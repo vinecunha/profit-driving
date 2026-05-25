@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="62dp"
+    android:layout_height="62dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <View
+        android:id="@+id/statusRing"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_gravity="center" />
+
+    <View
+        android:id="@+id/statusDot"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_gravity="center" />
+
+    <TextView
+        android:id="@+id/bubbleIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="R$"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+</FrameLayout>
