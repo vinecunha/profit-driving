@@ -9,15 +9,13 @@ import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import java.util.Calendar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -26,7 +24,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyText: TextView
     private lateinit var statusText: TextView
-    private lateinit var btnPermissions: Button
+    private lateinit var tvA11yBadge: TextView
+    private lateinit var btnPermissions: TextView
     private var adapter: HistoryAdapter? = null
     private var filterDays = 0
 
@@ -41,8 +40,8 @@ class MainActivity : AppCompatActivity() {
         emptyText = findViewById(R.id.emptyText)
         statusText = findViewById(R.id.statusText)
         btnPermissions = findViewById(R.id.btnPermissions)
-        val btnConfigure = findViewById<Button>(R.id.btnConfigure)
-        val btnPreview = findViewById<Button>(R.id.btnPreview)
+        val btnConfigure = findViewById<TextView>(R.id.btnConfigure)
+        val btnPreview = findViewById<TextView>(R.id.btnPreview)
 
         filterViews.addAll(listOf(
             findViewById(R.id.btnFilterToday),
@@ -50,6 +49,8 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.btnFilter30d),
             findViewById(R.id.btnFilterAll)
         ))
+
+        tvA11yBadge = findViewById(R.id.tvAccessibilityBadge)
 
         findViewById<TextView>(R.id.btnFilterToday).setOnClickListener { setFilter(0) }
         findViewById<TextView>(R.id.btnFilter7d).setOnClickListener { setFilter(7) }
@@ -61,10 +62,10 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
         btnPreview.setOnClickListener { showDemoCard() }
-        findViewById<Button>(R.id.btnAnalysis).setOnClickListener {
+        findViewById<TextView>(R.id.btnAnalysis).setOnClickListener {
             startActivity(Intent(this, AnalysisActivity::class.java))
         }
-        findViewById<View>(R.id.btnClearHistory).setOnClickListener {
+        findViewById<TextView>(R.id.btnClearHistory).setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle("Limpar histórico")
                 .setMessage("Tem certeza?")
@@ -96,7 +97,12 @@ class MainActivity : AppCompatActivity() {
                     (i == 1 && days == 7) ||
                     (i == 2 && days == 30) ||
                     (i == 3 && days == -1)
-            v.alpha = if (selected) 1f else 0.4f
+            v.setBackgroundResource(
+                if (selected) R.drawable.pill_selected else R.drawable.pill_unselected
+            )
+            v.setTextColor(
+                if (selected) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt()
+            )
         }
         loadFilteredHistory()
     }
@@ -137,6 +143,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnPermissions.text = if (a11yOk && overlayOk) "✔ OK" else "Permissões"
+        btnPermissions.setBackgroundResource(
+            if (a11yOk && overlayOk) R.drawable.pill_selected else R.drawable.pill_unselected
+        )
+        btnPermissions.setTextColor(
+            if (a11yOk && overlayOk) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt()
+        )
+
+        tvA11yBadge.text = if (a11yOk) "Acessível ✓" else "Acessibilidade ✗"
     }
 
     private fun isAccessibilityServiceEnabled(): Boolean {
@@ -218,21 +232,27 @@ class HistoryAdapter(private val records: List<RideRecord>) :
     private val dateFormat = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val tvApp: TextView = view.findViewById(R.id.tvApp)
-        val tvValue: TextView = view.findViewById(R.id.tvValue)
+        val accentStrip: View = view.findViewById(R.id.accentStrip)
+        val tvServiceType: TextView = view.findViewById(R.id.tvServiceType)
+        val tvPrice: TextView = view.findViewById(R.id.tvPrice)
+        val tvRatingText: TextView = view.findViewById(R.id.tvRatingText)
+        val tvPricePerKm: TextView = view.findViewById(R.id.tvPricePerKm)
+        val tvPricePerHour: TextView = view.findViewById(R.id.tvPricePerHour)
+        val tvPickupDist: TextView = view.findViewById(R.id.tvPickupDist)
+        val tvPickupTime: TextView = view.findViewById(R.id.tvPickupTime)
+        val tvTripDist: TextView = view.findViewById(R.id.tvTripDist)
+        val tvTripTime: TextView = view.findViewById(R.id.tvTripTime)
+        val tvTotalDist: TextView = view.findViewById(R.id.tvTotalDist)
+        val tvTotalTime: TextView = view.findViewById(R.id.tvTotalTime)
         val tvBonus: TextView = view.findViewById(R.id.tvBonus)
-        val tvPickup: TextView = view.findViewById(R.id.tvPickup)
-        val tvTrip: TextView = view.findViewById(R.id.tvTrip)
-        val tvTotal: TextView = view.findViewById(R.id.tvTotal)
-        val tvKm: TextView = view.findViewById(R.id.tvKm)
-        val tvHour: TextView = view.findViewById(R.id.tvHour)
-        val tvRating: TextView = view.findViewById(R.id.tvRating)
-        val tvTime: TextView = view.findViewById(R.id.tvTime)
+        val tvEfficiency: TextView = view.findViewById(R.id.tvEfficiency)
+        val tvStatus: TextView = view.findViewById(R.id.tvStatus)
+        val tvTimestamp: TextView = view.findViewById(R.id.tvTimestamp)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_history, parent, false)
+            .inflate(R.layout.item_ride_card, parent, false)
         return ViewHolder(view)
     }
 
@@ -240,79 +260,114 @@ class HistoryAdapter(private val records: List<RideRecord>) :
         val r = records[position]
         val ctx = holder.itemView.context
 
-        holder.tvApp.text = buildString {
-            when (r.status) {
-                "ACCEPTED" -> append("\u2705 ")
-                "DECLINED" -> append("\u274C ")
-                else -> append("\u23F3 ")
-            }
-            append(r.appName)
-            if (r.serviceType != null) {
-                append(" · ")
-                append(r.serviceType)
-            }
-        }
-        holder.tvValue.text = r.value?.let { "R$ %.2f".format(it).replace(".", ",") } ?: "---"
+        holder.tvServiceType.text = r.serviceType ?: r.appName
+
+        holder.tvPrice.text = r.value?.let {
+            "R$ %.2f".format(it).replace(".", ",")
+        } ?: "---"
+
+        holder.tvRatingText.text = r.rating?.let {
+            "%.2f".format(it).replace(".", ",")
+        } ?: "---"
+
+        holder.tvPricePerKm.text = r.pricePerKm?.let {
+            "R$ %.2f".format(it).replace(".", ",")
+        } ?: "---"
+
+        holder.tvPricePerHour.text = r.pricePerHour?.let {
+            "R$ %.2f".format(it).replace(".", ",")
+        } ?: "---"
+
+        holder.tvPickupDist.text = r.pickupDistanceKm?.let {
+            "%.1f km".format(it).replace(".", ",")
+        } ?: ""
+        holder.tvPickupTime.text = r.pickupTimeMin?.let {
+            "${it} min"
+        } ?: ""
+
+        holder.tvTripDist.text = r.tripDistanceKm?.let {
+            "%.1f km".format(it).replace(".", ",")
+        } ?: ""
+        holder.tvTripTime.text = r.tripTimeMin?.let {
+            "${it} min"
+        } ?: ""
+
+        holder.tvTotalDist.text = r.distanceKm?.let {
+            "%.1f km".format(it).replace(".", ",")
+        } ?: ""
+        holder.tvTotalTime.text = r.timeMin?.let {
+            "${it} min"
+        } ?: ""
+
         if (r.bonusAmount != null) {
-            holder.tvBonus.text = "Bônus: R$ %.2f".format(r.bonusAmount).replace(".", ",")
+            holder.tvBonus.text = "+ R$ %.2f".format(r.bonusAmount).replace(".", ",")
             holder.tvBonus.visibility = View.VISIBLE
         } else {
             holder.tvBonus.visibility = View.GONE
         }
 
-        holder.tvPickup.text = buildString {
-            if (r.pickupDistanceKm != null || r.pickupTimeMin != null) {
-                append("Emb: ")
-                r.pickupDistanceKm?.let { append("%.1f km".format(it).replace(".", ",")) }
-                if (r.pickupTimeMin != null) append(" · ${r.pickupTimeMin} min")
-            }
-        }
-        holder.tvTrip.text = buildString {
-            if (r.tripDistanceKm != null || r.tripTimeMin != null) {
-                append("Via: ")
-                r.tripDistanceKm?.let { append("%.1f km".format(it).replace(".", ",")) }
-                if (r.tripTimeMin != null) append(" · ${r.tripTimeMin} min")
-            }
-        }
-        holder.tvTotal.text = buildString {
-            if (r.distanceKm != null || r.timeMin != null) {
-                append("Total: ")
-                r.distanceKm?.let { append("%.1f km".format(it).replace(".", ",")) }
-                if (r.timeMin != null) append(" · ${r.timeMin} min")
-            }
-        }
-
-        holder.tvKm.text = r.pricePerKm?.let {
-            "R$/km: %.2f".format(it).replace(".", ",")
-        } ?: "R$/km: ---"
-
-        holder.tvHour.text = r.pricePerHour?.let {
-            "R$/h: %.2f".format(it).replace(".", ",")
-        } ?: "R$/h: ---"
-
-        holder.tvRating.text = r.rating?.let {
-            "Nota: %.2f".format(it).replace(".", ",")
-        } ?: "Nota: ---"
-
-        holder.tvTime.text = dateFormat.format(Date(r.timestamp))
-
-        val minKm = ctx.getSharedPreferences(SettingsActivity.PREF_NAME, 0)
-            .getFloat(SettingsActivity.KEY_MIN_KM, 0f)
-        val minHour = ctx.getSharedPreferences(SettingsActivity.PREF_NAME, 0)
-            .getFloat(SettingsActivity.KEY_MIN_HOUR, 0f)
-        val minRating = ctx.getSharedPreferences(SettingsActivity.PREF_NAME, 0)
-            .getFloat(SettingsActivity.KEY_MIN_RATING, 0f)
+        val prefs = ctx.getSharedPreferences(SettingsActivity.PREF_NAME, 0)
+        val minKm = prefs.getFloat(SettingsActivity.KEY_MIN_KM, 0f)
+        val minHour = prefs.getFloat(SettingsActivity.KEY_MIN_HOUR, 0f)
+        val minRating = prefs.getFloat(SettingsActivity.KEY_MIN_RATING, 0f)
 
         val kmOk = r.pricePerKm == null || r.pricePerKm >= minKm.toDouble()
         val hourOk = r.pricePerHour == null || r.pricePerHour >= minHour.toDouble()
         val ratingOk = r.rating == null || r.rating >= minRating.toDouble()
 
-        val color = if (kmOk && hourOk && ratingOk)
-            ctx.getColor(R.color.card_green)
-        else
-            ctx.getColor(R.color.card_red)
+        val cardColor: String
+        val efficiencyText: String
+        val efficiencyBg: String
+        val efficiencyFg: String
 
-        holder.itemView.setBackgroundColor(color)
+        when {
+            kmOk && hourOk && ratingOk -> {
+                cardColor = "#1B7B4A"
+                efficiencyText = "Rendimento Bom"
+                efficiencyBg = "#E8F5E9"
+                efficiencyFg = "#1A1A2E"
+            }
+            kmOk && hourOk -> {
+                cardColor = "#E65100"
+                efficiencyText = "Avaliação abaixo da média"
+                efficiencyBg = "#FFF3E0"
+                efficiencyFg = "#E65100"
+            }
+            else -> {
+                cardColor = "#B71C1C"
+                efficiencyText = "Rendimento Baixo"
+                efficiencyBg = "#FFEBEE"
+                efficiencyFg = "#C62828"
+            }
+        }
+
+        val isLowKm = r.pricePerKm != null && r.pricePerKm < 1.0
+        holder.tvEfficiency.text = if (isLowKm) "R$/km muito baixo" else efficiencyText
+        holder.tvEfficiency.setBackgroundColor(android.graphics.Color.parseColor(
+            if (isLowKm) "#FFEBEE" else efficiencyBg
+        ))
+        holder.tvEfficiency.setTextColor(android.graphics.Color.parseColor(
+            if (isLowKm) "#C62828" else efficiencyFg
+        ))
+
+        holder.accentStrip.visibility = View.VISIBLE
+        val stripBg = holder.accentStrip.background?.mutate() as? android.graphics.drawable.GradientDrawable
+        stripBg?.setColor(android.graphics.Color.parseColor(cardColor))
+
+        holder.tvStatus.text = when (r.status) {
+            "ACCEPTED" -> "\u2705"
+            "DECLINED" -> "\u274C"
+            else -> ""
+        }
+
+        val now = java.util.Calendar.getInstance()
+        val rideTime = java.util.Calendar.getInstance().apply { timeInMillis = r.timestamp }
+        holder.tvTimestamp.text = if (now.get(java.util.Calendar.DAY_OF_YEAR) == rideTime.get(java.util.Calendar.DAY_OF_YEAR) &&
+            now.get(java.util.Calendar.YEAR) == rideTime.get(java.util.Calendar.YEAR)) {
+            java.text.SimpleDateFormat("HH:mm", Locale.getDefault()).format(java.util.Date(r.timestamp))
+        } else {
+            dateFormat.format(java.util.Date(r.timestamp))
+        }
     }
 
     override fun getItemCount() = records.size

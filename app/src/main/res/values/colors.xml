@@ -3,4 +3,19 @@
     <color name="card_green">#CC2E7D32</color>
     <color name="card_red">#CCC62828</color>
     <color name="card_text">#FFFFFF</color>
+
+    <color name="bg_screen">#F0F2F8</color>
+    <color name="bg_card">#FFFFFF</color>
+    <color name="bg_service">#F3F5FA</color>
+    <color name="bg_inner_card">#F8F9FD</color>
+    <color name="bg_efficiency_green">#E8F5E9</color>
+    <color name="bg_efficiency_red">#FFEBEE</color>
+    <color name="text_primary">#1A1A2E</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="text_price">#1A1A2E</color>
+    <color name="text_rating_star">#FF8F00</color>
+    <color name="pill_active_bg">#1A1A2E</color>
+    <color name="pill_active_text">#FFFFFF</color>
+    <color name="pill_inactive_bg">#E8EAF0</color>
+    <color name="pill_inactive_text">#6B7280</color>
 </resources>

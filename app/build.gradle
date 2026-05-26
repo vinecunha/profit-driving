@@ -60,4 +60,6 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.activity.ktx)
     implementation(libs.recyclerview)
+    implementation(libs.cardview)
+    implementation(libs.constraintlayout)
 }

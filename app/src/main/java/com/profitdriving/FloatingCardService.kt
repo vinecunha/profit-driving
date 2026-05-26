@@ -101,8 +101,20 @@ class FloatingCardService : Service() {
     }
 
     private fun showCard(ride: RideData, isDemo: Boolean) {
+        val cardLayout = prefs.getString(
+            SettingsActivity.KEY_CARD_LAYOUT, SettingsActivity.DEFAULT_CARD_LAYOUT)
+        val cardSide = prefs.getString(
+            SettingsActivity.KEY_CARD_SIDE, SettingsActivity.DEFAULT_CARD_SIDE)
+        val cardYPercent = prefs.getInt(
+            SettingsActivity.KEY_CARD_Y_PERCENT, SettingsActivity.DEFAULT_CARD_Y_PERCENT)
+
         val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val view = inflater.inflate(R.layout.floating_card, null)
+        val layoutRes = if (cardLayout == "row")
+            R.layout.floating_card_row
+        else
+            R.layout.floating_card
+
+        val view = inflater.inflate(layoutRes, null)
 
         val cardRoot = view.findViewById<View>(R.id.cardRoot)
         val tvApp = view.findViewById<TextView>(R.id.tvApp)
@@ -154,9 +166,14 @@ class FloatingCardService : Service() {
         val hourOk = pricePerHour == null || pricePerHour >= minHour
         val ratingOk = ride.rating == null || ride.rating >= minRating
 
+        val financeiroOk = kmOk && hourOk
         val allOk = kmOk && hourOk && ratingOk
 
-        val bgColor = if (allOk) "#1B7B4A" else "#B71C1C"
+        val bgColor = when {
+            kmOk && hourOk && ratingOk   -> "#1B7B4A"
+            financeiroOk && !ratingOk    -> "#E65100"
+            else                         -> "#B71C1C"
+        }
         val bg = GradientDrawable()
         bg.setColor(Color.parseColor(bgColor))
         bg.cornerRadius = 14f * resources.displayMetrics.density
@@ -177,7 +194,15 @@ class FloatingCardService : Service() {
         val displayMetrics = DisplayMetrics()
         @Suppress("DEPRECATION")
         windowManager.defaultDisplay.getMetrics(displayMetrics)
-        val yOffset = (displayMetrics.heightPixels * 0.30).toInt()
+        val screenHeight = displayMetrics.heightPixels
+        val screenWidth = displayMetrics.widthPixels
+        val yOffset = (screenHeight * cardYPercent / 100.0).toInt()
+
+        val cardWidthPx = (220 * resources.displayMetrics.density).toInt()
+        val xOffset = if (cardSide == "right")
+            screenWidth - cardWidthPx - 16
+        else
+            16
 
         val type: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -193,8 +218,8 @@ class FloatingCardService : Service() {
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = Gravity.START or Gravity.TOP
-            x = 16
+            gravity = Gravity.TOP or Gravity.START
+            x = xOffset
             y = yOffset
         }
 

@@ -26,6 +26,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         if (oldVersion < 4) {
             db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_STATUS TEXT DEFAULT 'EXPIRED'")
         }
+        if (oldVersion < 5) {
+            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_STOPS INTEGER")
+        }
     }
 
     fun updateStatus(id: Long, status: String) {
@@ -50,6 +53,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             put(COL_SERVICE_TYPE, record.serviceType)
             put(COL_BONUS_AMOUNT, record.bonusAmount)
             put(COL_STATUS, record.status)
+            put(COL_STOPS, record.stops)
         }
         return writableDatabase.insert(TABLE_NAME, null, cv)
     }
@@ -108,7 +112,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                         if (it.isNull(it.getColumnIndexOrThrow(COL_BONUS_AMOUNT))) null else v
                     },
                     status = if (it.isNull(it.getColumnIndexOrThrow(COL_STATUS))) "EXPIRED"
-                        else it.getString(it.getColumnIndexOrThrow(COL_STATUS))
+                        else it.getString(it.getColumnIndexOrThrow(COL_STATUS)),
+                    stops = if (it.isNull(it.getColumnIndexOrThrow(COL_STOPS))) null
+                        else it.getInt(it.getColumnIndexOrThrow(COL_STOPS))
                 ))
             }
         }
@@ -121,7 +127,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 5
         private const val TABLE_NAME = "ride_history"
 
         private const val COL_ID = "id"
@@ -140,6 +146,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_SERVICE_TYPE = "service_type"
         private const val COL_BONUS_AMOUNT = "bonus_amount"
         private const val COL_STATUS = "status"
+        private const val COL_STOPS = "stops"
 
         private val CREATE_TABLE = """
             CREATE TABLE $TABLE_NAME (
@@ -154,7 +161,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_TIMESTAMP INTEGER NOT NULL,
                 $COL_SERVICE_TYPE TEXT,
                 $COL_BONUS_AMOUNT REAL,
-                $COL_STATUS TEXT DEFAULT 'EXPIRED'
+                $COL_STATUS TEXT DEFAULT 'EXPIRED',
+                $COL_STOPS INTEGER
             )
         """.trimIndent()
     }
@@ -176,5 +184,6 @@ data class RideRecord(
     val tripTimeMin: Int? = null,
     val serviceType: String? = null,
     val bonusAmount: Double? = null,
-    val status: String = "EXPIRED"
+    val status: String = "EXPIRED",
+    val stops: Int? = null
 )

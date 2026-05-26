@@ -14,7 +14,8 @@ data class RideData(
     val tripDistanceKm: Double? = null,
     val tripTimeMin: Int? = null,
     val serviceType: String? = null,
-    val bonusAmount: Double? = null
+    val bonusAmount: Double? = null,
+    val stops: Int? = null
 ) {
     val effectivePricePerKm: Double?
         get() = pricePerKm ?: if (value != null && distanceKm != null && distanceKm > 0)
