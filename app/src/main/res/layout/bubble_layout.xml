@@ -17,14 +17,12 @@
         android:layout_height="34dp"
         android:layout_gravity="center" />
 
-    <TextView
+    <ImageView
         android:id="@+id/bubbleIcon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
         android:layout_gravity="center"
-        android:text="R$"
-        android:textColor="@android:color/white"
-        android:textSize="14sp"
-        android:textStyle="bold" />
+        android:src="@drawable/ic_launcher_foreground"
+        android:contentDescription="CorridaCerta" />
 
 </FrameLayout>

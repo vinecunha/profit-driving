@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Profit Driving</string>
-    <string name="accessibility_description">Profit Driving analisa cards de corrida do Uber e 99 para calcular R$/km, R$/h e nota, exibindo um card flutuante com a avaliação.</string>
+    <string name="app_name">CorridaCerta</string>
+    <string name="accessibility_description">CorridaCerta analisa cards de corrida do Uber e 99 para calcular R$/km, R$/h e nota, exibindo um card flutuante com a avaliação.</string>
 </resources>

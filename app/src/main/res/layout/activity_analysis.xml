@@ -5,24 +5,23 @@
     android:orientation="vertical"
     android:background="#F5F5F5">
 
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="12dp"
-        android:background="@android:color/white">
+        android:paddingHorizontal="12dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="10dp"
+        android:background="#2E7D32">
 
-        <TextView
-            android:id="@+id/btnBack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="&lt; Voltar"
-            android:textColor="?attr/colorAccent"
-            android:padding="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackground" />
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_launcher"
+            android:contentDescription=""
+            android:layout_marginEnd="8dp" />
 
         <TextView
             android:layout_width="0dp"
@@ -31,7 +30,20 @@
             android:text="Análise de Desempenho"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:gravity="center" />
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/btnBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Voltar"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:paddingVertical="4dp"
+            android:paddingHorizontal="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
 
     </LinearLayout>
 
@@ -39,36 +51,54 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center"
-        android:padding="12dp">
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="12dp"
+        android:background="#FFFFFF">
 
-        <Button
+        <TextView
             android:id="@+id/btnPeriodToday"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="32dp"
             android:layout_weight="1"
             android:text="Hoje"
             android:textSize="12sp"
-            android:layout_marginEnd="4dp" />
+            android:textColor="#FFFFFF"
+            android:gravity="center"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/pill_selected"
+            android:clickable="true"
+            android:focusable="true" />
 
-        <Button
+        <TextView
             android:id="@+id/btnPeriodWeek"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="32dp"
             android:layout_weight="1"
             android:text="Esta semana"
             android:textSize="12sp"
+            android:textColor="#6B7280"
+            android:gravity="center"
             android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp" />
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/pill_unselected"
+            android:clickable="true"
+            android:focusable="true" />
 
-        <Button
+        <TextView
             android:id="@+id/btnPeriodMonth"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="32dp"
             android:layout_weight="1"
             android:text="Este mês"
             android:textSize="12sp"
-            android:layout_marginStart="4dp" />
+            android:textColor="#6B7280"
+            android:gravity="center"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/pill_unselected"
+            android:clickable="true"
+            android:focusable="true" />
 
     </LinearLayout>
 

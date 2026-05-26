@@ -74,7 +74,7 @@ class FloatingCardService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val ch = NotificationChannel(
-                CHANNEL_ID, "Profit Driving",
+                CHANNEL_ID, "CorridaCerta",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Notificação para exibir card flutuante"
@@ -85,7 +85,7 @@ class FloatingCardService : Service() {
     }
 
     private fun buildNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
-        .setContentTitle("Profit Driving")
+        .setContentTitle("CorridaCerta")
         .setContentText("Analisando corridas...")
         .setSmallIcon(android.R.drawable.ic_menu_info_details)
         .setPriority(NotificationCompat.PRIORITY_MIN)
@@ -101,108 +101,105 @@ class FloatingCardService : Service() {
     }
 
     private fun showCard(ride: RideData, isDemo: Boolean) {
-        val cardLayout = prefs.getString(
-            SettingsActivity.KEY_CARD_LAYOUT, SettingsActivity.DEFAULT_CARD_LAYOUT)
-        val cardSide = prefs.getString(
-            SettingsActivity.KEY_CARD_SIDE, SettingsActivity.DEFAULT_CARD_SIDE)
-        val cardYPercent = prefs.getInt(
-            SettingsActivity.KEY_CARD_Y_PERCENT, SettingsActivity.DEFAULT_CARD_Y_PERCENT)
-
         val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val layoutRes = if (cardLayout == "row")
-            R.layout.floating_card_row
-        else
-            R.layout.floating_card
-
+        val cardLayout = prefs.getString(SettingsActivity.KEY_CARD_LAYOUT, "column")
+        val layoutRes = if (cardLayout == "row") R.layout.floating_card_row else R.layout.floating_card
         val view = inflater.inflate(layoutRes, null)
 
-        val cardRoot = view.findViewById<View>(R.id.cardRoot)
-        val tvApp = view.findViewById<TextView>(R.id.tvApp)
-        val tvValue = view.findViewById<TextView>(R.id.tvValue)
+        val cardRoot     = view.findViewById<View>(R.id.cardRoot)
+        val tvApp        = view.findViewById<TextView>(R.id.tvApp)
+        val tvValue      = view.findViewById<TextView>(R.id.tvValue)
         val tvServiceType = view.findViewById<TextView>(R.id.tvServiceType)
-        val tvBonus = view.findViewById<TextView>(R.id.tvBonus)
-        val tvKm = view.findViewById<TextView>(R.id.tvKm)
-        val tvHour = view.findViewById<TextView>(R.id.tvHour)
-        val tvRating = view.findViewById<TextView>(R.id.tvRating)
-        val tvDistance = view.findViewById<TextView>(R.id.tvDistance)
-        val tvTime = view.findViewById<TextView>(R.id.tvTime)
-        val dotKm = view.findViewById<View>(R.id.dotKm)
-        val dotHour = view.findViewById<View>(R.id.dotHour)
-        val dotRating = view.findViewById<View>(R.id.dotRating)
+        val tvBonus      = view.findViewById<TextView>(R.id.tvBonus)
+        val tvKm         = view.findViewById<TextView>(R.id.tvKm)
+        val tvHour       = view.findViewById<TextView>(R.id.tvHour)
+        val tvRating     = view.findViewById<TextView>(R.id.tvRating)
+        val tvDistance   = view.findViewById<TextView>(R.id.tvDistance)
+        val tvTime       = view.findViewById<TextView>(R.id.tvTime)
+        val tvDecision   = view.findViewById<TextView>(R.id.tvDecision)
 
-        val pricePerKm = ride.effectivePricePerKm
+        val pricePerKm   = ride.effectivePricePerKm
         val pricePerHour = ride.effectivePricePerHour
 
         tvApp.text = ride.appName.ifEmpty { "" }
-        tvValue.text = ride.value?.let { "R$ %.2f".format(it).replace(".", ",") } ?: "---"
+        tvValue.text = ride.value
+            ?.let { "R$ %.2f".format(it).replace(".", ",") } ?: "---"
+
         tvServiceType.text = ride.serviceType ?: ""
-        tvServiceType.visibility = if (ride.serviceType != null) View.VISIBLE else View.GONE
-        tvBonus.text = ride.bonusAmount?.let { "Bônus: R$ %.2f".format(it).replace(".", ",") } ?: ""
-        tvBonus.visibility = if (ride.bonusAmount != null) View.VISIBLE else View.GONE
+        tvServiceType.visibility =
+            if (ride.serviceType != null) View.VISIBLE else View.GONE
+
+        tvBonus.text = ride.bonusAmount
+            ?.let { "Bônus: R$ %.2f".format(it).replace(".", ",") } ?: ""
+        tvBonus.visibility =
+            if (ride.bonusAmount != null) View.VISIBLE else View.GONE
 
         tvKm.text = if (pricePerKm != null)
             "%.2f".format(pricePerKm).replace(".", ",")
-        else
-            "---"
+        else "---"
 
         tvHour.text = if (pricePerHour != null)
             "%.2f".format(pricePerHour).replace(".", ",")
-        else
-            "---"
+        else "---"
 
         tvRating.text = if (ride.rating != null)
             "%.2f".format(ride.rating).replace(".", ",")
-        else
-            "---"
+        else "---"
 
-        tvDistance.text = ride.distanceKm?.let { "%.1f km".format(it).replace(".", ",") } ?: ""
+        tvDistance.text = ride.distanceKm
+            ?.let { "%.1f km".format(it).replace(".", ",") } ?: ""
         tvTime.text = ride.timeMin?.let { "${it} min" } ?: ""
 
-        val minKm = prefs.getFloat(SettingsActivity.KEY_MIN_KM, 0f)
-        val minHour = prefs.getFloat(SettingsActivity.KEY_MIN_HOUR, 0f)
-        val minRating = prefs.getFloat(SettingsActivity.KEY_MIN_RATING, 0f)
+        // Individual status per metric
+        val kmStatus = SettingsActivity.evaluateParameter(pricePerKm,
+            prefs.getFloat(SettingsActivity.KEY_MIN_KM, 2.5f),
+            prefs.getFloat(SettingsActivity.KEY_IDEAL_KM, 4.0f))
+        val hourStatus = SettingsActivity.evaluateParameter(pricePerHour,
+            prefs.getFloat(SettingsActivity.KEY_MIN_HOUR, 30f),
+            prefs.getFloat(SettingsActivity.KEY_IDEAL_HOUR, 60f))
+        val ratingStatus = SettingsActivity.evaluateParameter(ride.rating,
+            prefs.getFloat(SettingsActivity.KEY_MIN_RATING, 4.5f),
+            prefs.getFloat(SettingsActivity.KEY_IDEAL_RATING, 4.9f))
 
-        val kmOk = pricePerKm == null || pricePerKm >= minKm
-        val hourOk = pricePerHour == null || pricePerHour >= minHour
-        val ratingOk = ride.rating == null || ride.rating >= minRating
+        // Color each metric value
+        tvKm.setTextColor(SettingsActivity.getStatusColor(kmStatus))
+        tvHour.setTextColor(SettingsActivity.getStatusColor(hourStatus))
+        tvRating.setTextColor(SettingsActivity.getStatusColor(ratingStatus))
 
-        val financeiroOk = kmOk && hourOk
-        val allOk = kmOk && hourOk && ratingOk
+        // Overall decision (worst status wins)
+        val overall = SettingsActivity.getOverallStatus(pricePerKm, pricePerHour, ride.rating, prefs)
 
-        val bgColor = when {
-            kmOk && hourOk && ratingOk   -> "#1B7B4A"
-            financeiroOk && !ratingOk    -> "#E65100"
-            else                         -> "#B71C1C"
-        }
+        // Decision button
+        tvDecision.text = SettingsActivity.getDecisionText(overall)
+        val decisionBg = GradientDrawable()
+        decisionBg.setColor(SettingsActivity.getDecisionBgColor(overall))
+        decisionBg.cornerRadius = 6f * resources.displayMetrics.density
+        tvDecision.background = decisionBg
+        tvDecision.visibility = View.VISIBLE
+
+        // Neutral dark card background
         val bg = GradientDrawable()
-        bg.setColor(Color.parseColor(bgColor))
+        bg.setColor(Color.parseColor("#1A1A2E"))
         bg.cornerRadius = 14f * resources.displayMetrics.density
         cardRoot.background = bg
-
-        val dotVisibility = if (allOk) View.GONE else View.VISIBLE
-        dotKm.visibility = dotVisibility
-        dotHour.visibility = dotVisibility
-        dotRating.visibility = dotVisibility
-
-        if (!allOk) {
-            setDot(dotKm, kmOk)
-            setDot(dotHour, hourOk)
-            setDot(dotRating, ratingOk)
-        }
 
         @Suppress("DEPRECATION")
         val displayMetrics = DisplayMetrics()
         @Suppress("DEPRECATION")
         windowManager.defaultDisplay.getMetrics(displayMetrics)
-        val screenHeight = displayMetrics.heightPixels
-        val screenWidth = displayMetrics.widthPixels
-        val yOffset = (screenHeight * cardYPercent / 100.0).toInt()
 
-        val cardWidthPx = (220 * resources.displayMetrics.density).toInt()
-        val xOffset = if (cardSide == "right")
+        val cardSide     = prefs.getString(
+            SettingsActivity.KEY_CARD_SIDE, "left")
+        val cardYPercent = prefs.getInt(
+            SettingsActivity.KEY_CARD_Y_PERCENT, 30)
+
+        val screenWidth  = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+        val yOffset      = (screenHeight * cardYPercent / 100.0).toInt()
+        val cardWidthPx  = (220 * resources.displayMetrics.density).toInt()
+        val xOffset      = if (cardSide == "right")
             screenWidth - cardWidthPx - 16
-        else
-            16
+        else 16
 
         val type: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -218,7 +215,7 @@ class FloatingCardService : Service() {
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = Gravity.TOP or Gravity.START
+            gravity = Gravity.START or Gravity.TOP
             x = xOffset
             y = yOffset
         }
@@ -249,14 +246,6 @@ class FloatingCardService : Service() {
         }
     }
 
-    private fun setDot(dot: View, isOk: Boolean) {
-        val color = if (isOk) "#4CAF50" else "#FF5252"
-        val d = GradientDrawable()
-        d.shape = GradientDrawable.OVAL
-        d.setColor(Color.parseColor(color))
-        dot.background = d
-    }
-
     private fun dismiss() {
         handler.removeCallbacks(dismissRunnable)
         overlayView?.let { view ->
@@ -276,8 +265,8 @@ class FloatingCardService : Service() {
     }
 
     companion object {
-        private const val TAG = "ProfitDriving"
-        private const val CHANNEL_ID = "profit_driving_card"
+        private const val TAG = "CorridaCerta"
+        private const val CHANNEL_ID = "corrida_certa_card"
         private const val NOTIF_ID = 1001
 
         fun start(context: Context, intent: Intent) {

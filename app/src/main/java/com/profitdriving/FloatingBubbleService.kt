@@ -66,10 +66,10 @@ class FloatingBubbleService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val ch = NotificationChannel(
-                CHANNEL_ID, "Profit Driving Ícone",
+                CHANNEL_ID, "CorridaCerta Ícone",
                 NotificationManager.IMPORTANCE_MIN
             ).apply {
-                description = "Ícone flutuante do Profit Driving"
+                description = "Ícone flutuante do CorridaCerta"
                 setShowBadge(false)
             }
             nm.createNotificationChannel(ch)
@@ -77,7 +77,7 @@ class FloatingBubbleService : Service() {
     }
 
     private fun buildNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
-        .setContentTitle("Profit Driving")
+        .setContentTitle("CorridaCerta")
         .setContentText("Ícone flutuante ativo — toque para abrir o app")
         .setSmallIcon(android.R.drawable.ic_menu_info_details)
         .setPriority(NotificationCompat.PRIORITY_MIN)
@@ -240,8 +240,8 @@ class FloatingBubbleService : Service() {
     }
 
     companion object {
-        private const val TAG = "ProfitDriving"
-        private const val CHANNEL_ID = "profit_driving_bubble"
+        private const val TAG = "CorridaCerta"
+        private const val CHANNEL_ID = "corrida_certa_bubble"
         private const val NOTIF_ID = 1002
 
         fun start(context: Context) {

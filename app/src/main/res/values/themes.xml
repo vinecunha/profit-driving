@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.ProfitDriving" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="Theme.CorridaCerta" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">#FF2E7D32</item>
         <item name="colorPrimaryDark">#FF1B5E20</item>
         <item name="colorAccent">#FF4CAF50</item>
+    </style>
+    <style name="Theme.CorridaCerta.Splash" parent="Theme.CorridaCerta">
+        <item name="android:windowBackground">@drawable/splash_screen</item>
     </style>
 </resources>

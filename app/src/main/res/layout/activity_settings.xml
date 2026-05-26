@@ -1,227 +1,466 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#F0F2F8">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingBottom="24dp">
 
+        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="24dp">
+            android:paddingHorizontal="12dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="10dp"
+            android:background="#2E7D32">
 
-            <TextView
-                android:id="@+id/btnBack"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="&lt; Voltar"
-                android:textColor="?attr/colorAccent"
-                android:textSize="16sp"
-                android:padding="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground" />
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_launcher"
+                android:contentDescription=""
+                android:layout_marginEnd="8dp" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Parâmetros"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                android:gravity="center" />
+                android:textColor="#FFFFFF" />
+
+            <TextView
+                android:id="@+id/btnBack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Voltar"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:paddingVertical="4dp"
+                android:paddingHorizontal="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground" />
 
         </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Parâmetros Mínimos"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="R$ / km mínimo"
-            android:textSize="14sp"
-            android:layout_marginBottom="4dp"/>
-
-        <EditText
-            android:id="@+id/etMinKm"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
-            android:hint="Ex: 1,50"
-            android:layout_marginBottom="16dp"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="R$ / hora mínimo"
-            android:textSize="14sp"
-            android:layout_marginBottom="4dp"/>
-
-        <EditText
-            android:id="@+id/etMinHour"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
-            android:hint="Ex: 25,00"
-            android:layout_marginBottom="16dp"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Nota mínima do passageiro"
-            android:textSize="14sp"
-            android:layout_marginBottom="4dp"/>
-
-        <EditText
-            android:id="@+id/etMinRating"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
-            android:hint="Ex: 4,50"
-            android:layout_marginBottom="24dp"/>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#DDDDDD"
-            android:layout_marginBottom="20dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Aparência do Card"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Layout do card"
-            android:textSize="14sp"
-            android:layout_marginBottom="8dp" />
-
+        <!-- Parâmetros de Avaliação Card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginBottom="16dp">
+            android:orientation="vertical"
+            android:background="@drawable/inner_card_bg"
+            android:padding="16dp"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="12dp">
 
-            <Button
-                android:id="@+id/btnColuna"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:text="📋 Coluna"
-                android:textSize="13sp"
-                android:textColor="#333333"
-                android:background="@drawable/toggle_unselected"
-                android:stateListAnimator="@null" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Parâmetros de Avaliação"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A2E"
+                android:layout_marginBottom="16dp" />
 
-            <Button
-                android:id="@+id/btnLinha"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:text="➡️ Linha"
+            <!-- R$/km -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="R$ / km"
                 android:textSize="13sp"
-                android:textColor="#333333"
-                android:background="@drawable/toggle_unselected"
-                android:stateListAnimator="@null" />
+                android:textStyle="bold"
+                android:textColor="#1A1A2E"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Mínimo (vermelho)"
+                    android:textSize="11sp"
+                    android:textColor="#F87171"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Ideal (verde)"
+                    android:textSize="11sp"
+                    android:textColor="#4ADE80"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <EditText
+                    android:id="@+id/etMinKm"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:inputType="numberDecimal"
+                    android:hint="Ex: 2,50"
+                    android:textSize="14sp"
+                    android:textColor="#1A1A2E"
+                    android:background="@drawable/pill_unselected"
+                    android:paddingHorizontal="12dp"
+                    android:layout_marginEnd="4dp" />
+
+                <EditText
+                    android:id="@+id/etIdealKm"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:inputType="numberDecimal"
+                    android:hint="Ex: 4,00"
+                    android:textSize="14sp"
+                    android:textColor="#1A1A2E"
+                    android:background="@drawable/pill_unselected"
+                    android:paddingHorizontal="12dp"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
+
+            <!-- R$/h -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="R$ / hora"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A2E"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Mínimo (vermelho)"
+                    android:textSize="11sp"
+                    android:textColor="#F87171"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Ideal (verde)"
+                    android:textSize="11sp"
+                    android:textColor="#4ADE80"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <EditText
+                    android:id="@+id/etMinHour"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:inputType="numberDecimal"
+                    android:hint="Ex: 30,00"
+                    android:textSize="14sp"
+                    android:textColor="#1A1A2E"
+                    android:background="@drawable/pill_unselected"
+                    android:paddingHorizontal="12dp"
+                    android:layout_marginEnd="4dp" />
+
+                <EditText
+                    android:id="@+id/etIdealHour"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:inputType="numberDecimal"
+                    android:hint="Ex: 60,00"
+                    android:textSize="14sp"
+                    android:textColor="#1A1A2E"
+                    android:background="@drawable/pill_unselected"
+                    android:paddingHorizontal="12dp"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
+
+            <!-- Nota -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nota do passageiro"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A2E"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Mínimo (vermelho)"
+                    android:textSize="11sp"
+                    android:textColor="#F87171"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Ideal (verde)"
+                    android:textSize="11sp"
+                    android:textColor="#4ADE80"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etMinRating"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:inputType="numberDecimal"
+                    android:hint="Ex: 4,50"
+                    android:textSize="14sp"
+                    android:textColor="#1A1A2E"
+                    android:background="@drawable/pill_unselected"
+                    android:paddingHorizontal="12dp"
+                    android:layout_marginEnd="4dp" />
+
+                <EditText
+                    android:id="@+id/etIdealRating"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:inputType="numberDecimal"
+                    android:hint="Ex: 4,90"
+                    android:textSize="14sp"
+                    android:textColor="#1A1A2E"
+                    android:background="@drawable/pill_unselected"
+                    android:paddingHorizontal="12dp"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Lado da tela"
-            android:textSize="14sp"
-            android:layout_marginBottom="8dp" />
-
+        <!-- Aparência do Card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginBottom="16dp">
+            android:orientation="vertical"
+            android:background="@drawable/inner_card_bg"
+            android:padding="16dp"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="12dp">
 
-            <Button
-                android:id="@+id/btnEsquerda"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:text="◀ Esquerda"
-                android:textSize="13sp"
-                android:textColor="#333333"
-                android:background="@drawable/toggle_unselected"
-                android:stateListAnimator="@null" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Aparência do Card"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A2E"
+                android:layout_marginBottom="16dp" />
 
-            <Button
-                android:id="@+id/btnDireita"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:text="Direita ▶"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Layout do card"
                 android:textSize="13sp"
-                android:textColor="#333333"
-                android:background="@drawable/toggle_unselected"
-                android:stateListAnimator="@null" />
+                android:textColor="#6B7280"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="20dp">
+
+                <TextView
+                    android:id="@+id/btnColuna"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:text="Coluna"
+                    android:textSize="12sp"
+                    android:textColor="#FFFFFF"
+                    android:gravity="center"
+                    android:background="@drawable/pill_selected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnLinha"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:text="Linha"
+                    android:textSize="12sp"
+                    android:textColor="#6B7280"
+                    android:gravity="center"
+                    android:background="@drawable/pill_unselected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lado da tela"
+                android:textSize="13sp"
+                android:textColor="#6B7280"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="20dp">
+
+                <TextView
+                    android:id="@+id/btnEsquerda"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:text="Esquerda"
+                    android:textSize="12sp"
+                    android:textColor="#FFFFFF"
+                    android:gravity="center"
+                    android:background="@drawable/pill_selected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnDireita"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:text="Direita"
+                    android:textSize="12sp"
+                    android:textColor="#6B7280"
+                    android:gravity="center"
+                    android:background="@drawable/pill_unselected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvYLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Altura na tela: 30%"
+                android:textSize="13sp"
+                android:textColor="#6B7280"
+                android:layout_marginBottom="8dp" />
+
+            <SeekBar
+                android:id="@+id/seekY"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="90"
+                android:progress="30"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0% = topo | 90% = parte inferior"
+                android:textSize="11sp"
+                android:textColor="#9CA3AF"
+                android:layout_marginBottom="16dp" />
 
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvYLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Altura na tela: 30%"
-            android:textSize="14sp"
-            android:layout_marginBottom="4dp" />
-
-        <SeekBar
-            android:id="@+id/seekY"
+        <!-- Demo Card -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:max="90"
-            android:progress="30"
-            android:layout_marginBottom="2dp" />
+            android:orientation="vertical"
+            android:background="@drawable/inner_card_bg"
+            android:padding="16dp"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="12dp">
 
+            <TextView
+                android:id="@+id/btnDemo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Visualizar card de exemplo"
+                android:textSize="13sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:padding="12dp"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <!-- Save Button -->
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0% = topo da tela · 90% = parte inferior"
-            android:textSize="11sp"
-            android:textColor="#888888"
-            android:layout_marginBottom="20dp" />
-
-        <Button
-            android:id="@+id/btnDemo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Visualizar card de exemplo"
-            android:layout_marginBottom="20dp" />
-
-        <Button
             android:id="@+id/btnSave"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Salvar" />
+            android:layout_height="44dp"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="12dp"
+            android:text="Salvar"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:background="@drawable/pill_selected"
+            android:clickable="true"
+            android:focusable="true" />
 
     </LinearLayout>
 

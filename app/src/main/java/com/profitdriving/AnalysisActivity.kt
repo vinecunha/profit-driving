@@ -7,7 +7,6 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.View
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -27,9 +26,9 @@ class AnalysisActivity : AppCompatActivity() {
         cardsContainer = findViewById(R.id.cardsContainer)
 
         findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
-        findViewById<Button>(R.id.btnPeriodToday).setOnClickListener { setPeriod(0) }
-        findViewById<Button>(R.id.btnPeriodWeek).setOnClickListener { setPeriod(7) }
-        findViewById<Button>(R.id.btnPeriodMonth).setOnClickListener { setPeriod(30) }
+        findViewById<TextView>(R.id.btnPeriodToday).setOnClickListener { setPeriod(0) }
+        findViewById<TextView>(R.id.btnPeriodWeek).setOnClickListener { setPeriod(7) }
+        findViewById<TextView>(R.id.btnPeriodMonth).setOnClickListener { setPeriod(30) }
 
         setPeriod(0)
     }
@@ -80,12 +79,15 @@ class AnalysisActivity : AppCompatActivity() {
     }
 
     private fun updateButtons() {
-        val today = findViewById<Button>(R.id.btnPeriodToday)
-        val week = findViewById<Button>(R.id.btnPeriodWeek)
-        val month = findViewById<Button>(R.id.btnPeriodMonth)
-        today.alpha = if (currentPeriod == 0) 1f else 0.5f
-        week.alpha = if (currentPeriod == 7) 1f else 0.5f
-        month.alpha = if (currentPeriod == 30) 1f else 0.5f
+        val today = findViewById<TextView>(R.id.btnPeriodToday)
+        val week = findViewById<TextView>(R.id.btnPeriodWeek)
+        val month = findViewById<TextView>(R.id.btnPeriodMonth)
+        today.background = if (currentPeriod == 0) resources.getDrawable(R.drawable.pill_selected, theme) else resources.getDrawable(R.drawable.pill_unselected, theme)
+        today.setTextColor(if (currentPeriod == 0) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+        week.background = if (currentPeriod == 7) resources.getDrawable(R.drawable.pill_selected, theme) else resources.getDrawable(R.drawable.pill_unselected, theme)
+        week.setTextColor(if (currentPeriod == 7) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+        month.background = if (currentPeriod == 30) resources.getDrawable(R.drawable.pill_selected, theme) else resources.getDrawable(R.drawable.pill_unselected, theme)
+        month.setTextColor(if (currentPeriod == 30) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
     }
 
     private fun buildCards(result: AnalysisResult) {

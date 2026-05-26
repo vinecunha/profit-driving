@@ -163,7 +163,7 @@ class NotificationListener : NotificationListenerService() {
     }
 
     companion object {
-        private const val TAG = "ProfitDriving"
+        private const val TAG = "CorridaCerta"
 
         private val VALUE_PATTERNS = listOf(
             Regex("""R\$\s*(\d+(?:[.,]\d+)?)""", RegexOption.IGNORE_CASE),

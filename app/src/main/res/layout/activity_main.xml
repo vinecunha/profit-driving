@@ -11,28 +11,36 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="4dp"
-        android:background="#FFFFFF">
+        android:paddingHorizontal="12dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="10dp"
+        android:background="#2E7D32">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_launcher"
+            android:contentDescription=""
+            android:layout_marginEnd="8dp" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Uber Driving"
-            android:textSize="22sp"
+            android:text="CorridaCerta"
+            android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="#1A1A2E" />
+            android:textColor="#FFFFFF" />
 
         <TextView
             android:id="@+id/btnClearHistory"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Limpar"
-            android:textColor="#6B7280"
-            android:textSize="13sp"
-            android:padding="8dp"
+            android:textColor="#CCFFFFFF"
+            android:textSize="12sp"
+            android:paddingVertical="4dp"
+            android:paddingHorizontal="8dp"
             android:clickable="true"
             android:focusable="true"
             android:background="?attr/selectableItemBackground" />
@@ -46,6 +54,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingHorizontal="12dp"
+        android:paddingTop="8dp"
         android:paddingBottom="12dp"
         android:background="#FFFFFF">
 

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="720dp"
+    android:viewportWidth="360"
+    android:viewportHeight="720">
+    <!-- Background -->
+    <path
+        android:pathData="M0,0 L360,0 L360,720 L0,720 Z"
+        android:fillColor="#111827" />
+    <!-- Speed lines bottom-left -->
+    <path
+        android:pathData="M0,580 L120,580"
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#1B7B4A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.15" />
+    <path
+        android:pathData="M0,596 L80,596"
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#1B7B4A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.10" />
+    <path
+        android:pathData="M0,612 L50,612"
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#1B7B4A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.07" />
+    <!-- Speed lines top-right -->
+    <path
+        android:pathData="M240,108 L360,108"
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#1B7B4A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.15" />
+    <path
+        android:pathData="M280,124 L360,124"
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#1B7B4A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.10" />
+    <path
+        android:pathData="M310,140 L360,140"
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#1B7B4A"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.07" />
+    <!-- Icon background rect -->
+    <path
+        android:pathData="M152,258 L208,258 A22,22 0 0,1 230,280 L230,338 A22,22 0 0,1 208,358 L152,358 A22,22 0 0,1 130,338 L130,280 A22,22 0 0,1 152,258 Z"
+        android:fillColor="#1A1A2E" />
+    <!-- Route line -->
+    <path
+        android:pathData="M155,340 Q155,308 180,302 Q205,296 205,268"
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#22C55E"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round" />
+    <!-- Origin dot outer -->
+    <path
+        android:pathData="M149.5,340 A5.5,5.5 0 1,0 160.5,340 A5.5,5.5 0 1,0 149.5,340 Z"
+        android:fillColor="#374151" />
+    <!-- Origin dot inner -->
+    <path
+        android:pathData="M152,340 A3,3 0 1,0 158,340 A3,3 0 1,0 152,340 Z"
+        android:fillColor="#9CA3AF" />
+    <!-- Destination halo -->
+    <path
+        android:pathData="M186,268 A19,19 0 1,0 224,268 A19,19 0 1,0 186,268 Z"
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#22C55E"
+        android:strokeWidth="1"
+        android:strokeAlpha="0.35" />
+    <!-- Destination circle -->
+    <path
+        android:pathData="M191,268 A14,14 0 1,0 219,268 A14,14 0 1,0 191,268 Z"
+        android:fillColor="#16A34A" />
+    <!-- Checkmark -->
+    <path
+        android:pathData="M197,268 L204,276 L215,259"
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

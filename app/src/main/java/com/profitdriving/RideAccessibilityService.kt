@@ -388,7 +388,8 @@ class RideAccessibilityService : AccessibilityService() {
     private fun extractServiceType(text: String): String? {
         val lower = text.lowercase(Locale.ROOT)
         for (entry in SERVICE_TYPE_LIST) {
-            if (entry.first in lower) return entry.second
+            val regex = Regex("\\b${Regex.escape(entry.first)}\\b")
+            if (regex.containsMatchIn(lower)) return entry.second
         }
         return null
     }
@@ -404,11 +405,16 @@ class RideAccessibilityService : AccessibilityService() {
             val v = parseBr(ganhe.groupValues[1])
             if (v != null && v > 0) return v
         }
+        val prioridade = BONUS_REGEX_PRIORIDADE.find(text)
+        if (prioridade != null) {
+            val v = parseBr(prioridade.groupValues[1])
+            if (v != null && v > 0) return v
+        }
         return null
     }
 
     companion object {
-        private const val TAG = "ProfitDriving"
+        private const val TAG = "CorridaCerta"
 
         private val VALUE_REGEX = Regex("""R\$\s*(\d+(?:[.,]\d+)?)""")
         private val KM_PER_REAL_REGEX = Regex("""R\$(\d+[.,]\d+)\s*/\s*km""", RegexOption.IGNORE_CASE)
@@ -446,6 +452,9 @@ class RideAccessibilityService : AccessibilityService() {
             "uber moto" to "Moto",
             "uber black" to "Black",
             "uber comfort" to "Comfort",
+            "business comfort" to "Business Comfort",
+            "business black" to "Business Black",
+            "envios carro" to "Envios Carro",
             "flash" to "Flash",
             "juntos" to "Juntos",
             "moto" to "Moto",
@@ -473,6 +482,11 @@ class RideAccessibilityService : AccessibilityService() {
 
         private val MULTIPARADA_REGEX = Regex(
             """(\d+)\s*parada[s]?""",
+            RegexOption.IGNORE_CASE
+        )
+
+        private val BONUS_REGEX_PRIORIDADE = Regex(
+            """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do\s*para\s*prioridade""",
             RegexOption.IGNORE_CASE
         )
     }

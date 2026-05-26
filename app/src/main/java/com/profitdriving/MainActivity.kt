@@ -185,7 +185,7 @@ class MainActivity : AppCompatActivity() {
                 .setTitle("Ativar Serviço de Acessibilidade")
                 .setMessage(
                     "1. Toque em \"Abrir Configurações\"\n" +
-                    "2. Toque em \"Profit Driving\"\n" +
+                    "2. Toque em \"CorridaCerta\"\n" +
                     "3. Ative a chave \"Permitir\"\n" +
                     "4. Confirme em \"OK\""
                 )

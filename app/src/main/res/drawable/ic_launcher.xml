@@ -4,6 +4,10 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Rounded rect background -->
+    <path
+        android:pathData="M22,0 L86,0 A22,22 0 0,1 108,22 L108,86 A22,22 0 0,1 86,108 L22,108 A22,22 0 0,1 0,86 L0,22 A22,22 0 0,1 22,0 Z"
+        android:fillColor="#111827" />
     <!-- Route line -->
     <path
         android:pathData="M36,82 Q36,54 54,48 Q72,42 72,22"
