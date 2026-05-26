@@ -19,6 +19,18 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_TRIP_DISTANCE REAL")
             db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_TRIP_TIME INTEGER")
         }
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_SERVICE_TYPE TEXT")
+            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_BONUS_AMOUNT REAL")
+        }
+        if (oldVersion < 4) {
+            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_STATUS TEXT DEFAULT 'EXPIRED'")
+        }
+    }
+
+    fun updateStatus(id: Long, status: String) {
+        val cv = ContentValues().apply { put(COL_STATUS, status) }
+        writableDatabase.update(TABLE_NAME, cv, "$COL_ID = ?", arrayOf(id.toString()))
     }
 
     fun insert(record: RideRecord): Long {
@@ -35,14 +47,23 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             put(COL_PICKUP_TIME, record.pickupTimeMin)
             put(COL_TRIP_DISTANCE, record.tripDistanceKm)
             put(COL_TRIP_TIME, record.tripTimeMin)
+            put(COL_SERVICE_TYPE, record.serviceType)
+            put(COL_BONUS_AMOUNT, record.bonusAmount)
+            put(COL_STATUS, record.status)
         }
         return writableDatabase.insert(TABLE_NAME, null, cv)
     }
 
     fun getAll(): List<RideRecord> {
+        return getFiltered(null)
+    }
+
+    fun getFiltered(sinceMs: Long?): List<RideRecord> {
         val list = mutableListOf<RideRecord>()
+        val selection = if (sinceMs != null) "$COL_TIMESTAMP >= ?" else null
+        val selectionArgs = if (sinceMs != null) arrayOf(sinceMs.toString()) else null
         val cursor = readableDatabase.query(
-            TABLE_NAME, null, null, null, null, null,
+            TABLE_NAME, null, selection, selectionArgs, null, null,
             "$COL_TIMESTAMP DESC", "100"
         )
         cursor.use {
@@ -80,7 +101,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     },
                     tripTimeMin = it.getInt(it.getColumnIndexOrThrow(COL_TRIP_TIME)).let { v ->
                         if (it.isNull(it.getColumnIndexOrThrow(COL_TRIP_TIME))) null else v
-                    }
+                    },
+                    serviceType = if (it.isNull(it.getColumnIndexOrThrow(COL_SERVICE_TYPE))) null
+                        else it.getString(it.getColumnIndexOrThrow(COL_SERVICE_TYPE)),
+                    bonusAmount = it.getDouble(it.getColumnIndexOrThrow(COL_BONUS_AMOUNT)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_BONUS_AMOUNT))) null else v
+                    },
+                    status = if (it.isNull(it.getColumnIndexOrThrow(COL_STATUS))) "EXPIRED"
+                        else it.getString(it.getColumnIndexOrThrow(COL_STATUS))
                 ))
             }
         }
@@ -93,7 +121,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 2
+        private const val DATABASE_VERSION = 4
         private const val TABLE_NAME = "ride_history"
 
         private const val COL_ID = "id"
@@ -109,6 +137,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_PICKUP_TIME = "pickup_time_min"
         private const val COL_TRIP_DISTANCE = "trip_distance_km"
         private const val COL_TRIP_TIME = "trip_time_min"
+        private const val COL_SERVICE_TYPE = "service_type"
+        private const val COL_BONUS_AMOUNT = "bonus_amount"
+        private const val COL_STATUS = "status"
 
         private val CREATE_TABLE = """
             CREATE TABLE $TABLE_NAME (
@@ -120,7 +151,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_PRICE_PER_KM REAL,
                 $COL_PRICE_PER_HOUR REAL,
                 $COL_APP_NAME TEXT NOT NULL,
-                $COL_TIMESTAMP INTEGER NOT NULL
+                $COL_TIMESTAMP INTEGER NOT NULL,
+                $COL_SERVICE_TYPE TEXT,
+                $COL_BONUS_AMOUNT REAL,
+                $COL_STATUS TEXT DEFAULT 'EXPIRED'
             )
         """.trimIndent()
     }
@@ -139,5 +173,8 @@ data class RideRecord(
     val pickupDistanceKm: Double? = null,
     val pickupTimeMin: Int? = null,
     val tripDistanceKm: Double? = null,
-    val tripTimeMin: Int? = null
+    val tripTimeMin: Int? = null,
+    val serviceType: String? = null,
+    val bonusAmount: Double? = null,
+    val status: String = "EXPIRED"
 )

@@ -68,6 +68,76 @@
             android:textSize="12sp"
             android:layout_marginStart="4dp" />
 
+        <Button
+            android:id="@+id/btnAnalysis"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Análise"
+            android:textSize="12sp"
+            android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:id="@+id/btnFilterToday"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Hoje"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:padding="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+
+        <TextView
+            android:id="@+id/btnFilter7d"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="7 dias"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:padding="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+
+        <TextView
+            android:id="@+id/btnFilter30d"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="30 dias"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:padding="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+
+        <TextView
+            android:id="@+id/btnFilterAll"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Tudo"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:padding="6dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground" />
+
     </LinearLayout>
 
     <TextView

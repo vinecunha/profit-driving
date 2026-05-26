@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -27,6 +28,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var statusText: TextView
     private lateinit var btnPermissions: Button
     private var adapter: HistoryAdapter? = null
+    private var filterDays = 0
+
+    private val filterViews = mutableListOf<TextView>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,27 +44,44 @@ class MainActivity : AppCompatActivity() {
         val btnConfigure = findViewById<Button>(R.id.btnConfigure)
         val btnPreview = findViewById<Button>(R.id.btnPreview)
 
+        filterViews.addAll(listOf(
+            findViewById(R.id.btnFilterToday),
+            findViewById(R.id.btnFilter7d),
+            findViewById(R.id.btnFilter30d),
+            findViewById(R.id.btnFilterAll)
+        ))
+
+        findViewById<TextView>(R.id.btnFilterToday).setOnClickListener { setFilter(0) }
+        findViewById<TextView>(R.id.btnFilter7d).setOnClickListener { setFilter(7) }
+        findViewById<TextView>(R.id.btnFilter30d).setOnClickListener { setFilter(30) }
+        findViewById<TextView>(R.id.btnFilterAll).setOnClickListener { setFilter(-1) }
+
         btnPermissions.setOnClickListener { openPermissionSettings() }
         btnConfigure.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
         btnPreview.setOnClickListener { showDemoCard() }
+        findViewById<Button>(R.id.btnAnalysis).setOnClickListener {
+            startActivity(Intent(this, AnalysisActivity::class.java))
+        }
         findViewById<View>(R.id.btnClearHistory).setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle("Limpar histórico")
                 .setMessage("Tem certeza?")
                 .setPositiveButton("Sim") { _, _ ->
                     db.deleteAll()
-                    loadHistory()
+                    loadFilteredHistory()
                 }
                 .setNegativeButton("Não", null)
                 .show()
         }
+
+        setFilter(0)
     }
 
     override fun onResume() {
         super.onResume()
-        loadHistory()
+        loadFilteredHistory()
         updateStatus()
     }
 
@@ -68,8 +89,29 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private fun loadHistory() {
-        val records = db.getAll()
+    private fun setFilter(days: Int) {
+        filterDays = days
+        filterViews.forEachIndexed { i, v ->
+            val selected = (i == 0 && days == 0) ||
+                    (i == 1 && days == 7) ||
+                    (i == 2 && days == 30) ||
+                    (i == 3 && days == -1)
+            v.alpha = if (selected) 1f else 0.4f
+        }
+        loadFilteredHistory()
+    }
+
+    private fun loadFilteredHistory() {
+        val sinceMs = if (filterDays >= 0) {
+            val cal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -filterDays) }
+            cal.apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+        } else null
+        val records = if (sinceMs != null) db.getFiltered(sinceMs) else db.getAll()
         if (records.isEmpty()) {
             recyclerView.visibility = View.GONE
             emptyText.visibility = View.VISIBLE
@@ -178,6 +220,7 @@ class HistoryAdapter(private val records: List<RideRecord>) :
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvApp: TextView = view.findViewById(R.id.tvApp)
         val tvValue: TextView = view.findViewById(R.id.tvValue)
+        val tvBonus: TextView = view.findViewById(R.id.tvBonus)
         val tvPickup: TextView = view.findViewById(R.id.tvPickup)
         val tvTrip: TextView = view.findViewById(R.id.tvTrip)
         val tvTotal: TextView = view.findViewById(R.id.tvTotal)
@@ -197,8 +240,25 @@ class HistoryAdapter(private val records: List<RideRecord>) :
         val r = records[position]
         val ctx = holder.itemView.context
 
-        holder.tvApp.text = r.appName
+        holder.tvApp.text = buildString {
+            when (r.status) {
+                "ACCEPTED" -> append("\u2705 ")
+                "DECLINED" -> append("\u274C ")
+                else -> append("\u23F3 ")
+            }
+            append(r.appName)
+            if (r.serviceType != null) {
+                append(" · ")
+                append(r.serviceType)
+            }
+        }
         holder.tvValue.text = r.value?.let { "R$ %.2f".format(it).replace(".", ",") } ?: "---"
+        if (r.bonusAmount != null) {
+            holder.tvBonus.text = "Bônus: R$ %.2f".format(r.bonusAmount).replace(".", ",")
+            holder.tvBonus.visibility = View.VISIBLE
+        } else {
+            holder.tvBonus.visibility = View.GONE
+        }
 
         holder.tvPickup.text = buildString {
             if (r.pickupDistanceKm != null || r.pickupTimeMin != null) {

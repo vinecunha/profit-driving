@@ -59,8 +59,10 @@ class FloatingCardService : Service() {
         val timeMin = intent.getIntExtra("timeMin", -1).let { if (it < 0) null else it }
         val rating = intent.getDoubleExtra("rating", -1.0).let { if (it < 0) null else it }
         val appName = intent.getStringExtra("appName") ?: ""
+        val serviceType = intent.getStringExtra("serviceType")
+        val bonusAmount = intent.getDoubleExtra("bonusAmount", -1.0).let { if (it < 0) null else it }
 
-        val ride = RideData(value, distanceKm, timeMin, rating, appName)
+        val ride = RideData(value, distanceKm, timeMin, rating, appName, serviceType = serviceType, bonusAmount = bonusAmount)
 
         Log.d(TAG, "Card: valor=$value km=$distanceKm tempo=$timeMin nota=$rating demo=$isDemo")
         showOverlay(ride, isDemo)
@@ -105,6 +107,8 @@ class FloatingCardService : Service() {
         val cardRoot = view.findViewById<View>(R.id.cardRoot)
         val tvApp = view.findViewById<TextView>(R.id.tvApp)
         val tvValue = view.findViewById<TextView>(R.id.tvValue)
+        val tvServiceType = view.findViewById<TextView>(R.id.tvServiceType)
+        val tvBonus = view.findViewById<TextView>(R.id.tvBonus)
         val tvKm = view.findViewById<TextView>(R.id.tvKm)
         val tvHour = view.findViewById<TextView>(R.id.tvHour)
         val tvRating = view.findViewById<TextView>(R.id.tvRating)
@@ -119,6 +123,10 @@ class FloatingCardService : Service() {
 
         tvApp.text = ride.appName.ifEmpty { "" }
         tvValue.text = ride.value?.let { "R$ %.2f".format(it).replace(".", ",") } ?: "---"
+        tvServiceType.text = ride.serviceType ?: ""
+        tvServiceType.visibility = if (ride.serviceType != null) View.VISIBLE else View.GONE
+        tvBonus.text = ride.bonusAmount?.let { "Bônus: R$ %.2f".format(it).replace(".", ",") } ?: ""
+        tvBonus.visibility = if (ride.bonusAmount != null) View.VISIBLE else View.GONE
 
         tvKm.text = if (pricePerKm != null)
             "%.2f".format(pricePerKm).replace(".", ",")

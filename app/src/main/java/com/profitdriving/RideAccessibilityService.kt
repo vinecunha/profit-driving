@@ -7,14 +7,17 @@ import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import java.util.Locale
 
 class RideAccessibilityService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var pendingRunnable: Runnable? = null
-    private var lastHash = ""
+    private var lastDedupKey = ""
     private var lastSaveTime = 0L
     private var cardVisible = false
+    private var lastInsertedId: Long = -1L
+    private var statusLocked = false
     private val MIN_SAVE_INTERVAL_MS = 3_000L
 
     override fun onServiceConnected() {
@@ -26,6 +29,14 @@ class RideAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val pkg = event.packageName?.toString() ?: return
         if (!pkg.contains("ubercab") && !pkg.contains("taxis99")) return
+
+        if (event.eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) {
+            val texto = event.contentDescription?.toString()
+                ?: event.text.firstOrNull()?.toString()
+                ?: return
+            handleClick(texto)
+            return
+        }
 
         if (event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED &&
             event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
@@ -53,36 +64,48 @@ class RideAccessibilityService : AccessibilityService() {
         val allTexts = mutableListOf<String>()
         collectTexts(root, allTexts)
         val fullText = allTexts.joinToString(" ")
-        val hash = fullText.hashCode().toString()
 
         if (!fullText.contains("R$") || !fullText.contains("km")) {
             if (cardVisible) {
                 Log.d(TAG, "Card sumiu — resetando estado")
+                if (!statusLocked && lastInsertedId >= 0) {
+                    DatabaseHelper(this).updateStatus(lastInsertedId, "EXPIRED")
+                    Log.d(TAG, "Ride $lastInsertedId marcado como EXPIRADO")
+                }
                 cardVisible = false
                 lastSaveTime = 0L
-                lastHash = ""
+                lastDedupKey = ""
+                lastInsertedId = -1L
+                statusLocked = false
                 pendingRunnable?.let { handler.removeCallbacks(it) }
             }
             return
         }
 
-        if (hash == lastHash && cardVisible) {
-            Log.d(TAG, "Mesmo card ainda visível — ignorando")
+        val ride = parseRideData(fullText, pkg)
+        if (ride.value == null || ride.value <= 0) return
+
+        if (!PICKUP_REGEX.containsMatchIn(fullText) &&
+            !VIAGEM_REGEX.containsMatchIn(fullText)) {
+            Log.d(TAG, "Ignorando — sem padrão de oferta (pickup/viagem)")
             return
         }
 
-        cardVisible = true
-        lastHash = hash
+        val dedupKey = "${ride.value}|${ride.rating}"
+
+        if (cardVisible && dedupKey == lastDedupKey) {
+            Log.d(TAG, "Mesmo card (valor+nota) — ignorando")
+            return
+        }
+
         val now = System.currentTimeMillis()
-        if (hash == lastHash && (now - lastSaveTime) < MIN_SAVE_INTERVAL_MS) return
+        if ((now - lastSaveTime) < MIN_SAVE_INTERVAL_MS) return
+
+        cardVisible = true
+        lastDedupKey = dedupKey
         lastSaveTime = now
 
-        Log.d(TAG, "Card detectado em $pkg: $fullText")
-
-        val ride = parseRideData(fullText, pkg)
-        if (ride.value == null) return
-
-        Log.d(TAG, "Dados: valor=${ride.value} km=${ride.distanceKm} " +
+        Log.d(TAG, "Card detectado em $pkg: valor=${ride.value} km=${ride.distanceKm} " +
                 "tempo=${ride.timeMin} nota=${ride.rating} " +
                 "R$/km=${ride.effectivePricePerKm} R$/h=${ride.effectivePricePerHour}")
 
@@ -113,6 +136,9 @@ class RideAccessibilityService : AccessibilityService() {
 
         val appName = if (pkg.contains("ubercab")) "Uber" else "99"
 
+        val serviceType = extractServiceType(text)
+        val bonusAmount = extractBonus(text)
+
         return RideData(
             value = value,
             distanceKm = distance,
@@ -129,13 +155,16 @@ class RideAccessibilityService : AccessibilityService() {
             pickupDistanceKm = pickupKm,
             pickupTimeMin = pickupTime,
             tripDistanceKm = tripKm,
-            tripTimeMin = tripTime
+            tripTimeMin = tripTime,
+            serviceType = serviceType,
+            bonusAmount = bonusAmount
         )
     }
 
     private fun extractValue(text: String): Double? {
         val m = VALUE_REGEX.find(text) ?: return null
-        return parseBr(m.groupValues[1])
+        val v = parseBr(m.groupValues[1])
+        return if (v != null && v > 0) v else null
     }
 
     private fun extractPricePerKm(text: String): Double? {
@@ -248,6 +277,29 @@ class RideAccessibilityService : AccessibilityService() {
         return raw.replace(",", ".").toDoubleOrNull()
     }
 
+    private fun handleClick(texto: String) {
+        val lower = texto.lowercase(Locale.ROOT)
+        val db = DatabaseHelper(this)
+
+        if (lower.contains("aceitar") || lower.contains("accept")) {
+            Log.d(TAG, "Clique em Aceitar detectado: $texto")
+            if (lastInsertedId >= 0) {
+                db.updateStatus(lastInsertedId, "ACCEPTED")
+                statusLocked = true
+                Log.d(TAG, "Ride $lastInsertedId marcado como ACEITO")
+            }
+        }
+
+        if (lower.contains("recusar") || lower.contains("negar") || lower.contains("x")) {
+            Log.d(TAG, "Clique em Recusar detectado: $texto")
+            if (lastInsertedId >= 0) {
+                db.updateStatus(lastInsertedId, "DECLINED")
+                statusLocked = true
+                Log.d(TAG, "Ride $lastInsertedId marcado como RECUSADO")
+            }
+        }
+    }
+
     private fun saveAndShow(ride: RideData) {
         Log.d(TAG, "saveAndShow chamado: value=${ride.value} km=${ride.distanceKm}")
         if (ride.value == null) {
@@ -255,8 +307,9 @@ class RideAccessibilityService : AccessibilityService() {
             return
         }
         lastSaveTime = System.currentTimeMillis()
+        statusLocked = false
         val db = DatabaseHelper(this)
-        db.insert(RideRecord(
+        lastInsertedId = db.insert(RideRecord(
             value = ride.value, distanceKm = ride.distanceKm,
             timeMin = ride.timeMin, rating = ride.rating,
             pricePerKm = ride.effectivePricePerKm,
@@ -265,8 +318,11 @@ class RideAccessibilityService : AccessibilityService() {
             pickupDistanceKm = ride.pickupDistanceKm,
             pickupTimeMin = ride.pickupTimeMin,
             tripDistanceKm = ride.tripDistanceKm,
-            tripTimeMin = ride.tripTimeMin
+            tripTimeMin = ride.tripTimeMin,
+            serviceType = ride.serviceType,
+            bonusAmount = ride.bonusAmount
         ))
+        Log.d(TAG, "Ride inserido com id=$lastInsertedId")
 
         getSharedPreferences(SettingsActivity.PREF_NAME, 0).edit().apply {
             ride.value?.let { putFloat("last_value", it.toFloat()) }
@@ -275,6 +331,8 @@ class RideAccessibilityService : AccessibilityService() {
             ride.rating?.let { putFloat("last_rating", it.toFloat()) }
             putString("last_app", ride.appName)
             putLong("last_timestamp", System.currentTimeMillis())
+            ride.serviceType?.let { putString("last_service_type", it) }
+            ride.bonusAmount?.let { putFloat("last_bonus", it.toFloat()) }
             apply()
         }
 
@@ -284,6 +342,8 @@ class RideAccessibilityService : AccessibilityService() {
             ride.timeMin?.let { putExtra("timeMin", it) }
             ride.rating?.let { putExtra("rating", it) }
             putExtra("appName", ride.appName)
+            ride.serviceType?.let { putExtra("serviceType", it) }
+            ride.bonusAmount?.let { putExtra("bonusAmount", it) }
         })
 
         FloatingBubbleService.start(this, Intent().apply {
@@ -292,6 +352,28 @@ class RideAccessibilityService : AccessibilityService() {
             ride.timeMin?.let { putExtra("timeMin", it) }
             ride.rating?.let { putExtra("rating", it) }
         })
+    }
+
+    private fun extractServiceType(text: String): String? {
+        val lower = text.lowercase(Locale.ROOT)
+        for (entry in SERVICE_TYPE_LIST) {
+            if (entry.first in lower) return entry.second
+        }
+        return null
+    }
+
+    private fun extractBonus(text: String): Double? {
+        val chega = BONUS_REGEX_CHEGOU.find(text)
+        if (chega != null) {
+            val v = parseBr(chega.groupValues[1])
+            if (v != null && v > 0) return v
+        }
+        val ganhe = BONUS_REGEX_GANHE.find(text)
+        if (ganhe != null) {
+            val v = parseBr(ganhe.groupValues[1])
+            if (v != null && v > 0) return v
+        }
+        return null
     }
 
     companion object {
@@ -303,7 +385,7 @@ class RideAccessibilityService : AccessibilityService() {
         private val HOUR_REAL_REGEX = Regex("""R\$(\d+[.,]\d+)\s*/\s*h""", RegexOption.IGNORE_CASE)
 
         private val PICKUP_REGEX = Regex(
-            """(\d+)\s*minutos?\s*\((\d+[.,]\d+)\s*km\)\s*de\s*dist[âa]ncia""",
+            """(\d+)\s*min(?:uto)?s?\s*\(\s*(\d+[.,]\d+)\s*km\s*\)\s*de\s*dist[âa]ncia""",
             RegexOption.IGNORE_CASE
         )
 
@@ -325,5 +407,37 @@ class RideAccessibilityService : AccessibilityService() {
         private val RATING_COUNT_REGEX = Regex("""(\d[.,]\d{1,2})\s*\(\d+\)""")
         private val RATING_BULLET_REGEX = Regex("""(\d[.,]\d{1,2})\s*[·•]""")
         private val RATING_DECIMAL_REGEX = Regex("""(\d[.,]\d{1,2})""")
+
+        private val SERVICE_TYPE_LIST = listOf(
+            "uberx" to "UberX",
+            "uber flash" to "Flash",
+            "uber juntos" to "Juntos",
+            "uber moto" to "Moto",
+            "uber black" to "Black",
+            "uber comfort" to "Comfort",
+            "flash" to "Flash",
+            "juntos" to "Juntos",
+            "moto" to "Moto",
+            "black" to "Black",
+            "comfort" to "Comfort",
+            "99pop" to "99Pop",
+            "99top" to "99Top",
+            "99black" to "99Black",
+            "99moto" to "99Moto",
+            "99flash" to "99Flash",
+            "99entrega" to "Entrega",
+            "pop" to "Pop",
+            "top" to "Top",
+            "entrega" to "Entrega"
+        )
+
+        private val BONUS_REGEX_CHEGOU = Regex(
+            """(?:Chegou|b[ôo]nus\s+extra\s+de)\s*R\$\s*(\d+(?:[.,]\d+)?)""",
+            RegexOption.IGNORE_CASE
+        )
+        private val BONUS_REGEX_GANHE = Regex(
+            """Ganhe\s*at[ée]\s*R\$\s*(\d+(?:[.,]\d+)?)""",
+            RegexOption.IGNORE_CASE
+        )
     }
 }
