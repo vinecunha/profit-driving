@@ -53,6 +53,7 @@
         android:orientation="vertical">
 
         <LinearLayout
+            android:id="@+id/kmRow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -80,6 +81,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/hourRow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -107,6 +109,35 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/minuteRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="$/min"
+                android:textColor="#AAFFFFFF"
+                android:textSize="11sp" />
+            <TextView
+                android:id="@+id/tvMinute"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginStart="4dp" />
+            <View
+                android:id="@+id/dotMinute"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="4dp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ratingRow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -182,5 +213,14 @@
         android:layout_marginStart="4dp"
         android:paddingHorizontal="6dp"
         android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvScore"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="10sp"
+        android:textColor="#88FFFFFF"
+        android:gravity="center"
+        android:layout_marginTop="2dp" />
 
 </LinearLayout>

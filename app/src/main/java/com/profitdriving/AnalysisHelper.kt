@@ -34,7 +34,10 @@ data class AnalysisResult(
     val acceptedCount: Int = 0,
     val declinedCount: Int = 0,
     val expiredCount: Int = 0,
-    val acceptanceRate: Double? = null
+    val acceptanceRate: Double? = null,
+    val avgScorePercent: Double? = null,
+    val todayCount: Int = 0,
+    val todayHoursWorked: Double = 0.0
 )
 
 object AnalysisHelper {
@@ -135,6 +138,8 @@ object AnalysisHelper {
         val acceptanceRate = if (acceptedCount + declinedCount > 0)
             acceptedCount.toDouble() / (acceptedCount + declinedCount) * 100.0
         else null
+        val avgScorePercent = rides.mapNotNull { it.scorePercent }
+            .takeIf { it.isNotEmpty() }?.average()
 
         val projectedDailyEarnings = if (todayRides.size >= 2) {
             val firstTs = todayRides.minOf { it.timestamp }
@@ -143,6 +148,12 @@ object AnalysisHelper {
             val earnedSoFar = todayRides.mapNotNull { it.value }.sum()
             if (hoursWorked > 0) (earnedSoFar / hoursWorked) * 8.0 else null
         } else null
+        val todayCount = todayRides.size
+        val todayHoursWorked = if (todayRides.size >= 2) {
+            val firstTs = todayRides.minOf { it.timestamp }
+            val lastTs = todayRides.maxOf { it.timestamp }
+            (lastTs - firstTs) / 3_600_000.0
+        } else 0.0
 
         return AnalysisResult(
             totalRides = totalRides,
@@ -165,7 +176,10 @@ object AnalysisHelper {
             acceptedCount = acceptedCount,
             declinedCount = declinedCount,
             expiredCount = expiredCount,
-            acceptanceRate = acceptanceRate
+            acceptanceRate = acceptanceRate,
+            avgScorePercent = avgScorePercent,
+            todayCount = todayCount,
+            todayHoursWorked = todayHoursWorked
         )
     }
 

@@ -13,7 +13,6 @@ import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -93,16 +92,19 @@ class FloatingBubbleService : Service() {
         val allOk = if (value != null) {
             val pricePerKm = if (distanceKm != null && distanceKm > 0) value / distanceKm else null
             val pricePerHour = if (timeMin != null && timeMin > 0) value / (timeMin / 60.0) else null
+            val pricePerMinute = if (timeMin != null && timeMin > 0) value / timeMin else null
 
             val minKm = prefs.getFloat(SettingsActivity.KEY_MIN_KM, 0f)
             val minHour = prefs.getFloat(SettingsActivity.KEY_MIN_HOUR, 0f)
+            val minMinute = prefs.getFloat(SettingsActivity.KEY_MIN_MINUTE, 0f)
             val minRating = prefs.getFloat(SettingsActivity.KEY_MIN_RATING, 0f)
 
             val kmOk = pricePerKm == null || pricePerKm >= minKm.toDouble()
             val hourOk = pricePerHour == null || pricePerHour >= minHour.toDouble()
+            val minuteOk = pricePerMinute == null || pricePerMinute >= minMinute.toDouble()
             val ratingOk = rating == null || rating >= minRating.toDouble()
 
-            kmOk && hourOk && ratingOk
+            kmOk && hourOk && minuteOk && ratingOk
         } else {
             null
         }
@@ -131,6 +133,9 @@ class FloatingBubbleService : Service() {
             @Suppress("DEPRECATION")
             WindowManager.LayoutParams.TYPE_PHONE
 
+        val savedX = prefs.getInt("bubble_x", 16)
+        val savedY = prefs.getInt("bubble_y", yOffset)
+
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -140,8 +145,8 @@ class FloatingBubbleService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.START or Gravity.TOP
-            x = 16
-            y = yOffset
+            x = savedX
+            y = savedY
         }
 
         view.setOnTouchListener { v, event ->
@@ -160,6 +165,10 @@ class FloatingBubbleService : Service() {
                     true
                 }
                 MotionEvent.ACTION_UP -> {
+                    prefs.edit()
+                        .putInt("bubble_x", params.x)
+                        .putInt("bubble_y", params.y)
+                        .apply()
                     val dx = (event.rawX - initialTouchX).toInt()
                     val dy = (event.rawY - initialTouchY).toInt()
                     if (dx * dx + dy * dy < 100) {
@@ -178,9 +187,9 @@ class FloatingBubbleService : Service() {
         try {
             windowManager.addView(view, params)
             bubbleView = view
-            Log.d(TAG, "Bolha exibida")
+            L.d(TAG, "Bolha exibida")
         } catch (e: Exception) {
-            Log.e(TAG, "Falha ao exibir bolha", e)
+            L.e(TAG, "Falha ao exibir bolha", e)
             stopSelf()
         }
     }

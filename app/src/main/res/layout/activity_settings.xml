@@ -213,6 +213,78 @@
 
             </LinearLayout>
 
+            <!-- R$/min -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="R$ / minuto"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A2E"
+                android:layout_marginBottom="8dp"
+                android:layout_marginTop="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Mínimo (vermelho)"
+                    android:textSize="11sp"
+                    android:textColor="#F87171"
+                    android:layout_marginEnd="4dp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Ideal (verde)"
+                    android:textSize="11sp"
+                    android:textColor="#4ADE80"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <EditText
+                    android:id="@+id/etMinMinute"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:inputType="numberDecimal"
+                    android:hint="Ex: 0,50"
+                    android:textSize="14sp"
+                    android:textColor="#1A1A2E"
+                    android:background="@drawable/pill_unselected"
+                    android:paddingHorizontal="12dp"
+                    android:layout_marginEnd="4dp" />
+
+                <EditText
+                    android:id="@+id/etIdealMinute"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:inputType="numberDecimal"
+                    android:hint="Ex: 1,00"
+                    android:textSize="14sp"
+                    android:textColor="#1A1A2E"
+                    android:background="@drawable/pill_unselected"
+                    android:paddingHorizontal="12dp"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
+
             <!-- Nota -->
             <TextView
                 android:layout_width="wrap_content"
@@ -395,6 +467,79 @@
             </LinearLayout>
 
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Métricas visíveis"
+                android:textSize="13sp"
+                android:textColor="#6B7280"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="20dp">
+
+                <TextView
+                    android:id="@+id/btnShowKm"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="2dp"
+                    android:text="R$/km"
+                    android:textSize="11sp"
+                    android:textColor="#FFFFFF"
+                    android:gravity="center"
+                    android:background="@drawable/pill_selected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnShowHour"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="2dp"
+                    android:text="R$/h"
+                    android:textSize="11sp"
+                    android:textColor="#FFFFFF"
+                    android:gravity="center"
+                    android:background="@drawable/pill_selected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnShowMinute"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="2dp"
+                    android:text="R$/min"
+                    android:textSize="11sp"
+                    android:textColor="#FFFFFF"
+                    android:gravity="center"
+                    android:background="@drawable/pill_selected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnShowRating"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="2dp"
+                    android:text="Nota"
+                    android:textSize="11sp"
+                    android:textColor="#FFFFFF"
+                    android:gravity="center"
+                    android:background="@drawable/pill_selected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <TextView
                 android:id="@+id/tvYLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -418,6 +563,314 @@
                 android:textSize="11sp"
                 android:textColor="#9CA3AF"
                 android:layout_marginBottom="16dp" />
+
+        </LinearLayout>
+
+        <!-- Importância dos parâmetros -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/inner_card_bg"
+            android:padding="16dp"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Importância dos parâmetros"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A2E"
+                android:layout_marginBottom="12dp" />
+
+            <!-- R$/km weight -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:text="R$/km"
+                    android:textSize="14sp"
+                    android:textColor="#333333" />
+
+                <SeekBar
+                    android:id="@+id/seekWeightKm"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="4"
+                    android:progress="4" />
+
+                <TextView
+                    android:id="@+id/tvWeightKmStars"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:text="★★★★★"
+                    android:textSize="14sp"
+                    android:textColor="#FFD700"
+                    android:gravity="end" />
+
+            </LinearLayout>
+
+            <!-- R$/h weight -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:text="R$/h"
+                    android:textSize="14sp"
+                    android:textColor="#333333" />
+
+                <SeekBar
+                    android:id="@+id/seekWeightHour"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="4"
+                    android:progress="3" />
+
+                <TextView
+                    android:id="@+id/tvWeightHourStars"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:text="★★★★"
+                    android:textSize="14sp"
+                    android:textColor="#FFD700"
+                    android:gravity="end" />
+
+            </LinearLayout>
+
+            <!-- R$/min weight -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:text="R$/min"
+                    android:textSize="14sp"
+                    android:textColor="#333333" />
+
+                <SeekBar
+                    android:id="@+id/seekWeightMin"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="4"
+                    android:progress="2" />
+
+                <TextView
+                    android:id="@+id/tvWeightMinStars"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:text="★★★"
+                    android:textSize="14sp"
+                    android:textColor="#FFD700"
+                    android:gravity="end" />
+
+            </LinearLayout>
+
+            <!-- Nota weight -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:text="Nota"
+                    android:textSize="14sp"
+                    android:textColor="#333333" />
+
+                <SeekBar
+                    android:id="@+id/seekWeightRating"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="4"
+                    android:progress="1" />
+
+                <TextView
+                    android:id="@+id/tvWeightRatingStars"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:text="★★"
+                    android:textSize="14sp"
+                    android:textColor="#FFD700"
+                    android:gravity="end" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Thresholds de decisão -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/inner_card_bg"
+            android:padding="16dp"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Thresholds de decisão"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A2E"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Define a pontuação mínima para cada tag. Pontuação = soma dos pesos × estado de cada parâmetro."
+                android:textSize="11sp"
+                android:textColor="#888888"
+                android:layout_marginBottom="16dp" />
+
+            <!-- ACEITAR threshold -->
+            <TextView
+                android:id="@+id/tvThresholdAceitarLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ACEITAR se pontuação ≥ 80%"
+                android:textSize="13sp"
+                android:textColor="#00A86B"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <SeekBar
+                android:id="@+id/seekThresholdAceitar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="50"
+                android:progress="30"
+                android:layout_marginBottom="16dp" />
+
+            <!-- ANALISAR threshold -->
+            <TextView
+                android:id="@+id/tvThresholdAnalisarLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ANALISAR se pontuação ≥ 50%"
+                android:textSize="13sp"
+                android:textColor="#F97316"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <SeekBar
+                android:id="@+id/seekThresholdAnalisar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="59"
+                android:progress="30"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Abaixo disso = RECUSAR"
+                android:textSize="11sp"
+                android:textColor="#9CA3AF" />
+
+        </LinearLayout>
+
+        <!-- Preview Card -->
+        <LinearLayout
+            android:id="@+id/previewCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/inner_card_bg"
+            android:padding="12dp"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Simulação com valores de exemplo"
+                android:textSize="12sp"
+                android:textColor="#888888" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/pvKm"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/pvHour"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/pvMin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/pvRating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="13sp" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/pvDecision"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/pvScore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="11sp"
+                android:textColor="#888888"
+                android:layout_marginTop="6dp" />
 
         </LinearLayout>
 

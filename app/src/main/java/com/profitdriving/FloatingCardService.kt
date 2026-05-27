@@ -15,7 +15,6 @@ import android.os.IBinder
 import android.os.Looper
 import android.provider.Settings
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -47,7 +46,7 @@ class FloatingCardService : Service() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(this)) {
-                Log.w(TAG, "Permissão de sobreposição negada — card não exibido")
+                L.w(TAG, "Permissão de sobreposição negada — card não exibido")
                 stopSelf()
                 return START_NOT_STICKY
             }
@@ -64,7 +63,7 @@ class FloatingCardService : Service() {
 
         val ride = RideData(value, distanceKm, timeMin, rating, appName, serviceType = serviceType, bonusAmount = bonusAmount)
 
-        Log.d(TAG, "Card: valor=$value km=$distanceKm tempo=$timeMin nota=$rating demo=$isDemo")
+        L.d(TAG, "Card: valor=$value km=$distanceKm tempo=$timeMin nota=$rating demo=$isDemo")
         showOverlay(ride, isDemo)
 
         return START_NOT_STICKY
@@ -113,13 +112,20 @@ class FloatingCardService : Service() {
         val tvBonus      = view.findViewById<TextView>(R.id.tvBonus)
         val tvKm         = view.findViewById<TextView>(R.id.tvKm)
         val tvHour       = view.findViewById<TextView>(R.id.tvHour)
+        val tvMinute     = view.findViewById<TextView>(R.id.tvMinute)
         val tvRating     = view.findViewById<TextView>(R.id.tvRating)
         val tvDistance   = view.findViewById<TextView>(R.id.tvDistance)
         val tvTime       = view.findViewById<TextView>(R.id.tvTime)
         val tvDecision   = view.findViewById<TextView>(R.id.tvDecision)
+        val tvScore      = view.findViewById<TextView>(R.id.tvScore)
+        val kmRow        = view.findViewById<View>(R.id.kmRow)
+        val hourRow      = view.findViewById<View>(R.id.hourRow)
+        val minuteRow    = view.findViewById<View>(R.id.minuteRow)
+        val ratingRow    = view.findViewById<View>(R.id.ratingRow)
 
         val pricePerKm   = ride.effectivePricePerKm
         val pricePerHour = ride.effectivePricePerHour
+        val pricePerMinute = ride.effectivePricePerMinute
 
         tvApp.text = ride.appName.ifEmpty { "" }
         tvValue.text = ride.value
@@ -142,6 +148,10 @@ class FloatingCardService : Service() {
             "%.2f".format(pricePerHour).replace(".", ",")
         else "---"
 
+        tvMinute.text = if (pricePerMinute != null)
+            "%.2f".format(pricePerMinute).replace(".", ",")
+        else "---"
+
         tvRating.text = if (ride.rating != null)
             "%.2f".format(ride.rating).replace(".", ",")
         else "---"
@@ -151,31 +161,37 @@ class FloatingCardService : Service() {
         tvTime.text = ride.timeMin?.let { "${it} min" } ?: ""
 
         // Individual status per metric
-        val kmStatus = SettingsActivity.evaluateParameter(pricePerKm,
-            prefs.getFloat(SettingsActivity.KEY_MIN_KM, 2.5f),
-            prefs.getFloat(SettingsActivity.KEY_IDEAL_KM, 4.0f))
-        val hourStatus = SettingsActivity.evaluateParameter(pricePerHour,
-            prefs.getFloat(SettingsActivity.KEY_MIN_HOUR, 30f),
-            prefs.getFloat(SettingsActivity.KEY_IDEAL_HOUR, 60f))
-        val ratingStatus = SettingsActivity.evaluateParameter(ride.rating,
-            prefs.getFloat(SettingsActivity.KEY_MIN_RATING, 4.5f),
-            prefs.getFloat(SettingsActivity.KEY_IDEAL_RATING, 4.9f))
+        val result = DecisionEngine.evaluate(
+            kmValue     = ride.effectivePricePerKm,
+            hourValue   = ride.effectivePricePerHour,
+            minValue    = pricePerMinute,
+            ratingValue = ride.rating,
+            prefs       = prefs
+        )
 
         // Color each metric value
-        tvKm.setTextColor(SettingsActivity.getStatusColor(kmStatus))
-        tvHour.setTextColor(SettingsActivity.getStatusColor(hourStatus))
-        tvRating.setTextColor(SettingsActivity.getStatusColor(ratingStatus))
+        tvKm.setTextColor(DecisionEngine.stateColor(result.params[0].state))
+        tvHour.setTextColor(DecisionEngine.stateColor(result.params[1].state))
+        tvMinute.setTextColor(DecisionEngine.stateColor(result.params[2].state))
+        tvRating.setTextColor(DecisionEngine.stateColor(result.params[3].state))
+
+        // Show/hide metrics per user preference
+        kmRow.visibility = if (prefs.getBoolean(SettingsActivity.KEY_SHOW_KM, true)) View.VISIBLE else View.GONE
+        hourRow.visibility = if (prefs.getBoolean(SettingsActivity.KEY_SHOW_HOUR, true)) View.VISIBLE else View.GONE
+        minuteRow.visibility = if (prefs.getBoolean(SettingsActivity.KEY_SHOW_MINUTE, true)) View.VISIBLE else View.GONE
+        ratingRow.visibility = if (prefs.getBoolean(SettingsActivity.KEY_SHOW_RATING, true)) View.VISIBLE else View.GONE
 
         // Overall decision (worst status wins)
-        val overall = SettingsActivity.getOverallStatus(pricePerKm, pricePerHour, ride.rating, prefs)
 
         // Decision button
-        tvDecision.text = SettingsActivity.getDecisionText(overall)
+        tvDecision.text = DecisionEngine.decisionText(result.decision)
         val decisionBg = GradientDrawable()
-        decisionBg.setColor(SettingsActivity.getDecisionBgColor(overall))
+        decisionBg.setColor(DecisionEngine.decisionColor(result.decision))
         decisionBg.cornerRadius = 6f * resources.displayMetrics.density
         tvDecision.background = decisionBg
         tvDecision.visibility = View.VISIBLE
+
+        tvScore.text = "${"%.0f".format(result.scorePercent)}% (${result.totalPoints.toInt()}/${result.maxPoints.toInt()} pts)"
 
         // Neutral dark card background
         val bg = GradientDrawable()
@@ -233,9 +249,9 @@ class FloatingCardService : Service() {
         try {
             windowManager.addView(view, params)
             overlayView = view
-            Log.d(TAG, "Card exibido com sucesso")
+            L.d(TAG, "Card exibido com sucesso")
         } catch (e: Exception) {
-            Log.e(TAG, "Falha ao exibir card", e)
+            L.e(TAG, "Falha ao exibir card", e)
             stopSelf()
             return
         }

@@ -5,9 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
-import android.util.Log
 
 class NotificationListener : NotificationListenerService() {
 
@@ -23,7 +24,7 @@ class NotificationListener : NotificationListenerService() {
             val pkg = sbn.packageName
             val appMatch = matchApp(pkg)
             if (appMatch == null) {
-                Log.d(TAG, "Ignorando pacote: $pkg")
+                L.d(TAG, "Ignorando pacote: $pkg")
                 return
             }
 
@@ -34,15 +35,15 @@ class NotificationListener : NotificationListenerService() {
             val summary = extras.getString(Notification.EXTRA_SUMMARY_TEXT, "") ?: ""
             val fullText = "$title $text $bigText $summary"
 
-            Log.d(TAG, "Notificação recebida de $pkg => $appMatch: $fullText")
+            L.d(TAG, "Notificação recebida de $pkg => $appMatch")
 
             val rideData = parseRideData(fullText, appMatch)
-            Log.d(TAG, "Dados extraídos: valor=${rideData.value} km=${rideData.distanceKm} " +
+            L.d(TAG, "Dados extraídos: valor=${rideData.value} km=${rideData.distanceKm} " +
                     "tempo=${rideData.timeMin} nota=${rideData.rating}")
 
             runOnUi(rideData)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao processar notificação", e)
+            L.e(TAG, "Erro ao processar notificação", e)
         }
     }
 
@@ -124,42 +125,46 @@ class NotificationListener : NotificationListenerService() {
     }
 
     private fun runOnUi(ride: RideData) {
-        val db = DatabaseHelper(this)
-        db.insert(RideRecord(
-            value = ride.value,
-            distanceKm = ride.distanceKm,
-            timeMin = ride.timeMin,
-            rating = ride.rating,
-            pricePerKm = ride.effectivePricePerKm,
-            pricePerHour = ride.effectivePricePerHour,
-            appName = ride.appName,
-            timestamp = System.currentTimeMillis()
-        ))
+        Thread {
+            val db = DatabaseHelper(this)
+            db.insert(RideRecord(
+                value = ride.value,
+                distanceKm = ride.distanceKm,
+                timeMin = ride.timeMin,
+                rating = ride.rating,
+                pricePerKm = ride.effectivePricePerKm,
+                pricePerHour = ride.effectivePricePerHour,
+                appName = ride.appName,
+                timestamp = System.currentTimeMillis()
+            ))
 
-        prefs.edit().apply {
-            ride.value?.let { putFloat(SettingsActivity.KEY_LAST_VALUE, it.toFloat()) }
-            ride.distanceKm?.let { putFloat(SettingsActivity.KEY_LAST_DISTANCE, it.toFloat()) }
-            ride.timeMin?.let { putInt(SettingsActivity.KEY_LAST_TIME, it) }
-            ride.rating?.let { putFloat(SettingsActivity.KEY_LAST_RATING, it.toFloat()) }
-            putString(SettingsActivity.KEY_LAST_APP, ride.appName)
-            putLong(SettingsActivity.KEY_LAST_TIMESTAMP, System.currentTimeMillis())
-            apply()
-        }
+            Handler(Looper.getMainLooper()).post {
+                prefs.edit().apply {
+                    ride.value?.let { putFloat(SettingsActivity.KEY_LAST_VALUE, it.toFloat()) }
+                    ride.distanceKm?.let { putFloat(SettingsActivity.KEY_LAST_DISTANCE, it.toFloat()) }
+                    ride.timeMin?.let { putInt(SettingsActivity.KEY_LAST_TIME, it) }
+                    ride.rating?.let { putFloat(SettingsActivity.KEY_LAST_RATING, it.toFloat()) }
+                    putString(SettingsActivity.KEY_LAST_APP, ride.appName)
+                    putLong(SettingsActivity.KEY_LAST_TIMESTAMP, System.currentTimeMillis())
+                    apply()
+                }
 
-        FloatingCardService.start(this, Intent().apply {
-            ride.value?.let { putExtra("value", it) }
-            ride.distanceKm?.let { putExtra("distanceKm", it) }
-            ride.timeMin?.let { putExtra("timeMin", it) }
-            ride.rating?.let { putExtra("rating", it) }
-            putExtra("appName", ride.appName)
-        })
+                FloatingCardService.start(this@NotificationListener, Intent().apply {
+                    ride.value?.let { putExtra("value", it) }
+                    ride.distanceKm?.let { putExtra("distanceKm", it) }
+                    ride.timeMin?.let { putExtra("timeMin", it) }
+                    ride.rating?.let { putExtra("rating", it) }
+                    putExtra("appName", ride.appName)
+                })
 
-        FloatingBubbleService.start(this, Intent().apply {
-            ride.value?.let { putExtra("value", it) }
-            ride.distanceKm?.let { putExtra("distanceKm", it) }
-            ride.timeMin?.let { putExtra("timeMin", it) }
-            ride.rating?.let { putExtra("rating", it) }
-        })
+                FloatingBubbleService.start(this@NotificationListener, Intent().apply {
+                    ride.value?.let { putExtra("value", it) }
+                    ride.distanceKm?.let { putExtra("distanceKm", it) }
+                    ride.timeMin?.let { putExtra("timeMin", it) }
+                    ride.rating?.let { putExtra("rating", it) }
+                })
+            }
+        }.start()
     }
 
     companion object {

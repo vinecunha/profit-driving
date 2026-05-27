@@ -2,9 +2,9 @@ package com.profitdriving
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import java.util.Locale
@@ -23,7 +23,7 @@ class RideAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         FloatingBubbleService.start(this)
-        Log.d(TAG, "Acessibilidade conectada — bolha iniciada")
+        L.d(TAG, "Acessibilidade conectada — bolha iniciada")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
@@ -45,7 +45,14 @@ class RideAccessibilityService : AccessibilityService() {
 
         pendingRunnable = Runnable {
             val root = rootInActiveWindow ?: return@Runnable
-            detectRideCard(root, pkg)
+            try {
+                detectRideCard(root, pkg)
+            } finally {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    @Suppress("DEPRECATION")
+                    root.recycle()
+                }
+            }
         }
         handler.postDelayed(pendingRunnable!!, 800)
     }
@@ -67,10 +74,10 @@ class RideAccessibilityService : AccessibilityService() {
 
         if (!isRideRequestCard(allTexts)) {
             if (cardVisible) {
-                Log.d(TAG, "Card sumiu — resetando estado")
+                L.d(TAG, "Card sumiu — resetando estado")
                 if (!statusLocked && lastInsertedId >= 0) {
                     DatabaseHelper(this).updateStatus(lastInsertedId, "EXPIRED")
-                    Log.d(TAG, "Ride $lastInsertedId marcado como EXPIRADO")
+                    L.d(TAG, "Ride $lastInsertedId marcado como EXPIRADO")
                 }
                 cardVisible = false
                 lastSaveTime = 0L
@@ -87,7 +94,7 @@ class RideAccessibilityService : AccessibilityService() {
 
         val now = System.currentTimeMillis()
         if (isValorSuspeito(ride.value) && (now - lastSaveTime) < 30_000L) {
-            Log.d(TAG, "Valor suspeito R$ ${ride.value} ignorado — possível tela de confirmação")
+            L.d(TAG, "Valor suspeito R$ ${ride.value} ignorado — possível tela de confirmação")
             return
         }
 
@@ -99,7 +106,7 @@ class RideAccessibilityService : AccessibilityService() {
         val dedupKey = "${ride.value}|${ride.rating}"
 
         if (cardVisible && dedupKey == lastDedupKey) {
-            Log.d(TAG, "Mesmo card (valor+nota) — ignorando")
+            L.d(TAG, "Mesmo card (valor+nota) — ignorando")
             return
         }
 
@@ -109,7 +116,7 @@ class RideAccessibilityService : AccessibilityService() {
         lastDedupKey = dedupKey
         lastSaveTime = now
 
-        Log.d(TAG, "Card detectado em $pkg: valor=${ride.value} km=${ride.distanceKm} " +
+        L.d(TAG, "Card detectado em $pkg: valor=${ride.value} km=${ride.distanceKm} " +
                 "tempo=${ride.timeMin} nota=${ride.rating} " +
                 "R$/km=${ride.effectivePricePerKm} R$/h=${ride.effectivePricePerHour}")
 
@@ -136,7 +143,13 @@ class RideAccessibilityService : AccessibilityService() {
             list.add(node.text.toString())
         }
         for (i in 0 until node.childCount) {
-            node.getChild(i)?.let { collectTexts(it, list) }
+            node.getChild(i)?.let { child ->
+                collectTexts(child, list)
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    @Suppress("DEPRECATION")
+                    child.recycle()
+                }
+            }
         }
     }
 
@@ -312,33 +325,46 @@ class RideAccessibilityService : AccessibilityService() {
         val db = DatabaseHelper(this)
 
         if (lower.contains("aceitar") || lower.contains("accept") || lower.contains("selecionar")) {
-            Log.d(TAG, "Clique em Aceitar detectado: $texto")
+            L.d(TAG, "Clique em Aceitar detectado: $texto")
             if (lastInsertedId >= 0) {
                 db.updateStatus(lastInsertedId, "ACCEPTED")
                 statusLocked = true
-                Log.d(TAG, "Ride $lastInsertedId marcado como ACEITO")
+                L.d(TAG, "Ride $lastInsertedId marcado como ACEITO")
             }
         }
 
         if (lower.contains("recusar") || lower.contains("negar") || lower.contains("x")) {
-            Log.d(TAG, "Clique em Recusar detectado: $texto")
+            L.d(TAG, "Clique em Recusar detectado: $texto")
             if (lastInsertedId >= 0) {
                 db.updateStatus(lastInsertedId, "DECLINED")
                 statusLocked = true
-                Log.d(TAG, "Ride $lastInsertedId marcado como RECUSADO")
+                L.d(TAG, "Ride $lastInsertedId marcado como RECUSADO")
             }
         }
     }
 
     private fun saveAndShow(ride: RideData) {
-        Log.d(TAG, "saveAndShow chamado: value=${ride.value} km=${ride.distanceKm}")
+        L.d(TAG, "saveAndShow chamado: value=${ride.value} km=${ride.distanceKm}")
         if (ride.value == null) {
-            Log.w(TAG, "value é null — card não será exibido")
+            L.w(TAG, "value é null — card não será exibido")
             return
         }
         lastSaveTime = System.currentTimeMillis()
         statusLocked = false
         val db = DatabaseHelper(this)
+
+        val pricePerMin = ride.value.let { v ->
+            ride.timeMin?.let { t -> if (t > 0) v / t.toDouble() else null }
+        }
+        val prefs = getSharedPreferences(SettingsActivity.PREF_NAME, 0)
+        val result = DecisionEngine.evaluate(
+            kmValue     = ride.effectivePricePerKm,
+            hourValue   = ride.effectivePricePerHour,
+            minValue    = pricePerMin,
+            ratingValue = ride.rating,
+            prefs       = prefs
+        )
+
         lastInsertedId = db.insert(RideRecord(
             value = ride.value, distanceKm = ride.distanceKm,
             timeMin = ride.timeMin, rating = ride.rating,
@@ -351,9 +377,10 @@ class RideAccessibilityService : AccessibilityService() {
             tripTimeMin = ride.tripTimeMin,
             serviceType = ride.serviceType,
             bonusAmount = ride.bonusAmount,
-            stops = ride.stops
+            stops = ride.stops,
+            scorePercent = result.scorePercent
         ))
-        Log.d(TAG, "Ride inserido com id=$lastInsertedId")
+        L.d(TAG, "Ride inserido com id=$lastInsertedId")
 
         getSharedPreferences(SettingsActivity.PREF_NAME, 0).edit().apply {
             ride.value?.let { putFloat("last_value", it.toFloat()) }
@@ -452,13 +479,17 @@ class RideAccessibilityService : AccessibilityService() {
             "uber moto" to "Moto",
             "uber black" to "Black",
             "uber comfort" to "Comfort",
+            "uber bag" to "Black Bag",
             "business comfort" to "Business Comfort",
             "business black" to "Business Black",
+            "envios moto" to "Envios Moto",
             "envios carro" to "Envios Carro",
+            "black bag" to "Black Bag",
             "flash" to "Flash",
             "juntos" to "Juntos",
             "moto" to "Moto",
             "black" to "Black",
+            "bag" to "Black Bag",
             "comfort" to "Comfort",
             "99pop" to "99Pop",
             "99top" to "99Top",

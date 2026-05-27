@@ -8,14 +8,18 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import java.util.Calendar
 
 class AnalysisActivity : AppCompatActivity() {
 
     private lateinit var db: DatabaseHelper
     private lateinit var cardsContainer: LinearLayout
+    private lateinit var progressBar: ProgressBar
+    private lateinit var scrollView: View
     private var currentPeriod = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,6 +28,8 @@ class AnalysisActivity : AppCompatActivity() {
 
         db = DatabaseHelper(this)
         cardsContainer = findViewById(R.id.cardsContainer)
+        progressBar = findViewById(R.id.progressBar)
+        scrollView = findViewById(R.id.scrollView)
 
         findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<TextView>(R.id.btnPeriodToday).setOnClickListener { setPeriod(0) }
@@ -71,10 +77,18 @@ class AnalysisActivity : AppCompatActivity() {
         }
 
         val handler = Handler(Looper.getMainLooper())
+        progressBar.visibility = View.VISIBLE
+        cardsContainer.visibility = View.GONE
+        scrollView.visibility = View.GONE
         Thread {
             val records = db.getFiltered(sinceMs)
             val result = AnalysisHelper.calculate(records)
-            handler.post { buildCards(result) }
+            handler.post {
+                progressBar.visibility = View.GONE
+                scrollView.visibility = View.VISIBLE
+                cardsContainer.visibility = View.VISIBLE
+                buildCards(result)
+            }
         }.start()
     }
 
@@ -82,11 +96,11 @@ class AnalysisActivity : AppCompatActivity() {
         val today = findViewById<TextView>(R.id.btnPeriodToday)
         val week = findViewById<TextView>(R.id.btnPeriodWeek)
         val month = findViewById<TextView>(R.id.btnPeriodMonth)
-        today.background = if (currentPeriod == 0) resources.getDrawable(R.drawable.pill_selected, theme) else resources.getDrawable(R.drawable.pill_unselected, theme)
+        today.background = if (currentPeriod == 0) ContextCompat.getDrawable(this, R.drawable.pill_selected) else ContextCompat.getDrawable(this, R.drawable.pill_unselected)
         today.setTextColor(if (currentPeriod == 0) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-        week.background = if (currentPeriod == 7) resources.getDrawable(R.drawable.pill_selected, theme) else resources.getDrawable(R.drawable.pill_unselected, theme)
+        week.background = if (currentPeriod == 7) ContextCompat.getDrawable(this, R.drawable.pill_selected) else ContextCompat.getDrawable(this, R.drawable.pill_unselected)
         week.setTextColor(if (currentPeriod == 7) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-        month.background = if (currentPeriod == 30) resources.getDrawable(R.drawable.pill_selected, theme) else resources.getDrawable(R.drawable.pill_unselected, theme)
+        month.background = if (currentPeriod == 30) ContextCompat.getDrawable(this, R.drawable.pill_selected) else ContextCompat.getDrawable(this, R.drawable.pill_unselected)
         month.setTextColor(if (currentPeriod == 30) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
     }
 
@@ -194,17 +208,23 @@ class AnalysisActivity : AppCompatActivity() {
         }
         row.addView(barContainer)
 
-        val barFill = View(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                (barContainer.layoutParams.width * fraction).toInt(),
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
-            val bg = GradientDrawable()
-            bg.setColor(barColor)
-            bg.cornerRadius = 8 * resources.displayMetrics.density
-            background = bg
+        row.post {
+            val totalWidth = barContainer.width
+            if (totalWidth > 0) {
+                val fillWidth = (totalWidth * fraction).toInt()
+                val barFill = View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        fillWidth,
+                        LinearLayout.LayoutParams.MATCH_PARENT
+                    )
+                    val bg = GradientDrawable()
+                    bg.setColor(barColor)
+                    bg.cornerRadius = 8 * resources.displayMetrics.density
+                    background = bg
+                }
+                barContainer.addView(barFill)
+            }
         }
-        barContainer.addView(barFill)
 
         val valueTv = TextView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
@@ -237,6 +257,9 @@ class AnalysisActivity : AppCompatActivity() {
             append("Aceitas: ${result.acceptedCount}  Recusadas: ${result.declinedCount}  Expiradas: ${result.expiredCount}")
             result.acceptanceRate?.let { append("  |  Taxa de aceite: ${"%.0f".format(it)}%") }
         }, 13f, Color.parseColor("#666666"))
+        result.avgScorePercent?.let {
+            addTextToCard(card, "Pontuação média das corridas: ${"%.0f".format(it)}%", 13f, Color.parseColor("#666666"))
+        }
         cardsContainer.addView(card)
     }
 
@@ -497,22 +520,8 @@ class AnalysisActivity : AppCompatActivity() {
             15f, Color.parseColor("#1B7B4A"), true
         )
 
-        val todayRides = db.getFiltered(
-            Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
-        )
-        val todayCount = todayRides.size
-        val firstTs = todayRides.minOfOrNull { it.timestamp }
-        val lastTs = todayRides.maxOfOrNull { it.timestamp }
-        val hoursWorked = if (firstTs != null && lastTs != null && lastTs > firstTs)
-            "%.1f".format((lastTs - firstTs) / 3_600_000.0) else "0"
-
         addTextToCard(card,
-            "Baseado em $todayCount corridas nas últimas ${hoursWorked}h",
+            "Baseado em ${result.todayCount} corridas nas últimas ${"%.1f".format(result.todayHoursWorked)}h",
             12f, Color.parseColor("#999999")
         )
 

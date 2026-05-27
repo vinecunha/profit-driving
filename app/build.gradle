@@ -7,6 +7,10 @@ android {
     namespace = "com.profitdriving"
     compileSdk = 34
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.profitdriving"
         minSdk = 28

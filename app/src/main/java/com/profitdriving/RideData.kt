@@ -24,4 +24,8 @@ data class RideData(
     val effectivePricePerHour: Double?
         get() = pricePerHour ?: if (value != null && timeMin != null && timeMin > 0)
             value / (timeMin / 60.0) else null
+
+    val effectivePricePerMinute: Double?
+        get() = if (value != null && timeMin != null && timeMin > 0)
+            value / timeMin else null
 }

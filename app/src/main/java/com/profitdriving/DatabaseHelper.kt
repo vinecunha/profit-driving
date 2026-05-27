@@ -29,33 +29,47 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         if (oldVersion < 5) {
             db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_STOPS INTEGER")
         }
+        if (oldVersion < 6) {
+            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_SCORE_PERCENT REAL")
+        }
     }
 
     fun updateStatus(id: Long, status: String) {
-        val cv = ContentValues().apply { put(COL_STATUS, status) }
-        writableDatabase.update(TABLE_NAME, cv, "$COL_ID = ?", arrayOf(id.toString()))
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply { put(COL_STATUS, status) }
+            db.update(TABLE_NAME, cv, "$COL_ID = ?", arrayOf(id.toString()))
+        } finally {
+            db.close()
+        }
     }
 
     fun insert(record: RideRecord): Long {
-        val cv = ContentValues().apply {
-            put(COL_VALUE, record.value)
-            put(COL_DISTANCE_KM, record.distanceKm)
-            put(COL_TIME_MIN, record.timeMin)
-            put(COL_RATING, record.rating)
-            put(COL_PRICE_PER_KM, record.pricePerKm)
-            put(COL_PRICE_PER_HOUR, record.pricePerHour)
-            put(COL_APP_NAME, record.appName)
-            put(COL_TIMESTAMP, record.timestamp)
-            put(COL_PICKUP_DISTANCE, record.pickupDistanceKm)
-            put(COL_PICKUP_TIME, record.pickupTimeMin)
-            put(COL_TRIP_DISTANCE, record.tripDistanceKm)
-            put(COL_TRIP_TIME, record.tripTimeMin)
-            put(COL_SERVICE_TYPE, record.serviceType)
-            put(COL_BONUS_AMOUNT, record.bonusAmount)
-            put(COL_STATUS, record.status)
-            put(COL_STOPS, record.stops)
+        val db = writableDatabase
+        return try {
+            val cv = ContentValues().apply {
+                put(COL_VALUE, record.value)
+                put(COL_DISTANCE_KM, record.distanceKm)
+                put(COL_TIME_MIN, record.timeMin)
+                put(COL_RATING, record.rating)
+                put(COL_PRICE_PER_KM, record.pricePerKm)
+                put(COL_PRICE_PER_HOUR, record.pricePerHour)
+                put(COL_APP_NAME, record.appName)
+                put(COL_TIMESTAMP, record.timestamp)
+                put(COL_PICKUP_DISTANCE, record.pickupDistanceKm)
+                put(COL_PICKUP_TIME, record.pickupTimeMin)
+                put(COL_TRIP_DISTANCE, record.tripDistanceKm)
+                put(COL_TRIP_TIME, record.tripTimeMin)
+                put(COL_SERVICE_TYPE, record.serviceType)
+                put(COL_BONUS_AMOUNT, record.bonusAmount)
+                put(COL_STATUS, record.status)
+                put(COL_STOPS, record.stops)
+                put(COL_SCORE_PERCENT, record.scorePercent)
+            }
+            db.insert(TABLE_NAME, null, cv)
+        } finally {
+            db.close()
         }
-        return writableDatabase.insert(TABLE_NAME, null, cv)
     }
 
     fun getAll(): List<RideRecord> {
@@ -114,7 +128,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     status = if (it.isNull(it.getColumnIndexOrThrow(COL_STATUS))) "EXPIRED"
                         else it.getString(it.getColumnIndexOrThrow(COL_STATUS)),
                     stops = if (it.isNull(it.getColumnIndexOrThrow(COL_STOPS))) null
-                        else it.getInt(it.getColumnIndexOrThrow(COL_STOPS))
+                        else it.getInt(it.getColumnIndexOrThrow(COL_STOPS)),
+                    scorePercent = it.getDouble(it.getColumnIndexOrThrow(COL_SCORE_PERCENT)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_SCORE_PERCENT))) null else v
+                    }
                 ))
             }
         }
@@ -122,12 +139,17 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     fun deleteAll() {
-        writableDatabase.delete(TABLE_NAME, null, null)
+        val db = writableDatabase
+        try {
+            db.delete(TABLE_NAME, null, null)
+        } finally {
+            db.close()
+        }
     }
 
     companion object {
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 5
+        private const val DATABASE_VERSION = 6
         private const val TABLE_NAME = "ride_history"
 
         private const val COL_ID = "id"
@@ -147,6 +169,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_BONUS_AMOUNT = "bonus_amount"
         private const val COL_STATUS = "status"
         private const val COL_STOPS = "stops"
+        private const val COL_SCORE_PERCENT = "score_percent"
 
         private val CREATE_TABLE = """
             CREATE TABLE $TABLE_NAME (
@@ -162,7 +185,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_SERVICE_TYPE TEXT,
                 $COL_BONUS_AMOUNT REAL,
                 $COL_STATUS TEXT DEFAULT 'EXPIRED',
-                $COL_STOPS INTEGER
+                $COL_STOPS INTEGER,
+                $COL_SCORE_PERCENT REAL
             )
         """.trimIndent()
     }
@@ -185,5 +209,6 @@ data class RideRecord(
     val serviceType: String? = null,
     val bonusAmount: Double? = null,
     val status: String = "EXPIRED",
-    val stops: Int? = null
+    val stops: Int? = null,
+    val scorePercent: Double? = null
 )

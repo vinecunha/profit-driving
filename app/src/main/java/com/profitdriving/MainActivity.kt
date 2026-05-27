@@ -6,12 +6,15 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DiffUtil
 import java.util.Calendar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,6 +25,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var db: DatabaseHelper
     private lateinit var recyclerView: RecyclerView
+    private lateinit var emptyState: View
     private lateinit var emptyText: TextView
     private lateinit var statusText: TextView
     private lateinit var tvA11yBadge: TextView
@@ -34,9 +38,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        filterDays = savedInstanceState?.getInt("filterDays", 0) ?: 0
 
         db = DatabaseHelper(this)
         recyclerView = findViewById(R.id.recyclerView)
+        emptyState = findViewById(R.id.emptyState)
         emptyText = findViewById(R.id.emptyText)
         statusText = findViewById(R.id.statusText)
         btnPermissions = findViewById(R.id.btnPermissions)
@@ -66,28 +72,25 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, AnalysisActivity::class.java))
         }
         findViewById<TextView>(R.id.btnClearHistory).setOnClickListener {
+            val count = db.getAll().size
             AlertDialog.Builder(this)
                 .setTitle("Limpar histórico")
-                .setMessage("Tem certeza?")
-                .setPositiveButton("Sim") { _, _ ->
+                .setMessage("$count corridas serão apagadas permanentemente.\nEsta ação não pode ser desfeita.")
+                .setPositiveButton("Apagar tudo") { _, _ ->
                     db.deleteAll()
                     loadFilteredHistory()
                 }
-                .setNegativeButton("Não", null)
+                .setNegativeButton("Cancelar", null)
                 .show()
         }
 
-        setFilter(0)
+        setFilter(filterDays)
     }
 
     override fun onResume() {
         super.onResume()
         loadFilteredHistory()
         updateStatus()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 
     private fun setFilter(days: Int) {
@@ -120,13 +123,25 @@ class MainActivity : AppCompatActivity() {
         val records = if (sinceMs != null) db.getFiltered(sinceMs) else db.getAll()
         if (records.isEmpty()) {
             recyclerView.visibility = View.GONE
-            emptyText.visibility = View.VISIBLE
+            emptyState.visibility = View.VISIBLE
+            emptyText.visibility = View.GONE
         } else {
             recyclerView.visibility = View.VISIBLE
+            emptyState.visibility = View.GONE
             emptyText.visibility = View.GONE
-            adapter = HistoryAdapter(records)
-            recyclerView.layoutManager = LinearLayoutManager(this)
-            recyclerView.adapter = adapter
+            val prefs = getSharedPreferences(SettingsActivity.PREF_NAME, 0)
+            if (adapter == null) {
+                adapter = HistoryAdapter(
+                    records,
+                    prefs.getFloat(SettingsActivity.KEY_MIN_KM, 0f),
+                    prefs.getFloat(SettingsActivity.KEY_MIN_HOUR, 0f),
+                    prefs.getFloat(SettingsActivity.KEY_MIN_RATING, 0f)
+                )
+                recyclerView.layoutManager = LinearLayoutManager(this)
+                recyclerView.adapter = adapter
+            } else {
+                adapter!!.updateData(records)
+            }
         }
     }
 
@@ -224,11 +239,26 @@ class MainActivity : AppCompatActivity() {
             putExtra("isDemo", true)
         })
     }
+
+    override fun onDestroy() {
+        db.close()
+        super.onDestroy()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("filterDays", filterDays)
+    }
 }
 
-class HistoryAdapter(private val records: List<RideRecord>) :
-    RecyclerView.Adapter<HistoryAdapter.ViewHolder>() {
+class HistoryAdapter(
+    records: List<RideRecord>,
+    private val minKm: Float,
+    private val minHour: Float,
+    private val minRating: Float
+) : RecyclerView.Adapter<HistoryAdapter.ViewHolder>() {
 
+    private val records = records.toMutableList()
     private val dateFormat = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -247,6 +277,7 @@ class HistoryAdapter(private val records: List<RideRecord>) :
         val tvBonus: TextView = view.findViewById(R.id.tvBonus)
         val tvEfficiency: TextView = view.findViewById(R.id.tvEfficiency)
         val tvStatus: TextView = view.findViewById(R.id.tvStatus)
+        val tvScore: TextView = view.findViewById(R.id.tvScore)
         val tvTimestamp: TextView = view.findViewById(R.id.tvTimestamp)
     }
 
@@ -258,7 +289,6 @@ class HistoryAdapter(private val records: List<RideRecord>) :
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val r = records[position]
-        val ctx = holder.itemView.context
 
         holder.tvServiceType.text = r.serviceType ?: r.appName
 
@@ -305,11 +335,6 @@ class HistoryAdapter(private val records: List<RideRecord>) :
         } else {
             holder.tvBonus.visibility = View.GONE
         }
-
-        val prefs = ctx.getSharedPreferences(SettingsActivity.PREF_NAME, 0)
-        val minKm = prefs.getFloat(SettingsActivity.KEY_MIN_KM, 0f)
-        val minHour = prefs.getFloat(SettingsActivity.KEY_MIN_HOUR, 0f)
-        val minRating = prefs.getFloat(SettingsActivity.KEY_MIN_RATING, 0f)
 
         val kmOk = r.pricePerKm == null || r.pricePerKm >= minKm.toDouble()
         val hourOk = r.pricePerHour == null || r.pricePerHour >= minHour.toDouble()
@@ -360,6 +385,8 @@ class HistoryAdapter(private val records: List<RideRecord>) :
             else -> ""
         }
 
+        holder.tvScore.text = r.scorePercent?.let { "${"%.0f".format(it)}%" } ?: ""
+
         val now = java.util.Calendar.getInstance()
         val rideTime = java.util.Calendar.getInstance().apply { timeInMillis = r.timestamp }
         holder.tvTimestamp.text = if (now.get(java.util.Calendar.DAY_OF_YEAR) == rideTime.get(java.util.Calendar.DAY_OF_YEAR) &&
@@ -368,6 +395,20 @@ class HistoryAdapter(private val records: List<RideRecord>) :
         } else {
             dateFormat.format(java.util.Date(r.timestamp))
         }
+    }
+
+    fun updateData(newRecords: List<RideRecord>) {
+        val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize() = records.size
+            override fun getNewListSize() = newRecords.size
+            override fun areItemsTheSame(o: Int, n: Int) =
+                records[o].id == newRecords[n].id
+            override fun areContentsTheSame(o: Int, n: Int) =
+                records[o] == newRecords[n]
+        })
+        records.clear()
+        records.addAll(newRecords)
+        diff.dispatchUpdatesTo(this)
     }
 
     override fun getItemCount() = records.size
