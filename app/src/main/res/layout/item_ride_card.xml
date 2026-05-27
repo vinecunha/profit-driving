@@ -4,112 +4,101 @@
     android:id="@+id/cardRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="12dp"
-    android:layout_marginBottom="14dp"
+    android:layout_marginBottom="16dp"
     app:cardCornerRadius="28dp"
     app:cardElevation="4dp"
     app:cardBackgroundColor="#FFFFFF">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:padding="18dp">
 
-        <!-- Accent strip (left edge, inside padding) -->
-        <View
-            android:id="@+id/accentStrip"
-            android:layout_width="6dp"
-            android:layout_height="0dp"
-            android:background="@drawable/accent_strip"
-            android:visibility="gone"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
-        <!-- Row 1: Service badge + Price + Rating -->
-        <TextView
-            android:id="@+id/tvServiceType"
-            android:layout_width="wrap_content"
-            android:layout_height="28dp"
-            android:paddingHorizontal="12dp"
-            android:gravity="center"
-            android:textSize="12sp"
-            android:textColor="#6B7280"
-            android:textStyle="bold"
-            android:background="@drawable/inner_card_bg"
-            app:layout_constraintStart_toEndOf="@+id/accentStrip"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="@+id/tvPrice"
-            android:layout_marginStart="12dp" />
-
-        <TextView
-            android:id="@+id/tvPrice"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:textColor="#1A1A2E"
-            android:gravity="end"
-            android:letterSpacing="-0.02"
-            app:layout_constraintStart_toEndOf="@+id/tvServiceType"
-            app:layout_constraintEnd_toStartOf="@+id/tvRating"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp" />
-
+        <!-- Header: Service badge + Price + Rating -->
         <LinearLayout
-            android:id="@+id/tvRating"
-            android:layout_width="wrap_content"
-            android:layout_height="28dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center"
-            android:paddingHorizontal="10dp"
-            android:background="@drawable/inner_card_bg"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="@+id/tvPrice">
+            android:gravity="center_vertical">
 
             <TextView
-                android:id="@+id/tvRatingText"
+                android:id="@+id/tvServiceType"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="13sp"
+                android:layout_height="28dp"
+                android:paddingHorizontal="14dp"
+                android:gravity="center"
+                android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#FF8F00" />
+                android:textColor="#1A2C3E"
+                android:background="#F0F2F8" />
 
             <TextView
-                android:layout_width="wrap_content"
+                android:id="@+id/tvPrice"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="★"
-                android:textSize="13sp"
-                android:textColor="#FF8F00"
-                android:layout_marginStart="2dp" />
+                android:layout_weight="1"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="#0D2B3E"
+                android:gravity="end"
+                android:layout_marginHorizontal="10dp" />
+
+            <LinearLayout
+                android:id="@+id/layoutRating"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingHorizontal="12dp"
+                android:background="#FFF8E7">
+
+                <TextView
+                    android:id="@+id/tvRatingText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#F5A623" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="★"
+                    android:textSize="13sp"
+                    android:textColor="#F5A623"
+                    android:layout_marginStart="2dp" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Row 2: R$/km and R$/h inner cards with icons -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cvPricePerKm"
-            android:layout_width="0dp"
+        <!-- Metrics Grid: R$/km + R$/h -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="#F8F9FD"
-            app:layout_constraintStart_toEndOf="@+id/accentStrip"
-            app:layout_constraintEnd_toStartOf="@+id/cvPricePerHour"
-            app:layout_constraintTop_toBottomOf="@+id/tvPrice"
-            app:layout_constraintHorizontal_chainStyle="spread"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="6dp">
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:gravity="center">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/layoutKmMetric"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:paddingVertical="10dp"
-                android:paddingHorizontal="8dp">
+                android:paddingVertical="12dp"
+                android:background="#F8F9FE"
+                android:layout_marginEnd="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="R$/KM"
+                    android:textSize="11sp"
+                    android:textColor="#8E9AAF"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvPricePerKm"
@@ -117,41 +106,38 @@
                     android:layout_height="wrap_content"
                     android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="#1A1A2E" />
+                    android:textColor="#1A2C3E"
+                    android:layout_marginTop="4dp" />
+
+                <TextView
+                    android:id="@+id/tvKmBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="10sp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:layout_marginTop="4dp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutHourMetric"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingVertical="12dp"
+                android:background="#F8F9FE"
+                android:layout_marginStart="6dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="R$/H"
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
-                    android:drawableStart="@android:drawable/ic_menu_myplaces"
-                    android:drawablePadding="3dp"
-                    android:text=" R$/km" />
-
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cvPricePerHour"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="#F8F9FD"
-            app:layout_constraintStart_toEndOf="@+id/cvPricePerKm"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvPrice"
-            android:layout_marginStart="6dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:paddingVertical="10dp"
-                android:paddingHorizontal="8dp">
+                    android:textColor="#8E9AAF"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvPricePerHour"
@@ -159,130 +145,163 @@
                     android:layout_height="wrap_content"
                     android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="#1A1A2E" />
+                    android:textColor="#1A2C3E"
+                    android:layout_marginTop="4dp" />
 
                 <TextView
+                    android:id="@+id/tvHourBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="10sp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:layout_marginTop="4dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Trip Details -->
+        <LinearLayout
+            android:id="@+id/layoutTripDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:background="#F8F9FE">
+
+            <!-- Pickup row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📍 Embarque"
+                    android:textSize="13sp"
+                    android:textColor="#5E6F8D" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/tvPickupInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A2C3E"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/tvPickupStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
-                    android:drawableStart="@android:drawable/ic_menu_recent_history"
-                    android:drawablePadding="3dp"
-                    android:text=" R$/h" />
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:visibility="gone" />
 
             </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#EEF2F6" />
 
-        <!-- Row 3: Ride details - 3 columns -->
-        <LinearLayout
-            android:id="@+id/layoutDetails"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:orientation="horizontal"
-            android:gravity="center"
-            app:layout_constraintTop_toBottomOf="@+id/cvPricePerKm">
-
-            <!-- Column: Embarque -->
+            <!-- Trip row -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Embarque"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:textColor="#6B7280" />
+                    android:text="🛣️ Viagem"
+                    android:textSize="13sp"
+                    android:textColor="#5E6F8D" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
 
                 <TextView
-                    android:id="@+id/tvPickupDist"
+                    android:id="@+id/tvTripInfo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
-                    android:textColor="#1A1A2E"
                     android:textStyle="bold"
-                    android:layout_marginTop="2dp" />
+                    android:textColor="#1A2C3E"
+                    android:layout_marginEnd="8dp" />
 
                 <TextView
-                    android:id="@+id/tvPickupTime"
+                    android:id="@+id/tvTripStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:textColor="#6B7280" />
+                    android:textSize="11sp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:visibility="gone" />
 
             </LinearLayout>
 
-            <!-- Column: Viagem -->
+            <!-- Divider (dashed style) -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#EEF2F6"
+                android:layout_marginTop="4dp" />
+
+            <!-- Total row -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="12dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Viagem"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:textColor="#6B7280" />
-
-                <TextView
-                    android:id="@+id/tvTripDist"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:text="📊 Total"
                     android:textSize="13sp"
-                    android:textColor="#1A1A2E"
+                    android:textColor="#1A2C3E"
+                    android:textStyle="bold" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/tvTotalInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="15sp"
                     android:textStyle="bold"
-                    android:layout_marginTop="2dp" />
+                    android:textColor="#1A2C3E"
+                    android:layout_marginEnd="8dp" />
 
                 <TextView
-                    android:id="@+id/tvTripTime"
+                    android:id="@+id/tvScore"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:textColor="#6B7280" />
-
-            </LinearLayout>
-
-            <!-- Column: Total -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Total"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:textColor="#1A1A2E" />
-
-                <TextView
-                    android:id="@+id/tvTotalDist"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="13sp"
-                    android:textColor="#1A1A2E"
-                    android:textStyle="bold"
-                    android:layout_marginTop="2dp" />
-
-                <TextView
-                    android:id="@+id/tvTotalTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:textColor="#6B7280" />
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="4dp"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
@@ -294,49 +313,24 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="12sp"
-            android:textColor="#FF8F00"
             android:textStyle="bold"
+            android:textColor="#F5A623"
             android:layout_marginTop="8dp"
-            app:layout_constraintTop_toBottomOf="@+id/layoutDetails"
-            app:layout_constraintStart_toEndOf="@+id/accentStrip"
-            android:layout_marginStart="12dp" />
+            android:visibility="gone" />
 
-        <!-- Row 4: Efficiency badge + Status + Timestamp -->
+        <!-- Bottom: Status + Timestamp -->
         <LinearLayout
-            android:id="@+id/layoutBottom"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingStart="12dp"
-            app:layout_constraintTop_toBottomOf="@+id/tvBonus"
-            app:layout_constraintBottom_toBottomOf="parent">
-
-            <TextView
-                android:id="@+id/tvEfficiency"
-                android:layout_width="wrap_content"
-                android:layout_height="26dp"
-                android:paddingHorizontal="12dp"
-                android:gravity="center"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:background="@drawable/badge_efficiency" />
+            android:gravity="center_vertical">
 
             <TextView
                 android:id="@+id/tvStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:layout_marginStart="8dp" />
-
-            <TextView
-                android:id="@+id/tvScore"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="10sp"
-                android:textColor="#9CA3AF"
-                android:layout_marginStart="4dp" />
+                android:textSize="14sp" />
 
             <Space
                 android:layout_width="0dp"
@@ -352,6 +346,6 @@
 
         </LinearLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
 </androidx.cardview.widget.CardView>

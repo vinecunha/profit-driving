@@ -7,17 +7,20 @@ import android.os.Handler
 import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityWindowInfo
 import java.util.Locale
 
 class RideAccessibilityService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
+    private val bgHandler = Handler(Looper.getMainLooper())
     private var pendingRunnable: Runnable? = null
     private var lastDedupKey = ""
     private var lastSaveTime = 0L
     private var cardVisible = false
     private var lastInsertedId: Long = -1L
     private var statusLocked = false
+    private var uberWindowWasVisible = false
     private val MIN_SAVE_INTERVAL_MS = 3_000L
 
     override fun onServiceConnected() {
@@ -27,8 +30,7 @@ class RideAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
-        val pkg = event.packageName?.toString() ?: return
-        if (!pkg.contains("ubercab") && !pkg.contains("taxis99")) return
+        val pkg = event.packageName?.toString() ?: ""
 
         if (event.eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) {
             val texto = event.contentDescription?.toString()
@@ -38,15 +40,24 @@ class RideAccessibilityService : AccessibilityService() {
             return
         }
 
-        if (event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED &&
-            event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
+        val isRelevantType = event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED ||
+                             event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
+                             event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED
+        if (!isRelevantType) return
 
-        pendingRunnable?.let { handler.removeCallbacks(it) }
+        val isUberEvent = pkg.contains("ubercab") ||
+                          pkg.contains("taxis99") ||
+                          pkg.contains("app99")
+        val isWindowChange = event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED
+        if (!isUberEvent && !isWindowChange) return
+
+        pendingRunnable?.let { bgHandler.removeCallbacks(it) }
 
         pendingRunnable = Runnable {
-            val root = rootInActiveWindow ?: return@Runnable
+            val root = findUberWindow() ?: return@Runnable
+            val detectedPkg = root.packageName?.toString() ?: ""
             try {
-                detectRideCard(root, pkg)
+                detectRideCard(root, detectedPkg)
             } finally {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                     @Suppress("DEPRECATION")
@@ -54,17 +65,101 @@ class RideAccessibilityService : AccessibilityService() {
                 }
             }
         }
-        handler.postDelayed(pendingRunnable!!, 800)
+
+        bgHandler.postDelayed(pendingRunnable!!, 800)
+
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
+            val uberVisibleNow = isUberWindowVisible()
+            if (uberWindowWasVisible && !uberVisibleNow) {
+                onUberWindowDismissed()
+            }
+            uberWindowWasVisible = uberVisibleNow
+        }
     }
 
     override fun onInterrupt() {
         handler.removeCallbacksAndMessages(null)
+        bgHandler.removeCallbacksAndMessages(null)
     }
 
     override fun onDestroy() {
         FloatingBubbleService.stop(this)
         handler.removeCallbacksAndMessages(null)
+        bgHandler.removeCallbacksAndMessages(null)
         super.onDestroy()
+    }
+
+    private fun findUberWindow(): AccessibilityNodeInfo? {
+        val active = rootInActiveWindow
+        if (active != null) {
+            val pkg = active.packageName?.toString() ?: ""
+            if (pkg.contains("ubercab") || pkg.contains("taxis99") || pkg.contains("app99")) {
+                return active
+            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                @Suppress("DEPRECATION")
+                active.recycle()
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            try {
+                val allWindows = windows ?: return null
+                for (window in allWindows) {
+                    val root = window.root ?: continue
+                    val pkg = root.packageName?.toString() ?: ""
+                    if (pkg.contains("ubercab") || pkg.contains("taxis99") || pkg.contains("app99")) {
+                        L.d(TAG, "Janela Uber encontrada em segundo plano: $pkg tipo=${window.type} layer=${window.layer}")
+                        return root
+                    }
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        @Suppress("DEPRECATION")
+                        root.recycle()
+                    }
+                }
+            } catch (e: Exception) {
+                L.e(TAG, "Erro ao varrer janelas", e)
+            }
+        }
+
+        return null
+    }
+
+    private fun isUberWindowVisible(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return false
+        return try {
+            windows?.any { window ->
+                val pkg = window.root?.packageName?.toString() ?: ""
+                pkg.contains("ubercab") || pkg.contains("taxis99") || pkg.contains("app99")
+            } ?: false
+        } catch (e: Exception) { false }
+    }
+
+    private fun onUberWindowDismissed() {
+        handler.post {
+            cardVisible = false
+            lastDedupKey = ""
+            lastSaveTime = 0L
+            pendingRunnable?.let { bgHandler.removeCallbacks(it) }
+            L.d(TAG, "Janela Uber saiu — estado resetado")
+        }
+    }
+
+    private fun logAllWindows() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return
+        try {
+            val wins = windows ?: run {
+                L.d(TAG, "windows = null")
+                return
+            }
+            L.d(TAG, "Total de janelas abertas: ${wins.size}")
+            wins.forEachIndexed { i, w ->
+                val pkg = w.root?.packageName ?: "?"
+                L.d(TAG, "Janela $i: pkg=$pkg tipo=${w.type} layer=${w.layer} focada=${w.isFocused} ativa=${w.isActive}")
+            }
+        } catch (e: Exception) {
+            L.e(TAG, "Erro ao listar janelas", e)
+        }
     }
 
     private fun detectRideCard(root: AccessibilityNodeInfo, pkg: String) {
