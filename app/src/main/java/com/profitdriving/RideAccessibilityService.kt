@@ -15,13 +15,13 @@ class RideAccessibilityService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
     private val bgHandler = Handler(Looper.getMainLooper())
     private var pendingRunnable: Runnable? = null
-    private var lastDedupKey = ""
+    private var lastHash = ""
     private var lastSaveTime = 0L
     private var cardVisible = false
     private var lastInsertedId: Long = -1L
     private var statusLocked = false
     private var uberWindowWasVisible = false
-    private val MIN_SAVE_INTERVAL_MS = 3_000L
+    @Volatile private var isFirstCardEvent = true
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -51,6 +51,33 @@ class RideAccessibilityService : AccessibilityService() {
         val isWindowChange = event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED
         if (!isUberEvent && !isWindowChange) return
 
+        if (isFirstCardEvent) {
+            val root = findUberWindow()
+            if (root != null) {
+                val quickTexts = mutableListOf<String>()
+                collectTextsLimited(root, quickTexts, maxNodes = 30)
+                val quick = quickTexts.joinToString(" ")
+                if (quick.contains("Aceitar", ignoreCase = true) && quick.contains("R$")) {
+                    isFirstCardEvent = false
+                    pendingRunnable?.let { bgHandler.removeCallbacks(it) }
+                    pendingRunnable = Runnable {
+                        val detectedRoot = findUberWindow() ?: return@Runnable
+                        val dpkg = detectedRoot.packageName?.toString() ?: ""
+                        try {
+                            detectRideCard(detectedRoot, dpkg)
+                        } finally {
+                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                @Suppress("DEPRECATION")
+                                detectedRoot.recycle()
+                            }
+                        }
+                    }
+                    bgHandler.postDelayed(pendingRunnable!!, 200)
+                    return
+                }
+            }
+        }
+
         pendingRunnable?.let { bgHandler.removeCallbacks(it) }
 
         pendingRunnable = Runnable {
@@ -66,7 +93,8 @@ class RideAccessibilityService : AccessibilityService() {
             }
         }
 
-        bgHandler.postDelayed(pendingRunnable!!, 800)
+        val delay = if (quickScanHasRideCard()) 300L else 600L
+        bgHandler.postDelayed(pendingRunnable!!, delay)
 
         if (event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
             val uberVisibleNow = isUberWindowVisible()
@@ -138,8 +166,9 @@ class RideAccessibilityService : AccessibilityService() {
     private fun onUberWindowDismissed() {
         handler.post {
             cardVisible = false
-            lastDedupKey = ""
+            lastHash = ""
             lastSaveTime = 0L
+            isFirstCardEvent = true
             pendingRunnable?.let { bgHandler.removeCallbacks(it) }
             L.d(TAG, "Janela Uber saiu — estado resetado")
         }
@@ -162,10 +191,49 @@ class RideAccessibilityService : AccessibilityService() {
         }
     }
 
+    private fun quickScanHasRideCard(): Boolean {
+        return try {
+            val root = findUberWindow() ?: return false
+            val texts = mutableListOf<String>()
+            collectTextsLimited(root, texts, maxNodes = 20)
+            val quick = texts.joinToString(" ")
+            quick.contains("Aceitar", ignoreCase = true) && quick.contains("R$")
+        } catch (e: Exception) { false }
+    }
+
+    private fun collectTextsLimited(node: AccessibilityNodeInfo, list: MutableList<String>, maxNodes: Int) {
+        if (list.size >= maxNodes) return
+        if (node.text?.toString()?.isNotBlank() == true) {
+            list.add(node.text.toString())
+        }
+        for (i in 0 until node.childCount) {
+            if (list.size >= maxNodes) break
+            node.getChild(i)?.let { child ->
+                collectTextsLimited(child, list, maxNodes)
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    @Suppress("DEPRECATION")
+                    child.recycle()
+                }
+            }
+        }
+    }
+
+    private fun buildCardHash(texts: List<String>): String {
+        val cardTokens = texts.filter { text ->
+            text.contains("R$") ||
+            text.contains("km", ignoreCase = true) ||
+            text.contains("min", ignoreCase = true) ||
+            text.contains("Aceitar", ignoreCase = true) ||
+            (text.length < 20 && text.any { it.isDigit() })
+        }
+        return cardTokens.sorted().joinToString("|").hashCode().toString()
+    }
+
     private fun detectRideCard(root: AccessibilityNodeInfo, pkg: String) {
         val allTexts = mutableListOf<String>()
         collectTexts(root, allTexts)
         val fullText = allTexts.joinToString(" ")
+        val hash = buildCardHash(allTexts)
 
         if (!isRideRequestCard(allTexts)) {
             if (cardVisible) {
@@ -175,10 +243,11 @@ class RideAccessibilityService : AccessibilityService() {
                     L.d(TAG, "Ride $lastInsertedId marcado como EXPIRADO")
                 }
                 cardVisible = false
+                lastHash = ""
                 lastSaveTime = 0L
-                lastDedupKey = ""
                 lastInsertedId = -1L
                 statusLocked = false
+                isFirstCardEvent = true
                 pendingRunnable?.let { handler.removeCallbacks(it) }
             }
             return
@@ -198,18 +267,15 @@ class RideAccessibilityService : AccessibilityService() {
             return
         }
 
-        val dedupKey = "${ride.value}|${ride.rating}"
-
-        if (cardVisible && dedupKey == lastDedupKey) {
-            L.d(TAG, "Mesmo card (valor+nota) — ignorando")
+        if (hash == lastHash && cardVisible) {
+            L.d(TAG, "Mesmo card ainda visível — ignorando")
             return
         }
 
-        if ((now - lastSaveTime) < MIN_SAVE_INTERVAL_MS) return
-
         cardVisible = true
-        lastDedupKey = dedupKey
+        lastHash = hash
         lastSaveTime = now
+        isFirstCardEvent = false
 
         L.d(TAG, "Card detectado em $pkg: valor=${ride.value} km=${ride.distanceKm} " +
                 "tempo=${ride.timeMin} nota=${ride.rating} " +
@@ -220,13 +286,27 @@ class RideAccessibilityService : AccessibilityService() {
 
     private fun isRideRequestCard(texts: List<String>): Boolean {
         val full = texts.joinToString(" ")
+
         val temAceitar = full.contains("Aceitar", ignoreCase = true) ||
                          full.contains("Accept", ignoreCase = true) ||
                          full.contains("Selecionar", ignoreCase = true)
-        val temValor = full.contains("R$")
-        val temViagem = full.contains("km", ignoreCase = true) &&
-                        full.contains("min", ignoreCase = true)
-        return temAceitar && temValor && temViagem
+        if (!temAceitar) return false
+
+        if (!full.contains("R$")) return false
+
+        val temKm = full.contains("km", ignoreCase = true)
+        val temMin = full.contains("min", ignoreCase = true)
+        if (!temKm || !temMin) return false
+
+        val temValorCard = VALUE_REGEX.containsMatchIn(full)
+        if (!temValorCard) return false
+
+        val temPadraoCard =
+            full.contains("de distância", ignoreCase = true) ||
+            full.contains("Viagem de", ignoreCase = true) ||
+            full.contains("por km", ignoreCase = true)
+
+        return temPadraoCard
     }
 
     private fun isValorSuspeito(valor: Double): Boolean {
