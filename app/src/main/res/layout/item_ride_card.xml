@@ -4,7 +4,7 @@
     android:id="@+id/cardRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
+    android:layout_marginBottom="8dp"
     app:cardCornerRadius="28dp"
     app:cardElevation="4dp"
     app:cardBackgroundColor="#FFFFFF">
@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="18dp">
+        android:padding="12dp">
 
         <!-- Header: Service badge + Price + Rating -->
         <LinearLayout
@@ -23,10 +23,20 @@
             android:gravity="center_vertical">
 
             <TextView
+                android:id="@+id/tvServiceTypeIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:gravity="center"
+                android:text="🏷️"
+                android:textSize="14sp"
+                android:background="#F0F2F8" />
+
+            <TextView
                 android:id="@+id/tvServiceType"
                 android:layout_width="wrap_content"
                 android:layout_height="28dp"
-                android:paddingHorizontal="14dp"
+                android:paddingStart="2dp"
+                android:paddingEnd="8dp"
                 android:gravity="center"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -40,7 +50,7 @@
                 android:layout_weight="1"
                 android:textSize="28sp"
                 android:textStyle="bold"
-                android:textColor="#0D2B3E"
+                android:textColor="#00982b"
                 android:gravity="end"
                 android:layout_marginHorizontal="10dp" />
 
@@ -73,7 +83,7 @@
 
         </LinearLayout>
 
-        <!-- Metrics Grid: R$/km + R$/h -->
+        <!-- Metrics Grid: R$/km + R$/h + R$/min -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -90,13 +100,13 @@
                 android:gravity="center"
                 android:paddingVertical="12dp"
                 android:background="#F8F9FE"
-                android:layout_marginEnd="6dp">
+                android:layout_marginEnd="4dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="R$/KM"
-                    android:textSize="11sp"
+                    android:textSize="10sp"
                     android:textColor="#8E9AAF"
                     android:textStyle="bold" />
 
@@ -104,7 +114,7 @@
                     android:id="@+id/tvPricePerKm"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="22sp"
+                    android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="#1A2C3E"
                     android:layout_marginTop="4dp" />
@@ -113,8 +123,8 @@
                     android:id="@+id/tvKmBadge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="10sp"
-                    android:paddingHorizontal="8dp"
+                    android:textSize="9sp"
+                    android:paddingHorizontal="6dp"
                     android:paddingVertical="2dp"
                     android:layout_marginTop="4dp" />
 
@@ -129,13 +139,13 @@
                 android:gravity="center"
                 android:paddingVertical="12dp"
                 android:background="#F8F9FE"
-                android:layout_marginStart="6dp">
+                android:layout_marginHorizontal="4dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="R$/H"
-                    android:textSize="11sp"
+                    android:textSize="10sp"
                     android:textColor="#8E9AAF"
                     android:textStyle="bold" />
 
@@ -143,7 +153,7 @@
                     android:id="@+id/tvPricePerHour"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="22sp"
+                    android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="#1A2C3E"
                     android:layout_marginTop="4dp" />
@@ -152,8 +162,47 @@
                     android:id="@+id/tvHourBadge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:textSize="9sp"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="2dp"
+                    android:layout_marginTop="4dp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutMinMetric"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingVertical="12dp"
+                android:background="#F8F9FE"
+                android:layout_marginStart="4dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="R$/MIN"
                     android:textSize="10sp"
-                    android:paddingHorizontal="8dp"
+                    android:textColor="#8E9AAF"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvPricePerMin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A2C3E"
+                    android:layout_marginTop="4dp" />
+
+                <TextView
+                    android:id="@+id/tvMinBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="9sp"
+                    android:paddingHorizontal="6dp"
                     android:paddingVertical="2dp"
                     android:layout_marginTop="4dp" />
 
@@ -161,149 +210,164 @@
 
         </LinearLayout>
 
-        <!-- Trip Details -->
+        <!-- Trip Details: Embarque + Viagem (duas colunas) -->
         <LinearLayout
             android:id="@+id/layoutTripDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:orientation="vertical"
+            android:orientation="horizontal"
             android:padding="12dp"
             android:background="#F8F9FE">
 
-            <!-- Pickup row -->
+            <!-- Coluna 1: Embarque -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingVertical="8dp">
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingEnd="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📍 Embarque"
-                    android:textSize="13sp"
+                    android:text="🟢 Embarque"
+                    android:textSize="11sp"
                     android:textColor="#5E6F8D" />
 
-                <Space
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-
-                <TextView
-                    android:id="@+id/tvPickupInfo"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="#1A2C3E"
-                    android:layout_marginEnd="8dp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp">
 
-                <TextView
-                    android:id="@+id/tvPickupStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="11sp"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="2dp"
-                    android:visibility="gone" />
+                    <TextView
+                        android:id="@+id/tvPickupDistance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A2C3E" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="  ⏱️  "
+                        android:textSize="11sp"
+                        android:textColor="#5E6F8D" />
+
+                    <TextView
+                        android:id="@+id/tvPickupTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A2C3E" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
-            <!-- Divider -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#EEF2F6" />
-
-            <!-- Trip row -->
+            <!-- Coluna 2: Viagem -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingVertical="8dp">
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="end"
+                android:paddingStart="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🛣️ Viagem"
-                    android:textSize="13sp"
+                    android:text="🏁 Viagem"
+                    android:textSize="11sp"
                     android:textColor="#5E6F8D" />
 
-                <Space
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-
-                <TextView
-                    android:id="@+id/tvTripInfo"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="#1A2C3E"
-                    android:layout_marginEnd="8dp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="4dp">
 
-                <TextView
-                    android:id="@+id/tvTripStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="11sp"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="2dp"
-                    android:visibility="gone" />
+                    <TextView
+                        android:id="@+id/tvDistanceWithIcon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A2C3E" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="  ⏱️  "
+                        android:textSize="11sp"
+                        android:textColor="#5E6F8D" />
+
+                    <TextView
+                        android:id="@+id/tvTimeWithIcon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A2C3E" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
-            <!-- Divider (dashed style) -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#EEF2F6"
-                android:layout_marginTop="4dp" />
+        </LinearLayout>
 
-            <!-- Total row -->
-            <LinearLayout
-                android:layout_width="match_parent"
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="12dp"
+            android:background="#EEF2F6" />
+
+        <!-- Total line -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp"
+            android:paddingVertical="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingTop="12dp">
+                android:text="📊 Total"
+                android:textSize="12sp"
+                android:textColor="#1A2C3E"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="📊 Total"
-                    android:textSize="13sp"
-                    android:textColor="#1A2C3E"
-                    android:textStyle="bold" />
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
-                <Space
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
+            <TextView
+                android:id="@+id/tvTotalInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginEnd="8dp" />
 
-                <TextView
-                    android:id="@+id/tvTotalInfo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    android:textColor="#1A2C3E"
-                    android:layout_marginEnd="8dp" />
-
-                <TextView
-                    android:id="@+id/tvScore"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="12dp"
-                    android:paddingVertical="4dp"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
+            <TextView
+                android:id="@+id/tvScore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="3dp"
+                android:textSize="11sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 
@@ -318,6 +382,28 @@
             android:layout_marginTop="8dp"
             android:visibility="gone" />
 
+        <!-- Expandable Profit Details -->
+        <LinearLayout
+            android:id="@+id/expandableProfitDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:padding="12dp"
+            android:layout_marginTop="8dp"
+            android:background="#F0F2F8"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tvProfitDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="11sp"
+                android:textColor="#5E6F8D"
+                android:gravity="center" />
+
+        </LinearLayout>
+
         <!-- Bottom: Status + Timestamp -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -331,6 +417,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/btnExpandProfit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+ detalhar corrida"
+                android:textSize="11sp"
+                android:textColor="#5E6F8D"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingVertical="4dp"
+                android:paddingHorizontal="4dp"
+                android:layout_marginStart="12dp"
+                android:background="?attr/selectableItemBackground" />
 
             <Space
                 android:layout_width="0dp"

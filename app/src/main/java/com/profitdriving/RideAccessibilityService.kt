@@ -3,8 +3,12 @@ package com.profitdriving
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
 import android.os.Build
+import android.os.CombinedVibration
 import android.os.Handler
 import android.os.Looper
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
@@ -248,7 +252,7 @@ class RideAccessibilityService : AccessibilityService() {
                 lastInsertedId = -1L
                 statusLocked = false
                 isFirstCardEvent = true
-                pendingRunnable?.let { handler.removeCallbacks(it) }
+                pendingRunnable?.let { bgHandler.removeCallbacks(it) }
             }
             return
         }
@@ -345,9 +349,10 @@ class RideAccessibilityService : AccessibilityService() {
 
         val serviceType = extractServiceType(text)
         val bonusAmount = extractBonus(text)
+        val priorityBonus = extractPriorityBonus(text)
+        val dynamicBonus = extractDynamicBonus(text)
 
-        val stops = MULTIPARADA_REGEX.find(text)
-            ?.groupValues?.get(1)?.toIntOrNull()
+        val stops = extractStops(text)
 
         return RideData(
             value = value,
@@ -368,7 +373,9 @@ class RideAccessibilityService : AccessibilityService() {
             tripTimeMin = tripTime,
             serviceType = serviceType,
             bonusAmount = bonusAmount,
-            stops = stops
+            stops = stops,
+            priorityBonus = priorityBonus,
+            dynamicBonus = dynamicBonus
         )
     }
 
@@ -526,6 +533,7 @@ class RideAccessibilityService : AccessibilityService() {
         }
         lastSaveTime = System.currentTimeMillis()
         statusLocked = false
+        vibrateFeedback()
         val db = DatabaseHelper(this)
 
         val pricePerMin = ride.value.let { v ->
@@ -577,6 +585,8 @@ class RideAccessibilityService : AccessibilityService() {
             putExtra("appName", ride.appName)
             ride.serviceType?.let { putExtra("serviceType", it) }
             ride.bonusAmount?.let { putExtra("bonusAmount", it) }
+            ride.priorityBonus?.let { putExtra("priorityBonus", it) }
+            ride.dynamicBonus?.let { putExtra("dynamicBonus", it) }
         })
 
         FloatingBubbleService.start(this, Intent().apply {
@@ -585,6 +595,24 @@ class RideAccessibilityService : AccessibilityService() {
             ride.timeMin?.let { putExtra("timeMin", it) }
             ride.rating?.let { putExtra("rating", it) }
         })
+    }
+
+    private fun vibrateFeedback() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibrator = getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                vibrator.vibrate(CombinedVibration.createParallel(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)))
+            } else {
+                @Suppress("DEPRECATION")
+                val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator.vibrate(100)
+                }
+            }
+        } catch (_: Exception) {}
     }
 
     private fun extractServiceType(text: String): String? {
@@ -607,12 +635,43 @@ class RideAccessibilityService : AccessibilityService() {
             val v = parseBr(ganhe.groupValues[1])
             if (v != null && v > 0) return v
         }
-        val prioridade = BONUS_REGEX_PRIORIDADE.find(text)
-        if (prioridade != null) {
-            val v = parseBr(prioridade.groupValues[1])
+        val priority = PRIORITY_BONUS_REGEX.find(text)
+        if (priority != null) {
+            val v = parseBr(priority.groupValues[1])
+            if (v != null && v > 0) return v
+        }
+        val dynamicMatches = DYNAMIC_BONUS_REGEX.findAll(text).filter { m ->
+            val full = m.value.lowercase(Locale.ROOT)
+            !full.contains("prioridade")
+        }.toList()
+        if (dynamicMatches.isNotEmpty()) {
+            val v = parseBr(dynamicMatches.first().groupValues[1])
             if (v != null && v > 0) return v
         }
         return null
+    }
+
+    private fun extractPriorityBonus(text: String): Double? {
+        val m = PRIORITY_BONUS_REGEX.find(text) ?: return null
+        val v = parseBr(m.groupValues[1])
+        return if (v != null && v > 0) v else null
+    }
+
+    private fun extractDynamicBonus(text: String): Double? {
+        val matches = DYNAMIC_BONUS_REGEX.findAll(text).filter { m ->
+            val full = m.value.lowercase(Locale.ROOT)
+            !full.contains("prioridade")
+        }.toList()
+        if (matches.isEmpty()) return null
+        val v = matches.firstOrNull()?.let { parseBr(it.groupValues[1]) }
+        return if (v != null && v > 0) v else null
+    }
+
+    private fun extractStops(text: String): Int? {
+        val m = MULTIPLE_STOPS_REGEX.find(text) ?: return null
+        val fullMatch = m.groupValues[1]
+        val digitMatch = Regex("""(\d+)""").find(fullMatch)
+        return digitMatch?.groupValues?.get(1)?.toIntOrNull()
     }
 
     companion object {
@@ -686,13 +745,18 @@ class RideAccessibilityService : AccessibilityService() {
             RegexOption.IGNORE_CASE
         )
 
-        private val MULTIPARADA_REGEX = Regex(
-            """(\d+)\s*parada[s]?""",
+        private val MULTIPLE_STOPS_REGEX = Regex(
+            """(várias paradas|multiplas paradas|várias\s+paradas|multiplas\s+paradas|\d+\s*paradas)""",
             RegexOption.IGNORE_CASE
         )
 
-        private val BONUS_REGEX_PRIORIDADE = Regex(
+        private val PRIORITY_BONUS_REGEX = Regex(
             """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do\s*para\s*prioridade""",
+            RegexOption.IGNORE_CASE
+        )
+
+        private val DYNAMIC_BONUS_REGEX = Regex(
+            """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do""",
             RegexOption.IGNORE_CASE
         )
     }

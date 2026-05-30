@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:id="@+id/tvPerKmTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="\uD83D\uDCB0 DESPESA POR KM"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A2E"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Selecione ou digite o nome:"
+            android:textSize="12sp"
+            android:textColor="#6B7280"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/perKmSuggestionsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/btnPerKmManutencao"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:gravity="center_vertical"
+                android:text="\uD83D\uDD27 Manuten\u00E7\u00E3o"
+                android:textSize="12sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/btnPerKmPneus"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:gravity="center_vertical"
+                android:text="\uD83D\uDD04 Pneus"
+                android:textSize="12sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/btnPerKmCombustivel"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:gravity="center_vertical"
+                android:text="\u26FD Combust\u00EDvel"
+                android:textSize="12sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/btnPerKmLavagem"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:gravity="center_vertical"
+                android:text="\uD83E\uDDFC Lavagem"
+                android:textSize="12sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/btnPerKmOutro"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:gravity="center_vertical"
+                android:text="\u270F\uFE0F Outro..."
+                android:textSize="12sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/etPerKmName"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:inputType="text"
+            android:hint="Nome personalizado"
+            android:textSize="13sp"
+            android:textColor="#1A1A2E"
+            android:background="@drawable/pill_unselected"
+            android:paddingHorizontal="12dp"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/etPerKmValue"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:inputType="numberDecimal"
+            android:hint="Valor por km (R$)"
+            android:textSize="14sp"
+            android:textColor="#1A1A2E"
+            android:background="@drawable/pill_unselected"
+            android:paddingHorizontal="12dp"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="\uD83D\uDCA1 SUGEST\u00D5ES DE MERCADO:"
+            android:textSize="10sp"
+            android:textColor="#9CA3AF"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="\u2022 Manuten\u00E7\u00E3o preventiva: R$ 0,02 - R$ 0,06/km\n\u2022 Pneus: R$ 0,01 - R$ 0,04/km (vida \u00Fatil 50.000km)\n\u2022 Lavagem: R$ 0,004 - R$ 0,01/km"
+            android:textSize="10sp"
+            android:textColor="#9CA3AF"
+            android:lineSpacingExtra="2dp"
+            android:layout_marginBottom="16dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/btnCancelPerKm"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:gravity="center"
+                android:text="CANCELAR"
+                android:textSize="12sp"
+                android:textColor="#6B7280"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnSavePerKm"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:gravity="center"
+                android:text="\u2705 SALVAR"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/pill_selected"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

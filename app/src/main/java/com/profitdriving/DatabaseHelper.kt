@@ -4,12 +4,22 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     context, DATABASE_NAME, null, DATABASE_VERSION
 ) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(CREATE_TABLE)
+        db.execSQL(CREATE_FUEL_REFUELS)
+        db.execSQL(CREATE_FIXED_EXPENSES_V8)
+        db.execSQL(CREATE_VARIABLE_COSTS)
+        db.execSQL(CREATE_COST_SETTINGS)
+        db.execSQL(CREATE_MONTHLY_STATS)
+        db.execSQL(CREATE_EXPENSES)
+        db.execSQL(CREATE_DAILY_RIDES)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -31,6 +41,40 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
         if (oldVersion < 6) {
             db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_SCORE_PERCENT REAL")
+        }
+        if (oldVersion < 7) {
+            db.execSQL(CREATE_FUEL_REFUELS)
+            db.execSQL(CREATE_FIXED_EXPENSES_V7)
+            db.execSQL(CREATE_COST_SETTINGS)
+        }
+        if (oldVersion < 8) {
+            db.execSQL("ALTER TABLE $TABLE_FIXED_EXPENSES ADD COLUMN $COL_E_PERIODICITY TEXT DEFAULT 'monthly'")
+            db.execSQL("ALTER TABLE $TABLE_FIXED_EXPENSES ADD COLUMN $COL_E_USEFUL_LIFE INTEGER DEFAULT 1")
+            db.execSQL(CREATE_VARIABLE_COSTS)
+        }
+        if (oldVersion < 9) {
+            db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN $COL_R_NOTES TEXT")
+            db.execSQL(CREATE_MONTHLY_STATS)
+        }
+        if (oldVersion < 10) {
+            db.execSQL(CREATE_EXPENSES)
+            db.execSQL("""
+                INSERT INTO $TABLE_EXPENSES ($COL_E_NAME, $COL_E_VALUE, $COL_EX_COST_TYPE,
+                    $COL_EX_PERIODICITY, $COL_E_USEFUL_LIFE, $COL_E_CATEGORY, $COL_E_CREATED_AT)
+                SELECT $COL_E_NAME, $COL_E_VALUE, 'fixed' AS $COL_EX_COST_TYPE,
+                    $COL_E_PERIODICITY, $COL_E_USEFUL_LIFE, $COL_E_CATEGORY, $COL_E_CREATED_AT
+                FROM $TABLE_FIXED_EXPENSES
+            """.trimIndent())
+            db.execSQL("""
+                INSERT INTO $TABLE_EXPENSES ($COL_E_NAME, $COL_E_VALUE, $COL_EX_COST_TYPE,
+                    $COL_E_CATEGORY, $COL_E_CREATED_AT)
+                SELECT $COL_VC_NAME, $COL_VC_COST_PER_KM, 'per_km' AS $COL_EX_COST_TYPE,
+                    $COL_VC_CATEGORY, $COL_VC_CREATED_AT
+                FROM $TABLE_VARIABLE_COSTS
+            """.trimIndent())
+        }
+        if (oldVersion < 11) {
+            db.execSQL(CREATE_DAILY_RIDES)
         }
     }
 
@@ -73,16 +117,21 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     fun getAll(): List<RideRecord> {
-        return getFiltered(null)
+        return getFiltered(null, null)
     }
 
     fun getFiltered(sinceMs: Long?): List<RideRecord> {
+        return getFiltered(sinceMs, null, 0)
+    }
+
+    fun getFiltered(sinceMs: Long?, limit: Int?, offset: Int = 0): List<RideRecord> {
         val list = mutableListOf<RideRecord>()
         val selection = if (sinceMs != null) "$COL_TIMESTAMP >= ?" else null
         val selectionArgs = if (sinceMs != null) arrayOf(sinceMs.toString()) else null
+        val limitClause = if (limit != null) "$limit OFFSET $offset" else null
         val cursor = readableDatabase.query(
             TABLE_NAME, null, selection, selectionArgs, null, null,
-            "$COL_TIMESTAMP DESC", "100"
+            "$COL_TIMESTAMP DESC", limitClause
         )
         cursor.use {
             while (it.moveToNext()) {
@@ -138,6 +187,19 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return list
     }
 
+    fun getCount(sinceMs: Long?): Int {
+        val db = readableDatabase
+        val selection = if (sinceMs != null) "$COL_TIMESTAMP >= ?" else null
+        val selectionArgs = if (sinceMs != null) arrayOf(sinceMs.toString()) else null
+        val sql = "SELECT COUNT(*) FROM $TABLE_NAME" +
+                (if (selection != null) " WHERE $selection" else "")
+        val cursor = db.rawQuery(sql, selectionArgs)
+        cursor.use {
+            if (it.moveToFirst()) return it.getInt(0)
+        }
+        return 0
+    }
+
     fun deleteAll() {
         val db = writableDatabase
         try {
@@ -147,10 +209,569 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
+    // ── Fuel Refuels ──
+
+    fun insertRefuel(r: RefuelRecord): Long {
+        val db = writableDatabase
+        return try {
+            val cv = ContentValues().apply {
+                put(COL_R_TIMESTAMP, r.timestamp)
+                put(COL_R_ODOMETER, r.odometerKm)
+                put(COL_R_LITERS, r.liters)
+                put(COL_R_PRICE, r.pricePerLiter)
+                put(COL_R_TOTAL, r.totalValue)
+                put(COL_R_FULL_TANK, if (r.isFullTank) 1 else 0)
+                put(COL_R_FUEL_TYPE, r.fuelType)
+                put(COL_R_NOTES, r.notes)
+            }
+            db.insert(TABLE_FUEL_REFUELS, null, cv)
+        } finally {
+            db.close()
+        }
+    }
+
+    fun getRefuels(): List<RefuelRecord> {
+        val list = mutableListOf<RefuelRecord>()
+        val cursor = readableDatabase.query(
+            TABLE_FUEL_REFUELS, null, null, null, null, null,
+            "$COL_R_TIMESTAMP DESC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                list.add(RefuelRecord(
+                    id = it.getLong(it.getColumnIndexOrThrow(COL_ID)),
+                    timestamp = it.getLong(it.getColumnIndexOrThrow(COL_R_TIMESTAMP)),
+                    odometerKm = it.getDouble(it.getColumnIndexOrThrow(COL_R_ODOMETER)),
+                    liters = it.getDouble(it.getColumnIndexOrThrow(COL_R_LITERS)),
+                    pricePerLiter = it.getDouble(it.getColumnIndexOrThrow(COL_R_PRICE)),
+                    totalValue = it.getDouble(it.getColumnIndexOrThrow(COL_R_TOTAL)),
+                    isFullTank = it.getInt(it.getColumnIndexOrThrow(COL_R_FULL_TANK)) == 1,
+                    fuelType = it.getString(it.getColumnIndexOrThrow(COL_R_FUEL_TYPE)),
+                    notes = if (it.isNull(it.getColumnIndexOrThrow(COL_R_NOTES))) null
+                        else it.getString(it.getColumnIndexOrThrow(COL_R_NOTES))
+                ))
+            }
+        }
+        return list
+    }
+
+    fun deleteRefuel(id: Long) {
+        writableDatabase.delete(TABLE_FUEL_REFUELS, "$COL_ID = ?", arrayOf(id.toString()))
+    }
+
+    // ── Fixed Expenses ──
+
+    fun insertExpense(e: FixedExpense): Long {
+        val db = writableDatabase
+        return try {
+            val cv = ContentValues().apply {
+                put(COL_E_NAME, e.name)
+                put(COL_E_VALUE, e.value)
+                put(COL_E_CATEGORY, e.category)
+                put(COL_E_CREATED_AT, e.createdAt)
+                put(COL_E_PERIODICITY, e.periodicity)
+                put(COL_E_USEFUL_LIFE, e.usefulLifeMonths)
+            }
+            db.insert(TABLE_FIXED_EXPENSES, null, cv)
+        } finally {
+            db.close()
+        }
+    }
+
+    fun getExpenses(): List<FixedExpense> {
+        val list = mutableListOf<FixedExpense>()
+        val cursor = readableDatabase.query(
+            TABLE_FIXED_EXPENSES, null, null, null, null, null,
+            "$COL_E_CREATED_AT DESC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                list.add(FixedExpense(
+                    id = it.getLong(it.getColumnIndexOrThrow(COL_ID)),
+                    name = it.getString(it.getColumnIndexOrThrow(COL_E_NAME)),
+                    value = it.getDouble(it.getColumnIndexOrThrow(COL_E_VALUE)),
+                    category = it.getString(it.getColumnIndexOrThrow(COL_E_CATEGORY)),
+                    createdAt = it.getLong(it.getColumnIndexOrThrow(COL_E_CREATED_AT)),
+                    periodicity = it.getString(it.getColumnIndexOrThrow(COL_E_PERIODICITY)),
+                    usefulLifeMonths = it.getInt(it.getColumnIndexOrThrow(COL_E_USEFUL_LIFE))
+                ))
+            }
+        }
+        return list
+    }
+
+    fun updateExpense(e: FixedExpense) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_E_NAME, e.name)
+                put(COL_E_VALUE, e.value)
+                put(COL_E_CATEGORY, e.category)
+                put(COL_E_PERIODICITY, e.periodicity)
+                put(COL_E_USEFUL_LIFE, e.usefulLifeMonths)
+            }
+            db.update(TABLE_FIXED_EXPENSES, cv, "$COL_ID = ?", arrayOf(e.id.toString()))
+        } finally {
+            db.close()
+        }
+    }
+
+    fun deleteExpense(id: Long) {
+        writableDatabase.delete(TABLE_FIXED_EXPENSES, "$COL_ID = ?", arrayOf(id.toString()))
+    }
+
+    // ── Variable Costs ──
+
+    fun insertVariableCost(vc: VariableCost): Long {
+        val db = writableDatabase
+        return try {
+            val cv = ContentValues().apply {
+                put(COL_VC_NAME, vc.name)
+                put(COL_VC_COST_PER_KM, vc.costPerKm)
+                put(COL_VC_CATEGORY, vc.category)
+                put(COL_VC_CREATED_AT, vc.createdAt)
+            }
+            db.insert(TABLE_VARIABLE_COSTS, null, cv)
+        } finally {
+            db.close()
+        }
+    }
+
+    fun getVariableCosts(): List<VariableCost> {
+        val list = mutableListOf<VariableCost>()
+        val cursor = readableDatabase.query(
+            TABLE_VARIABLE_COSTS, null, null, null, null, null,
+            "$COL_VC_CREATED_AT DESC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                list.add(VariableCost(
+                    id = it.getLong(it.getColumnIndexOrThrow(COL_ID)),
+                    name = it.getString(it.getColumnIndexOrThrow(COL_VC_NAME)),
+                    costPerKm = it.getDouble(it.getColumnIndexOrThrow(COL_VC_COST_PER_KM)),
+                    category = it.getString(it.getColumnIndexOrThrow(COL_VC_CATEGORY)),
+                    createdAt = it.getLong(it.getColumnIndexOrThrow(COL_VC_CREATED_AT))
+                ))
+            }
+        }
+        return list
+    }
+
+    fun deleteVariableCost(id: Long) {
+        writableDatabase.delete(TABLE_VARIABLE_COSTS, "$COL_ID = ?", arrayOf(id.toString()))
+    }
+
+    // ── Unified Expenses ──
+
+    fun insertExpenseItem(e: Expense): Long {
+        val db = writableDatabase
+        return try {
+            val cv = ContentValues().apply {
+                put(COL_E_NAME, e.name)
+                put(COL_E_VALUE, e.value)
+                put(COL_EX_COST_TYPE, e.costType.name.lowercase())
+                put(COL_EX_PERIODICITY, e.periodicity?.name?.lowercase())
+                put(COL_E_USEFUL_LIFE, e.usefulLifeMonths)
+                put(COL_EX_PROFIT_PCT, e.percentageOfProfit)
+                put(COL_EX_EVENTS_PER_MONTH, e.estimatedEventsPerMonth)
+                put(COL_E_CATEGORY, e.category.name)
+                put(COL_R_NOTES, e.notes)
+                put(COL_E_CREATED_AT, e.createdAt)
+            }
+            db.insert(TABLE_EXPENSES, null, cv)
+        } finally {
+            db.close()
+        }
+    }
+
+    fun getAllExpenses(): List<Expense> {
+        val list = mutableListOf<Expense>()
+        val cursor = readableDatabase.query(
+            TABLE_EXPENSES, null, null, null, null, null,
+            "$COL_E_CREATED_AT DESC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                list.add(expenseFromCursor(it))
+            }
+        }
+        return list
+    }
+
+    fun getExpensesByCostType(costType: CostType): List<Expense> {
+        val list = mutableListOf<Expense>()
+        val cursor = readableDatabase.query(
+            TABLE_EXPENSES, null,
+            "$COL_EX_COST_TYPE = ?", arrayOf(costType.name.lowercase()),
+            null, null, "$COL_E_CREATED_AT DESC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                list.add(expenseFromCursor(it))
+            }
+        }
+        return list
+    }
+
+    fun updateExpenseItem(e: Expense) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_E_NAME, e.name)
+                put(COL_E_VALUE, e.value)
+                put(COL_EX_COST_TYPE, e.costType.name.lowercase())
+                put(COL_EX_PERIODICITY, e.periodicity?.name?.lowercase())
+                put(COL_E_USEFUL_LIFE, e.usefulLifeMonths)
+                put(COL_EX_PROFIT_PCT, e.percentageOfProfit)
+                put(COL_EX_EVENTS_PER_MONTH, e.estimatedEventsPerMonth)
+                put(COL_E_CATEGORY, e.category.name)
+                put(COL_R_NOTES, e.notes)
+            }
+            db.update(TABLE_EXPENSES, cv, "$COL_ID = ?", arrayOf(e.id.toString()))
+        } finally {
+            db.close()
+        }
+    }
+
+    fun deleteExpenseItem(id: Long) {
+        writableDatabase.delete(TABLE_EXPENSES, "$COL_ID = ?", arrayOf(id.toString()))
+    }
+
+    private fun expenseFromCursor(cursor: android.database.Cursor): Expense {
+        return Expense(
+            id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_ID)),
+            name = cursor.getString(cursor.getColumnIndexOrThrow(COL_E_NAME)),
+            value = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_E_VALUE)),
+            costType = CostType.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COL_EX_COST_TYPE)).uppercase()),
+            periodicity = try {
+                if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_EX_PERIODICITY))) null
+                else Periodicity.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COL_EX_PERIODICITY)).uppercase())
+            } catch (_: IllegalArgumentException) { null },
+            usefulLifeMonths = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_E_USEFUL_LIFE))) null
+                else cursor.getInt(cursor.getColumnIndexOrThrow(COL_E_USEFUL_LIFE)),
+            percentageOfProfit = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_EX_PROFIT_PCT))) null
+                else cursor.getInt(cursor.getColumnIndexOrThrow(COL_EX_PROFIT_PCT)),
+            estimatedEventsPerMonth = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_EX_EVENTS_PER_MONTH))) null
+                else cursor.getInt(cursor.getColumnIndexOrThrow(COL_EX_EVENTS_PER_MONTH)),
+            category = try {
+                ExpenseCategory.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COL_E_CATEGORY)).uppercase())
+            } catch (_: IllegalArgumentException) { ExpenseCategory.OTHER },
+            notes = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_R_NOTES))) null
+                else cursor.getString(cursor.getColumnIndexOrThrow(COL_R_NOTES)),
+            createdAt = cursor.getLong(cursor.getColumnIndexOrThrow(COL_E_CREATED_AT))
+        )
+    }
+
+    // ── Monthly Stats ──
+
+    fun saveMonthlyStat(year: Int, month: Int, totalKm: Double, totalFuelCost: Double, avgConsumption: Double?) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_MS_YEAR, year)
+                put(COL_MS_MONTH, month)
+                put(COL_MS_TOTAL_KM, totalKm)
+                put(COL_MS_TOTAL_FUEL_COST, totalFuelCost)
+                put(COL_MS_AVG_CONSUMPTION, avgConsumption)
+            }
+            db.insertWithOnConflict(TABLE_MONTHLY_STATS, null, cv, SQLiteDatabase.CONFLICT_REPLACE)
+        } finally {
+            db.close()
+        }
+    }
+
+    fun getMonthlyStats(): List<MonthlyStat> {
+        val list = mutableListOf<MonthlyStat>()
+        val cursor = readableDatabase.query(
+            TABLE_MONTHLY_STATS, null, null, null, null, null,
+            "$COL_MS_YEAR DESC, $COL_MS_MONTH DESC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                list.add(MonthlyStat(
+                    id = it.getLong(it.getColumnIndexOrThrow(COL_ID)),
+                    year = it.getInt(it.getColumnIndexOrThrow(COL_MS_YEAR)),
+                    month = it.getInt(it.getColumnIndexOrThrow(COL_MS_MONTH)),
+                    totalKm = it.getDouble(it.getColumnIndexOrThrow(COL_MS_TOTAL_KM)),
+                    totalFuelCost = it.getDouble(it.getColumnIndexOrThrow(COL_MS_TOTAL_FUEL_COST)),
+                    avgConsumption = if (it.isNull(it.getColumnIndexOrThrow(COL_MS_AVG_CONSUMPTION))) null
+                        else it.getDouble(it.getColumnIndexOrThrow(COL_MS_AVG_CONSUMPTION))
+                ))
+            }
+        }
+        return list
+    }
+
+    // ── Cost Settings ──
+
+    fun getMonthlyKm(): Int {
+        val cursor = readableDatabase.query(
+            TABLE_COST_SETTINGS, null, "$COL_ID = 1", null, null, null, null
+        )
+        cursor.use {
+            if (it.moveToFirst()) return it.getInt(it.getColumnIndexOrThrow(COL_CS_MONTHLY_KM))
+        }
+        return 3000
+    }
+
+    fun saveMonthlyKm(km: Int) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_ID, 1)
+                put(COL_CS_MONTHLY_KM, km)
+                put(COL_CS_UPDATED_AT, System.currentTimeMillis())
+            }
+            db.insertWithOnConflict(TABLE_COST_SETTINGS, null, cv,
+                SQLiteDatabase.CONFLICT_REPLACE)
+        } finally {
+            db.close()
+        }
+    }
+
+    fun getDistinctServiceTypes(): List<String> {
+        val list = mutableListOf<String>()
+        val cursor = readableDatabase.query(
+            true, TABLE_NAME, arrayOf(COL_SERVICE_TYPE),
+            "$COL_SERVICE_TYPE IS NOT NULL AND $COL_SERVICE_TYPE NOT LIKE 'Manual -%'", null, null, null, null, null
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                list.add(it.getString(0))
+            }
+        }
+        return list
+    }
+
+    fun getRidesByDateRange(startMs: Long, endMs: Long): List<RideRecord> {
+        val list = mutableListOf<RideRecord>()
+        val cursor = readableDatabase.query(
+            TABLE_NAME, null,
+            "$COL_TIMESTAMP >= ? AND $COL_TIMESTAMP <= ?",
+            arrayOf(startMs.toString(), endMs.toString()),
+            null, null, "$COL_TIMESTAMP DESC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                list.add(RideRecord(
+                    id = it.getLong(it.getColumnIndexOrThrow(COL_ID)),
+                    value = it.getDouble(it.getColumnIndexOrThrow(COL_VALUE)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_VALUE))) null else v
+                    },
+                    distanceKm = it.getDouble(it.getColumnIndexOrThrow(COL_DISTANCE_KM)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_DISTANCE_KM))) null else v
+                    },
+                    timeMin = it.getInt(it.getColumnIndexOrThrow(COL_TIME_MIN)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_TIME_MIN))) null else v
+                    },
+                    rating = it.getDouble(it.getColumnIndexOrThrow(COL_RATING)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_RATING))) null else v
+                    },
+                    pricePerKm = it.getDouble(it.getColumnIndexOrThrow(COL_PRICE_PER_KM)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_PRICE_PER_KM))) null else v
+                    },
+                    pricePerHour = it.getDouble(it.getColumnIndexOrThrow(COL_PRICE_PER_HOUR)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_PRICE_PER_HOUR))) null else v
+                    },
+                    appName = it.getString(it.getColumnIndexOrThrow(COL_APP_NAME)),
+                    timestamp = it.getLong(it.getColumnIndexOrThrow(COL_TIMESTAMP)),
+                    pickupDistanceKm = it.getDouble(it.getColumnIndexOrThrow(COL_PICKUP_DISTANCE)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_PICKUP_DISTANCE))) null else v
+                    },
+                    pickupTimeMin = it.getInt(it.getColumnIndexOrThrow(COL_PICKUP_TIME)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_PICKUP_TIME))) null else v
+                    },
+                    tripDistanceKm = it.getDouble(it.getColumnIndexOrThrow(COL_TRIP_DISTANCE)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_TRIP_DISTANCE))) null else v
+                    },
+                    tripTimeMin = it.getInt(it.getColumnIndexOrThrow(COL_TRIP_TIME)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_TRIP_TIME))) null else v
+                    },
+                    serviceType = if (it.isNull(it.getColumnIndexOrThrow(COL_SERVICE_TYPE))) null
+                        else it.getString(it.getColumnIndexOrThrow(COL_SERVICE_TYPE)),
+                    bonusAmount = it.getDouble(it.getColumnIndexOrThrow(COL_BONUS_AMOUNT)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_BONUS_AMOUNT))) null else v
+                    },
+                    status = if (it.isNull(it.getColumnIndexOrThrow(COL_STATUS))) "EXPIRED"
+                        else it.getString(it.getColumnIndexOrThrow(COL_STATUS)),
+                    stops = if (it.isNull(it.getColumnIndexOrThrow(COL_STOPS))) null
+                        else it.getInt(it.getColumnIndexOrThrow(COL_STOPS)),
+                    scorePercent = it.getDouble(it.getColumnIndexOrThrow(COL_SCORE_PERCENT)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_SCORE_PERCENT))) null else v
+                    }
+                ))
+            }
+        }
+        return list
+    }
+
+    // ── Daily Rides ──
+
+    fun insertDailyRide(dailyRide: DailyRide): Long {
+        val db = writableDatabase
+        return try {
+            val cv = ContentValues().apply {
+                put(COL_DR_RIDE_ID, dailyRide.rideId)
+                put(COL_DR_DATE, dailyRide.date)
+                put(COL_DR_ORIGINAL_VALUE, dailyRide.originalValue)
+                put(COL_DR_ADJUSTED_VALUE, dailyRide.adjustedValue)
+                put(COL_DR_TIP_AMOUNT, dailyRide.tipAmount)
+                put(COL_DR_IS_COMPLETED, if (dailyRide.isCompleted) 1 else 0)
+                put(COL_DR_NOTES, dailyRide.notes)
+                put(COL_DR_CREATED_AT, dailyRide.createdAt)
+                put(COL_DR_UPDATED_AT, dailyRide.updatedAt)
+            }
+            db.insert(TABLE_DAILY_RIDES, null, cv)
+        } finally {
+            db.close()
+        }
+    }
+
+    fun getDailyRidesByDate(date: String): List<DailyRide> {
+        val list = mutableListOf<DailyRide>()
+        val cursor = readableDatabase.query(
+            TABLE_DAILY_RIDES, null,
+            "$COL_DR_DATE = ?", arrayOf(date),
+            null, null, "$COL_DR_CREATED_AT ASC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                list.add(dailyRideFromCursor(it))
+            }
+        }
+        return list
+    }
+
+    fun getDailyRidesByDateRange(startMs: Long, endMs: Long): List<DailyRide> {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val startDate = dateFormat.format(Date(startMs))
+        val endDate = dateFormat.format(Date(endMs))
+        val list = mutableListOf<DailyRide>()
+        val cursor = readableDatabase.query(
+            TABLE_DAILY_RIDES, null,
+            "$COL_DR_DATE >= ? AND $COL_DR_DATE <= ?",
+            arrayOf(startDate, endDate),
+            null, null, "$COL_DR_DATE ASC, $COL_DR_CREATED_AT ASC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                list.add(dailyRideFromCursor(it))
+            }
+        }
+        return list
+    }
+
+    fun getAllDailyRides(): List<DailyRide> {
+        val list = mutableListOf<DailyRide>()
+        val cursor = readableDatabase.query(
+            TABLE_DAILY_RIDES, null, null, null, null, null,
+            "$COL_DR_DATE DESC, $COL_DR_CREATED_AT ASC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                list.add(dailyRideFromCursor(it))
+            }
+        }
+        return list
+    }
+
+    fun updateDailyRide(dailyRide: DailyRide) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_DR_RIDE_ID, dailyRide.rideId)
+                put(COL_DR_DATE, dailyRide.date)
+                put(COL_DR_ORIGINAL_VALUE, dailyRide.originalValue)
+                put(COL_DR_ADJUSTED_VALUE, dailyRide.adjustedValue)
+                put(COL_DR_TIP_AMOUNT, dailyRide.tipAmount)
+                put(COL_DR_IS_COMPLETED, if (dailyRide.isCompleted) 1 else 0)
+                put(COL_DR_NOTES, dailyRide.notes)
+                put(COL_DR_UPDATED_AT, System.currentTimeMillis())
+            }
+            db.update(TABLE_DAILY_RIDES, cv, "$COL_ID = ?", arrayOf(dailyRide.id.toString()))
+        } finally {
+            db.close()
+        }
+    }
+
+    fun deleteDailyRide(id: Long) {
+        writableDatabase.delete(TABLE_DAILY_RIDES, "$COL_ID = ?", arrayOf(id.toString()))
+    }
+
+    fun getTodayRideRecords(date: String): List<RideRecord> {
+        val todayStart = java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.HOUR_OF_DAY, 0)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        val todayEnd = todayStart + 86_400_000
+        val addedRideIds = getDailyRidesByDate(date).map { it.rideId }.toSet()
+        return getFiltered(todayStart, null, 0)
+            .filter { it.id !in addedRideIds }
+            .filter { it.serviceType == null || !it.serviceType!!.startsWith("Manual -") }
+    }
+
+    fun insertManualRide(serviceType: String, value: Double, distanceKm: Double, timeMin: Int): Long {
+        val db = writableDatabase
+        return try {
+            val cv = ContentValues().apply {
+                put(COL_VALUE, value)
+                put(COL_DISTANCE_KM, distanceKm)
+                put(COL_TIME_MIN, timeMin)
+                put(COL_TRIP_DISTANCE, distanceKm)
+                put(COL_TRIP_TIME, timeMin)
+                put(COL_APP_NAME, "")
+                put(COL_TIMESTAMP, System.currentTimeMillis())
+                put(COL_SERVICE_TYPE, "Manual - $serviceType")
+                put(COL_STATUS, "COMPLETED")
+            }
+            db.insert(TABLE_NAME, null, cv)
+        } finally {
+            db.close()
+        }
+    }
+
+    fun isRideAlreadyAddedToday(rideId: Long, date: String): Boolean {
+        val cursor = readableDatabase.query(
+            TABLE_DAILY_RIDES, arrayOf(COL_ID),
+            "$COL_DR_RIDE_ID = ? AND $COL_DR_DATE = ?",
+            arrayOf(rideId.toString(), date),
+            null, null, null
+        )
+        cursor.use {
+            return it.count > 0
+        }
+    }
+
+    private fun dailyRideFromCursor(cursor: android.database.Cursor): DailyRide {
+        return DailyRide(
+            id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_ID)),
+            rideId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_DR_RIDE_ID)),
+            date = cursor.getString(cursor.getColumnIndexOrThrow(COL_DR_DATE)),
+            originalValue = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_DR_ORIGINAL_VALUE)),
+            adjustedValue = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_DR_ADJUSTED_VALUE))) null
+                else cursor.getDouble(cursor.getColumnIndexOrThrow(COL_DR_ADJUSTED_VALUE)),
+            tipAmount = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_DR_TIP_AMOUNT)),
+            isCompleted = cursor.getInt(cursor.getColumnIndexOrThrow(COL_DR_IS_COMPLETED)) == 1,
+            notes = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_DR_NOTES))) null
+                else cursor.getString(cursor.getColumnIndexOrThrow(COL_DR_NOTES)),
+            createdAt = cursor.getLong(cursor.getColumnIndexOrThrow(COL_DR_CREATED_AT)),
+            updatedAt = cursor.getLong(cursor.getColumnIndexOrThrow(COL_DR_UPDATED_AT))
+        )
+    }
+
     companion object {
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 6
+        private const val DATABASE_VERSION = 11
         private const val TABLE_NAME = "ride_history"
+        private const val TABLE_FUEL_REFUELS = "fuel_refuels"
+        private const val TABLE_EXPENSES = "expenses"
+        private const val TABLE_FIXED_EXPENSES = "fixed_expenses"
+        private const val TABLE_VARIABLE_COSTS = "variable_costs"
+        private const val TABLE_COST_SETTINGS = "cost_settings"
+        private const val TABLE_MONTHLY_STATS = "monthly_stats"
+        private const val TABLE_DAILY_RIDES = "daily_rides"
 
         private const val COL_ID = "id"
         private const val COL_VALUE = "ride_value"
@@ -170,6 +791,153 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_STATUS = "status"
         private const val COL_STOPS = "stops"
         private const val COL_SCORE_PERCENT = "score_percent"
+
+        // Fuel refuels columns
+        private const val COL_R_TIMESTAMP = "timestamp"
+        private const val COL_R_ODOMETER = "odometer_km"
+        private const val COL_R_LITERS = "liters"
+        private const val COL_R_PRICE = "price_per_liter"
+        private const val COL_R_TOTAL = "total_value"
+        private const val COL_R_FULL_TANK = "is_full_tank"
+        private const val COL_R_FUEL_TYPE = "fuel_type"
+        private const val COL_R_NOTES = "notes"
+
+        // Fixed expenses / unified expenses columns
+        private const val COL_E_NAME = "name"
+        private const val COL_E_VALUE = "value"
+        private const val COL_E_CATEGORY = "category"
+        private const val COL_E_CREATED_AT = "created_at"
+        private const val COL_E_PERIODICITY = "periodicity"
+        private const val COL_E_USEFUL_LIFE = "useful_life_months"
+        private const val COL_EX_COST_TYPE = "cost_type"
+        private const val COL_EX_PERIODICITY = "periodicity"
+        private const val COL_EX_PROFIT_PCT = "percentage_of_profit"
+        private const val COL_EX_EVENTS_PER_MONTH = "estimated_events_per_month"
+
+        // Variable costs columns
+        private const val COL_VC_NAME = "name"
+        private const val COL_VC_COST_PER_KM = "cost_per_km"
+        private const val COL_VC_CATEGORY = "category"
+        private const val COL_VC_CREATED_AT = "created_at"
+
+        // Monthly stats columns
+        private const val COL_MS_YEAR = "year"
+        private const val COL_MS_MONTH = "month"
+        private const val COL_MS_TOTAL_KM = "total_km"
+        private const val COL_MS_TOTAL_FUEL_COST = "total_fuel_cost"
+        private const val COL_MS_AVG_CONSUMPTION = "avg_consumption"
+
+        // Cost settings columns
+        private const val COL_CS_MONTHLY_KM = "monthly_km"
+        private const val COL_CS_UPDATED_AT = "updated_at"
+
+        // Daily rides columns
+        private const val COL_DR_RIDE_ID = "ride_id"
+        private const val COL_DR_DATE = "date"
+        private const val COL_DR_ORIGINAL_VALUE = "original_value"
+        private const val COL_DR_ADJUSTED_VALUE = "adjusted_value"
+        private const val COL_DR_TIP_AMOUNT = "tip_amount"
+        private const val COL_DR_IS_COMPLETED = "is_completed"
+        private const val COL_DR_NOTES = "notes"
+        private const val COL_DR_CREATED_AT = "created_at"
+        private const val COL_DR_UPDATED_AT = "updated_at"
+
+        private val CREATE_FUEL_REFUELS = """
+            CREATE TABLE $TABLE_FUEL_REFUELS (
+                $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_R_TIMESTAMP INTEGER NOT NULL,
+                $COL_R_ODOMETER REAL NOT NULL,
+                $COL_R_LITERS REAL NOT NULL,
+                $COL_R_PRICE REAL NOT NULL,
+                $COL_R_TOTAL REAL NOT NULL,
+                $COL_R_FULL_TANK INTEGER DEFAULT 0,
+                $COL_R_FUEL_TYPE TEXT DEFAULT 'gasoline',
+                $COL_R_NOTES TEXT
+            )
+        """.trimIndent()
+
+        private val CREATE_FIXED_EXPENSES_V7 = """
+            CREATE TABLE IF NOT EXISTS $TABLE_FIXED_EXPENSES (
+                $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_E_NAME TEXT NOT NULL,
+                $COL_E_VALUE REAL NOT NULL,
+                $COL_E_CATEGORY TEXT,
+                $COL_E_CREATED_AT INTEGER NOT NULL
+            )
+        """.trimIndent()
+
+        private val CREATE_FIXED_EXPENSES_V8 = """
+            CREATE TABLE IF NOT EXISTS $TABLE_FIXED_EXPENSES (
+                $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_E_NAME TEXT NOT NULL,
+                $COL_E_VALUE REAL NOT NULL,
+                $COL_E_CATEGORY TEXT,
+                $COL_E_CREATED_AT INTEGER NOT NULL,
+                $COL_E_PERIODICITY TEXT DEFAULT 'monthly',
+                $COL_E_USEFUL_LIFE INTEGER DEFAULT 1
+            )
+        """.trimIndent()
+
+        private val CREATE_VARIABLE_COSTS = """
+            CREATE TABLE IF NOT EXISTS $TABLE_VARIABLE_COSTS (
+                $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_VC_NAME TEXT NOT NULL,
+                $COL_VC_COST_PER_KM REAL NOT NULL,
+                $COL_VC_CATEGORY TEXT,
+                $COL_VC_CREATED_AT INTEGER NOT NULL
+            )
+        """.trimIndent()
+
+        private val CREATE_EXPENSES = """
+            CREATE TABLE $TABLE_EXPENSES (
+                $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                ${COL_E_NAME} TEXT NOT NULL,
+                ${COL_E_VALUE} REAL NOT NULL,
+                ${COL_EX_COST_TYPE} TEXT NOT NULL,
+                ${COL_EX_PERIODICITY} TEXT,
+                ${COL_E_USEFUL_LIFE} INTEGER DEFAULT 1,
+                ${COL_EX_PROFIT_PCT} INTEGER,
+                ${COL_EX_EVENTS_PER_MONTH} INTEGER,
+                ${COL_E_CATEGORY} TEXT NOT NULL,
+                ${COL_R_NOTES} TEXT,
+                ${COL_E_CREATED_AT} INTEGER NOT NULL
+            )
+        """.trimIndent()
+
+        private val CREATE_MONTHLY_STATS = """
+            CREATE TABLE IF NOT EXISTS $TABLE_MONTHLY_STATS (
+                $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_MS_YEAR INTEGER NOT NULL,
+                $COL_MS_MONTH INTEGER NOT NULL,
+                $COL_MS_TOTAL_KM REAL NOT NULL,
+                $COL_MS_TOTAL_FUEL_COST REAL NOT NULL,
+                $COL_MS_AVG_CONSUMPTION REAL,
+                UNIQUE($COL_MS_YEAR, $COL_MS_MONTH)
+            )
+        """.trimIndent()
+
+        private val CREATE_DAILY_RIDES = """
+            CREATE TABLE $TABLE_DAILY_RIDES (
+                $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_DR_RIDE_ID INTEGER NOT NULL,
+                $COL_DR_DATE TEXT NOT NULL,
+                $COL_DR_ORIGINAL_VALUE REAL NOT NULL,
+                $COL_DR_ADJUSTED_VALUE REAL,
+                $COL_DR_TIP_AMOUNT REAL DEFAULT 0,
+                $COL_DR_IS_COMPLETED INTEGER DEFAULT 0,
+                $COL_DR_NOTES TEXT,
+                $COL_DR_CREATED_AT INTEGER,
+                $COL_DR_UPDATED_AT INTEGER
+            )
+        """.trimIndent()
+
+        private val CREATE_COST_SETTINGS = """
+            CREATE TABLE IF NOT EXISTS $TABLE_COST_SETTINGS (
+                $COL_ID INTEGER PRIMARY KEY DEFAULT 1,
+                $COL_CS_MONTHLY_KM INTEGER DEFAULT 3000,
+                $COL_CS_UPDATED_AT INTEGER NOT NULL
+            )
+        """.trimIndent()
 
         private val CREATE_TABLE = """
             CREATE TABLE $TABLE_NAME (
@@ -211,4 +979,94 @@ data class RideRecord(
     val status: String = "EXPIRED",
     val stops: Int? = null,
     val scorePercent: Double? = null
+)
+
+data class RefuelRecord(
+    val id: Long = 0,
+    val timestamp: Long,
+    val odometerKm: Double,
+    val liters: Double,
+    val pricePerLiter: Double,
+    val totalValue: Double,
+    val isFullTank: Boolean,
+    val fuelType: String,
+    val notes: String? = null
+)
+
+data class FixedExpense(
+    val id: Long = 0,
+    val name: String,
+    val value: Double,
+    val category: String,
+    val createdAt: Long,
+    val periodicity: String = "monthly",
+    val usefulLifeMonths: Int = 1
+)
+
+data class VariableCost(
+    val id: Long = 0,
+    val name: String,
+    val costPerKm: Double,
+    val category: String,
+    val createdAt: Long
+)
+
+data class MonthlyStat(
+    val id: Long = 0,
+    val year: Int,
+    val month: Int,
+    val totalKm: Double,
+    val totalFuelCost: Double,
+    val avgConsumption: Double?
+)
+
+data class NormalizedExpense(
+    val name: String,
+    val monthlyCost: Double,
+    val costPerKm: Double,
+    val category: String,
+    val periodicity: String?
+)
+
+data class CostSummary(
+    val avgConsumption: Double,
+    val fuelCostPerKm: Double,
+    val normalizedExpenses: List<NormalizedExpense>,
+    val totalFixedMonthlyCost: Double,
+    val fixedCostPerKm: Double,
+    val variableCostPerKm: Double,
+    val totalCostPerKm: Double,
+    val costPerHour: Double,
+    val costPerMinute: Double
+)
+
+enum class CostType { FIXED, PER_KM, EVENT }
+
+enum class Periodicity { MONTHLY, YEARLY }
+
+enum class ExpenseCategory(val display: String, val icon: String) {
+    FUEL("Combustível", "\u26FD"),
+    MAINTENANCE("Manutenção", "\uD83D\uDD27"),
+    TIRES("Pneus", "\uD83D\uDD04"),
+    INSURANCE("Seguro", "\uD83D\uDEE1\uFE0F"),
+    TAX("IPVA", "\uD83D\uDCB0"),
+    WASH("Lavagem", "\uD83E\uDDFC"),
+    PARKING("Estacionamento", "\uD83D\uDD7F\uFE0F"),
+    TOLL("Pedágio", "\uD83D\uDEE3\uFE0F"),
+    FINANCING("Financiamento", "\uD83C\uDFE6"),
+    OTHER("Outros", "\uD83D\uDCCB")
+}
+
+data class Expense(
+    val id: Long = 0,
+    val name: String,
+    val value: Double,
+    val costType: CostType,
+    val periodicity: Periodicity? = null,
+    val usefulLifeMonths: Int? = null,
+    val percentageOfProfit: Int? = null,
+    val estimatedEventsPerMonth: Int? = null,
+    val category: ExpenseCategory,
+    val notes: String? = null,
+    val createdAt: Long = System.currentTimeMillis()
 )

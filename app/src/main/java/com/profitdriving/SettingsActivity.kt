@@ -6,14 +6,22 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import java.text.NumberFormat
+import java.util.Locale
+import androidx.appcompat.app.AlertDialog
 
-class SettingsActivity : AppCompatActivity() {
+
+class SettingsActivity : BaseActivity() {
 
     private lateinit var prefs: SharedPreferences
     private lateinit var etMinKm: EditText
@@ -28,6 +36,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var btnColuna: TextView
     private lateinit var btnLinha: TextView
     private lateinit var btnEsquerda: TextView
+    private lateinit var btnCentro: TextView
     private lateinit var btnDireita: TextView
     private lateinit var seekY: SeekBar
     private lateinit var tvYLabel: TextView
@@ -54,10 +63,18 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var pvRating: TextView
     private lateinit var pvDecision: TextView
     private lateinit var pvScore: TextView
+    private lateinit var btnPage25: TextView
+    private lateinit var btnPage50: TextView
+    private lateinit var btnPage100: TextView
+    private lateinit var btnPage200: TextView
+    private lateinit var btnPage500: TextView
+    private var selectedPageSize = 100
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+        setupBottomNav(Screen.PARAMS)
+        setupToolbar(title = "Par\u00e2metros", showBack = true, actionText = "\uD83D\uDCBE Salvar", actionListener = { saveValues() })
 
         prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
@@ -69,10 +86,11 @@ class SettingsActivity : AppCompatActivity() {
         etIdealMinute = findViewById(R.id.etIdealMinute)
         etMinRating = findViewById(R.id.etMinRating)
         etIdealRating = findViewById(R.id.etIdealRating)
-        btnSave = findViewById(R.id.btnSave)
+        btnSave = findViewById(R.id.btnAction)
         btnColuna = findViewById(R.id.btnColuna)
         btnLinha = findViewById(R.id.btnLinha)
         btnEsquerda = findViewById(R.id.btnEsquerda)
+        btnCentro = findViewById(R.id.btnCentro)
         btnDireita = findViewById(R.id.btnDireita)
         seekY = findViewById(R.id.seekY)
         tvYLabel = findViewById(R.id.tvYLabel)
@@ -99,19 +117,67 @@ class SettingsActivity : AppCompatActivity() {
         pvRating = findViewById(R.id.pvRating)
         pvDecision = findViewById(R.id.pvDecision)
         pvScore = findViewById(R.id.pvScore)
+        btnPage25 = findViewById(R.id.btnPage25)
+        btnPage50 = findViewById(R.id.btnPage50)
+        btnPage100 = findViewById(R.id.btnPage100)
+        btnPage200 = findViewById(R.id.btnPage200)
+        btnPage500 = findViewById(R.id.btnPage500)
 
         loadValues()
 
-        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
+        val textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) { updatePreview() }
+        }
+        etMinKm.addTextChangedListener(textWatcher)
+        etIdealKm.addTextChangedListener(textWatcher)
+        etMinHour.addTextChangedListener(textWatcher)
+        etIdealHour.addTextChangedListener(textWatcher)
+        etMinMinute.addTextChangedListener(textWatcher)
+        etIdealMinute.addTextChangedListener(textWatcher)
+        etMinRating.addTextChangedListener(textWatcher)
+        etIdealRating.addTextChangedListener(textWatcher)
+
+        val validationWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val text = s?.toString() ?: return
+                if (text.isNotEmpty()) {
+                    val cleaned = text.trim().replace(",", ".")
+                    val v = cleaned.toFloatOrNull()
+                    if (v == null || v <= 0) {
+                        (s as? EditText)?.error = "Valor inválido"
+                    } else {
+                        (s as? EditText)?.error = null
+                    }
+                }
+            }
+        }
+        etMinKm.addTextChangedListener(validationWatcher)
+        etIdealKm.addTextChangedListener(validationWatcher)
+        etMinHour.addTextChangedListener(validationWatcher)
+        etIdealHour.addTextChangedListener(validationWatcher)
+        etMinMinute.addTextChangedListener(validationWatcher)
+        etIdealMinute.addTextChangedListener(validationWatcher)
+        etMinRating.addTextChangedListener(validationWatcher)
+        etIdealRating.addTextChangedListener(validationWatcher)
 
         btnColuna.setOnClickListener { toggleLayout(isColumn = true) }
         btnLinha.setOnClickListener { toggleLayout(isColumn = false) }
-        btnEsquerda.setOnClickListener { toggleSide(isLeft = true) }
-        btnDireita.setOnClickListener { toggleSide(isLeft = false) }
+        btnEsquerda.setOnClickListener { togglePosition("left") }
+        btnCentro.setOnClickListener { togglePosition("center") }
+        btnDireita.setOnClickListener { togglePosition("right") }
         btnShowKm.setOnClickListener { toggleMetric(btnShowKm) }
         btnShowHour.setOnClickListener { toggleMetric(btnShowHour) }
         btnShowMinute.setOnClickListener { toggleMetric(btnShowMinute) }
         btnShowRating.setOnClickListener { toggleMetric(btnShowRating) }
+        btnPage25.setOnClickListener { selectPageSize(25) }
+        btnPage50.setOnClickListener { selectPageSize(50) }
+        btnPage100.setOnClickListener { selectPageSize(100) }
+        btnPage200.setOnClickListener { selectPageSize(200) }
+        btnPage500.setOnClickListener { selectPageSize(500) }
 
         seekY.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -180,7 +246,124 @@ class SettingsActivity : AppCompatActivity() {
             Toast.makeText(this, "Card de exemplo exibido!", Toast.LENGTH_SHORT).show()
         }
 
-        btnSave.setOnClickListener { saveValues() }
+        findViewById<TextView>(R.id.btnSuggestFromCosts).setOnClickListener { showMarginSelector() }
+    }
+
+    private fun showMarginSelector() {
+        val db = DatabaseHelper(this)
+        val refuels = db.getRefuels()
+        val expenses = db.getAllExpenses()
+        val monthlyKm = db.getMonthlyKm()
+
+        if (refuels.isEmpty() && expenses.isEmpty()) {
+            AlertDialog.Builder(this)
+                .setTitle("Sem dados de custos")
+                .setMessage("Cadastre abastecimentos e despesas na tela de Custos primeiro.")
+                .setPositiveButton("OK", null)
+                .show()
+            return
+        }
+
+        val summary = CostCalculator.calculateCostSummary(refuels, expenses, monthlyKm)
+        val costPerKm = summary.totalCostPerKm
+
+        val margin15 = CostCalculator.getRequiredPricePerKm(15, costPerKm)
+        val margin50 = CostCalculator.getRequiredPricePerKm(50, costPerKm)
+        val margin100 = CostCalculator.getRequiredPricePerKm(100, costPerKm)
+
+        val margins = listOf(
+            Triple("15%", margin15, "Margem conservadora"),
+            Triple("50%", margin50, "Margem equilibrada"),
+            Triple("100%", margin100, "Margem agressiva")
+        )
+
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_margin_selector, null)
+
+        val tvCostInfo = view.findViewById<TextView>(R.id.tvCostInfo)
+        val radioGroupMin = view.findViewById<RadioGroup>(R.id.radioGroupMin)
+        val radioGroupIdeal = view.findViewById<RadioGroup>(R.id.radioGroupIdeal)
+        val tvWarning = view.findViewById<TextView>(R.id.tvWarning)
+
+        tvCostInfo.text = "Seu custo total/km: ${formatCurrency(costPerKm)}"
+
+        for ((index, margin) in margins.withIndex()) {
+            val radioMin = RadioButton(this).apply {
+                id = View.generateViewId()
+                text = "${margin.first} → ${formatCurrency(margin.second)}/km"
+                setPadding(8, 8, 8, 8)
+                tag = margin.second
+            }
+            radioGroupMin.addView(radioMin)
+
+            val radioIdeal = RadioButton(this).apply {
+                id = View.generateViewId()
+                text = "${margin.first} → ${formatCurrency(margin.second)}/km"
+                setPadding(8, 8, 8, 8)
+                tag = margin.second
+            }
+            radioGroupIdeal.addView(radioIdeal)
+        }
+
+        (radioGroupMin.getChildAt(0) as RadioButton).isChecked = true
+        (radioGroupIdeal.getChildAt(1) as RadioButton).isChecked = true
+
+        fun validateAndUpdateWarning() {
+            val minValue = getSelectedValue(radioGroupMin)
+            val idealValue = getSelectedValue(radioGroupIdeal)
+            tvWarning.visibility = if (minValue >= idealValue) View.VISIBLE else View.GONE
+        }
+
+        radioGroupMin.setOnCheckedChangeListener { _, _ -> validateAndUpdateWarning() }
+        radioGroupIdeal.setOnCheckedChangeListener { _, _ -> validateAndUpdateWarning() }
+
+        AlertDialog.Builder(this)
+            .setTitle("\uD83D\uDCCA Escolha seus parâmetros")
+            .setView(view)
+            .setPositiveButton("Aplicar") { _, _ ->
+                val minValue = getSelectedValue(radioGroupMin)
+                val idealValue = getSelectedValue(radioGroupIdeal)
+
+                if (minValue >= idealValue) {
+                    Toast.makeText(this, "O valor MÍNIMO deve ser menor que o IDEAL", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
+                etMinKm.setText(formatCurrencySimple(minValue))
+                etIdealKm.setText(formatCurrencySimple(idealValue))
+
+                val minHour = minValue * 30
+                val idealHour = idealValue * 30
+                val minMinute = minHour / 60
+                val idealMinute = idealHour / 60
+
+                etMinHour.setText(formatCurrencySimple(minHour))
+                etIdealHour.setText(formatCurrencySimple(idealHour))
+                etMinMinute.setText(formatCurrencySimple(minMinute))
+                etIdealMinute.setText(formatCurrencySimple(idealMinute))
+
+                updatePreview()
+                Toast.makeText(this, "Parâmetros atualizados! Revise e salve se desejar.", Toast.LENGTH_LONG).show()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun getSelectedValue(radioGroup: RadioGroup): Double {
+        for (i in 0 until radioGroup.childCount) {
+            val radio = radioGroup.getChildAt(i) as RadioButton
+            if (radio.isChecked) {
+                return radio.tag as Double
+            }
+        }
+        return 0.0
+    }
+
+    private fun formatCurrency(value: Double): String {
+        return NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(value)
+    }
+
+    private fun formatCurrencySimple(value: Double): String {
+        return String.format("%.2f", value).replace(".", ",")
     }
 
     private fun toggleLayout(isColumn: Boolean) {
@@ -196,17 +379,33 @@ class SettingsActivity : AppCompatActivity() {
         btnLinha.setTextColor(if (!isColumn) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
     }
 
-    private fun toggleSide(isLeft: Boolean) {
+    private fun togglePosition(position: String) {
+        val isLeft = position == "left"
+        val isCenter = position == "center"
+        val isRight = position == "right"
         btnEsquerda.isSelected = isLeft
-        btnDireita.isSelected = !isLeft
-        btnEsquerda.setBackgroundResource(
-            if (isLeft) R.drawable.pill_selected else R.drawable.pill_unselected
-        )
-        btnDireita.setBackgroundResource(
-            if (!isLeft) R.drawable.pill_selected else R.drawable.pill_unselected
-        )
+        btnCentro.isSelected = isCenter
+        btnDireita.isSelected = isRight
+        btnEsquerda.setBackgroundResource(if (isLeft) R.drawable.pill_selected else R.drawable.pill_unselected)
+        btnCentro.setBackgroundResource(if (isCenter) R.drawable.pill_selected else R.drawable.pill_unselected)
+        btnDireita.setBackgroundResource(if (isRight) R.drawable.pill_selected else R.drawable.pill_unselected)
         btnEsquerda.setTextColor(if (isLeft) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-        btnDireita.setTextColor(if (!isLeft) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+        btnCentro.setTextColor(if (isCenter) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+        btnDireita.setTextColor(if (isRight) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+    }
+
+    private fun selectPageSize(size: Int) {
+        selectedPageSize = size
+        val buttons = listOf(
+            btnPage25 to 25, btnPage50 to 50, btnPage100 to 100,
+            btnPage200 to 200, btnPage500 to 500
+        )
+        for ((btn, value) in buttons) {
+            val selected = value == size
+            btn.isSelected = selected
+            btn.setBackgroundResource(if (selected) R.drawable.pill_selected else R.drawable.pill_unselected)
+            btn.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+        }
     }
 
     private fun toggleMetric(btn: TextView) {
@@ -234,8 +433,9 @@ class SettingsActivity : AppCompatActivity() {
         val layout = prefs.getString(KEY_CARD_LAYOUT, DEFAULT_CARD_LAYOUT)
         toggleLayout(isColumn = layout == "column")
 
-        val side = prefs.getString(KEY_CARD_SIDE, DEFAULT_CARD_SIDE)
-        toggleSide(isLeft = side == "left")
+        val side = prefs.getString(KEY_CARD_SIDE, DEFAULT_CARD_SIDE) ?: DEFAULT_CARD_SIDE
+        val position = prefs.getString(KEY_CARD_POSITION, side) ?: side
+        togglePosition(position)
 
         val yPct = prefs.getInt(KEY_CARD_Y_PERCENT, DEFAULT_CARD_Y_PERCENT)
         seekY.progress = yPct
@@ -271,6 +471,9 @@ class SettingsActivity : AppCompatActivity() {
         val an = prefs.getInt(KEY_THRESHOLD_ANALISAR, 50)
         seekThresholdAnalisar.progress = an - 20
         tvThresholdAnalisarLabel.text = "ANALISAR se pontuação ≥ ${an}%"
+
+        val pageSize = prefs.getInt(KEY_PAGE_SIZE, 100)
+        selectPageSize(pageSize)
     }
 
     private fun saveValues(showToast: Boolean = true) {
@@ -315,7 +518,12 @@ class SettingsActivity : AppCompatActivity() {
             putFloat(KEY_MIN_RATING, minRating ?: 4.85f)
             putFloat(KEY_IDEAL_RATING, idealRating ?: 4.93f)
             putString(KEY_CARD_LAYOUT, if (btnColuna.isSelected) "column" else "row")
-            putString(KEY_CARD_SIDE, if (btnEsquerda.isSelected) "left" else "right")
+            val position = when {
+                btnCentro.isSelected -> "center"
+                btnDireita.isSelected -> "right"
+                else -> "left"
+            }
+            putString(KEY_CARD_POSITION, position)
             putInt(KEY_CARD_Y_PERCENT, seekY.progress)
             putBoolean(KEY_SHOW_KM, btnShowKm.isSelected)
             putBoolean(KEY_SHOW_HOUR, btnShowHour.isSelected)
@@ -327,6 +535,7 @@ class SettingsActivity : AppCompatActivity() {
             putInt(KEY_WEIGHT_RATING, seekWeightRating.progress + 1)
             putInt(KEY_THRESHOLD_ACEITAR, seekThresholdAceitar.progress + 50)
             putInt(KEY_THRESHOLD_ANALISAR, seekThresholdAnalisar.progress + 20)
+            putInt(KEY_PAGE_SIZE, selectedPageSize)
             apply()
         }
 
@@ -366,18 +575,41 @@ class SettingsActivity : AppCompatActivity() {
             prefs       = prefs
         )
 
-        pvKm.text = "R$/km 3,20"
-        pvKm.setTextColor(DecisionEngine.stateColor(result.params[0].state))
-        pvHour.text = "R$/h 45,00"
-        pvHour.setTextColor(DecisionEngine.stateColor(result.params[1].state))
-        pvMin.text = "R$/min 0,75"
-        pvMin.setTextColor(DecisionEngine.stateColor(result.params[2].state))
-        pvRating.text = "Nota 4,70"
-        pvRating.setTextColor(DecisionEngine.stateColor(result.params[3].state))
+        val kmState = result.params[0].state
+        val hourState = result.params[1].state
+        val minState = result.params[2].state
+        val ratingState = result.params[3].state
 
-        pvDecision.text = DecisionEngine.decisionText(result.decision)
+        pvKm.text = "R$/km: 3,20 \u2014 ${semaphoreEmoji(kmState)} ${stateLabel(kmState)}"
+        pvKm.setTextColor(DecisionEngine.stateColor(kmState))
+        pvHour.text = "R$/h: 45,00 \u2014 ${semaphoreEmoji(hourState)} ${stateLabel(hourState)}"
+        pvHour.setTextColor(DecisionEngine.stateColor(hourState))
+        pvMin.text = "R$/min: 0,75 \u2014 ${semaphoreEmoji(minState)} ${stateLabel(minState)}"
+        pvMin.setTextColor(DecisionEngine.stateColor(minState))
+        pvRating.text = "Nota: 4,70 \u2014 ${semaphoreEmoji(ratingState)} ${stateLabel(ratingState)}"
+        pvRating.setTextColor(DecisionEngine.stateColor(ratingState))
+
+        pvDecision.text = "${decisionEmoji(result.decision)} ${DecisionEngine.decisionText(result.decision)}"
         pvDecision.setTextColor(DecisionEngine.decisionColor(result.decision))
-        pvScore.text = "Pontuação: ${"%.0f".format(result.scorePercent)}% (${result.totalPoints.toInt()}/${result.maxPoints.toInt()} pts)"
+        pvScore.text = "Pontua\u00e7\u00e3o: ${"%.0f".format(result.scorePercent)}% (${result.totalPoints.toInt()}/${result.maxPoints.toInt()} pts)"
+    }
+
+    private fun semaphoreEmoji(state: DecisionEngine.ParamState): String = when (state) {
+        DecisionEngine.ParamState.OK -> "\uD83D\uDFE2"
+        DecisionEngine.ParamState.ANALISAR -> "\uD83D\uDFE0"
+        else -> "\uD83D\uDD34"
+    }
+
+    private fun stateLabel(state: DecisionEngine.ParamState): String = when (state) {
+        DecisionEngine.ParamState.OK -> "BOM"
+        DecisionEngine.ParamState.ANALISAR -> "M\u00c9DIO"
+        else -> "RUIM"
+    }
+
+    private fun decisionEmoji(decision: DecisionEngine.Decision): String = when (decision) {
+        DecisionEngine.Decision.ACEITAR -> "\u2705"
+        DecisionEngine.Decision.ANALISAR -> "\u26A0\uFE0F"
+        else -> "\u274C"
     }
 
     private fun parseBr(value: String): Float? {
@@ -405,6 +637,7 @@ class SettingsActivity : AppCompatActivity() {
 
         const val KEY_CARD_LAYOUT = "card_layout"
         const val KEY_CARD_SIDE = "card_side"
+        const val KEY_CARD_POSITION = "card_position"
         const val KEY_CARD_Y_PERCENT = "card_y_percent"
         const val KEY_SHOW_KM = "show_km"
         const val KEY_SHOW_HOUR = "show_hour"
@@ -417,9 +650,11 @@ class SettingsActivity : AppCompatActivity() {
 
         const val KEY_THRESHOLD_ACEITAR  = "threshold_aceitar"
         const val KEY_THRESHOLD_ANALISAR = "threshold_analisar"
+        const val KEY_PAGE_SIZE = "page_size"
 
         const val DEFAULT_CARD_LAYOUT = "column"
         const val DEFAULT_CARD_SIDE = "left"
+        const val DEFAULT_CARD_POSITION = "left"
         const val DEFAULT_CARD_Y_PERCENT = 30
     }
 }

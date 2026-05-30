@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="6dp"
+    android:paddingHorizontal="8dp">
+
+    <TextView
+        android:id="@+id/tvRefuelDate"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="11sp"
+        android:textColor="#5E6F8D" />
+
+    <TextView
+        android:id="@+id/tvRefuelOdometer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="11sp"
+        android:textColor="#5E6F8D"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/tvRefuelLiters"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.7"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textColor="#1A2C3E"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/tvRefuelPrice"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="11sp"
+        android:textColor="#5E6F8D"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/tvRefuelConsumption"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textColor="#1A2C3E"
+        android:gravity="end" />
+
+</LinearLayout>

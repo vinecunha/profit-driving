@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="\uD83D\uDCB0 Adicionar Gorjeta"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#1A2C3E"
+        android:layout_marginBottom="12dp" />
+
+    <TextView
+        android:id="@+id/tvTipRideInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="13sp"
+        android:textColor="#5E6F8D"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Valor da gorjeta:"
+        android:textSize="13sp"
+        android:textColor="#333333"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/etTipValue"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:inputType="numberDecimal"
+        android:hint="R$ 5,00"
+        android:textSize="16sp"
+        android:textColor="#1A1A2E"
+        android:background="@drawable/pill_unselected"
+        android:paddingHorizontal="12dp" />
+
+</LinearLayout>

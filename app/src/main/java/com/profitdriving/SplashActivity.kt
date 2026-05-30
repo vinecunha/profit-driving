@@ -10,7 +10,7 @@ class SplashActivity : AppCompatActivity() {
 
     private val handler = Handler(Looper.getMainLooper())
     private val launchRunnable = Runnable {
-        startActivity(Intent(this, MainActivity::class.java))
+        startActivity(Intent(this@SplashActivity, MainActivity::class.java))
         finish()
     }
 

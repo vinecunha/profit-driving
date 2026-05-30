@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="\uD83D\uDEEF\uFE0F Adicionar Corrida Manual"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#1A2C3E"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tipo de servi\u00E7o:"
+        android:textSize="13sp"
+        android:textColor="#333333"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/etManualService"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:inputType="text"
+        android:hint="Ex: UberX, 99Pop..."
+        android:textSize="14sp"
+        android:textColor="#1A1A2E"
+        android:background="@drawable/pill_unselected"
+        android:paddingHorizontal="12dp"
+        android:layout_marginBottom="12dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginEnd="6dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Valor (R$):"
+                android:textSize="13sp"
+                android:textColor="#333333"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/etManualValue"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:inputType="numberDecimal"
+                android:hint="25,00"
+                android:textSize="14sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="6dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dist\u00E2ncia (km):"
+                android:textSize="13sp"
+                android:textColor="#333333"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/etManualDistance"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:inputType="numberDecimal"
+                android:hint="5,0"
+                android:textSize="14sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2"
+        android:layout_marginTop="12dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginEnd="6dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dura\u00E7\u00E3o (min):"
+                android:textSize="13sp"
+                android:textColor="#333333"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/etManualDuration"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:inputType="number"
+                android:hint="15"
+                android:textSize="14sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="6dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Gorjeta (R$):"
+                android:textSize="13sp"
+                android:textColor="#333333"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/etManualTip"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:inputType="numberDecimal"
+                android:hint="0,00"
+                android:textSize="14sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Observa\u00E7\u00F5es:"
+        android:textSize="13sp"
+        android:textColor="#333333"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/etManualNotes"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:inputType="text"
+        android:hint="Opcional"
+        android:textSize="14sp"
+        android:textColor="#1A1A2E"
+        android:background="@drawable/pill_unselected"
+        android:paddingHorizontal="12dp" />
+
+</LinearLayout>

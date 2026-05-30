@@ -22,12 +22,18 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 class FloatingCardService : Service() {
 
     private lateinit var windowManager: WindowManager
     private lateinit var prefs: SharedPreferences
     private lateinit var handler: Handler
+    private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var overlayView: View? = null
 
     private val dismissRunnable = Runnable { dismiss() }
@@ -42,7 +48,7 @@ class FloatingCardService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent == null) return START_NOT_STICKY
+        if (intent == null) return START_STICKY
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(this)) {
@@ -60,13 +66,15 @@ class FloatingCardService : Service() {
         val appName = intent.getStringExtra("appName") ?: ""
         val serviceType = intent.getStringExtra("serviceType")
         val bonusAmount = intent.getDoubleExtra("bonusAmount", -1.0).let { if (it < 0) null else it }
+        val priorityBonus = intent.getDoubleExtra("priorityBonus", -1.0).let { if (it < 0) null else it }
+        val dynamicBonus = intent.getDoubleExtra("dynamicBonus", -1.0).let { if (it < 0) null else it }
 
-        val ride = RideData(value, distanceKm, timeMin, rating, appName, serviceType = serviceType, bonusAmount = bonusAmount)
+        val ride = RideData(value, distanceKm, timeMin, rating, appName, serviceType = serviceType, bonusAmount = bonusAmount, priorityBonus = priorityBonus, dynamicBonus = dynamicBonus)
 
         L.d(TAG, "Card: valor=$value km=$distanceKm tempo=$timeMin nota=$rating demo=$isDemo")
         showOverlay(ride, isDemo)
 
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     private fun createNotificationChannel() {
@@ -100,16 +108,30 @@ class FloatingCardService : Service() {
     }
 
     private fun showCard(ride: RideData, isDemo: Boolean) {
+        L.d(TAG, "=== showCard INICIADO ===")
+        L.d(TAG, "isDemo=$isDemo value=${ride.value} km=${ride.distanceKm} time=${ride.timeMin} rating=${ride.rating}")
+
+        if (!::windowManager.isInitialized) {
+            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+            L.d(TAG, "windowManager inicializado sob demanda")
+        }
         val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val cardLayout = prefs.getString(SettingsActivity.KEY_CARD_LAYOUT, "column")
         val layoutRes = if (cardLayout == "row") R.layout.floating_card_row else R.layout.floating_card
         val view = inflater.inflate(layoutRes, null)
 
         val cardRoot     = view.findViewById<View>(R.id.cardRoot)
+        val bg = GradientDrawable()
+        bg.setColor(Color.parseColor("#FF1A1A2E"))
+        bg.cornerRadius = 14f * resources.displayMetrics.density
+        cardRoot.background = bg
+
         val tvApp        = view.findViewById<TextView>(R.id.tvApp)
         val tvValue      = view.findViewById<TextView>(R.id.tvValue)
         val tvServiceType = view.findViewById<TextView>(R.id.tvServiceType)
         val tvBonus      = view.findViewById<TextView>(R.id.tvBonus)
+        val tvPriorityBonus = view.findViewById<TextView>(R.id.tvPriorityBonus)
+        val tvDynamicBonus = view.findViewById<TextView>(R.id.tvDynamicBonus)
         val tvKm         = view.findViewById<TextView>(R.id.tvKm)
         val tvHour       = view.findViewById<TextView>(R.id.tvHour)
         val tvMinute     = view.findViewById<TextView>(R.id.tvMinute)
@@ -140,6 +162,16 @@ class FloatingCardService : Service() {
         tvBonus.visibility =
             if (ride.bonusAmount != null) View.VISIBLE else View.GONE
 
+        tvPriorityBonus.text = ride.priorityBonus
+            ?.let { "+R$ %.2f Prioridade".format(it).replace(".", ",") } ?: ""
+        tvPriorityBonus.visibility =
+            if (ride.priorityBonus != null) View.VISIBLE else View.GONE
+
+        tvDynamicBonus.text = ride.dynamicBonus
+            ?.let { "+R$ %.2f Dinâmica".format(it).replace(".", ",") } ?: ""
+        tvDynamicBonus.visibility =
+            if (ride.dynamicBonus != null) View.VISIBLE else View.GONE
+
         tvKm.text = if (pricePerKm != null)
             "%.2f".format(pricePerKm).replace(".", ",")
         else "---"
@@ -160,7 +192,6 @@ class FloatingCardService : Service() {
             ?.let { "%.1f km".format(it).replace(".", ",") } ?: ""
         tvTime.text = ride.timeMin?.let { "${it} min" } ?: ""
 
-        // Individual status per metric
         val result = DecisionEngine.evaluate(
             kmValue     = ride.effectivePricePerKm,
             hourValue   = ride.effectivePricePerHour,
@@ -169,43 +200,60 @@ class FloatingCardService : Service() {
             prefs       = prefs
         )
 
-        // Color each metric value
         tvKm.setTextColor(DecisionEngine.stateColor(result.params[0].state))
         tvHour.setTextColor(DecisionEngine.stateColor(result.params[1].state))
         tvMinute.setTextColor(DecisionEngine.stateColor(result.params[2].state))
         tvRating.setTextColor(DecisionEngine.stateColor(result.params[3].state))
 
-        // Show/hide metrics per user preference
         kmRow.visibility = if (prefs.getBoolean(SettingsActivity.KEY_SHOW_KM, true)) View.VISIBLE else View.GONE
         hourRow.visibility = if (prefs.getBoolean(SettingsActivity.KEY_SHOW_HOUR, true)) View.VISIBLE else View.GONE
         minuteRow.visibility = if (prefs.getBoolean(SettingsActivity.KEY_SHOW_MINUTE, true)) View.VISIBLE else View.GONE
         ratingRow.visibility = if (prefs.getBoolean(SettingsActivity.KEY_SHOW_RATING, true)) View.VISIBLE else View.GONE
 
-        // Overall decision (worst status wins)
-
-        // Decision button
         tvDecision.text = DecisionEngine.decisionText(result.decision)
         val decisionBg = GradientDrawable()
         decisionBg.setColor(DecisionEngine.decisionColor(result.decision))
         decisionBg.cornerRadius = 6f * resources.displayMetrics.density
         tvDecision.background = decisionBg
         tvDecision.visibility = View.VISIBLE
+        tvDecision.isClickable = false
 
         tvScore.text = "${"%.0f".format(result.scorePercent)}% (${result.totalPoints.toInt()}/${result.maxPoints.toInt()} pts)"
 
-        // Neutral dark card background
-        val bg = GradientDrawable()
-        bg.setColor(Color.parseColor("#1A1A2E"))
-        bg.cornerRadius = 14f * resources.displayMetrics.density
-        cardRoot.background = bg
+        val tvProfit = view.findViewById<TextView>(R.id.tvProfit)
+        tvProfit.visibility = View.GONE
+
+        serviceScope.launch {
+            try {
+                val costSummary = CostSummaryCache.getCurrentSummary(this@FloatingCardService)
+                val estimatedProfit = CostCalculator.estimateProfit(
+                    ride.value, ride.distanceKm, costSummary.totalCostPerKm
+                )
+                val estimatedProfitPercent = CostCalculator.estimateProfitPercent(
+                    ride.value, ride.distanceKm, costSummary.totalCostPerKm
+                )
+                if (estimatedProfit != null && estimatedProfitPercent != null) {
+                    val profitText = buildString {
+                        append("\uD83D\uDCC8 Lucro: R$ ${String.format("%.2f", estimatedProfit).replace(".", ",")}")
+                        append(" (${String.format("%.0f", estimatedProfitPercent)}%)")
+                    }
+                    tvProfit.text = profitText
+                    tvProfit.setTextColor(
+                        if (estimatedProfit >= 0) 0xFF4ADE80.toInt() else 0xFFF87171.toInt()
+                    )
+                    tvProfit.visibility = View.VISIBLE
+                }
+            } catch (_: Exception) {}
+        }
 
         @Suppress("DEPRECATION")
         val displayMetrics = DisplayMetrics()
         @Suppress("DEPRECATION")
         windowManager.defaultDisplay.getMetrics(displayMetrics)
 
-        val cardSide     = prefs.getString(
-            SettingsActivity.KEY_CARD_SIDE, "left")
+        val cardPosition = prefs.getString(
+            SettingsActivity.KEY_CARD_POSITION, "left"
+        )
         val cardYPercent = prefs.getInt(
             SettingsActivity.KEY_CARD_Y_PERCENT, 30)
 
@@ -213,9 +261,11 @@ class FloatingCardService : Service() {
         val screenHeight = displayMetrics.heightPixels
         val yOffset      = (screenHeight * cardYPercent / 100.0).toInt()
         val cardWidthPx  = (220 * resources.displayMetrics.density).toInt()
-        val xOffset      = if (cardSide == "right")
-            screenWidth - cardWidthPx - 16
-        else 16
+        val xOffset      = when (cardPosition) {
+            "right" -> screenWidth - cardWidthPx - 16
+            "center" -> (screenWidth - cardWidthPx) / 2
+            else -> 16
+        }
 
         val type: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -228,7 +278,7 @@ class FloatingCardService : Service() {
             WindowManager.LayoutParams.WRAP_CONTENT,
             type,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.START or Gravity.TOP
@@ -247,18 +297,21 @@ class FloatingCardService : Service() {
         }
 
         try {
+            if (!::windowManager.isInitialized) {
+                windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+            }
             windowManager.addView(view, params)
             overlayView = view
-            L.d(TAG, "Card exibido com sucesso")
+            L.d(TAG, "Card exibido com sucesso: isDemo=$isDemo decisao=${DecisionEngine.decisionText(result.decision)}")
         } catch (e: Exception) {
-            L.e(TAG, "Falha ao exibir card", e)
+            L.e(TAG, "Falha ao adicionar overlay view: ${e.message}", e)
             stopSelf()
             return
         }
 
         handler.removeCallbacks(dismissRunnable)
         if (!isDemo) {
-            handler.postDelayed(dismissRunnable, 12000L)
+            handler.postDelayed(dismissRunnable, 30000L)
         }
     }
 
@@ -276,6 +329,8 @@ class FloatingCardService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        serviceScope.cancel()
+        handler.removeCallbacksAndMessages(null)
         dismiss()
         super.onDestroy()
     }

@@ -38,6 +38,18 @@ object DecisionEngine {
 
     enum class Decision { ACEITAR, ANALISAR, RECUSAR }
 
+    data class DynamicThresholds(val minKm: Double, val idealKm: Double)
+
+    fun getDynamicThresholds(prefs: SharedPreferences, costPerKm: Double): DynamicThresholds {
+        val userMinKm = prefs.getFloat(SettingsActivity.KEY_MIN_KM, 0f).toDouble()
+        val userIdealKm = prefs.getFloat(SettingsActivity.KEY_IDEAL_KM, 0f).toDouble()
+
+        val minKm = if (userMinKm > 0) userMinKm else costPerKm * 1.15
+        val idealKm = if (userIdealKm > 0) userIdealKm else costPerKm * 1.50
+
+        return DynamicThresholds(minKm, idealKm)
+    }
+
     fun evaluate(
         kmValue: Double?,
         hourValue: Double?,
@@ -105,8 +117,8 @@ object DecisionEngine {
     }
 
     fun decisionText(decision: Decision): String = when (decision) {
-        Decision.ACEITAR  -> "✅ ACEITAR"
-        Decision.ANALISAR -> "⚠️ ANALISAR"
-        Decision.RECUSAR  -> "❌ RECUSAR"
+        Decision.ACEITAR  -> "✅ BOA"
+        Decision.ANALISAR -> "⚠️ MÉDIA"
+        Decision.RECUSAR  -> "❌ RUIM"
     }
 }

@@ -10,33 +10,38 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+
 import androidx.core.content.ContextCompat
 import java.util.Calendar
 
-class AnalysisActivity : AppCompatActivity() {
+class AnalysisActivity : BaseActivity() {
 
     private lateinit var db: DatabaseHelper
     private lateinit var cardsContainer: LinearLayout
     private lateinit var progressBar: ProgressBar
     private lateinit var scrollView: View
     private var currentPeriod = 0
+    private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_analysis)
+        setupBottomNav(Screen.HOME)
+        setupToolbar(title = "An\u00e1lise", showBack = true)
 
-        db = DatabaseHelper(this)
-        cardsContainer = findViewById(R.id.cardsContainer)
         progressBar = findViewById(R.id.progressBar)
         scrollView = findViewById(R.id.scrollView)
 
-        findViewById<View>(R.id.btnBack).setOnClickListener { finish() }
         findViewById<TextView>(R.id.btnPeriodToday).setOnClickListener { setPeriod(0) }
         findViewById<TextView>(R.id.btnPeriodWeek).setOnClickListener { setPeriod(7) }
         findViewById<TextView>(R.id.btnPeriodMonth).setOnClickListener { setPeriod(30) }
 
         setPeriod(0)
+    }
+
+    override fun onDestroy() {
+        handler.removeCallbacksAndMessages(null)
+        super.onDestroy()
     }
 
     private fun setPeriod(days: Int) {
@@ -76,7 +81,7 @@ class AnalysisActivity : AppCompatActivity() {
             else -> 0L
         }
 
-        val handler = Handler(Looper.getMainLooper())
+        val handler = this.handler
         progressBar.visibility = View.VISIBLE
         cardsContainer.visibility = View.GONE
         scrollView.visibility = View.GONE
@@ -106,6 +111,7 @@ class AnalysisActivity : AppCompatActivity() {
 
     private fun buildCards(result: AnalysisResult) {
         cardsContainer.removeAllViews()
+        cardColorIndex = 0
 
         buildCard1(result)
         buildCard2(result)
@@ -116,7 +122,21 @@ class AnalysisActivity : AppCompatActivity() {
         if (currentPeriod == 0) buildCard7(result)
     }
 
+    private val cardColors = listOf(
+        Color.parseColor("#FFFFFF"),
+        Color.parseColor("#F0FDF4"),
+        Color.parseColor("#FFF7ED"),
+        Color.parseColor("#EFF6FF"),
+        Color.parseColor("#FEF2F2"),
+        Color.parseColor("#F5F3FF"),
+        Color.parseColor("#FFF9E6")
+    )
+    private var cardColorIndex = 0
+
     private fun createCard(title: String): LinearLayout {
+        val bgColor = cardColors[cardColorIndex % cardColors.size]
+        cardColorIndex++
+
         val card = LinearLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -126,7 +146,7 @@ class AnalysisActivity : AppCompatActivity() {
             setPadding(16, 12, 16, 16)
 
             val bg = GradientDrawable()
-            bg.setColor(Color.WHITE)
+            bg.setColor(bgColor)
             bg.cornerRadius = 12 * resources.displayMetrics.density
             background = bg
             elevation = 2 * resources.displayMetrics.density
@@ -242,7 +262,7 @@ class AnalysisActivity : AppCompatActivity() {
 
     // ─── CARD 1: Visão Geral ───
     private fun buildCard1(result: AnalysisResult) {
-        val card = createCard("Visão Geral")
+        val card = createCard("\uD83D\uDCCA Visão Geral")
         addTextToCard(card,
             "${result.totalRides} corridas · R$ ${AnalysisHelper.formatBr(result.totalEarnings)} total" +
                     " · ${AnalysisHelper.formatBr1(result.totalKm)} km" +
@@ -265,7 +285,7 @@ class AnalysisActivity : AppCompatActivity() {
 
     // ─── CARD 2: Melhor Horário ───
     private fun buildCard2(result: AnalysisResult) {
-        val card = createCard("\u23F0 Melhor horário para rodar")
+        val card = createCard("\u23F0 Melhor horário")
         addTextToCard(card,
             "Entre ${result.bestHour}h e ${(result.bestHour + 1) % 24}h você ganha em média R$ ${AnalysisHelper.formatBr(result.bestHourAvgKm)}/km"
         )
@@ -301,7 +321,7 @@ class AnalysisActivity : AppCompatActivity() {
 
     // ─── CARD 3: Melhor Dia ───
     private fun buildCard3(result: AnalysisResult) {
-        val card = createCard("\uD83D\uDCC5 Melhor dia para rodar")
+        val card = createCard("\uD83D\uDCC5 Melhor dia")
         addTextToCard(card,
             "${AnalysisHelper.dayName(result.bestDayOfWeek)} é seu dia mais rentável com R$ ${AnalysisHelper.formatBr(result.bestDayAvgKm)}/km"
         )
@@ -406,7 +426,7 @@ class AnalysisActivity : AppCompatActivity() {
     private fun buildCard5(result: AnalysisResult) {
         val withSpeed = result.byServiceType.filter { it.avgTimeBetweenRidesMin != null }
         if (withSpeed.isEmpty()) return
-        val card = createCard("\u26A1 Qual categoria chama mais rápido")
+        val card = createCard("\u26A1 Categorias mais rápidas")
 
         val sorted = withSpeed.sortedBy { it.avgTimeBetweenRidesMin }
 
@@ -513,7 +533,7 @@ class AnalysisActivity : AppCompatActivity() {
     // ─── CARD 7: Projeção do dia ───
     private fun buildCard7(result: AnalysisResult) {
         val projection = result.projectedDailyEarnings ?: return
-        val card = createCard("\uD83D\uDCC8 Projeção para hoje")
+        val card = createCard("\uD83C\uDFAF Projeção do dia")
 
         addTextToCard(card,
             "No ritmo atual você vai ganhar aproximadamente R$ ${AnalysisHelper.formatBr(projection)} hoje",

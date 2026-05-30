@@ -5,47 +5,7 @@
     android:orientation="vertical"
     android:background="#F5F5F5">
 
-    <!-- Header -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingHorizontal="12dp"
-        android:paddingTop="14dp"
-        android:paddingBottom="10dp"
-        android:background="#2E7D32">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_launcher"
-            android:contentDescription=""
-            android:layout_marginEnd="8dp" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Análise de Desempenho"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF" />
-
-        <TextView
-            android:id="@+id/btnBack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Voltar"
-            android:textColor="#FFFFFF"
-            android:textSize="13sp"
-            android:paddingVertical="4dp"
-            android:paddingHorizontal="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackground" />
-
-    </LinearLayout>
+    <include layout="@layout/toolbar_default" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -124,5 +84,7 @@
             android:orientation="vertical" />
 
     </ScrollView>
+
+<include layout="@layout/bottom_nav" />
 
 </LinearLayout>

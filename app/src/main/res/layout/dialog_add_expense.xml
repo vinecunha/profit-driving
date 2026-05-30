@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:id="@+id/tvExpenseTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="\uD83D\uDCCB Nova Despesa"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A2E"
+            android:layout_marginBottom="16dp" />
+
+        <EditText
+            android:id="@+id/etExpenseName"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:inputType="text"
+            android:hint="Nome da despesa"
+            android:textSize="14sp"
+            android:textColor="#1A1A2E"
+            android:background="@drawable/pill_unselected"
+            android:paddingHorizontal="12dp"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tipo de custo"
+            android:textSize="12sp"
+            android:textColor="#6B7280"
+            android:layout_marginBottom="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/btnCostTypeFixed"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="2dp"
+                android:text="\uD83D\uDCC6 Fixo"
+                android:textSize="10sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center"
+                android:background="@drawable/pill_selected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnCostTypePerKm"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="\uD83D\uDEE4\uFE0F Por km"
+                android:textSize="10sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnCostTypeEvent"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginStart="2dp"
+                android:text="\uD83C\uDFAF Evento"
+                android:textSize="10sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <!-- ── FIXED SECTION ── -->
+        <LinearLayout
+            android:id="@+id/fixedSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/etFixedValue"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:inputType="numberDecimal"
+                android:hint="Valor mensal (R$)"
+                android:textSize="14sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Periodicidade"
+                android:textSize="12sp"
+                android:textColor="#6B7280"
+                android:layout_marginBottom="4dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:id="@+id/btnPerMonthly"
+                    android:layout_width="0dp"
+                    android:layout_height="30dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="2dp"
+                    android:text="Mensal"
+                    android:textSize="10sp"
+                    android:textColor="#FFFFFF"
+                    android:gravity="center"
+                    android:background="@drawable/pill_selected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnPerYearly"
+                    android:layout_width="0dp"
+                    android:layout_height="30dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="2dp"
+                    android:text="Anual"
+                    android:textSize="10sp"
+                    android:textColor="#6B7280"
+                    android:gravity="center"
+                    android:background="@drawable/pill_unselected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/usefulLifeGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Vida \u00fatil:"
+                    android:textSize="12sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginEnd="8dp" />
+
+                <EditText
+                    android:id="@+id/etUsefulLife"
+                    android:layout_width="80dp"
+                    android:layout_height="36dp"
+                    android:inputType="number"
+                    android:text="12"
+                    android:textSize="13sp"
+                    android:textColor="#1A1A2E"
+                    android:gravity="center"
+                    android:background="@drawable/pill_unselected" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="meses"
+                    android:textSize="12sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginStart="6dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ── PER KM SECTION ── -->
+        <LinearLayout
+            android:id="@+id/perKmSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <EditText
+                android:id="@+id/etPerKmValue"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:inputType="numberDecimal"
+                android:hint="Valor por km (R$)"
+                android:textSize="14sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="OU"
+                android:textSize="11sp"
+                android:textColor="#9CA3AF"
+                android:gravity="center"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="% do lucro bruto:"
+                    android:textSize="11sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginEnd="6dp" />
+
+                <EditText
+                    android:id="@+id/etProfitPercent"
+                    android:layout_width="80dp"
+                    android:layout_height="36dp"
+                    android:inputType="number"
+                    android:text=""
+                    android:textSize="13sp"
+                    android:textColor="#1A1A2E"
+                    android:gravity="center"
+                    android:background="@drawable/pill_unselected" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="%"
+                    android:textSize="12sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginStart="4dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- ── EVENT SECTION ── -->
+        <LinearLayout
+            android:id="@+id/eventSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <EditText
+                android:id="@+id/etEventValue"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:inputType="numberDecimal"
+                android:hint="Valor por evento (R$)"
+                android:textSize="14sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Eventos/m\u00eas:"
+                    android:textSize="11sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginEnd="6dp" />
+
+                <EditText
+                    android:id="@+id/etEventsPerMonth"
+                    android:layout_width="80dp"
+                    android:layout_height="36dp"
+                    android:inputType="number"
+                    android:text="1"
+                    android:textSize="13sp"
+                    android:textColor="#1A1A2E"
+                    android:gravity="center"
+                    android:background="@drawable/pill_unselected" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/etExpenseNotes"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:inputType="text"
+            android:hint="Observa\u00e7\u00f5es (opcional)"
+            android:textSize="12sp"
+            android:textColor="#1A1A2E"
+            android:background="@drawable/pill_unselected"
+            android:paddingHorizontal="12dp"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Categoria"
+            android:textSize="12sp"
+            android:textColor="#6B7280"
+            android:layout_marginBottom="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/btnCatFuel"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="2dp"
+                android:text="\u26FD Combust\u00edvel"
+                android:textSize="9sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnCatMaintenance"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="\uD83D\uDD27 Manuten\u00e7\u00e3o"
+                android:textSize="9sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnCatTires"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="\uD83D\uDD04 Pneus"
+                android:textSize="9sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnCatInsurance"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:layout_marginStart="2dp"
+                android:text="\uD83D\uDEE1\uFE0F Seguro"
+                android:textSize="9sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/btnCatTax"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="2dp"
+                android:text="\uD83D\uDCB0 IPVA"
+                android:textSize="9sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnCatWash"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="\uD83E\uDDFC Lavagem"
+                android:textSize="9sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnCatFinancing"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="\uD83C\uDFE6 Financiamento"
+                android:textSize="9sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnCatOther"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:layout_marginStart="2dp"
+                android:text="\uD83D\uDCCB Outro"
+                android:textSize="9sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/btnCatParking"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="2dp"
+                android:text="\uD83D\uDD7F\uFE0F Estacionamento"
+                android:textSize="9sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnCatToll"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:layout_marginStart="2dp"
+                android:text="\uD83D\uDEE3\uFE0F Ped\u00e1gio"
+                android:textSize="9sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnConfirmExpense"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center"
+            android:text="\u2795 ADICIONAR DESPESA"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/pill_selected"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+</ScrollView>

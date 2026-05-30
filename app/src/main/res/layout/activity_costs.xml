@@ -1,0 +1,811 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F5F7FB">
+
+<ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <include layout="@layout/toolbar_default" />
+
+        <!-- Card: Combustível / GNV -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg_costs"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\u26FD COMBUST\u00cdVEL / GNV"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tipo"
+                android:textSize="11sp"
+                android:textColor="#6B7280"
+                android:layout_marginBottom="4dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:id="@+id/btnFuelGasoline"
+                    android:layout_width="0dp"
+                    android:layout_height="30dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="2dp"
+                    android:text="Gasolina"
+                    android:textSize="11sp"
+                    android:textColor="#FFFFFF"
+                    android:gravity="center"
+                    android:background="@drawable/pill_selected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnFuelEthanol"
+                    android:layout_width="0dp"
+                    android:layout_height="30dp"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="2dp"
+                    android:text="Etanol"
+                    android:textSize="11sp"
+                    android:textColor="#6B7280"
+                    android:gravity="center"
+                    android:background="@drawable/pill_unselected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnFuelDiesel"
+                    android:layout_width="0dp"
+                    android:layout_height="30dp"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="2dp"
+                    android:text="Diesel"
+                    android:textSize="11sp"
+                    android:textColor="#6B7280"
+                    android:gravity="center"
+                    android:background="@drawable/pill_unselected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnFuelGNV"
+                    android:layout_width="0dp"
+                    android:layout_height="30dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="2dp"
+                    android:text="GNV"
+                    android:textSize="11sp"
+                    android:textColor="#6B7280"
+                    android:gravity="center"
+                    android:background="@drawable/pill_unselected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+            <!-- Add Refuel Button -->
+            <TextView
+                android:id="@+id/btnAddRefuel"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:gravity="center"
+                android:text="\uD83D\uDCCB NOVO ABASTECIMENTO"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#2E7D32"
+                android:background="#E8F5E9"
+                android:padding="4dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Refuel History -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83D\uDCCA \u00daltimos abastecimentos"
+                android:textSize="12sp"
+                android:textColor="#1A2C3E"
+                android:textStyle="bold"
+                android:layout_marginBottom="6dp" />
+
+            <!-- Table header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="4dp"
+                android:paddingHorizontal="8dp"
+                android:background="#F8F9FE">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Data"
+                    android:textSize="10sp"
+                    android:textColor="#8E9AAF"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Hod\u00f4metro"
+                    android:textSize="10sp"
+                    android:textColor="#8E9AAF"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.7"
+                    android:text="Litros"
+                    android:textSize="10sp"
+                    android:textColor="#8E9AAF"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Pre\u00e7o"
+                    android:textSize="10sp"
+                    android:textColor="#8E9AAF"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="km/L"
+                    android:textSize="10sp"
+                    android:textColor="#8E9AAF"
+                    android:textStyle="bold"
+                    android:gravity="end" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#EEF2F6" />
+
+            <LinearLayout
+                android:id="@+id/refuelList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="4dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nenhum abastecimento registrado"
+                    android:textSize="12sp"
+                    android:textColor="#9CA3AF"
+                    android:gravity="center"
+                    android:paddingVertical="12dp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnViewAllRefuels"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:gravity="center"
+                android:text="\uD83D\uDCCB Ver todos os abastecimentos"
+                android:textSize="12sp"
+                android:textColor="#5E6F8D"
+                android:textStyle="bold"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#EEF2F6"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Average stats -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83D\uDCC8 M\u00e9dia atual"
+                android:textSize="12sp"
+                android:textColor="#1A2C3E"
+                android:textStyle="bold"
+                android:layout_marginBottom="6dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="10dp"
+                android:background="#F8F9FE">
+
+                <TextView
+                    android:id="@+id/tvAvgConsumption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Consumo m\u00e9dio: -- km/L"
+                    android:textSize="12sp"
+                    android:textColor="#1A2C3E" />
+
+                <TextView
+                    android:id="@+id/tvAvgFuelCost"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Custo combust\u00edvel: -- R\$/km"
+                    android:textSize="12sp"
+                    android:textColor="#1A2C3E"
+                    android:layout_marginTop="2dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Card: Custos -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg_costs"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="\uD83D\uDCCB TODAS AS DESPESAS"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A2C3E" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/btnViewExpenses"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ver todas \u2192"
+                    android:textSize="11sp"
+                    android:textColor="#5E6F8D"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground"
+                    android:paddingVertical="4dp"
+                    android:paddingHorizontal="8dp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Km mensal:"
+                    android:textSize="12sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginEnd="8dp" />
+
+                <EditText
+                    android:id="@+id/etMonthlyKm"
+                    android:layout_width="100dp"
+                    android:layout_height="36dp"
+                    android:inputType="number"
+                    android:textSize="13sp"
+                    android:textColor="#1A2C3E"
+                    android:background="@drawable/pill_unselected"
+                    android:paddingHorizontal="10dp"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="km"
+                    android:textSize="12sp"
+                    android:textColor="#6B7280"
+                    android:layout_marginStart="6dp" />
+
+            </LinearLayout>
+
+            <!-- Custos Variáveis (por km) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83D\uDEE4\uFE0F Vari\u00e1veis (por km)"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginBottom="4dp" />
+
+            <LinearLayout
+                android:id="@+id/perKmList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="2dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nenhum custo vari\u00e1vel"
+                    android:textSize="11sp"
+                    android:textColor="#9CA3AF"
+                    android:gravity="center"
+                    android:paddingVertical="6dp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnAddPerKm"
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
+                android:gravity="center"
+                android:text="\u2795 Adicionar vari\u00e1vel"
+                android:textSize="11sp"
+                android:textColor="#2E7D32"
+                android:background="#E8F5E9"
+                android:padding="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="10dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#EEF2F6"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Custos Fixos (mensais) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83D\uDCC6 Fixos (mensais)"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginBottom="4dp" />
+
+            <LinearLayout
+                android:id="@+id/fixedList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="2dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nenhum custo fixo"
+                    android:textSize="11sp"
+                    android:textColor="#9CA3AF"
+                    android:gravity="center"
+                    android:paddingVertical="6dp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnAddFixed"
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
+                android:gravity="center"
+                android:text="\u2795 Adicionar fixo"
+                android:textSize="11sp"
+                android:textColor="#2E7D32"
+                android:background="#E8F5E9"
+                android:padding="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="10dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#EEF2F6"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Custos por Evento -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83C\uDFAF Por evento"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginBottom="4dp" />
+
+            <LinearLayout
+                android:id="@+id/eventList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="2dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nenhum custo por evento"
+                    android:textSize="11sp"
+                    android:textColor="#9CA3AF"
+                    android:gravity="center"
+                    android:paddingVertical="6dp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnAddEvent"
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
+                android:gravity="center"
+                android:text="\u2795 Adicionar evento"
+                android:textSize="11sp"
+                android:textColor="#2E7D32"
+                android:background="#E8F5E9"
+                android:padding="2dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <!-- Card: Resumo de Custos -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg_costs"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83D\uDCB0 RESUMO DE CUSTOS"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginBottom="12dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp"
+                android:background="#F8F9FE">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="\uD83D\uDCCB Despesas por km (detalhado)"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A2C3E"
+                    android:layout_marginBottom="6dp" />
+
+                <LinearLayout
+                    android:id="@+id/normalizedExpenseList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E5E7EB"
+                    android:layout_marginVertical="6dp" />
+
+                <TextView
+                    android:id="@+id/tvFuelCostKm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Combust\u00edvel/km: --"
+                    android:textSize="12sp"
+                    android:textColor="#5E6F8D" />
+
+                <TextView
+                    android:id="@+id/tvFixedCostKm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total fixos/km: --"
+                    android:textSize="12sp"
+                    android:textColor="#5E6F8D"
+                    android:layout_marginTop="2dp" />
+
+                <TextView
+                    android:id="@+id/tvVariableCostKm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Var\u00e1veis/km: --"
+                    android:textSize="12sp"
+                    android:textColor="#5E6F8D"
+                    android:layout_marginTop="2dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E5E7EB"
+                    android:layout_marginVertical="6dp" />
+
+                <TextView
+                    android:id="@+id/tvTotalCostKm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CUSTO TOTAL/km: --"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A2C3E" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:id="@+id/tvCostPerHour"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Custo/hora: --"
+                    android:textSize="12sp"
+                    android:textColor="#6B7280" />
+
+                <TextView
+                    android:id="@+id/tvCostPerMinute"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Custo/min: --"
+                    android:textSize="12sp"
+                    android:textColor="#6B7280"
+                    android:gravity="end" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Card: Simulador de Lucro -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg_costs"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83C\uDFAF SIMULADOR DE LUCRO"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Visual range indicator -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp"
+                android:background="#F8F9FE"
+                android:layout_marginBottom="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="4dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Ruim"
+                        android:textSize="11sp"
+                        android:textColor="#F87171"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Aceit\u00e1vel"
+                        android:textSize="11sp"
+                        android:textColor="#FB923C"
+                        android:textStyle="bold"
+                        android:gravity="center" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Bom"
+                        android:textSize="11sp"
+                        android:textColor="#4ADE80"
+                        android:textStyle="bold"
+                        android:gravity="end" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp"
+                    android:background="@drawable/progress_bar_gradient"
+                    android:layout_marginBottom="4dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvRangeRuim"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="R$ --"
+                        android:textSize="10sp"
+                        android:textColor="#F87171" />
+
+                    <TextView
+                        android:id="@+id/tvRangeAceitavel"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="R$ --"
+                        android:textSize="10sp"
+                        android:textColor="#FB923C"
+                        android:gravity="center" />
+
+                    <TextView
+                        android:id="@+id/tvRangeBom"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="R$ --"
+                        android:textSize="10sp"
+                        android:textColor="#4ADE80"
+                        android:gravity="end" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvYourCost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Seu custo/km: --"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/tvProfit30"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Para lucro de 30%: precisa R$ --/km"
+                android:textSize="12sp"
+                android:textColor="#5E6F8D"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/tvProfit50"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Para lucro de 50%: precisa R$ --/km"
+                android:textSize="12sp"
+                android:textColor="#5E6F8D"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/tvProfit100"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Para lucro de 100%: precisa R$ --/km"
+                android:textSize="12sp"
+                android:textColor="#5E6F8D" />
+
+        </LinearLayout>
+
+        <!-- Card: Estatisticas Mensais -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg_costs"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83D\uDCCA ESTAT\u00cdSTICAS MENSAIS"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Acompanhe seu desempenho por m\u00eas: KM rodados, custo de combust\u00edvel e consumo m\u00e9dio."
+                android:textSize="11sp"
+                android:textColor="#6B7280"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:id="@+id/btnViewStats"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:gravity="center"
+                android:text="\uD83D\uDCC8 VER ESTAT\u00cdSTICAS \u2192"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:background="#F8F9FE"
+                android:padding="4dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
+
+<include layout="@layout/bottom_nav" />
+
+</LinearLayout>

@@ -3,224 +3,287 @@
     android:id="@+id/cardRoot"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="8dp"
-    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:padding="6dp"
+    android:minWidth="190dp"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    >
 
+    <!-- Linha 1: App + Valor + Tipo -->
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginEnd="10dp">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
         <TextView
             android:id="@+id/tvApp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#CCFFFFFF"
-            android:textSize="10sp" />
+            android:textSize="10sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvValue"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:textColor="@android:color/white"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:gravity="end"
+            android:layout_marginStart="6dp" />
 
         <TextView
             android:id="@+id/tvServiceType"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#FFD700"
-            android:textSize="10sp"
+            android:textSize="9sp"
             android:textStyle="bold"
+            android:layout_marginStart="6dp"
             android:visibility="gone" />
 
     </LinearLayout>
 
-    <View
-        android:layout_width="1dp"
-        android:layout_height="match_parent"
-        android:background="#44FFFFFF"
-        android:layout_marginEnd="10dp" />
-
+    <!-- Linha 2: 4 colunas (R$/km, R$/h, R$/min, Nota) -->
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp"
+        android:gravity="center">
 
+        <!-- Coluna R$/km -->
         <LinearLayout
             android:id="@+id/kmRow"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="2dp">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="$/km"
                 android:textColor="#AAFFFFFF"
-                android:textSize="11sp" />
+                android:textSize="8sp" />
+
             <TextView
                 android:id="@+id/tvKm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@android:color/white"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginStart="4dp" />
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
             <View
                 android:id="@+id/dotKm"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:layout_marginStart="4dp"
+                android:layout_width="5dp"
+                android:layout_height="5dp"
+                android:layout_marginTop="1dp"
                 android:visibility="gone" />
+
         </LinearLayout>
 
+        <!-- Coluna R$/h -->
         <LinearLayout
             android:id="@+id/hourRow"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="2dp">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="$/h "
+                android:text="$/h"
                 android:textColor="#AAFFFFFF"
-                android:textSize="11sp" />
+                android:textSize="8sp" />
+
             <TextView
                 android:id="@+id/tvHour"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@android:color/white"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginStart="4dp" />
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
             <View
                 android:id="@+id/dotHour"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:layout_marginStart="4dp"
+                android:layout_width="5dp"
+                android:layout_height="5dp"
+                android:layout_marginTop="1dp"
                 android:visibility="gone" />
+
         </LinearLayout>
 
+        <!-- Coluna R$/min -->
         <LinearLayout
             android:id="@+id/minuteRow"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="2dp">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="$/min"
                 android:textColor="#AAFFFFFF"
-                android:textSize="11sp" />
+                android:textSize="8sp" />
+
             <TextView
                 android:id="@+id/tvMinute"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@android:color/white"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginStart="4dp" />
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
             <View
                 android:id="@+id/dotMinute"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:layout_marginStart="4dp"
+                android:layout_width="5dp"
+                android:layout_height="5dp"
+                android:layout_marginTop="1dp"
                 android:visibility="gone" />
+
         </LinearLayout>
 
+        <!-- Coluna Nota -->
         <LinearLayout
             android:id="@+id/ratingRow"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="2dp">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="★  "
+                android:text="★"
                 android:textColor="#AAFFFFFF"
-                android:textSize="11sp" />
+                android:textSize="8sp" />
+
             <TextView
                 android:id="@+id/tvRating"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@android:color/white"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:layout_marginStart="4dp" />
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
             <View
                 android:id="@+id/dotRating"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:layout_marginStart="4dp"
+                android:layout_width="5dp"
+                android:layout_height="5dp"
+                android:layout_marginTop="1dp"
                 android:visibility="gone" />
+
         </LinearLayout>
 
     </LinearLayout>
 
+    <!-- Linha 3: Distância e Tempo -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="2dp"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/tvDistance"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#CCFFFFFF"
+            android:textSize="9sp"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#CCFFFFFF"
+            android:textSize="9sp"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+    <!-- Linha 4: Bônus (se houver) -->
     <TextView
         android:id="@+id/tvBonus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="#FFD700"
-        android:textSize="11sp"
+        android:textSize="9sp"
         android:textStyle="bold"
-        android:layout_marginStart="8dp"
+        android:layout_marginTop="2dp"
         android:visibility="gone" />
 
     <TextView
-        android:id="@+id/tvDistance"
-        android:visibility="gone"
+        android:id="@+id/tvPriorityBonus"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-    <TextView
-        android:id="@+id/tvTime"
-        android:visibility="gone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-    <TextView
-        android:id="@+id/tvKmLabel"
-        android:visibility="gone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-    <TextView
-        android:id="@+id/tvHourLabel"
-        android:visibility="gone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-    <TextView
-        android:id="@+id/tvRatingLabel"
-        android:visibility="gone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:textColor="#FFD700"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        android:layout_marginTop="2dp"
+        android:visibility="gone" />
 
+    <TextView
+        android:id="@+id/tvDynamicBonus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#FFD700"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        android:layout_marginTop="1dp"
+        android:visibility="gone" />
+
+    <!-- Linha 5: Decisão (BOA/REVISAR/RUIM) -->
     <TextView
         android:id="@+id/tvDecision"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
         android:gravity="center"
-        android:textSize="10sp"
+        android:textSize="9sp"
         android:textStyle="bold"
         android:textColor="#FFFFFF"
-        android:layout_marginStart="4dp"
-        android:paddingHorizontal="6dp"
+        android:layout_marginTop="2dp"
         android:visibility="gone" />
 
+    <!-- Linha 6: Pontuação (opcional) -->
     <TextView
         android:id="@+id/tvScore"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="10sp"
+        android:textSize="8sp"
         android:textColor="#88FFFFFF"
         android:gravity="center"
-        android:layout_marginTop="2dp" />
+        android:layout_marginTop="1dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvProfit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="8sp"
+        android:textColor="#4ADE80"
+        android:gravity="center"
+        android:layout_marginTop="1dp"
+        android:visibility="gone" />
 
 </LinearLayout>

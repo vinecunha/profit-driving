@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F5F7FB">
+
+<ScrollView
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <include layout="@layout/toolbar_default" />
+
+        <!-- Card: Goal suggestion -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg_costs"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83C\uDFAF Meta sugerida"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/tvSuggestedGoal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-- km/m\u00eas"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#00A86B" />
+
+            <TextView
+                android:id="@+id/tvGoalDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Baseado na m\u00e9dia dos \u00faltimos 3 meses"
+                android:textSize="11sp"
+                android:textColor="#6B7280"
+                android:layout_marginTop="4dp" />
+
+        </LinearLayout>
+
+        <!-- Card: Km graph -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg_costs"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83D\uDCC8 KM por M\u00eas"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/kmGraphContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nenhum dado dispon\u00edvel"
+                    android:textSize="12sp"
+                    android:textColor="#9CA3AF"
+                    android:gravity="center"
+                    android:paddingVertical="16dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Card: Fuel Cost graph -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg_costs"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83D\uDCB0 Custo Combust\u00edvel por M\u00eas"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/fuelGraphContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nenhum dado dispon\u00edvel"
+                    android:textSize="12sp"
+                    android:textColor="#9CA3AF"
+                    android:gravity="center"
+                    android:paddingVertical="16dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Card: Table -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg_costs"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="\uD83D\uDCCA Tabela de KM por M\u00eas"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Table header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="6dp"
+                android:paddingHorizontal="4dp"
+                android:background="#F8F9FE">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="M\u00eas/Ano"
+                    android:textSize="10sp"
+                    android:textColor="#8E9AAF"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="KM Rodados"
+                    android:textSize="10sp"
+                    android:textColor="#8E9AAF"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Combust\u00edvel"
+                    android:textSize="10sp"
+                    android:textColor="#8E9AAF"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.8"
+                    android:text="Consumo"
+                    android:textSize="10sp"
+                    android:textColor="#8E9AAF"
+                    android:textStyle="bold"
+                    android:gravity="end" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#EEF2F6" />
+
+            <LinearLayout
+                android:id="@+id/statsTableContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingVertical="4dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nenhum dado dispon\u00edvel"
+                    android:textSize="12sp"
+                    android:textColor="#9CA3AF"
+                    android:gravity="center"
+                    android:paddingVertical="12dp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
+
+<include layout="@layout/bottom_nav" />
+
+</LinearLayout>

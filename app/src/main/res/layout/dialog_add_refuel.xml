@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⛽ Novo Abastecimento"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A2E"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Fuel Type -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tipo de combustível"
+            android:textSize="12sp"
+            android:textColor="#6B7280"
+            android:layout_marginBottom="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/btnFuelGasoline"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="2dp"
+                android:text="Gasolina"
+                android:textSize="11sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center"
+                android:background="@drawable/pill_selected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnFuelEthanol"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="Etanol"
+                android:textSize="11sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnFuelDiesel"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="Diesel"
+                android:textSize="11sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnFuelGNV"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginStart="2dp"
+                android:text="GNV"
+                android:textSize="11sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/etOdometer"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:inputType="numberDecimal"
+            android:hint="Hod\u00f4metro (km)"
+            android:textSize="14sp"
+            android:textColor="#1A1A2E"
+            android:background="@drawable/pill_unselected"
+            android:paddingHorizontal="12dp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/etLiters"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:inputType="numberDecimal"
+            android:hint="Litros / m\u00b3"
+            android:textSize="14sp"
+            android:textColor="#1A1A2E"
+            android:background="@drawable/pill_unselected"
+            android:paddingHorizontal="12dp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/etPricePerLiter"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:inputType="numberDecimal"
+            android:hint="Pre\u00e7o por litro/m\u00b3 (R$)"
+            android:textSize="14sp"
+            android:textColor="#1A1A2E"
+            android:background="@drawable/pill_unselected"
+            android:paddingHorizontal="12dp"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/etTotalValue"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:inputType="numberDecimal"
+            android:hint="Valor total (R$) - calculado automaticamente"
+            android:textSize="14sp"
+            android:textColor="#888888"
+            android:background="@drawable/pill_unselected"
+            android:paddingHorizontal="12dp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Full tank toggle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tanque cheio?"
+                android:textSize="14sp"
+                android:textColor="#1A1A2E"
+                android:layout_marginEnd="12dp" />
+
+            <TextView
+                android:id="@+id/btnFullTankYes"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:paddingHorizontal="14dp"
+                android:text="✅ SIM"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center"
+                android:background="@drawable/pill_selected"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/btnFullTankNo"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:paddingHorizontal="14dp"
+                android:text="❌ NÃO"
+                android:textSize="12sp"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnConfirmRefuel"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center"
+            android:text="➕ REGISTRAR ABASTECIMENTO"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/pill_selected"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+</ScrollView>

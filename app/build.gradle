@@ -66,4 +66,7 @@ dependencies {
     implementation(libs.recyclerview)
     implementation(libs.cardview)
     implementation(libs.constraintlayout)
+    implementation(libs.material)
+    implementation(libs.security.crypto)
+
 }

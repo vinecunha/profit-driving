@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:id="@+id/tvEventTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="\uD83C\uDFAF DESPESA POR EVENTO"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A2E"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Selecione ou digite o nome:"
+            android:textSize="12sp"
+            android:textColor="#6B7280"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/eventSuggestionsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/btnEventEstacionamento"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:gravity="center_vertical"
+                android:text="\uD83D\uDD7F\uFE0F Estacionamento"
+                android:textSize="12sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/btnEventPedagio"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:gravity="center_vertical"
+                android:text="\uD83D\uDEE3\uFE0F Ped\u00E1gio"
+                android:textSize="12sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/btnEventLavagem"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:gravity="center_vertical"
+                android:text="\uD83E\uDDFC Lavagem especial"
+                android:textSize="12sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/btnEventOutro"
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:gravity="center_vertical"
+                android:text="\u270F\uFE0F Outro..."
+                android:textSize="12sp"
+                android:textColor="#1A1A2E"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/etEventName"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:inputType="text"
+            android:hint="Nome personalizado"
+            android:textSize="13sp"
+            android:textColor="#1A1A2E"
+            android:background="@drawable/pill_unselected"
+            android:paddingHorizontal="12dp"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/etEventValue"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:inputType="numberDecimal"
+            android:hint="Valor por evento (R$)"
+            android:textSize="14sp"
+            android:textColor="#1A1A2E"
+            android:background="@drawable/pill_unselected"
+            android:paddingHorizontal="12dp"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Quantas vezes por m\u00EAs?"
+                android:textSize="12sp"
+                android:textColor="#6B7280"
+                android:layout_marginEnd="8dp" />
+
+            <EditText
+                android:id="@+id/etEventFreq"
+                android:layout_width="60dp"
+                android:layout_height="36dp"
+                android:inputType="number"
+                android:text="1"
+                android:textSize="13sp"
+                android:textColor="#1A1A2E"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="vezes"
+                android:textSize="12sp"
+                android:textColor="#6B7280"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="\uD83D\uDCA1 SUGEST\u00D5ES DE MERCADO:"
+            android:textSize="10sp"
+            android:textColor="#9CA3AF"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="\u2022 Estacionamento: R$ 10 - R$ 30/dia\n\u2022 Ped\u00E1gio: R$ 5 - R$ 20/viagem\n\u2022 Lavagem completa: R$ 50 - R$ 100"
+            android:textSize="10sp"
+            android:textColor="#9CA3AF"
+            android:lineSpacingExtra="2dp"
+            android:layout_marginBottom="16dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/btnCancelEvent"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:gravity="center"
+                android:text="CANCELAR"
+                android:textSize="12sp"
+                android:textColor="#6B7280"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnSaveEvent"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:gravity="center"
+                android:text="\u2705 SALVAR"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/pill_selected"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

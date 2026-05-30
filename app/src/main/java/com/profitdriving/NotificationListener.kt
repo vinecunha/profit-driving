@@ -9,10 +9,12 @@ import android.os.Handler
 import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import java.util.concurrent.Executors
 
 class NotificationListener : NotificationListenerService() {
 
     private lateinit var prefs: SharedPreferences
+    private val executor = Executors.newSingleThreadExecutor()
 
     override fun onCreate() {
         super.onCreate()
@@ -125,7 +127,7 @@ class NotificationListener : NotificationListenerService() {
     }
 
     private fun runOnUi(ride: RideData) {
-        Thread {
+        executor.execute {
             val db = DatabaseHelper(this)
             db.insert(RideRecord(
                 value = ride.value,
@@ -164,7 +166,7 @@ class NotificationListener : NotificationListenerService() {
                     ride.rating?.let { putExtra("rating", it) }
                 })
             }
-        }.start()
+        }
     }
 
     companion object {
