@@ -12,6 +12,7 @@ import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -417,6 +418,7 @@ class HistoryAdapter(
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val cardRoot: androidx.cardview.widget.CardView = view.findViewById(R.id.cardRoot)
+        val ivServiceTypeIcon: ImageView = view.findViewById(R.id.tvServiceTypeIcon)
         val tvServiceType: TextView = view.findViewById(R.id.tvServiceType)
         val tvPrice: TextView = view.findViewById(R.id.tvPrice)
         val tvRatingText: TextView = view.findViewById(R.id.tvRatingText)
@@ -426,10 +428,6 @@ class HistoryAdapter(
         val tvKmBadge: TextView = view.findViewById(R.id.tvKmBadge)
         val tvHourBadge: TextView = view.findViewById(R.id.tvHourBadge)
         val tvMinBadge: TextView = view.findViewById(R.id.tvMinBadge)
-        val tvPickupDistance: TextView = view.findViewById(R.id.tvPickupDistance)
-        val tvPickupTime: TextView = view.findViewById(R.id.tvPickupTime)
-        val tvDistanceWithIcon: TextView = view.findViewById(R.id.tvDistanceWithIcon)
-        val tvTimeWithIcon: TextView = view.findViewById(R.id.tvTimeWithIcon)
         val tvTotalInfo: TextView = view.findViewById(R.id.tvTotalInfo)
         val tvPriorityBonus: TextView = view.findViewById(R.id.tvPriorityBonus)
         val tvDynamicBonus: TextView = view.findViewById(R.id.tvDynamicBonus)
@@ -439,8 +437,12 @@ class HistoryAdapter(
         val btnExpandProfit: TextView = view.findViewById(R.id.btnExpandProfit)
         val expandableProfitDetails: View = view.findViewById(R.id.expandableProfitDetails)
         val tvProfitDetail: TextView = view.findViewById(R.id.tvProfitDetail)
-        val layoutAddresses: View = view.findViewById(R.id.layoutAddresses)
+        val layoutTripInfo: View = view.findViewById(R.id.layoutTripInfo)
+        val tvPickupDistance: TextView = view.findViewById(R.id.tvPickupDistance)
+        val tvPickupTime: TextView = view.findViewById(R.id.tvPickupTime)
         val tvPickupAddress: TextView = view.findViewById(R.id.tvPickupAddress)
+        val tvDropoffDistance: TextView = view.findViewById(R.id.tvDropoffDistance)
+        val tvDropoffTime: TextView = view.findViewById(R.id.tvDropoffTime)
         val tvDropoffAddress: TextView = view.findViewById(R.id.tvDropoffAddress)
         val tvStops: TextView = view.findViewById(R.id.tvStops)
     }
@@ -473,6 +475,26 @@ class HistoryAdapter(
         val r = records[position]
 
         holder.tvServiceType.text = r.serviceType ?: r.appName
+
+        val iconRes = when {
+            r.serviceType == null -> R.drawable.ic_ride_generic
+            r.serviceType!!.contains("Moto", ignoreCase = true) -> R.drawable.ic_moto
+            r.serviceType!!.contains("Black", ignoreCase = true) ||
+            r.serviceType!!.contains("Bag", ignoreCase = true) ||
+            r.serviceType == "99Top" || r.serviceType == "Top" ||
+            r.serviceType == "99Black" || r.serviceType == "99VIP" -> R.drawable.ic_car_luxury
+            r.serviceType!!.contains("Entrega", ignoreCase = true) ||
+            r.serviceType!!.contains("Flash", ignoreCase = true) ||
+            r.serviceType!!.contains("Envios", ignoreCase = true) -> R.drawable.ic_delivery
+            r.serviceType!!.contains("UberX", ignoreCase = true) ||
+            r.serviceType!!.contains("99Pop", ignoreCase = true) ||
+            r.serviceType!!.contains("Pop", ignoreCase = true) ||
+            r.serviceType!!.contains("Comfort", ignoreCase = true) ||
+            r.serviceType!!.contains("Juntos", ignoreCase = true) ||
+            r.serviceType!!.startsWith("Manual - ") -> R.drawable.ic_car
+            else -> R.drawable.ic_ride_generic
+        }
+        holder.ivServiceTypeIcon.setImageResource(iconRes)
 
         holder.tvPrice.text = r.value?.let {
             "R$ %.2f".format(it).replace(".", ",")
@@ -517,19 +539,23 @@ class HistoryAdapter(
         val (_, ratingColor) = getBadgeTextAndColor(ratingState)
         holder.tvRatingText.setTextColor(ratingColor)
 
+        // Embarque: distância · tempo · endereço (individual)
         holder.tvPickupDistance.text = r.pickupDistanceKm?.let {
             "%.1f km".format(it).replace(".", ",")
         } ?: r.distanceKm?.let {
             "%.1f km".format(it).replace(".", ",")
         } ?: ""
         holder.tvPickupTime.text = r.pickupTimeMin?.let { "${it} min" } ?: r.timeMin?.let { "${it} min" } ?: ""
+        holder.tvPickupAddress.text = maskAddress(r.pickupAddress)
 
-        holder.tvDistanceWithIcon.text = r.tripDistanceKm?.let {
+        // Destino: distância · tempo · endereço (individual)
+        holder.tvDropoffDistance.text = r.tripDistanceKm?.let {
             "%.1f km".format(it).replace(".", ",")
         } ?: r.distanceKm?.let {
             "%.1f km".format(it).replace(".", ",")
         } ?: ""
-        holder.tvTimeWithIcon.text = r.tripTimeMin?.let { "${it} min" } ?: r.timeMin?.let { "${it} min" } ?: ""
+        holder.tvDropoffTime.text = r.tripTimeMin?.let { "${it} min" } ?: r.timeMin?.let { "${it} min" } ?: ""
+        holder.tvDropoffAddress.text = maskAddress(r.dropoffAddress)
 
         val totalParts = mutableListOf<String>()
         r.distanceKm?.let { totalParts.add("%.1f km".format(it).replace(".", ",")) }
@@ -574,11 +600,6 @@ class HistoryAdapter(
         } else {
             holder.tvDynamicBonus.visibility = View.GONE
         }
-
-        val hasAddress = r.pickupAddress != null || r.dropoffAddress != null
-        holder.layoutAddresses.visibility = if (hasAddress) View.VISIBLE else View.GONE
-        holder.tvPickupAddress.text = maskAddress(r.pickupAddress)
-        holder.tvDropoffAddress.text = maskAddress(r.dropoffAddress)
 
         if (r.stops != null && r.stops > 0) {
             val stopsText = if (r.stops == 1) {

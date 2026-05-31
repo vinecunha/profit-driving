@@ -22,13 +22,13 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <TextView
+            <ImageView
                 android:id="@+id/tvServiceTypeIcon"
-                android:layout_width="wrap_content"
+                android:layout_width="28dp"
                 android:layout_height="28dp"
-                android:gravity="center"
-                android:text="🏷️"
-                android:textSize="14sp"
+                android:scaleType="center"
+                android:padding="4dp"
+                android:src="@drawable/ic_car"
                 android:background="#F0F2F8" />
 
             <TextView
@@ -91,14 +91,16 @@
                 android:layout_height="wrap_content"
                 android:textSize="28sp"
                 android:textStyle="bold"
-                android:textColor="#00982b" />
+                android:textColor="#333" />
 
             <TextView
                 android:id="@+id/tvPriorityBonus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="10sp"
-                android:textColor="#FF9800"
+                android:textColor="#F57C00"
+                android:background="#FFF8E1"
+                android:padding="4dp"
                 android:layout_marginStart="12dp"
                 android:visibility="gone" />
 
@@ -107,7 +109,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="10sp"
-                android:textColor="#FF9800"
+                android:textColor="#F57C00"
+                android:background="#FFF8E1"
+                android:padding="4dp"
                 android:layout_marginStart="8dp"
                 android:visibility="gone" />
 
@@ -240,150 +244,76 @@
 
         </LinearLayout>
 
-        <!-- Trip Details: Embarque + Viagem (duas colunas) -->
+        <!-- Trip Details: Embarque + Destino em duas linhas unificadas -->
         <LinearLayout
-            android:id="@+id/layoutTripDetails"
+            android:id="@+id/layoutTripInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal"
-            android:padding="12dp"
-            android:background="#F8F9FE">
-
-            <!-- Coluna 1: Embarque -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:paddingEnd="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🟢 Embarque"
-                    android:textSize="11sp"
-                    android:textColor="#5E6F8D" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginTop="4dp">
-
-                    <TextView
-                        android:id="@+id/tvPickupDistance"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="#1A2C3E" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="  ⏱️  "
-                        android:textSize="11sp"
-                        android:textColor="#5E6F8D" />
-
-                    <TextView
-                        android:id="@+id/tvPickupTime"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="#1A2C3E" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- Coluna 2: Viagem -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="end"
-                android:paddingStart="8dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🏁 Viagem"
-                    android:textSize="11sp"
-                    android:textColor="#5E6F8D" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginTop="4dp">
-
-                    <TextView
-                        android:id="@+id/tvDistanceWithIcon"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="#1A2C3E" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="  ⏱️  "
-                        android:textSize="11sp"
-                        android:textColor="#5E6F8D" />
-
-                    <TextView
-                        android:id="@+id/tvTimeWithIcon"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="#1A2C3E" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Endereços -->
-        <LinearLayout
-            android:id="@+id/layoutAddresses"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_marginTop="8dp"
-            android:visibility="gone">
+            android:orientation="vertical"
+            android:visibility="visible">
 
             <!-- Embarque -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="8dp">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="4dp">
+
+                <ImageView
+                    android:id="@+id/ivPickupIcon"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_pickup"
+                    android:contentDescription="Embarque"
+                    android:layout_marginEnd="6dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🟢 Embarque"
+                    android:text="Embarque: "
                     android:textSize="11sp"
-                    android:textColor="#5E6F8D"
-                    android:layout_marginBottom="2dp" />
+                    android:textColor="#5E6F8D" />
+
+                <TextView
+                    android:id="@+id/tvPickupDistance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A2C3E" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" · "
+                    android:textSize="11sp"
+                    android:textColor="#5E6F8D" />
+
+                <TextView
+                    android:id="@+id/tvPickupTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A2C3E" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" · "
+                    android:textSize="11sp"
+                    android:textColor="#5E6F8D" />
 
                 <TextView
                     android:id="@+id/tvPickupAddress"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:paddingStart="20dp"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="#1A2C3E"
-                    android:maxLines="2"
+                    android:layout_weight="1"
+                    android:textSize="11sp"
+                    android:textColor="#6B7280"
+                    android:maxLines="1"
                     android:ellipsize="end" />
 
             </LinearLayout>
@@ -392,25 +322,63 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingVertical="4dp">
+
+                <ImageView
+                    android:id="@+id/ivDropoffIcon"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_dropoff"
+                    android:contentDescription="Destino"
+                    android:layout_marginEnd="6dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🏁 Destino"
+                    android:text="Destino: "
                     android:textSize="11sp"
-                    android:textColor="#5E6F8D"
-                    android:layout_marginBottom="2dp" />
+                    android:textColor="#5E6F8D" />
+
+                <TextView
+                    android:id="@+id/tvDropoffDistance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A2C3E" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" · "
+                    android:textSize="11sp"
+                    android:textColor="#5E6F8D" />
+
+                <TextView
+                    android:id="@+id/tvDropoffTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A2C3E" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" · "
+                    android:textSize="11sp"
+                    android:textColor="#5E6F8D" />
 
                 <TextView
                     android:id="@+id/tvDropoffAddress"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:paddingStart="20dp"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="#1A2C3E"
-                    android:maxLines="2"
+                    android:layout_weight="1"
+                    android:textSize="11sp"
+                    android:textColor="#6B7280"
+                    android:maxLines="1"
                     android:ellipsize="end" />
 
             </LinearLayout>

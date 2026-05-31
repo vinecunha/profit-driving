@@ -269,14 +269,16 @@ class FloatingCardService : Service() {
             tvKnownDestination.visibility = View.VISIBLE
         }
 
+        // Congela o costPerKm no momento da criação do card
         serviceScope.launch {
             try {
                 val costSummary = CostSummaryCache.getCurrentSummary(this@FloatingCardService)
+                val frozenCostPerKm = costSummary.totalCostPerKm
                 val estimatedProfit = CostCalculator.estimateProfit(
-                    ride.value, ride.distanceKm, costSummary.totalCostPerKm
+                    ride.value, ride.distanceKm, frozenCostPerKm
                 )
                 val estimatedProfitPercent = CostCalculator.estimateProfitPercent(
-                    ride.value, ride.distanceKm, costSummary.totalCostPerKm
+                    ride.value, ride.distanceKm, frozenCostPerKm
                 )
                 if (estimatedProfit != null && estimatedProfitPercent != null) {
                     val profitText = buildString {

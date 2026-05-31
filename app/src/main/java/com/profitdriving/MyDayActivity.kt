@@ -648,14 +648,13 @@ class MyDayActivity : BaseActivity() {
             val totalTime = (record?.pickupTimeMin ?: 0) +
                 (record?.tripTimeMin ?: record?.timeMin ?: 0)
             totalDuration += totalTime
-            grossRevenue += ride.originalValue
+            grossRevenue += ride.finalValue
             totalTips += ride.tipAmount
             totalAdjustments += ride.adjustmentDifference
         }
 
         val totalCost = totalKm * costPerKm
-        val sumFinalValues = grossRevenue + totalTips + totalAdjustments
-        val netProfit = sumFinalValues - totalCost
+        val netProfit = grossRevenue - totalCost
         val profitPercent = if (grossRevenue > 0) (netProfit / grossRevenue) * 100 else 0.0
         val revenuePerKm = if (totalKm > 0) grossRevenue / totalKm else 0.0
         val revenuePerHour = if (totalDuration > 0) grossRevenue / totalDuration * 60 else 0.0

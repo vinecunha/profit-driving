@@ -275,25 +275,59 @@ class AnalysisActivity : BaseActivity() {
     // ─── CARD 2: Impacto dos Bônus ───
     private fun buildBonusImpact(r: AnalysisResultV2) {
         val card = createCard("\uD83D\uDCB0 Impacto dos B\u00F4nus")
+        val MIN_DATA = 3
+
         addText(card, "Comparativo de corridas com e sem b\u00F4nus", 12f, Color.parseColor("#666666"))
 
         addDivider(card)
-        addText(card, "\u2B06 Prioridade (${"%.0f".format(r.priorityImpact.percentage)}% das corridas)", 13f, Color.parseColor("#333333"), true)
-        addText(card, "Corridas: ${r.priorityImpact.count}  |  Valor m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.priorityImpact.avgBonusValue)}", 12f, Color.parseColor("#555555"))
-        addText(card, "R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.priorityImpact.avgPricePerKm)}  |  Sem prioridade: R\$ ${AnalysisHelperV2.formatBr(r.priorityImpact.avgPricePerKmWithout)}", 12f, Color.parseColor("#555555"))
-        val diffP = r.priorityImpact.avgPricePerKm - r.priorityImpact.avgPricePerKmWithout
-        val signalP = if (diffP >= 0) "+" else ""
-        addText(card, "Diferen\u00E7a: ${signalP}R\$ ${AnalysisHelperV2.formatBr(diffP)}/km  (${signalP}${"%.0f".format(r.priorityImpact.goodRatePercent - (r.goodPercent))}% boas)",
-            11f, if (diffP >= 0) Color.parseColor("#00A86B") else Color.parseColor("#EF4444"), true)
+
+        // Prioridade
+        val p = r.priorityImpact
+        addText(card, "\u2B06 Prioridade", 13f, Color.parseColor("#333333"), true)
+        if (p.count >= MIN_DATA) {
+            val diffP = maxOf(p.avgPricePerKm - p.avgPricePerKmWithout, 0.0)
+            val diffPctP = if (p.avgPricePerKmWithout > 0) (diffP / p.avgPricePerKmWithout * 100) else 0.0
+            val goodDiffP = maxOf(p.goodRatePercent - r.goodPercent, 0.0)
+            addText(card, buildString {
+                append("Presente em ${"%.0f".format(p.percentage)}% das corridas")
+            }, 12f, Color.parseColor("#555555"))
+            addText(card, buildString {
+                append("R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(p.avgPricePerKm)}")
+                append("  (sem: R\$ ${AnalysisHelperV2.formatBr(p.avgPricePerKmWithout)})")
+            }, 12f, Color.parseColor("#555555"))
+            addText(card, buildString {
+                append("\u2B06 ${"%.0f".format(diffPctP)}% melhor R\$/km  |  ${"%.0f".format(goodDiffP)}% mais corridas \"boas\"")
+            }, 12f, Color.parseColor("#00A86B"), true)
+        } else {
+            addText(card, "Dados insuficientes (m\u00EDn. $MIN_DATA corridas com prioridade)", 12f, Color.parseColor("#999999"))
+        }
 
         addDivider(card)
-        addText(card, "\u26A1 Din\u00E2mica (${"%.0f".format(r.dynamicImpact.percentage)}% das corridas)", 13f, Color.parseColor("#333333"), true)
-        addText(card, "Corridas: ${r.dynamicImpact.count}  |  Valor m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.dynamicImpact.avgBonusValue)}", 12f, Color.parseColor("#555555"))
-        addText(card, "R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.dynamicImpact.avgPricePerKm)}  |  Sem din\u00E2mica: R\$ ${AnalysisHelperV2.formatBr(r.dynamicImpact.avgPricePerKmWithout)}", 12f, Color.parseColor("#555555"))
-        val diffD = r.dynamicImpact.avgPricePerKm - r.dynamicImpact.avgPricePerKmWithout
-        val signalD = if (diffD >= 0) "+" else ""
-        addText(card, "Diferen\u00E7a: ${signalD}R\$ ${AnalysisHelperV2.formatBr(diffD)}/km  (${signalD}${"%.0f".format(r.dynamicImpact.goodRatePercent - (r.goodPercent))}% boas)",
-            11f, if (diffD >= 0) Color.parseColor("#00A86B") else Color.parseColor("#EF4444"), true)
+
+        // Dinâmica
+        val d = r.dynamicImpact
+        addText(card, "\u26A1 Din\u00E2mica", 13f, Color.parseColor("#333333"), true)
+        if (d.count >= MIN_DATA) {
+            val diffD = maxOf(d.avgPricePerKm - d.avgPricePerKmWithout, 0.0)
+            val diffPctD = if (d.avgPricePerKmWithout > 0) (diffD / d.avgPricePerKmWithout * 100) else 0.0
+            val goodDiffD = maxOf(d.goodRatePercent - r.goodPercent, 0.0)
+            addText(card, buildString {
+                append("Presente em ${"%.0f".format(d.percentage)}% das corridas")
+            }, 12f, Color.parseColor("#555555"))
+            addText(card, buildString {
+                append("R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(d.avgPricePerKm)}")
+                append("  (sem: R\$ ${AnalysisHelperV2.formatBr(d.avgPricePerKmWithout)})")
+            }, 12f, Color.parseColor("#555555"))
+            addText(card, buildString {
+                append("\u2B06 ${"%.0f".format(diffPctD)}% melhor R\$/km  |  ${"%.0f".format(goodDiffD)}% mais corridas \"boas\"")
+            }, 12f, Color.parseColor("#00A86B"), true)
+        } else {
+            addText(card, "Dados insuficientes (m\u00EDn. $MIN_DATA corridas com din\u00E2mica)", 12f, Color.parseColor("#999999"))
+        }
+
+        addDivider(card)
+        addText(card, "\uD83D\uDCA1 O que significa? B\u00F4nus de prioridade s\u00E3o oferecidos pela Uber para incentivar aceita\u00E7\u00E3o em \u00E1reas de alta demanda. O indicador mostra o impacto real no ganho por km \u2014 quanto maior a diferen\u00E7a, mais vale a pena priorizar essas corridas.",
+            11f, Color.parseColor("#888888"))
 
         cardsContainer.addView(card)
     }
