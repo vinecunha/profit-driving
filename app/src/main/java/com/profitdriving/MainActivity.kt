@@ -151,6 +151,13 @@ class MainActivity : BaseActivity() {
         loadServiceTypeFilters()
         loadFilteredHistory()
         updateStatus()
+
+        val overlayOk = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            Settings.canDrawOverlays(this) else true
+
+        if (isAccessibilityServiceEnabled() && overlayOk) {
+            FloatingBubbleService.start(this)
+        }
     }
 
     private fun setFilter(days: Int) {
@@ -546,12 +553,7 @@ class HistoryAdapter(
         holder.tvScore.setBackgroundColor(scoreBgColor)
         holder.tvScore.setTextColor(scoreFgColor)
 
-        if (r.bonusAmount != null) {
-            holder.tvBonus.text = "+ R$ %.2f".format(r.bonusAmount).replace(".", ",")
-            holder.tvBonus.visibility = View.VISIBLE
-        } else {
-            holder.tvBonus.visibility = View.GONE
-        }
+        holder.tvBonus.visibility = View.GONE
 
         val isExpanded = expandedItems.contains(position)
         holder.expandableProfitDetails.visibility = if (isExpanded) View.VISIBLE else View.GONE

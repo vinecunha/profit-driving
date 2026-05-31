@@ -5,6 +5,8 @@
     android:orientation="vertical"
     android:background="#F5F7FB">
 
+    <include layout="@layout/toolbar_default" />
+
 <ScrollView
     android:layout_width="match_parent"
     android:layout_height="0dp"
@@ -14,9 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="12dp">
-
-        <include layout="@layout/toolbar_default" />
+        android:padding="16dp">
 
         <!-- Card: Combustível / GNV -->
         <LinearLayout

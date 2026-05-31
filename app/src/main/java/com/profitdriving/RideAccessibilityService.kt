@@ -348,7 +348,6 @@ class RideAccessibilityService : AccessibilityService() {
         val appName = if (pkg.contains("ubercab")) "Uber" else "99"
 
         val serviceType = extractServiceType(text)
-        val bonusAmount = extractBonus(text)
         val priorityBonus = extractPriorityBonus(text)
         val dynamicBonus = extractDynamicBonus(text)
 
@@ -372,7 +371,6 @@ class RideAccessibilityService : AccessibilityService() {
             tripDistanceKm = tripKm,
             tripTimeMin = tripTime,
             serviceType = serviceType,
-            bonusAmount = bonusAmount,
             stops = stops,
             priorityBonus = priorityBonus,
             dynamicBonus = dynamicBonus
@@ -559,7 +557,6 @@ class RideAccessibilityService : AccessibilityService() {
             tripDistanceKm = ride.tripDistanceKm,
             tripTimeMin = ride.tripTimeMin,
             serviceType = ride.serviceType,
-            bonusAmount = ride.bonusAmount,
             stops = ride.stops,
             scorePercent = result.scorePercent
         ))
@@ -573,7 +570,6 @@ class RideAccessibilityService : AccessibilityService() {
             putString("last_app", ride.appName)
             putLong("last_timestamp", System.currentTimeMillis())
             ride.serviceType?.let { putString("last_service_type", it) }
-            ride.bonusAmount?.let { putFloat("last_bonus", it.toFloat()) }
             apply()
         }
 
@@ -584,7 +580,6 @@ class RideAccessibilityService : AccessibilityService() {
             ride.rating?.let { putExtra("rating", it) }
             putExtra("appName", ride.appName)
             ride.serviceType?.let { putExtra("serviceType", it) }
-            ride.bonusAmount?.let { putExtra("bonusAmount", it) }
             ride.priorityBonus?.let { putExtra("priorityBonus", it) }
             ride.dynamicBonus?.let { putExtra("dynamicBonus", it) }
         })
@@ -594,6 +589,7 @@ class RideAccessibilityService : AccessibilityService() {
             ride.distanceKm?.let { putExtra("distanceKm", it) }
             ride.timeMin?.let { putExtra("timeMin", it) }
             ride.rating?.let { putExtra("rating", it) }
+            putExtra("decision", result.decision.name)
         })
     }
 
@@ -620,33 +616,6 @@ class RideAccessibilityService : AccessibilityService() {
         for (entry in SERVICE_TYPE_LIST) {
             val regex = Regex("\\b${Regex.escape(entry.first)}\\b")
             if (regex.containsMatchIn(lower)) return entry.second
-        }
-        return null
-    }
-
-    private fun extractBonus(text: String): Double? {
-        val chega = BONUS_REGEX_CHEGOU.find(text)
-        if (chega != null) {
-            val v = parseBr(chega.groupValues[1])
-            if (v != null && v > 0) return v
-        }
-        val ganhe = BONUS_REGEX_GANHE.find(text)
-        if (ganhe != null) {
-            val v = parseBr(ganhe.groupValues[1])
-            if (v != null && v > 0) return v
-        }
-        val priority = PRIORITY_BONUS_REGEX.find(text)
-        if (priority != null) {
-            val v = parseBr(priority.groupValues[1])
-            if (v != null && v > 0) return v
-        }
-        val dynamicMatches = DYNAMIC_BONUS_REGEX.findAll(text).filter { m ->
-            val full = m.value.lowercase(Locale.ROOT)
-            !full.contains("prioridade")
-        }.toList()
-        if (dynamicMatches.isNotEmpty()) {
-            val v = parseBr(dynamicMatches.first().groupValues[1])
-            if (v != null && v > 0) return v
         }
         return null
     }
@@ -736,17 +705,8 @@ class RideAccessibilityService : AccessibilityService() {
             "entrega" to "Entrega"
         )
 
-        private val BONUS_REGEX_CHEGOU = Regex(
-            """(?:Chegou|b[ôo]nus\s+extra\s+de)\s*R\$\s*(\d+(?:[.,]\d+)?)""",
-            RegexOption.IGNORE_CASE
-        )
-        private val BONUS_REGEX_GANHE = Regex(
-            """Ganhe\s*at[ée]\s*R\$\s*(\d+(?:[.,]\d+)?)""",
-            RegexOption.IGNORE_CASE
-        )
-
         private val MULTIPLE_STOPS_REGEX = Regex(
-            """(várias paradas|multiplas paradas|várias\s+paradas|multiplas\s+paradas|\d+\s*paradas)""",
+            """(v[aá]rias\s+paradas|mult[ií]plas\s+paradas|\d+\s*paradas)""",
             RegexOption.IGNORE_CASE
         )
 

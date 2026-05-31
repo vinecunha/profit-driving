@@ -37,6 +37,8 @@ class FloatingCardService : Service() {
     private var overlayView: View? = null
 
     private val dismissRunnable = Runnable { dismiss() }
+    private var lastRideHash = ""
+    private var lastRideTime = 0L
 
     override fun onCreate() {
         super.onCreate()
@@ -65,11 +67,10 @@ class FloatingCardService : Service() {
         val rating = intent.getDoubleExtra("rating", -1.0).let { if (it < 0) null else it }
         val appName = intent.getStringExtra("appName") ?: ""
         val serviceType = intent.getStringExtra("serviceType")
-        val bonusAmount = intent.getDoubleExtra("bonusAmount", -1.0).let { if (it < 0) null else it }
         val priorityBonus = intent.getDoubleExtra("priorityBonus", -1.0).let { if (it < 0) null else it }
         val dynamicBonus = intent.getDoubleExtra("dynamicBonus", -1.0).let { if (it < 0) null else it }
 
-        val ride = RideData(value, distanceKm, timeMin, rating, appName, serviceType = serviceType, bonusAmount = bonusAmount, priorityBonus = priorityBonus, dynamicBonus = dynamicBonus)
+        val ride = RideData(value, distanceKm, timeMin, rating, appName, serviceType = serviceType, priorityBonus = priorityBonus, dynamicBonus = dynamicBonus)
 
         L.d(TAG, "Card: valor=$value km=$distanceKm tempo=$timeMin nota=$rating demo=$isDemo")
         showOverlay(ride, isDemo)
@@ -110,6 +111,15 @@ class FloatingCardService : Service() {
     private fun showCard(ride: RideData, isDemo: Boolean) {
         L.d(TAG, "=== showCard INICIADO ===")
         L.d(TAG, "isDemo=$isDemo value=${ride.value} km=${ride.distanceKm} time=${ride.timeMin} rating=${ride.rating}")
+
+        val rideHash = "${ride.value}_${ride.distanceKm}_${ride.timeMin}_${ride.rating}"
+        val now = System.currentTimeMillis()
+        if (rideHash == lastRideHash && (now - lastRideTime) < 5000L) {
+            L.d(TAG, "Mesmo card detectado em menos de 5s — ignorando")
+            return
+        }
+        lastRideHash = rideHash
+        lastRideTime = now
 
         if (!::windowManager.isInitialized) {
             windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -157,10 +167,7 @@ class FloatingCardService : Service() {
         tvServiceType.visibility =
             if (ride.serviceType != null) View.VISIBLE else View.GONE
 
-        tvBonus.text = ride.bonusAmount
-            ?.let { "Bônus: R$ %.2f".format(it).replace(".", ",") } ?: ""
-        tvBonus.visibility =
-            if (ride.bonusAmount != null) View.VISIBLE else View.GONE
+        tvBonus.visibility = View.GONE
 
         tvPriorityBonus.text = ride.priorityBonus
             ?.let { "+R$ %.2f Prioridade".format(it).replace(".", ",") } ?: ""

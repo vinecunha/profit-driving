@@ -240,7 +240,6 @@ class SettingsActivity : BaseActivity() {
                 putExtra("rating", 4.87)
                 putExtra("appName", "Uber")
                 putExtra("serviceType", "UberX")
-                putExtra("bonusAmount", -1.0)
             }
             FloatingCardService.start(this, intent)
             Toast.makeText(this, "Card de exemplo exibido!", Toast.LENGTH_SHORT).show()

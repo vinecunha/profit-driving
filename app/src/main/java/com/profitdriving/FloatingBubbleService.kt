@@ -36,17 +36,32 @@ class FloatingBubbleService : Service() {
         startForeground(NOTIF_ID, buildNotification())
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         prefs = getSharedPreferences(SettingsActivity.PREF_NAME, Context.MODE_PRIVATE)
+        showBubble(null)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (bubbleView == null) {
+            showBubble(null)
+        }
+
         if (intent == null) return START_STICKY
-        if (intent.`package` != packageName) return START_NOT_STICKY
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(this)) {
                 stopSelf()
                 return START_NOT_STICKY
             }
+        }
+
+        val decision = intent.getStringExtra("decision")
+        if (decision != null) {
+            val status = when (decision) {
+                "ACEITAR" -> "good"
+                "ANALISAR" -> "medium"
+                else -> "bad"
+            }
+            updateBubbleColor(status)
+            return START_STICKY
         }
 
         val value = if (intent.hasExtra("value"))
@@ -58,66 +73,46 @@ class FloatingBubbleService : Service() {
         val rating = if (intent.hasExtra("rating"))
             intent.getDoubleExtra("rating", -1.0).let { if (it < 0) null else it } else null
 
-        showOrUpdateBubble(value, distanceKm, timeMin, rating)
+        updateBubbleByRide(value, distanceKm, timeMin, rating)
         return START_STICKY
     }
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            val ch = NotificationChannel(
-                CHANNEL_ID, "CorridaCerta Ícone",
-                NotificationManager.IMPORTANCE_MIN
-            ).apply {
-                description = "Ícone flutuante do CorridaCerta"
-                setShowBadge(false)
-            }
-            nm.createNotificationChannel(ch)
-        }
-    }
-
-    private fun buildNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
-        .setContentTitle("CorridaCerta")
-        .setContentText("Ícone flutuante ativo — toque para abrir o app")
-        .setSmallIcon(android.R.drawable.ic_menu_info_details)
-        .setPriority(NotificationCompat.PRIORITY_MIN)
-        .setOngoing(true)
-        .build()
-
-    private fun showOrUpdateBubble(
-        value: Double?,
-        distanceKm: Double?,
-        timeMin: Int?,
-        rating: Double?
-    ) {
-        val allOk = if (value != null) {
+    private fun updateBubbleByRide(value: Double?, distanceKm: Double?, timeMin: Int?, rating: Double?) {
+        val status = if (value != null) {
             val pricePerKm = if (distanceKm != null && distanceKm > 0) value / distanceKm else null
             val pricePerHour = if (timeMin != null && timeMin > 0) value / (timeMin / 60.0) else null
             val pricePerMinute = if (timeMin != null && timeMin > 0) value / timeMin else null
 
-            val minKm = prefs.getFloat(SettingsActivity.KEY_MIN_KM, 0f)
-            val minHour = prefs.getFloat(SettingsActivity.KEY_MIN_HOUR, 0f)
-            val minMinute = prefs.getFloat(SettingsActivity.KEY_MIN_MINUTE, 0f)
-            val minRating = prefs.getFloat(SettingsActivity.KEY_MIN_RATING, 0f)
+            val result = DecisionEngine.evaluate(
+                kmValue = pricePerKm,
+                hourValue = pricePerHour,
+                minValue = pricePerMinute,
+                ratingValue = rating,
+                prefs = prefs
+            )
 
-            val kmOk = pricePerKm == null || pricePerKm >= minKm.toDouble()
-            val hourOk = pricePerHour == null || pricePerHour >= minHour.toDouble()
-            val minuteOk = pricePerMinute == null || pricePerMinute >= minMinute.toDouble()
-            val ratingOk = rating == null || rating >= minRating.toDouble()
-
-            kmOk && hourOk && minuteOk && ratingOk
+            when (result.decision) {
+                DecisionEngine.Decision.ACEITAR -> "good"
+                DecisionEngine.Decision.ANALISAR -> "medium"
+                DecisionEngine.Decision.RECUSAR -> "bad"
+            }
         } else {
             null
         }
-
-        if (bubbleView != null) {
-            applyBubbleColors(bubbleView!!, allOk)
-            return
-        }
-        showBubble(allOk)
+        updateBubbleColor(status)
     }
 
-    private fun showBubble(status: Boolean?) {
+    private fun updateBubbleColor(status: String?) {
+        if (bubbleView == null) {
+            showBubble(status)
+        } else {
+            applyBubbleColors(bubbleView!!, status)
+        }
+    }
+
+    private fun showBubble(status: String?) {
+        if (bubbleView != null) return
+
         val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val view = inflater.inflate(R.layout.bubble_layout, null)
         applyBubbleColors(view, status)
@@ -188,28 +183,31 @@ class FloatingBubbleService : Service() {
         try {
             windowManager.addView(view, params)
             bubbleView = view
-            L.d(TAG, "Bolha exibida")
+            L.d(TAG, "Bolha exibida com sucesso")
         } catch (e: Exception) {
-            L.e(TAG, "Falha ao exibir bolha", e)
-            stopSelf()
+            L.e(TAG, "Falha ao exibir bolha: ${e.message}", e)
         }
     }
 
-    private fun applyBubbleColors(view: View, status: Boolean?) {
+    private fun applyBubbleColors(view: View, status: String?) {
         val ringColor: String
         val dotColor: String
         when (status) {
-            true -> {
+            "good" -> {
                 ringColor = "#4CAF50"
                 dotColor = "#4CAF50"
             }
-            false -> {
-                ringColor = "#FF5252"
-                dotColor = "#FF5252"
+            "medium" -> {
+                ringColor = "#FF9800"
+                dotColor = "#FF9800"
             }
-            null -> {
-                ringColor = "#444444"
-                dotColor = "#444444"
+            "bad" -> {
+                ringColor = "#F44336"
+                dotColor = "#F44336"
+            }
+            else -> {
+                ringColor = "#9E9E9E"
+                dotColor = "#9E9E9E"
             }
         }
 
@@ -229,11 +227,31 @@ class FloatingBubbleService : Service() {
 
     private fun Int.dpToPx(): Int = (this * resources.displayMetrics.density).toInt()
 
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            val ch = NotificationChannel(
+                CHANNEL_ID, "CorridaCerta Ícone",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Ícone flutuante do CorridaCerta"
+                setShowBadge(false)
+            }
+            nm.createNotificationChannel(ch)
+        }
+    }
+
+    private fun buildNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
+        .setContentTitle("CorridaCerta")
+        .setContentText("Ícone flutuante ativo")
+        .setSmallIcon(android.R.drawable.ic_menu_info_details)
+        .setPriority(NotificationCompat.PRIORITY_LOW)
+        .setOngoing(true)
+        .build()
+
     private fun dismiss() {
         bubbleView?.let { view ->
-            try {
-                windowManager.removeView(view)
-            } catch (_: Exception) {}
+            try { windowManager.removeView(view) } catch (_: Exception) {}
         }
         bubbleView = null
         stopSelf()
@@ -256,18 +274,20 @@ class FloatingBubbleService : Service() {
 
         fun start(context: Context) {
             val intent = Intent(context, FloatingBubbleService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
-            else
+            } else {
                 context.startService(intent)
+            }
         }
 
         fun start(context: Context, intent: Intent) {
             intent.setClass(context, FloatingBubbleService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
-            else
+            } else {
                 context.startService(intent)
+            }
         }
 
         fun stop(context: Context) {

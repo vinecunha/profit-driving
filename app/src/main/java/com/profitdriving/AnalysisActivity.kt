@@ -399,13 +399,6 @@ class AnalysisActivity : BaseActivity() {
                 12f, Color.parseColor("#666666")
             )
 
-            st.avgBonus?.let {
-                addTextToCard(row,
-                    "Bônus médio +R$ ${AnalysisHelper.formatBr(it)}",
-                    12f, Color.parseColor("#FFD700"), true
-                )
-            }
-
             if (i < result.byServiceType.size - 1) {
                 val div = View(this).apply {
                     layoutParams = LinearLayout.LayoutParams(

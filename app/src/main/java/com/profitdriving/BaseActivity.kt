@@ -33,7 +33,13 @@ abstract class BaseActivity : AppCompatActivity() {
         } else {
             layoutLogo?.visibility = View.GONE
             btnBack.visibility = if (showBack) View.VISIBLE else View.GONE
-            btnBack.setOnClickListener { (backListener ?: { finish() }).invoke() }
+            btnBack.setOnClickListener {
+                (backListener ?: {
+                    startActivity(Intent(this, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    })
+                }).invoke()
+            }
         }
 
         if (title != null) {
@@ -90,20 +96,20 @@ abstract class BaseActivity : AppCompatActivity() {
 
         when (currentScreen) {
             Screen.HOME -> {
-                iconHome?.alpha = 1.0f
-                labelHome?.setTextColor(0xFF1A1A2E.toInt())
+                iconHome?.setTextColor(0xFF00A86B.toInt())
+                labelHome?.setTextColor(0xFF00A86B.toInt())
             }
             Screen.PARAMS -> {
-                iconParams?.alpha = 1.0f
-                labelParams?.setTextColor(0xFF1A1A2E.toInt())
+                iconParams?.setTextColor(0xFF00A86B.toInt())
+                labelParams?.setTextColor(0xFF00A86B.toInt())
             }
             Screen.MY_DAY -> {
-                iconMyDay?.alpha = 1.0f
-                labelMyDay?.setTextColor(0xFF1A1A2E.toInt())
+                iconMyDay?.setTextColor(0xFF00A86B.toInt())
+                labelMyDay?.setTextColor(0xFF00A86B.toInt())
             }
             Screen.COSTS -> {
-                iconCosts?.alpha = 1.0f
-                labelCosts?.setTextColor(0xFF1A1A2E.toInt())
+                iconCosts?.setTextColor(0xFF00A86B.toInt())
+                labelCosts?.setTextColor(0xFF00A86B.toInt())
             }
         }
 

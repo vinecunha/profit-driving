@@ -36,20 +36,12 @@
 
             <ImageView
                 android:id="@+id/ivLogo"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/nyxion_logo"
-                android:layout_marginEnd="6dp"
+                android:layout_width="120dp"
+                android:layout_height="40dp"
+                android:src="@drawable/nyxion_logo_1200x400"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
                 android:importantForAccessibility="no" />
-
-            <TextView
-                android:id="@+id/tvAppName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Corrida Certa"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:textColor="#1A2C3E" />
 
         </LinearLayout>
 

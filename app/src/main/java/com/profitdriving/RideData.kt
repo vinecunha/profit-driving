@@ -14,7 +14,6 @@ data class RideData(
     val tripDistanceKm: Double? = null,
     val tripTimeMin: Int? = null,
     val serviceType: String? = null,
-    val bonusAmount: Double? = null,
     val stops: Int? = null,
     val priorityBonus: Double? = null,
     val dynamicBonus: Double? = null

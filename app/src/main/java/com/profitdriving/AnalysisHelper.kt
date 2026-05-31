@@ -9,7 +9,6 @@ data class ServiceTypeStats(
     val avgPricePerHour: Double,
     val avgRating: Double?,
     val totalEarnings: Double,
-    val avgBonus: Double?,
     val avgTimeBetweenRidesMin: Double?
 )
 
@@ -107,8 +106,6 @@ object AnalysisHelper {
                     avgRating = list.mapNotNull { it.rating }
                         .takeIf { it.isNotEmpty() }?.average(),
                     totalEarnings = list.mapNotNull { it.value }.sum(),
-                    avgBonus = list.mapNotNull { it.bonusAmount }
-                        .takeIf { it.isNotEmpty() }?.average(),
                     avgTimeBetweenRidesMin = gaps
                         .takeIf { it.isNotEmpty() }?.average()
                 )
