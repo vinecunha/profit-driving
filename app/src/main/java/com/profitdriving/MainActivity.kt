@@ -438,6 +438,10 @@ class HistoryAdapter(
         val btnExpandProfit: TextView = view.findViewById(R.id.btnExpandProfit)
         val expandableProfitDetails: View = view.findViewById(R.id.expandableProfitDetails)
         val tvProfitDetail: TextView = view.findViewById(R.id.tvProfitDetail)
+        val layoutAddresses: View = view.findViewById(R.id.layoutAddresses)
+        val tvPickupAddress: TextView = view.findViewById(R.id.tvPickupAddress)
+        val tvDropoffAddress: TextView = view.findViewById(R.id.tvDropoffAddress)
+        val tvStops: TextView = view.findViewById(R.id.tvStops)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -554,6 +558,23 @@ class HistoryAdapter(
         holder.tvScore.setTextColor(scoreFgColor)
 
         holder.tvBonus.visibility = View.GONE
+
+        val hasAddress = r.pickupAddress != null || r.dropoffAddress != null
+        holder.layoutAddresses.visibility = if (hasAddress) View.VISIBLE else View.GONE
+        holder.tvPickupAddress.text = r.pickupAddress ?: ""
+        holder.tvDropoffAddress.text = r.dropoffAddress ?: ""
+
+        if (r.stops != null && r.stops > 0) {
+            val stopsText = if (r.stops == 1) {
+                "\uD83D\uDD04 Várias paradas"
+            } else {
+                "\uD83D\uDD04 ${r.stops} paradas"
+            }
+            holder.tvStops.text = stopsText
+            holder.tvStops.visibility = View.VISIBLE
+        } else {
+            holder.tvStops.visibility = View.GONE
+        }
 
         val isExpanded = expandedItems.contains(position)
         holder.expandableProfitDetails.visibility = if (isExpanded) View.VISIBLE else View.GONE

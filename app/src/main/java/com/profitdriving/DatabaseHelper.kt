@@ -20,6 +20,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         db.execSQL(CREATE_MONTHLY_STATS)
         db.execSQL(CREATE_EXPENSES)
         db.execSQL(CREATE_DAILY_RIDES)
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_dropoff_address ON $TABLE_NAME(dropoff_address)")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -76,6 +77,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         if (oldVersion < 11) {
             db.execSQL(CREATE_DAILY_RIDES)
         }
+        if (oldVersion < 12) {
+            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_PICKUP_ADDRESS TEXT")
+            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_DROPOFF_ADDRESS TEXT")
+        }
+        if (oldVersion < 13) {
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_dropoff_address ON $TABLE_NAME(dropoff_address)")
+        }
     }
 
     fun updateStatus(id: Long, status: String) {
@@ -109,6 +117,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 put(COL_STATUS, record.status)
                 put(COL_STOPS, record.stops)
                 put(COL_SCORE_PERCENT, record.scorePercent)
+                put(COL_PICKUP_ADDRESS, record.pickupAddress)
+                put(COL_DROPOFF_ADDRESS, record.dropoffAddress)
             }
             db.insert(TABLE_NAME, null, cv)
         } finally {
@@ -180,7 +190,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                         else it.getInt(it.getColumnIndexOrThrow(COL_STOPS)),
                     scorePercent = it.getDouble(it.getColumnIndexOrThrow(COL_SCORE_PERCENT)).let { v ->
                         if (it.isNull(it.getColumnIndexOrThrow(COL_SCORE_PERCENT))) null else v
-                    }
+                    },
+                    pickupAddress = if (it.isNull(it.getColumnIndexOrThrow(COL_PICKUP_ADDRESS))) null
+                        else it.getString(it.getColumnIndexOrThrow(COL_PICKUP_ADDRESS)),
+                    dropoffAddress = if (it.isNull(it.getColumnIndexOrThrow(COL_DROPOFF_ADDRESS))) null
+                        else it.getString(it.getColumnIndexOrThrow(COL_DROPOFF_ADDRESS))
                 ))
             }
         }
@@ -732,6 +746,26 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
+    fun getCompletedVisitsCountForAddress(address: String): Int {
+        if (address.isBlank()) return 0
+
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            """SELECT COUNT(*)
+               FROM $TABLE_NAME r
+               INNER JOIN $TABLE_DAILY_RIDES dr ON r.$COL_ID = dr.$COL_DR_RIDE_ID
+               WHERE r.$COL_DROPOFF_ADDRESS LIKE ?
+               AND dr.$COL_DR_IS_COMPLETED = 1""",
+            arrayOf("%$address%")
+        )
+        cursor.use {
+            if (it.moveToFirst()) {
+                return it.getInt(0)
+            }
+        }
+        return 0
+    }
+
     fun isRideAlreadyAddedToday(rideId: Long, date: String): Boolean {
         val cursor = readableDatabase.query(
             TABLE_DAILY_RIDES, arrayOf(COL_ID),
@@ -763,7 +797,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 11
+        private const val DATABASE_VERSION = 13
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"
@@ -791,6 +825,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_STATUS = "status"
         private const val COL_STOPS = "stops"
         private const val COL_SCORE_PERCENT = "score_percent"
+        private const val COL_PICKUP_ADDRESS = "pickup_address"
+        private const val COL_DROPOFF_ADDRESS = "dropoff_address"
 
         // Fuel refuels columns
         private const val COL_R_TIMESTAMP = "timestamp"
@@ -978,7 +1014,9 @@ data class RideRecord(
     val bonusAmount: Double? = null,
     val status: String = "EXPIRED",
     val stops: Int? = null,
-    val scorePercent: Double? = null
+    val scorePercent: Double? = null,
+    val pickupAddress: String? = null,
+    val dropoffAddress: String? = null
 )
 
 data class RefuelRecord(

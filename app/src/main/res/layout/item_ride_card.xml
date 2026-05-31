@@ -50,7 +50,7 @@
                 android:layout_weight="1"
                 android:textSize="28sp"
                 android:textStyle="bold"
-                android:textColor="#00982b"
+                android:textColor="#333"
                 android:gravity="end"
                 android:layout_marginHorizontal="10dp" />
 
@@ -321,6 +321,72 @@
 
         </LinearLayout>
 
+        <!-- Endereços -->
+        <LinearLayout
+            android:id="@+id/layoutAddresses"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            android:visibility="gone">
+
+            <!-- Embarque -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🟢 Embarque"
+                    android:textSize="11sp"
+                    android:textColor="#5E6F8D"
+                    android:layout_marginBottom="2dp" />
+
+                <TextView
+                    android:id="@+id/tvPickupAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="20dp"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A2C3E"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+
+            </LinearLayout>
+
+            <!-- Destino -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🏁 Destino"
+                    android:textSize="11sp"
+                    android:textColor="#5E6F8D"
+                    android:layout_marginBottom="2dp" />
+
+                <TextView
+                    android:id="@+id/tvDropoffAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="20dp"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A2C3E"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
         <!-- Divider -->
         <View
             android:layout_width="match_parent"
@@ -380,6 +446,17 @@
             android:textStyle="bold"
             android:textColor="#F5A623"
             android:layout_marginTop="8dp"
+            android:visibility="gone" />
+
+        <!-- Stops -->
+        <TextView
+            android:id="@+id/tvStops"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="#FF9800"
+            android:layout_marginTop="4dp"
             android:visibility="gone" />
 
         <!-- Expandable Profit Details -->

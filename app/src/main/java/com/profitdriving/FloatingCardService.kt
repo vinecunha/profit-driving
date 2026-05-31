@@ -27,6 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class FloatingCardService : Service() {
 
@@ -69,8 +70,12 @@ class FloatingCardService : Service() {
         val serviceType = intent.getStringExtra("serviceType")
         val priorityBonus = intent.getDoubleExtra("priorityBonus", -1.0).let { if (it < 0) null else it }
         val dynamicBonus = intent.getDoubleExtra("dynamicBonus", -1.0).let { if (it < 0) null else it }
+        val pickupAddress = intent.getStringExtra("pickupAddress")
+        val dropoffAddress = intent.getStringExtra("dropoffAddress")
+        val stops = intent.getIntExtra("stops", -1).let { if (it < 0) null else it }
+        val hasExactStopCount = intent.getBooleanExtra("hasExactStopCount", true)
 
-        val ride = RideData(value, distanceKm, timeMin, rating, appName, serviceType = serviceType, priorityBonus = priorityBonus, dynamicBonus = dynamicBonus)
+        val ride = RideData(value, distanceKm, timeMin, rating, appName, serviceType = serviceType, priorityBonus = priorityBonus, dynamicBonus = dynamicBonus, pickupAddress = pickupAddress, dropoffAddress = dropoffAddress, stops = stops, hasExactStopCount = hasExactStopCount)
 
         L.d(TAG, "Card: valor=$value km=$distanceKm tempo=$timeMin nota=$rating demo=$isDemo")
         showOverlay(ride, isDemo)
@@ -150,6 +155,7 @@ class FloatingCardService : Service() {
         val tvTime       = view.findViewById<TextView>(R.id.tvTime)
         val tvDecision   = view.findViewById<TextView>(R.id.tvDecision)
         val tvScore      = view.findViewById<TextView>(R.id.tvScore)
+        val tvStops      = view.findViewById<TextView>(R.id.tvStops)
         val kmRow        = view.findViewById<View>(R.id.kmRow)
         val hourRow      = view.findViewById<View>(R.id.hourRow)
         val minuteRow    = view.findViewById<View>(R.id.minuteRow)
@@ -229,6 +235,39 @@ class FloatingCardService : Service() {
 
         val tvProfit = view.findViewById<TextView>(R.id.tvProfit)
         tvProfit.visibility = View.GONE
+
+        if (ride.stops != null && ride.stops > 0) {
+            val stopsText = if (!ride.hasExactStopCount) {
+                "\uD83D\uDD04 Várias paradas"
+            } else if (ride.stops == 1) {
+                "\uD83D\uDD04 1 parada"
+            } else {
+                "\uD83D\uDD04 ${ride.stops} paradas"
+            }
+            tvStops.text = stopsText
+            tvStops.visibility = View.VISIBLE
+        } else {
+            tvStops.visibility = View.GONE
+        }
+
+        val tvKnownDestination = view.findViewById<TextView>(R.id.tvKnownDestination)
+        if (!ride.dropoffAddress.isNullOrEmpty() && !isDemo) {
+            serviceScope.launch(Dispatchers.IO) {
+                val db = DatabaseHelper(this@FloatingCardService)
+                val visitCount = db.getCompletedVisitsCountForAddress(ride.dropoffAddress!!)
+
+                withContext(Dispatchers.Main) {
+                    if (visitCount > 0) {
+                        val tagText = if (visitCount == 1) "\uD83D\uDCCD Destino conhecido · 1x" else "\uD83D\uDCCD Destino conhecido · ${visitCount}x"
+                        tvKnownDestination.text = tagText
+                        tvKnownDestination.visibility = View.VISIBLE
+                    }
+                }
+            }
+        } else if (isDemo && ride.dropoffAddress != null) {
+            tvKnownDestination.text = "\uD83D\uDCCD Destino conhecido · 3x"
+            tvKnownDestination.visibility = View.VISIBLE
+        }
 
         serviceScope.launch {
             try {

@@ -288,20 +288,13 @@ class RideAccessibilityService : AccessibilityService() {
     private fun isRideRequestCard(texts: List<String>): Boolean {
         val full = texts.joinToString(" ")
 
-        val temAceitar = full.contains("Aceitar", ignoreCase = true) ||
-                         full.contains("Accept", ignoreCase = true) ||
-                         full.contains("Selecionar", ignoreCase = true)
-        if (!temAceitar) return false
+        val hasAccept = full.contains("Aceitar", ignoreCase = true) ||
+                        full.contains("Accept", ignoreCase = true) ||
+                        full.contains("Selecionar", ignoreCase = true)
 
-        val temValor = full.contains("R$")
-        if (!temValor) return false
+        val hasMoney = full.contains("R$")
 
-        val temKm = full.contains("km", ignoreCase = true)
-        val temMin = full.contains("min", ignoreCase = true)
-
-        if (!temKm && !temMin) return false
-
-        return true
+        return hasAccept && hasMoney
     }
 
     private fun isValorSuspeito(valor: Double): Boolean {
@@ -343,6 +336,9 @@ class RideAccessibilityService : AccessibilityService() {
         val dynamicBonus = extractDynamicBonus(text)
 
         val stops = extractStops(text)
+        val hasExactStopCount = stops != null && !text.contains("várias paradas", ignoreCase = true) && !text.contains("multiplas paradas", ignoreCase = true)
+
+        val (pickupAddress, dropoffAddress) = extractAddresses(text)
 
         return RideData(
             value = value,
@@ -364,7 +360,10 @@ class RideAccessibilityService : AccessibilityService() {
             serviceType = serviceType,
             stops = stops,
             priorityBonus = priorityBonus,
-            dynamicBonus = dynamicBonus
+            dynamicBonus = dynamicBonus,
+            pickupAddress = pickupAddress,
+            dropoffAddress = dropoffAddress,
+            hasExactStopCount = hasExactStopCount
         )
     }
 
@@ -549,7 +548,9 @@ class RideAccessibilityService : AccessibilityService() {
             tripTimeMin = ride.tripTimeMin,
             serviceType = ride.serviceType,
             stops = ride.stops,
-            scorePercent = result.scorePercent
+            scorePercent = result.scorePercent,
+            pickupAddress = ride.pickupAddress,
+            dropoffAddress = ride.dropoffAddress
         ))
         L.d(TAG, "Ride inserido com id=$lastInsertedId")
 
@@ -573,6 +574,8 @@ class RideAccessibilityService : AccessibilityService() {
             ride.serviceType?.let { putExtra("serviceType", it) }
             ride.priorityBonus?.let { putExtra("priorityBonus", it) }
             ride.dynamicBonus?.let { putExtra("dynamicBonus", it) }
+            ride.pickupAddress?.let { putExtra("pickupAddress", it) }
+            ride.dropoffAddress?.let { putExtra("dropoffAddress", it) }
         })
 
         FloatingBubbleService.start(this, Intent().apply {
@@ -629,9 +632,49 @@ class RideAccessibilityService : AccessibilityService() {
 
     private fun extractStops(text: String): Int? {
         val m = MULTIPLE_STOPS_REGEX.find(text) ?: return null
-        val fullMatch = m.groupValues[1]
+        val fullMatch = m.groupValues[1].lowercase(Locale.ROOT)
+        L.d(TAG, "Paradas detectadas: $fullMatch")
+
+        if (fullMatch.contains("varias") || fullMatch.contains("multiplas")) {
+            return 1
+        }
+
         val digitMatch = Regex("""(\d+)""").find(fullMatch)
         return digitMatch?.groupValues?.get(1)?.toIntOrNull()
+    }
+
+    private fun extractAddresses(text: String): Pair<String?, String?> {
+        var pickupAddress: String? = null
+        var dropoffAddress: String? = null
+
+        val pickupMatch = PICKUP_ADDRESS_REGEX.find(text)
+        if (pickupMatch != null) {
+            pickupAddress = pickupMatch.groupValues[1].trim()
+            pickupAddress = cleanupAddress(pickupAddress)
+            L.d(TAG, "Endereço de embarque encontrado: $pickupAddress")
+        }
+
+        val dropoffMatch = DROPOFF_ADDRESS_REGEX.find(text)
+        if (dropoffMatch != null) {
+            dropoffAddress = dropoffMatch.groupValues[1].trim()
+            dropoffAddress = cleanupAddress(dropoffAddress)
+            L.d(TAG, "Endereço de viagem encontrado: $dropoffAddress")
+        }
+
+        return Pair(pickupAddress, dropoffAddress)
+    }
+
+    private fun cleanupAddress(address: String): String {
+        var cleaned = address
+            .replace(Regex("\\s+"), " ")
+            .replace(Regex(",\\s*,+"), ",")
+            .trim()
+
+        if (cleaned.length > 150) {
+            cleaned = cleaned.take(150)
+        }
+
+        return cleaned
     }
 
     companion object {
@@ -712,6 +755,16 @@ class RideAccessibilityService : AccessibilityService() {
 
         private val DYNAMIC_BONUS_REGEX = Regex(
             """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do""",
+            RegexOption.IGNORE_CASE
+        )
+
+        private val PICKUP_ADDRESS_REGEX = Regex(
+            """\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)\s*de\s*dist[âa]ncia\s+([A-Za-zÀ-Úà-ú0-9\s,.-]+?)(?=\s*(?:\d+\s*min|Viagem|Aceitar|$))""",
+            RegexOption.IGNORE_CASE
+        )
+
+        private val DROPOFF_ADDRESS_REGEX = Regex(
+            """Viagem\s+de\s+\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)\s+([A-Za-zÀ-Úà-ú0-9\s,.-]+?\d{5}-\d{3})""",
             RegexOption.IGNORE_CASE
         )
     }

@@ -232,17 +232,25 @@ class SettingsActivity : BaseActivity() {
 
         btnDemo.setOnClickListener {
             saveValues(showToast = false)
+
             val intent = Intent().apply {
                 putExtra("isDemo", true)
-                putExtra("value", 18.50)
-                putExtra("distanceKm", 3.7)
-                putExtra("timeMin", 15)
-                putExtra("rating", 4.87)
+                putExtra("value", 28.50)
+                putExtra("distanceKm", 7.3)
+                putExtra("timeMin", 22)
+                putExtra("rating", 4.92)
                 putExtra("appName", "Uber")
                 putExtra("serviceType", "UberX")
+                putExtra("priorityBonus", 3.00)
+                putExtra("dynamicBonus", 2.50)
+                putExtra("stops", 1)
+                putExtra("hasExactStopCount", false)
+                putExtra("pickupAddress", "Av. Paulista, 1000 - Bela Vista, São Paulo - SP")
+                putExtra("dropoffAddress", "Rua Augusta, 1500 - Cerqueira César - São Paulo - SP, 01305-000")
             }
+
             FloatingCardService.start(this, intent)
-            Toast.makeText(this, "Card de exemplo exibido!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Card de demonstração exibido!", Toast.LENGTH_SHORT).show()
         }
 
         findViewById<TextView>(R.id.btnSuggestFromCosts).setOnClickListener { showMarginSelector() }
