@@ -37,6 +37,7 @@ class AnalysisActivity : BaseActivity() {
         cardsContainer = findViewById(R.id.cardsContainer)
         progressBar = findViewById(R.id.progressBar)
         scrollView = findViewById(R.id.scrollView)
+        db = DatabaseHelper(this)
 
         findViewById<TextView>(R.id.btnPeriodToday).setOnClickListener { setPeriod(0) }
         findViewById<TextView>(R.id.btnPeriodWeek).setOnClickListener { setPeriod(7) }
