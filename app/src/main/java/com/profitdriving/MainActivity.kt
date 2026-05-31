@@ -431,7 +431,8 @@ class HistoryAdapter(
         val tvDistanceWithIcon: TextView = view.findViewById(R.id.tvDistanceWithIcon)
         val tvTimeWithIcon: TextView = view.findViewById(R.id.tvTimeWithIcon)
         val tvTotalInfo: TextView = view.findViewById(R.id.tvTotalInfo)
-        val tvBonus: TextView = view.findViewById(R.id.tvBonus)
+        val tvPriorityBonus: TextView = view.findViewById(R.id.tvPriorityBonus)
+        val tvDynamicBonus: TextView = view.findViewById(R.id.tvDynamicBonus)
         val tvScore: TextView = view.findViewById(R.id.tvScore)
         val tvStatus: TextView = view.findViewById(R.id.tvStatus)
         val tvTimestamp: TextView = view.findViewById(R.id.tvTimestamp)
@@ -557,7 +558,25 @@ class HistoryAdapter(
         holder.tvScore.setBackgroundColor(scoreBgColor)
         holder.tvScore.setTextColor(scoreFgColor)
 
-        holder.tvBonus.visibility = View.GONE
+        val hasPriority = r.priorityBonus != null && r.priorityBonus > 0
+        val hasDynamic = r.dynamicBonus != null && r.dynamicBonus > 0
+        if (hasPriority || hasDynamic) {
+            if (hasPriority) {
+                holder.tvPriorityBonus.text = "\u2B50 ${String.format("%.2f", r.priorityBonus).replace(".", ",")}"
+                holder.tvPriorityBonus.visibility = View.VISIBLE
+            } else {
+                holder.tvPriorityBonus.visibility = View.GONE
+            }
+            if (hasDynamic) {
+                holder.tvDynamicBonus.text = "\uD83D\uDCC8 ${String.format("%.2f", r.dynamicBonus).replace(".", ",")}"
+                holder.tvDynamicBonus.visibility = View.VISIBLE
+            } else {
+                holder.tvDynamicBonus.visibility = View.GONE
+            }
+        } else {
+            holder.tvPriorityBonus.visibility = View.GONE
+            holder.tvDynamicBonus.visibility = View.GONE
+        }
 
         val hasAddress = r.pickupAddress != null || r.dropoffAddress != null
         holder.layoutAddresses.visibility = if (hasAddress) View.VISIBLE else View.GONE

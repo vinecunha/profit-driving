@@ -633,6 +633,12 @@ class RideAccessibilityService : AccessibilityService() {
     }
 
     private fun extractStops(text: String): Int? {
+        if (text.contains("várias paradas", ignoreCase = true) ||
+            text.contains("multiplas paradas", ignoreCase = true) ||
+            text.contains("múltiplas paradas", ignoreCase = true)) {
+            L.d(TAG, "Paradas detectadas: várias paradas")
+            return 1
+        }
         val m = MULTIPLE_STOPS_REGEX.find(text) ?: return null
         val fullMatch = m.groupValues[1].lowercase(Locale.ROOT)
         L.d(TAG, "Paradas detectadas: $fullMatch")
@@ -746,7 +752,7 @@ class RideAccessibilityService : AccessibilityService() {
         )
 
         private val MULTIPLE_STOPS_REGEX = Regex(
-            """(v[aá]rias\s+paradas|mult[ií]plas\s+paradas|\d+\s*paradas)""",
+            """(?:[🔄⏸🚏])?\s*(v[aá]rias\s+paradas|mult[ií]plas\s+paradas|\d+\s*paradas)""",
             RegexOption.IGNORE_CASE
         )
 
