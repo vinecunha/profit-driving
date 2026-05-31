@@ -558,23 +558,20 @@ class HistoryAdapter(
         holder.tvScore.setBackgroundColor(scoreBgColor)
         holder.tvScore.setTextColor(scoreFgColor)
 
-        val hasPriority = r.priorityBonus != null && r.priorityBonus > 0
-        val hasDynamic = r.dynamicBonus != null && r.dynamicBonus > 0
-        if (hasPriority || hasDynamic) {
-            if (hasPriority) {
-                holder.tvPriorityBonus.text = "\u2B50 ${String.format("%.2f", r.priorityBonus).replace(".", ",")}"
-                holder.tvPriorityBonus.visibility = View.VISIBLE
-            } else {
-                holder.tvPriorityBonus.visibility = View.GONE
-            }
-            if (hasDynamic) {
-                holder.tvDynamicBonus.text = "\uD83D\uDCC8 ${String.format("%.2f", r.dynamicBonus).replace(".", ",")}"
-                holder.tvDynamicBonus.visibility = View.VISIBLE
-            } else {
-                holder.tvDynamicBonus.visibility = View.GONE
-            }
+        val priorityBonus = r.priorityBonus ?: 0.0
+        val dynamicBonus = r.dynamicBonus ?: 0.0
+
+        if (priorityBonus > 0) {
+            holder.tvPriorityBonus.text = "\u2B50 +R$ ${String.format("%.2f", priorityBonus).replace(".", ",")} de prioridade"
+            holder.tvPriorityBonus.visibility = View.VISIBLE
         } else {
             holder.tvPriorityBonus.visibility = View.GONE
+        }
+
+        if (dynamicBonus > 0) {
+            holder.tvDynamicBonus.text = "\uD83D\uDCC8 +R$ ${String.format("%.2f", dynamicBonus).replace(".", ",")} de din\u00E2mica"
+            holder.tvDynamicBonus.visibility = View.VISIBLE
+        } else {
             holder.tvDynamicBonus.visibility = View.GONE
         }
 

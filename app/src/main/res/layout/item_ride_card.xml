@@ -43,16 +43,49 @@
                 android:textColor="#1A2C3E"
                 android:background="#F0F2F8" />
 
-            <TextView
-                android:id="@+id/tvPrice"
+            <!-- Preço e bônus -->
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:textColor="#333"
-                android:gravity="end"
-                android:layout_marginHorizontal="10dp" />
+                android:orientation="vertical"
+                android:gravity="start"
+                android:layout_marginHorizontal="10dp">
+
+                <TextView
+                    android:id="@+id/tvPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="#00982b" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="2dp">
+
+                    <TextView
+                        android:id="@+id/tvPriorityBonus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="10sp"
+                        android:textColor="#FF9800"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tvDynamicBonus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="10sp"
+                        android:textColor="#FF9800"
+                        android:layout_marginTop="2dp"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/layoutRating"
@@ -434,33 +467,6 @@
                 android:paddingVertical="3dp"
                 android:textSize="11sp"
                 android:textStyle="bold" />
-
-        </LinearLayout>
-
-        <!-- Bonus line -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="end"
-            android:layout_marginTop="4dp">
-
-            <TextView
-                android:id="@+id/tvPriorityBonus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="9sp"
-                android:textColor="#FF9800"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/tvDynamicBonus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="9sp"
-                android:textColor="#FF9800"
-                android:layout_marginStart="6dp"
-                android:visibility="gone" />
 
         </LinearLayout>
 
