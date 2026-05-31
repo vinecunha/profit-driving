@@ -25,8 +25,6 @@ class RideAccessibilityService : AccessibilityService() {
     private var lastInsertedId: Long = -1L
     private var statusLocked = false
     private var uberWindowWasVisible = false
-    @Volatile private var isFirstCardEvent = true
-
     override fun onServiceConnected() {
         super.onServiceConnected()
         FloatingBubbleService.start(this)
@@ -36,6 +34,8 @@ class RideAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val pkg = event.packageName?.toString() ?: ""
 
+        L.d(TAG, "Evento: type=${event.eventType}, pkg=$pkg")
+
         if (event.eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) {
             val texto = event.contentDescription?.toString()
                 ?: event.text.firstOrNull()?.toString()
@@ -44,61 +44,30 @@ class RideAccessibilityService : AccessibilityService() {
             return
         }
 
-        val isRelevantType = event.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED ||
-                             event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
-                             event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED
-        if (!isRelevantType) return
-
         val isUberEvent = pkg.contains("ubercab") ||
                           pkg.contains("taxis99") ||
                           pkg.contains("app99")
-        val isWindowChange = event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED
-        if (!isUberEvent && !isWindowChange) return
 
-        if (isFirstCardEvent) {
-            val root = findUberWindow()
-            if (root != null) {
-                val quickTexts = mutableListOf<String>()
-                collectTextsLimited(root, quickTexts, maxNodes = 30)
-                val quick = quickTexts.joinToString(" ")
-                if (quick.contains("Aceitar", ignoreCase = true) && quick.contains("R$")) {
-                    isFirstCardEvent = false
-                    pendingRunnable?.let { bgHandler.removeCallbacks(it) }
-                    pendingRunnable = Runnable {
-                        val detectedRoot = findUberWindow() ?: return@Runnable
-                        val dpkg = detectedRoot.packageName?.toString() ?: ""
-                        try {
-                            detectRideCard(detectedRoot, dpkg)
-                        } finally {
-                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                                @Suppress("DEPRECATION")
-                                detectedRoot.recycle()
-                            }
-                        }
+        if (isUberEvent) {
+            pendingRunnable?.let { bgHandler.removeCallbacks(it) }
+
+            pendingRunnable = Runnable {
+                val root = findUberWindow() ?: return@Runnable
+                val detectedPkg = root.packageName?.toString() ?: ""
+                try {
+                    detectRideCard(root, detectedPkg)
+                } finally {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        @Suppress("DEPRECATION")
+                        root.recycle()
                     }
-                    bgHandler.postDelayed(pendingRunnable!!, 200)
-                    return
                 }
             }
+
+            val delay = if (quickScanHasRideCard()) 500L else 800L
+            bgHandler.postDelayed(pendingRunnable!!, delay)
+            return
         }
-
-        pendingRunnable?.let { bgHandler.removeCallbacks(it) }
-
-        pendingRunnable = Runnable {
-            val root = findUberWindow() ?: return@Runnable
-            val detectedPkg = root.packageName?.toString() ?: ""
-            try {
-                detectRideCard(root, detectedPkg)
-            } finally {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                    @Suppress("DEPRECATION")
-                    root.recycle()
-                }
-            }
-        }
-
-        val delay = if (quickScanHasRideCard()) 300L else 600L
-        bgHandler.postDelayed(pendingRunnable!!, delay)
 
         if (event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
             val uberVisibleNow = isUberWindowVisible()
@@ -106,6 +75,23 @@ class RideAccessibilityService : AccessibilityService() {
                 onUberWindowDismissed()
             }
             uberWindowWasVisible = uberVisibleNow
+
+            pendingRunnable?.let { bgHandler.removeCallbacks(it) }
+
+            pendingRunnable = Runnable {
+                val root = findUberWindow() ?: return@Runnable
+                val detectedPkg = root.packageName?.toString() ?: ""
+                try {
+                    detectRideCard(root, detectedPkg)
+                } finally {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        @Suppress("DEPRECATION")
+                        root.recycle()
+                    }
+                }
+            }
+
+            bgHandler.postDelayed(pendingRunnable!!, 500)
         }
     }
 
@@ -122,35 +108,37 @@ class RideAccessibilityService : AccessibilityService() {
     }
 
     private fun findUberWindow(): AccessibilityNodeInfo? {
-        val active = rootInActiveWindow
-        if (active != null) {
-            val pkg = active.packageName?.toString() ?: ""
+        val root = rootInActiveWindow
+        if (root != null) {
+            val pkg = root.packageName?.toString() ?: ""
             if (pkg.contains("ubercab") || pkg.contains("taxis99") || pkg.contains("app99")) {
-                return active
+                L.d(TAG, "Janela Uber/99 encontrada (rootInActiveWindow): $pkg")
+                return root
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                 @Suppress("DEPRECATION")
-                active.recycle()
+                root.recycle()
             }
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             try {
                 val allWindows = windows ?: return null
-                for (window in allWindows) {
-                    val root = window.root ?: continue
-                    val pkg = root.packageName?.toString() ?: ""
+                val sortedWindows = allWindows.sortedByDescending { it.layer }
+                for (window in sortedWindows) {
+                    val windowRoot = window.root ?: continue
+                    val pkg = windowRoot.packageName?.toString() ?: ""
                     if (pkg.contains("ubercab") || pkg.contains("taxis99") || pkg.contains("app99")) {
-                        L.d(TAG, "Janela Uber encontrada em segundo plano: $pkg tipo=${window.type} layer=${window.layer}")
-                        return root
+                        L.d(TAG, "Janela Uber/99 encontrada em segundo plano: $pkg layer=${window.layer}")
+                        return windowRoot
                     }
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                         @Suppress("DEPRECATION")
-                        root.recycle()
+                        windowRoot.recycle()
                     }
                 }
             } catch (e: Exception) {
-                L.e(TAG, "Erro ao varrer janelas", e)
+                L.e(TAG, "Erro ao varrer janelas: ${e.message}", e)
             }
         }
 
@@ -172,7 +160,6 @@ class RideAccessibilityService : AccessibilityService() {
             cardVisible = false
             lastHash = ""
             lastSaveTime = 0L
-            isFirstCardEvent = true
             pendingRunnable?.let { bgHandler.removeCallbacks(it) }
             L.d(TAG, "Janela Uber saiu — estado resetado")
         }
@@ -234,12 +221,24 @@ class RideAccessibilityService : AccessibilityService() {
     }
 
     private fun detectRideCard(root: AccessibilityNodeInfo, pkg: String) {
+        L.d(TAG, "=== detectRideCard iniciado para $pkg ===")
+
         val allTexts = mutableListOf<String>()
         collectTexts(root, allTexts)
-        val fullText = allTexts.joinToString(" ")
-        val hash = buildCardHash(allTexts)
+        L.d(TAG, "Textos coletados (${allTexts.size}): ${allTexts.take(10)}")
 
-        if (!isRideRequestCard(allTexts)) {
+        val fullText = allTexts.joinToString(" ")
+        L.d(TAG, "Texto completo: $fullText")
+
+        val hasAccept = fullText.contains("Aceitar", ignoreCase = true) ||
+                        fullText.contains("Accept", ignoreCase = true) ||
+                        fullText.contains("Selecionar", ignoreCase = true)
+        val hasMoney = fullText.contains("R$")
+
+        L.d(TAG, "hasAccept=$hasAccept, hasMoney=$hasMoney")
+
+        if (!hasAccept || !hasMoney) {
+            L.d(TAG, "Card não é de corrida — ignorando")
             if (cardVisible) {
                 L.d(TAG, "Card sumiu — resetando estado")
                 if (!statusLocked && lastInsertedId >= 0) {
@@ -251,14 +250,23 @@ class RideAccessibilityService : AccessibilityService() {
                 lastSaveTime = 0L
                 lastInsertedId = -1L
                 statusLocked = false
-                isFirstCardEvent = true
                 pendingRunnable?.let { bgHandler.removeCallbacks(it) }
             }
             return
         }
 
+        val hash = buildCardHash(allTexts)
+
+        if (hash == lastHash && cardVisible) {
+            L.d(TAG, "Mesmo card ainda visível — ignorando")
+            return
+        }
+
         val ride = parseRideData(fullText, pkg)
-        if (ride.value == null || ride.value <= 0) return
+        if (ride.value == null || ride.value <= 0) {
+            L.d(TAG, "Valor inválido: ${ride.value} — ignorando")
+            return
+        }
 
         val now = System.currentTimeMillis()
         if (isValorSuspeito(ride.value) && (now - lastSaveTime) < 30_000L) {
@@ -266,20 +274,9 @@ class RideAccessibilityService : AccessibilityService() {
             return
         }
 
-        if (!PICKUP_REGEX.containsMatchIn(fullText) &&
-            !VIAGEM_REGEX.containsMatchIn(fullText)) {
-            return
-        }
-
-        if (hash == lastHash && cardVisible) {
-            L.d(TAG, "Mesmo card ainda visível — ignorando")
-            return
-        }
-
         cardVisible = true
         lastHash = hash
         lastSaveTime = now
-        isFirstCardEvent = false
 
         L.d(TAG, "Card detectado em $pkg: valor=${ride.value} km=${ride.distanceKm} " +
                 "tempo=${ride.timeMin} nota=${ride.rating} " +
@@ -296,21 +293,15 @@ class RideAccessibilityService : AccessibilityService() {
                          full.contains("Selecionar", ignoreCase = true)
         if (!temAceitar) return false
 
-        if (!full.contains("R$")) return false
+        val temValor = full.contains("R$")
+        if (!temValor) return false
 
         val temKm = full.contains("km", ignoreCase = true)
         val temMin = full.contains("min", ignoreCase = true)
-        if (!temKm || !temMin) return false
 
-        val temValorCard = VALUE_REGEX.containsMatchIn(full)
-        if (!temValorCard) return false
+        if (!temKm && !temMin) return false
 
-        val temPadraoCard =
-            full.contains("de distância", ignoreCase = true) ||
-            full.contains("Viagem de", ignoreCase = true) ||
-            full.contains("por km", ignoreCase = true)
-
-        return temPadraoCard
+        return true
     }
 
     private fun isValorSuspeito(valor: Double): Boolean {
@@ -664,11 +655,15 @@ class RideAccessibilityService : AccessibilityService() {
             Regex("""\((\d+[.,]?\d*)\s*km""", RegexOption.IGNORE_CASE),
             Regex("""(\d+[.,]?\d*)\s*km""", RegexOption.IGNORE_CASE),
             Regex("""km[:\s]*(\d+[.,]?\d*)""", RegexOption.IGNORE_CASE),
-            Regex("""(\d+[.,]?\d*)\s*quilômetro""", RegexOption.IGNORE_CASE)
+            Regex("""(\d+[.,]?\d*)\s*quilômetro""", RegexOption.IGNORE_CASE),
+            Regex("""dist[âa]ncia[:\s]*(\d+[.,]?\d*)\s*km""", RegexOption.IGNORE_CASE),
+            Regex("""(\d+[.,]?\d*)\s*km\s*de\s*dist[âa]ncia""", RegexOption.IGNORE_CASE)
         )
         private val TIME_PATTERNS = listOf(
             Regex("""(\d+)\s*[Mm]in(?:uto)?s?"""),
-            Regex("""(\d+)\s*[Hh](?:ora)?s?""")
+            Regex("""(\d+)\s*[Hh](?:ora)?s?"""),
+            Regex("""tempo[:\s]*(\d+)\s*min""", RegexOption.IGNORE_CASE),
+            Regex("""duração[:\s]*(\d+)\s*min""", RegexOption.IGNORE_CASE)
         )
         private val RATING_STAR_REGEX = Regex("""(\d[.,]\d{1,2})\s*[★⭐*]""")
         private val RATING_COUNT_REGEX = Regex("""(\d[.,]\d{1,2})\s*\(\d+\)""")
