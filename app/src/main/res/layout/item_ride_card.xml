@@ -81,7 +81,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:layout_marginTop="8dp">
 
             <TextView
@@ -92,30 +93,23 @@
                 android:textStyle="bold"
                 android:textColor="#00982b" />
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/tvPriorityBonus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="2dp">
+                android:textSize="10sp"
+                android:textColor="#FF9800"
+                android:layout_marginStart="12dp"
+                android:visibility="gone" />
 
-                <TextView
-                    android:id="@+id/tvPriorityBonus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="10sp"
-                    android:textColor="#FF9800"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/tvDynamicBonus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="10sp"
-                    android:textColor="#FF9800"
-                    android:layout_marginTop="2dp"
-                    android:visibility="gone" />
-
-            </LinearLayout>
+            <TextView
+                android:id="@+id/tvDynamicBonus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="10sp"
+                android:textColor="#FF9800"
+                android:layout_marginStart="8dp"
+                android:visibility="gone" />
 
         </LinearLayout>
 
