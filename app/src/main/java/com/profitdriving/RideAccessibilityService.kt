@@ -549,6 +549,8 @@ class RideAccessibilityService : AccessibilityService() {
             serviceType = ride.serviceType,
             stops = ride.stops,
             scorePercent = result.scorePercent,
+            priorityBonus = ride.priorityBonus,
+            dynamicBonus = ride.dynamicBonus,
             pickupAddress = ride.pickupAddress,
             dropoffAddress = ride.dropoffAddress
         ))

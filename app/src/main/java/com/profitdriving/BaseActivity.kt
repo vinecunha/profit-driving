@@ -7,7 +7,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
 enum class Screen {
-    HOME, PARAMS, MY_DAY, COSTS
+    HOME, PARAMS, MY_DAY, COSTS, ANALYSIS
 }
 
 abstract class BaseActivity : AppCompatActivity() {
@@ -70,6 +70,7 @@ abstract class BaseActivity : AppCompatActivity() {
         val btnParams = findViewById<LinearLayout>(R.id.btnNavParams) ?: return
         val btnMyDay = findViewById<LinearLayout>(R.id.btnNavMyDay) ?: return
         val btnCosts = findViewById<LinearLayout>(R.id.btnNavCosts) ?: return
+        val btnAnalysis = findViewById<LinearLayout>(R.id.btnNavAnalysis) ?: return
 
         val iconHome = findViewById<TextView>(R.id.tvNavHomeIcon)
         val labelHome = findViewById<TextView>(R.id.tvNavHomeLabel)
@@ -79,15 +80,17 @@ abstract class BaseActivity : AppCompatActivity() {
         val labelMyDay = findViewById<TextView>(R.id.tvNavMyDayLabel)
         val iconCosts = findViewById<TextView>(R.id.tvNavCostsIcon)
         val labelCosts = findViewById<TextView>(R.id.tvNavCostsLabel)
+        val iconAnalysis = findViewById<TextView>(R.id.tvNavAnalysisIcon)
+        val labelAnalysis = findViewById<TextView>(R.id.tvNavAnalysisLabel)
 
         fun resetAll() {
-            listOf(labelHome, labelParams, labelMyDay, labelCosts).forEach {
+            listOf(labelHome, labelParams, labelMyDay, labelCosts, labelAnalysis).forEach {
                 it?.setTextColor(0xFF5E6F8D.toInt())
             }
-            listOf(iconHome, iconParams, iconMyDay, iconCosts).forEach {
+            listOf(iconHome, iconParams, iconMyDay, iconCosts, iconAnalysis).forEach {
                 it?.alpha = 0.5f
             }
-            listOf(btnHome, btnParams, btnMyDay, btnCosts).forEach {
+            listOf(btnHome, btnParams, btnMyDay, btnCosts, btnAnalysis).forEach {
                 it?.setBackgroundResource(android.R.color.transparent)
             }
         }
@@ -110,6 +113,10 @@ abstract class BaseActivity : AppCompatActivity() {
             Screen.COSTS -> {
                 iconCosts?.setTextColor(0xFF00A86B.toInt())
                 labelCosts?.setTextColor(0xFF00A86B.toInt())
+            }
+            Screen.ANALYSIS -> {
+                iconAnalysis?.setTextColor(0xFF00A86B.toInt())
+                labelAnalysis?.setTextColor(0xFF00A86B.toInt())
             }
         }
 
@@ -140,6 +147,14 @@ abstract class BaseActivity : AppCompatActivity() {
         btnCosts.setOnClickListener {
             if (currentScreen != Screen.COSTS) {
                 startActivity(Intent(this, CostsActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                })
+            }
+        }
+
+        btnAnalysis.setOnClickListener {
+            if (currentScreen != Screen.ANALYSIS) {
+                startActivity(Intent(this, AnalysisActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 })
             }

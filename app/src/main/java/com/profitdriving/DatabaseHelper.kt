@@ -96,6 +96,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             db.execSQL("UPDATE $TABLE_EXPENSES SET $COL_E_VALUE = $COL_E_VALUE * 12 WHERE $COL_EX_PERIODICITY = 'yearly'")
             db.execSQL("UPDATE $TABLE_EXPENSES SET $COL_E_TOTAL_ORIGINAL = $COL_E_VALUE WHERE $COL_E_TOTAL_ORIGINAL IS NULL")
         }
+        if (oldVersion < 15) {
+            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_PRIORITY_BONUS REAL")
+            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_DYNAMIC_BONUS REAL")
+        }
     }
 
     fun updateStatus(id: Long, status: String) {
@@ -126,6 +130,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 put(COL_TRIP_TIME, record.tripTimeMin)
                 put(COL_SERVICE_TYPE, record.serviceType)
                 put(COL_BONUS_AMOUNT, record.bonusAmount)
+                put(COL_PRIORITY_BONUS, record.priorityBonus)
+                put(COL_DYNAMIC_BONUS, record.dynamicBonus)
                 put(COL_STATUS, record.status)
                 put(COL_STOPS, record.stops)
                 put(COL_SCORE_PERCENT, record.scorePercent)
@@ -202,6 +208,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                         else it.getInt(it.getColumnIndexOrThrow(COL_STOPS)),
                     scorePercent = it.getDouble(it.getColumnIndexOrThrow(COL_SCORE_PERCENT)).let { v ->
                         if (it.isNull(it.getColumnIndexOrThrow(COL_SCORE_PERCENT))) null else v
+                    },
+                    priorityBonus = it.getDouble(it.getColumnIndexOrThrow(COL_PRIORITY_BONUS)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_PRIORITY_BONUS))) null else v
+                    },
+                    dynamicBonus = it.getDouble(it.getColumnIndexOrThrow(COL_DYNAMIC_BONUS)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_DYNAMIC_BONUS))) null else v
                     },
                     pickupAddress = if (it.isNull(it.getColumnIndexOrThrow(COL_PICKUP_ADDRESS))) null
                         else it.getString(it.getColumnIndexOrThrow(COL_PICKUP_ADDRESS)),
@@ -648,8 +660,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                         else it.getInt(it.getColumnIndexOrThrow(COL_STOPS)),
                     scorePercent = it.getDouble(it.getColumnIndexOrThrow(COL_SCORE_PERCENT)).let { v ->
                         if (it.isNull(it.getColumnIndexOrThrow(COL_SCORE_PERCENT))) null else v
+                    },
+                    priorityBonus = it.getDouble(it.getColumnIndexOrThrow(COL_PRIORITY_BONUS)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_PRIORITY_BONUS))) null else v
+                    },
+                    dynamicBonus = it.getDouble(it.getColumnIndexOrThrow(COL_DYNAMIC_BONUS)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_DYNAMIC_BONUS))) null else v
                     }
-                ))
+                )) // getRidesByDateRange
             }
         }
         return list
@@ -833,7 +851,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 14
+        private const val DATABASE_VERSION = 15
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"
@@ -858,6 +876,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_TRIP_TIME = "trip_time_min"
         private const val COL_SERVICE_TYPE = "service_type"
         private const val COL_BONUS_AMOUNT = "bonus_amount"
+        private const val COL_PRIORITY_BONUS = "priority_bonus"
+        private const val COL_DYNAMIC_BONUS = "dynamic_bonus"
         private const val COL_STATUS = "status"
         private const val COL_STOPS = "stops"
         private const val COL_SCORE_PERCENT = "score_percent"
@@ -1038,6 +1058,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_TIMESTAMP INTEGER NOT NULL,
                 $COL_SERVICE_TYPE TEXT,
                 $COL_BONUS_AMOUNT REAL,
+                $COL_PRIORITY_BONUS REAL,
+                $COL_DYNAMIC_BONUS REAL,
                 $COL_STATUS TEXT DEFAULT 'EXPIRED',
                 $COL_STOPS INTEGER,
                 $COL_SCORE_PERCENT REAL
@@ -1062,6 +1084,8 @@ data class RideRecord(
     val tripTimeMin: Int? = null,
     val serviceType: String? = null,
     val bonusAmount: Double? = null,
+    val priorityBonus: Double? = null,
+    val dynamicBonus: Double? = null,
     val status: String = "EXPIRED",
     val stops: Int? = null,
     val scorePercent: Double? = null,
