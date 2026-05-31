@@ -205,6 +205,44 @@ class CostsActivity : BaseActivity() {
         renderExpenseList(eventList, allExpenses.filter { it.costType == CostType.EVENT }, "nenhum custo por evento")
     }
 
+    private fun formatExpenseValue(expense: Expense): String {
+        return when (expense.costType) {
+            CostType.FIXED -> {
+                if (expense.periodicity == Periodicity.YEARLY) {
+                    val monthly = expense.value / 12
+                    "${currencyFormat.format(expense.value)}/ano"
+                } else {
+                    "${currencyFormat.format(expense.value)}/m\u00EAs"
+                }
+            }
+            CostType.PER_KM -> {
+                if (expense.percentageOfProfit != null) "${expense.percentageOfProfit}% do lucro"
+                else "${currencyFormat.format(expense.value)}/km"
+            }
+            CostType.EVENT -> {
+                val events = expense.estimatedEventsPerMonth ?: 1
+                "${currencyFormat.format(expense.value)}/evento (~${events}x/m\u00EAs)"
+            }
+        }
+    }
+
+    private fun formatExpenseDetail(expense: Expense): String {
+        if (expense.costType != CostType.FIXED) return ""
+
+        val sb = StringBuilder()
+        if (expense.periodicity == Periodicity.YEARLY) {
+            val monthly = expense.value / 12
+            sb.append("${currencyFormat.format(monthly)}/m\u00EAs")
+        }
+        if (expense.installmentTotal > 1) {
+            if (sb.isNotEmpty()) sb.append(" \u2022 ")
+            sb.append("${expense.installmentCurrent}/${expense.installmentTotal} parcelas pagas")
+            val installmentValue = expense.value / expense.installmentTotal
+            sb.append(" (${currencyFormat.format(installmentValue)})")
+        }
+        return sb.toString()
+    }
+
     private fun renderExpenseList(container: LinearLayout, expenses: List<Expense>, emptyMessage: String) {
         container.removeAllViews()
 
@@ -221,40 +259,59 @@ class CostsActivity : BaseActivity() {
         }
 
         for (expense in expenses) {
-            val row = layoutInflater.inflate(R.layout.item_refuel_history, container, false)
+            val row = layoutInflater.inflate(R.layout.item_expense, container, false)
 
-            row.findViewById<TextView>(R.id.tvRefuelDate).text =
-                "${expense.category.icon} ${expense.category.display}"
+            row.findViewById<TextView>(R.id.tvExpenseIcon).text = expense.category.icon
+            row.findViewById<TextView>(R.id.tvExpenseName).text = expense.name
 
-            row.findViewById<TextView>(R.id.tvRefuelOdometer).text = expense.name
+            val statusText = when (expense.paymentStatus) {
+                "PAID" -> if (expense.installmentTotal > 1)
+                    "\u2705 Quitado (${expense.installmentCurrent}/${expense.installmentTotal})"
+                    else "\u2705 Quitado"
+                "PARTIAL" -> "\u23F3 Pago parcialmente (${expense.installmentCurrent}/${expense.installmentTotal})"
+                else -> "\u23F1 Pendente"
+            }
+            val statusColor = when (expense.paymentStatus) {
+                "PAID" -> 0xFF16A34A.toInt()
+                "PARTIAL" -> 0xFFF59E0B.toInt()
+                else -> 0xFF6B7280.toInt()
+            }
+            row.findViewById<TextView>(R.id.tvExpenseStatus).text = statusText
+            row.findViewById<TextView>(R.id.tvExpenseStatus).setTextColor(statusColor)
 
-            val detail = when (expense.costType) {
-                CostType.FIXED -> {
-                    val per = if (expense.periodicity == Periodicity.YEARLY) "anual" else "mensal"
-                    "R\$ ${"%.2f".format(expense.value)}/$per"
+            row.findViewById<TextView>(R.id.tvExpenseValue).text = formatExpenseValue(expense)
+
+            val detail = formatExpenseDetail(expense)
+            row.findViewById<TextView>(R.id.tvExpenseDetail).text = detail
+
+            // Payment action buttons
+            val btnPay = row.findViewById<TextView>(R.id.btnPayPartial)
+            val btnQuit = row.findViewById<TextView>(R.id.btnQuit)
+            if (expense.paymentStatus != "PAID") {
+                btnPay.visibility = View.VISIBLE
+                btnQuit.visibility = View.VISIBLE
+                btnPay.setOnClickListener {
+                    showPaymentDialog(expense)
                 }
-                CostType.PER_KM -> {
-                    if (expense.percentageOfProfit != null) "${expense.percentageOfProfit}% do lucro"
-                    else "R\$ ${"%.4f".format(expense.value)}/km"
-                }
-                CostType.EVENT -> {
-                    val events = expense.estimatedEventsPerMonth ?: 1
-                    "R\$ ${"%.2f".format(expense.value)}/evento (~${events}x/m\u00EAs)"
+                btnQuit.setOnClickListener {
+                    db.updateExpenseItem(expense.copy(
+                        paymentStatus = "PAID",
+                        installmentCurrent = expense.installmentTotal,
+                        paidAmount = expense.totalOriginalValue ?: expense.value,
+                        lastPaymentDate = System.currentTimeMillis()
+                    ))
+                    loadData()
                 }
             }
-            row.findViewById<TextView>(R.id.tvRefuelLiters).text = detail
-            row.findViewById<TextView>(R.id.tvRefuelLiters).setTextColor(0xFF6B7280.toInt())
-            row.findViewById<TextView>(R.id.tvRefuelLiters).textSize = 9f
 
-            row.findViewById<TextView>(R.id.tvRefuelConsumption).text = "\u270F\uFE0F"
-            row.findViewById<TextView>(R.id.tvRefuelConsumption).setOnClickListener {
+            row.findViewById<TextView>(R.id.btnEditExpense).setOnClickListener {
                 AddExpenseDialog(this, expense) { updated ->
                     db.updateExpenseItem(updated)
                     loadData()
                 }.show()
             }
 
-            row.setOnLongClickListener {
+            row.findViewById<TextView>(R.id.btnDeleteExpense).setOnClickListener {
                 AlertDialog.Builder(this)
                     .setTitle("Excluir despesa")
                     .setMessage("Remover \"${expense.name}\"?")
@@ -264,11 +321,57 @@ class CostsActivity : BaseActivity() {
                     }
                     .setNegativeButton("Cancelar", null)
                     .show()
-                true
             }
 
             container.addView(row)
         }
+    }
+
+    private fun showPaymentDialog(expense: Expense) {
+        val remaining = (expense.totalOriginalValue ?: expense.value) - expense.paidAmount
+        if (remaining <= 0) {
+            db.updateExpenseItem(expense.copy(
+                paymentStatus = "PAID",
+                installmentCurrent = expense.installmentTotal,
+                paidAmount = expense.totalOriginalValue ?: expense.value,
+                lastPaymentDate = System.currentTimeMillis()
+            ))
+            loadData()
+            return
+        }
+
+        val installmentValue = (expense.totalOriginalValue ?: expense.value) / expense.installmentTotal
+        val remainingInstallments = expense.installmentTotal - expense.installmentCurrent
+
+        val input = android.widget.EditText(this).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+            hint = "Valor a pagar (R\$ ${"%.2f".format(installmentValue).replace(".", ",")})"
+            setText(String.format("%.2f", installmentValue).replace(".", ","))
+            selectAll()
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("\uD83D\uDCB0 Registrar pagamento")
+            .setMessage("Restam ${remainingInstallments}x de ${currencyFormat.format(installmentValue)}")
+            .setView(input)
+            .setPositiveButton("Pagar") { _, _ ->
+                val payValue = input.text.toString().replace(",", ".").toDoubleOrNull() ?: installmentValue
+                val newPaidAmount = expense.paidAmount + payValue
+                val newInstallmentCurrent = (newPaidAmount / installmentValue).toInt()
+                    .coerceAtMost(expense.installmentTotal)
+                val totalValue = expense.totalOriginalValue ?: expense.value
+                val newStatus = if (newPaidAmount >= totalValue) "PAID" else "PARTIAL"
+
+                db.updateExpenseItem(expense.copy(
+                    paymentStatus = newStatus,
+                    paidAmount = newPaidAmount,
+                    installmentCurrent = newInstallmentCurrent,
+                    lastPaymentDate = System.currentTimeMillis()
+                ))
+                loadData()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun updateSummary() {

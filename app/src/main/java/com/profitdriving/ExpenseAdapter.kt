@@ -23,10 +23,14 @@ class ExpenseAdapter(
         holder.icon.text = expense.category.icon
         holder.name.text = expense.name
 
-        val detail = when (expense.costType) {
+        val valueText = when (expense.costType) {
             CostType.FIXED -> {
-                val per = if (expense.periodicity == Periodicity.YEARLY) "anual" else "mensal"
-                "R\$ ${"%.2f".format(expense.value)}/$per"
+                if (expense.periodicity == Periodicity.YEARLY) {
+                    val monthly = expense.value / 12
+                    "R\$ ${"%.2f".format(expense.value)}/ano"
+                } else {
+                    "R\$ ${"%.2f".format(expense.value)}/m\u00EAs"
+                }
             }
             CostType.PER_KM -> {
                 if (expense.percentageOfProfit != null) "${expense.percentageOfProfit}% do lucro"
@@ -37,17 +41,13 @@ class ExpenseAdapter(
                 "R\$ ${"%.2f".format(expense.value)}/evento (~${events}x/m\u00EAs)"
             }
         }
-        holder.detail.text = detail
+        holder.value.text = valueText
 
-        val monthlyCost = when (expense.costType) {
-            CostType.FIXED -> CostCalculator.calculateMonthlyFixedCost(
-                expense.value, expense.periodicity ?: Periodicity.MONTHLY, expense.usefulLifeMonths
-            )
-            CostType.PER_KM -> expense.value * 3000
-            CostType.EVENT -> expense.value * (expense.estimatedEventsPerMonth ?: 1)
-        }
-        holder.monthly.text = "R\$ ${"%.2f".format(monthlyCost)}/m\u00EAs"
-        holder.perKm.text = "R\$ ${"%.4f".format(monthlyCost / 3000)}/km"
+        val detail = if (expense.costType == CostType.FIXED && expense.installmentTotal > 1) {
+            val installmentValue = expense.value / expense.installmentTotal
+            "${expense.installmentCurrent}/${expense.installmentTotal} parcelas (${"R\$ ${"%.2f".format(installmentValue)}"})"
+        } else ""
+        holder.detail.text = detail
 
         holder.btnEdit.setOnClickListener { onEdit(expense, position) }
         holder.btnDelete.setOnClickListener { onDelete(expense, position) }
@@ -67,9 +67,8 @@ class ExpenseAdapter(
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val icon: TextView = view.findViewById(R.id.tvExpenseIcon)
         val name: TextView = view.findViewById(R.id.tvExpenseName)
+        val value: TextView = view.findViewById(R.id.tvExpenseValue)
         val detail: TextView = view.findViewById(R.id.tvExpenseDetail)
-        val monthly: TextView = view.findViewById(R.id.tvExpenseMonthly)
-        val perKm: TextView = view.findViewById(R.id.tvExpensePerKm)
         val btnEdit: TextView = view.findViewById(R.id.btnEditExpense)
         val btnDelete: TextView = view.findViewById(R.id.btnDeleteExpense)
     }

@@ -19,7 +19,7 @@ object ExpenseSuggestions {
 
     val fixedSuggestions = listOf(
         Suggestion("Seguro", "\uD83D\uDEE1\uFE0F", 250.0, "m\u00EAs", "Prote\u00E7\u00E3o veicular"),
-        Suggestion("IPVA", "\uD83D\uDCB0", 100.0, "m\u00EAs", "Imposto anual (valor / 12)"),
+        Suggestion("IPVA", "\uD83D\uDCB0", 1350.0, "ano", "Imposto anual (R\$ 1.350 \u00E0 vista)"),
         Suggestion("Financiamento", "\uD83C\uDFE6", 500.0, "m\u00EAs", "Parcela do banco"),
         Suggestion("Manuten\u00E7\u00E3o preventiva", "\uD83D\uDD27", 80.0, "m\u00EAs", "Revis\u00F5es peri\u00F3dicas")
     )

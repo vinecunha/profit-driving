@@ -4,11 +4,30 @@ import java.util.Calendar
 
 object CostCalculator {
 
-    fun calculateMonthlyFixedCost(value: Double, periodicity: Periodicity, usefulLifeMonths: Int?): Double {
-        return when (periodicity) {
+    fun calculateMonthlyFixedCost(
+        value: Double,
+        periodicity: Periodicity,
+        usefulLifeMonths: Int?,
+        paymentStatus: String = "PENDING",
+        paidAmount: Double = 0.0,
+        installmentTotal: Int = 1,
+        installmentCurrent: Int = 1
+    ): Double {
+        if (paymentStatus == "PAID") return 0.0
+
+        val baseMonthly = when (periodicity) {
             Periodicity.YEARLY -> value / 12
             Periodicity.MONTHLY -> value
         }
+
+        if (paymentStatus == "PARTIAL") {
+            val remainingMonths = (installmentTotal - installmentCurrent).coerceAtLeast(1)
+            val remainingValue = (value - paidAmount).coerceAtLeast(0.0)
+            val perPeriod = if (periodicity == Periodicity.YEARLY) remainingValue / 12 else remainingValue
+            return (perPeriod / remainingMonths * installmentTotal).coerceAtMost(baseMonthly)
+        }
+
+        return baseMonthly
     }
 
     fun calculateCostPerKm(monthlyCost: Double, monthlyKm: Double): Double {
@@ -39,7 +58,11 @@ object CostCalculator {
             val monthlyCost = calculateMonthlyFixedCost(
                 value = expense.value,
                 periodicity = expense.periodicity ?: Periodicity.MONTHLY,
-                usefulLifeMonths = expense.usefulLifeMonths
+                usefulLifeMonths = expense.usefulLifeMonths,
+                paymentStatus = expense.paymentStatus,
+                paidAmount = expense.paidAmount,
+                installmentTotal = expense.installmentTotal,
+                installmentCurrent = expense.installmentCurrent
             )
             totalFixedMonthlyCost += monthlyCost
 

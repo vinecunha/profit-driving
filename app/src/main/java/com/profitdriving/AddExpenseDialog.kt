@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.app.AlertDialog
 
@@ -133,8 +134,14 @@ class AddExpenseDialog(
 
         val etName = view.findViewById<EditText>(R.id.etFixedName)
         val etValue = view.findViewById<EditText>(R.id.etFixedValue)
+        val etInstallmentTotal = view.findViewById<EditText>(R.id.etInstallmentTotal)
+        val etInstallmentCurrent = view.findViewById<EditText>(R.id.etInstallmentCurrent)
+        val installGroup = view.findViewById<LinearLayout>(R.id.installmentGroup)
+        val btnAvista = view.findViewById<TextView>(R.id.btnPaymentInstallmentNo)
+        val btnParcelado = view.findViewById<TextView>(R.id.btnPaymentInstallmentYes)
         var selectedName: String? = null
         var selectedPeriodicity = Periodicity.MONTHLY
+        var isInstallment = false
 
         val btnMonthly = view.findViewById<TextView>(R.id.btnFixedMonthly)
         val btnYearly = view.findViewById<TextView>(R.id.btnFixedYearly)
@@ -155,9 +162,20 @@ class AddExpenseDialog(
             btnYearly.setTextColor(if (per == Periodicity.YEARLY) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
         }
 
+        fun selectPaymentType(installment: Boolean) {
+            isInstallment = installment
+            btnAvista.isSelected = !installment
+            btnParcelado.isSelected = installment
+            btnAvista.setBackgroundResource(if (!installment) R.drawable.pill_selected else R.drawable.pill_unselected)
+            btnParcelado.setBackgroundResource(if (installment) R.drawable.pill_selected else R.drawable.pill_unselected)
+            btnAvista.setTextColor(if (!installment) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+            btnParcelado.setTextColor(if (installment) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+            installGroup.visibility = if (installment) View.VISIBLE else View.GONE
+        }
+
         view.findViewById<TextView>(R.id.btnFixedSeguro).setOnClickListener { selectSuggestion("Seguro", 250.0) }
         view.findViewById<TextView>(R.id.btnFixedIpva).setOnClickListener {
-            selectSuggestion("IPVA", 100.0)
+            selectSuggestion("IPVA", 1350.0)
             selectPeriodicity(Periodicity.YEARLY)
         }
         view.findViewById<TextView>(R.id.btnFixedFinanciamento).setOnClickListener { selectSuggestion("Financiamento", 500.0) }
@@ -171,16 +189,25 @@ class AddExpenseDialog(
         btnMonthly.setOnClickListener { selectPeriodicity(Periodicity.MONTHLY) }
         btnYearly.setOnClickListener { selectPeriodicity(Periodicity.YEARLY) }
 
+        btnAvista.setOnClickListener { selectPaymentType(false) }
+        btnParcelado.setOnClickListener { selectPaymentType(true) }
+
         if (existing?.costType == CostType.FIXED) {
             selectedName = existing.name
+            val displayValue = existing.totalOriginalValue ?: existing.value
             if (ExpenseSuggestions.fixedSuggestions.any { it.name == existing.name }) {
-                etValue.setText(String.format("%.2f", existing.value).replace(".", ","))
+                etValue.setText(String.format("%.2f", displayValue).replace(".", ","))
             } else {
                 etName.setText(existing.name)
                 etName.visibility = View.VISIBLE
-                etValue.setText(String.format("%.2f", existing.value).replace(".", ","))
+                etValue.setText(String.format("%.2f", displayValue).replace(".", ","))
             }
             selectPeriodicity(existing.periodicity ?: Periodicity.MONTHLY)
+            if (existing.installmentTotal > 1) {
+                selectPaymentType(true)
+                etInstallmentTotal.setText(existing.installmentTotal.toString())
+                etInstallmentCurrent.setText(existing.installmentCurrent.toString())
+            }
         }
 
         view.findViewById<TextView>(R.id.btnCancelFixed).setOnClickListener { dialog.dismiss() }
@@ -197,19 +224,34 @@ class AddExpenseDialog(
                 return@setOnClickListener
             }
 
-            val monthlyValue = when (selectedPeriodicity) {
-                Periodicity.YEARLY -> valueStr / 12
-                Periodicity.MONTHLY -> valueStr
-            }
+            val installmentTotal = if (isInstallment)
+                etInstallmentTotal.text.toString().toIntOrNull()?.takeIf { it >= 1 } ?: 12
+            else 1
+            val installmentCurrent = if (isInstallment)
+                etInstallmentCurrent.text.toString().toIntOrNull()?.takeIf { it >= 0 } ?: 0
+            else (if (existing?.installmentTotal ?: 1 > 1) (existing?.installmentCurrent ?: 0) else 0)
+
+            val paymentStatus = if (installmentCurrent >= installmentTotal && installmentTotal > 1) "PAID"
+                else if (installmentCurrent > 0) "PARTIAL"
+                else "PENDING"
+
+            val paidAmount = if (installmentTotal > 1 && installmentCurrent > 0)
+                valueStr / installmentTotal * installmentCurrent
+            else 0.0
 
             onSave(Expense(
                 id = existing?.id ?: 0,
                 name = name,
-                value = monthlyValue,
+                value = valueStr,
                 costType = CostType.FIXED,
                 periodicity = selectedPeriodicity,
                 category = mapCategory(name),
-                createdAt = existing?.createdAt ?: System.currentTimeMillis()
+                createdAt = existing?.createdAt ?: System.currentTimeMillis(),
+                totalOriginalValue = valueStr,
+                paymentStatus = paymentStatus,
+                paidAmount = paidAmount,
+                installmentTotal = installmentTotal,
+                installmentCurrent = installmentCurrent
             ))
             dialog.dismiss()
         }

@@ -84,6 +84,18 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         if (oldVersion < 13) {
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_dropoff_address ON $TABLE_NAME(dropoff_address)")
         }
+        if (oldVersion < 14) {
+            db.execSQL("ALTER TABLE $TABLE_EXPENSES ADD COLUMN $COL_E_TOTAL_ORIGINAL REAL")
+            db.execSQL("ALTER TABLE $TABLE_EXPENSES ADD COLUMN $COL_E_PAYMENT_STATUS TEXT DEFAULT 'PENDING'")
+            db.execSQL("ALTER TABLE $TABLE_EXPENSES ADD COLUMN $COL_E_PAID_AMOUNT REAL DEFAULT 0")
+            db.execSQL("ALTER TABLE $TABLE_EXPENSES ADD COLUMN $COL_E_INSTALLMENT_TOTAL INTEGER DEFAULT 1")
+            db.execSQL("ALTER TABLE $TABLE_EXPENSES ADD COLUMN $COL_E_INSTALLMENT_CURRENT INTEGER DEFAULT 1")
+            db.execSQL("ALTER TABLE $TABLE_EXPENSES ADD COLUMN $COL_E_DUE_DATE INTEGER")
+            db.execSQL("ALTER TABLE $TABLE_EXPENSES ADD COLUMN $COL_E_LAST_PAYMENT INTEGER")
+            // Fix existing YEARLY records: value was stored as annual/12, restore to full annual
+            db.execSQL("UPDATE $TABLE_EXPENSES SET $COL_E_VALUE = $COL_E_VALUE * 12 WHERE $COL_EX_PERIODICITY = 'yearly'")
+            db.execSQL("UPDATE $TABLE_EXPENSES SET $COL_E_TOTAL_ORIGINAL = $COL_E_VALUE WHERE $COL_E_TOTAL_ORIGINAL IS NULL")
+        }
     }
 
     fun updateStatus(id: Long, status: String) {
@@ -391,6 +403,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 put(COL_E_CATEGORY, e.category.name)
                 put(COL_R_NOTES, e.notes)
                 put(COL_E_CREATED_AT, e.createdAt)
+                put(COL_E_TOTAL_ORIGINAL, e.totalOriginalValue)
+                put(COL_E_PAYMENT_STATUS, e.paymentStatus)
+                put(COL_E_PAID_AMOUNT, e.paidAmount)
+                put(COL_E_INSTALLMENT_TOTAL, e.installmentTotal)
+                put(COL_E_INSTALLMENT_CURRENT, e.installmentCurrent)
+                put(COL_E_DUE_DATE, e.dueDate)
+                put(COL_E_LAST_PAYMENT, e.lastPaymentDate)
             }
             db.insert(TABLE_EXPENSES, null, cv)
         } finally {
@@ -440,6 +459,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 put(COL_EX_EVENTS_PER_MONTH, e.estimatedEventsPerMonth)
                 put(COL_E_CATEGORY, e.category.name)
                 put(COL_R_NOTES, e.notes)
+                put(COL_E_TOTAL_ORIGINAL, e.totalOriginalValue)
+                put(COL_E_PAYMENT_STATUS, e.paymentStatus)
+                put(COL_E_PAID_AMOUNT, e.paidAmount)
+                put(COL_E_INSTALLMENT_TOTAL, e.installmentTotal)
+                put(COL_E_INSTALLMENT_CURRENT, e.installmentCurrent)
+                put(COL_E_DUE_DATE, e.dueDate)
+                put(COL_E_LAST_PAYMENT, e.lastPaymentDate)
             }
             db.update(TABLE_EXPENSES, cv, "$COL_ID = ?", arrayOf(e.id.toString()))
         } finally {
@@ -472,7 +498,17 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             } catch (_: IllegalArgumentException) { ExpenseCategory.OTHER },
             notes = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_R_NOTES))) null
                 else cursor.getString(cursor.getColumnIndexOrThrow(COL_R_NOTES)),
-            createdAt = cursor.getLong(cursor.getColumnIndexOrThrow(COL_E_CREATED_AT))
+            createdAt = cursor.getLong(cursor.getColumnIndexOrThrow(COL_E_CREATED_AT)),
+            totalOriginalValue = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_E_TOTAL_ORIGINAL))) null
+                else cursor.getDouble(cursor.getColumnIndexOrThrow(COL_E_TOTAL_ORIGINAL)),
+            paymentStatus = cursor.getString(cursor.getColumnIndexOrThrow(COL_E_PAYMENT_STATUS)),
+            paidAmount = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_E_PAID_AMOUNT)),
+            installmentTotal = cursor.getInt(cursor.getColumnIndexOrThrow(COL_E_INSTALLMENT_TOTAL)),
+            installmentCurrent = cursor.getInt(cursor.getColumnIndexOrThrow(COL_E_INSTALLMENT_CURRENT)),
+            dueDate = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_E_DUE_DATE))) null
+                else cursor.getLong(cursor.getColumnIndexOrThrow(COL_E_DUE_DATE)),
+            lastPaymentDate = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_E_LAST_PAYMENT))) null
+                else cursor.getLong(cursor.getColumnIndexOrThrow(COL_E_LAST_PAYMENT))
         )
     }
 
@@ -797,7 +833,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 13
+        private const val DATABASE_VERSION = 14
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"
@@ -849,6 +885,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_EX_PERIODICITY = "periodicity"
         private const val COL_EX_PROFIT_PCT = "percentage_of_profit"
         private const val COL_EX_EVENTS_PER_MONTH = "estimated_events_per_month"
+        private const val COL_E_TOTAL_ORIGINAL = "total_original_value"
+        private const val COL_E_PAYMENT_STATUS = "payment_status"
+        private const val COL_E_PAID_AMOUNT = "paid_amount"
+        private const val COL_E_INSTALLMENT_TOTAL = "installment_total"
+        private const val COL_E_INSTALLMENT_CURRENT = "installment_current"
+        private const val COL_E_DUE_DATE = "due_date"
+        private const val COL_E_LAST_PAYMENT = "last_payment_date"
 
         // Variable costs columns
         private const val COL_VC_NAME = "name"
@@ -936,7 +979,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 ${COL_EX_EVENTS_PER_MONTH} INTEGER,
                 ${COL_E_CATEGORY} TEXT NOT NULL,
                 ${COL_R_NOTES} TEXT,
-                ${COL_E_CREATED_AT} INTEGER NOT NULL
+                ${COL_E_CREATED_AT} INTEGER NOT NULL,
+                ${COL_E_TOTAL_ORIGINAL} REAL,
+                ${COL_E_PAYMENT_STATUS} TEXT DEFAULT 'PENDING',
+                ${COL_E_PAID_AMOUNT} REAL DEFAULT 0,
+                ${COL_E_INSTALLMENT_TOTAL} INTEGER DEFAULT 1,
+                ${COL_E_INSTALLMENT_CURRENT} INTEGER DEFAULT 1,
+                ${COL_E_DUE_DATE} INTEGER,
+                ${COL_E_LAST_PAYMENT} INTEGER
             )
         """.trimIndent()
 
@@ -1095,6 +1145,8 @@ enum class ExpenseCategory(val display: String, val icon: String) {
     OTHER("Outros", "\uD83D\uDCCB")
 }
 
+enum class PaymentStatus { PENDING, PARTIAL, PAID }
+
 data class Expense(
     val id: Long = 0,
     val name: String,
@@ -1106,5 +1158,12 @@ data class Expense(
     val estimatedEventsPerMonth: Int? = null,
     val category: ExpenseCategory,
     val notes: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val totalOriginalValue: Double? = null,
+    val paymentStatus: String = "PENDING",
+    val paidAmount: Double = 0.0,
+    val installmentTotal: Int = 1,
+    val installmentCurrent: Int = 1,
+    val dueDate: Long? = null,
+    val lastPaymentDate: Long? = null
 )
