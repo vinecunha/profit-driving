@@ -35,22 +35,22 @@ data class NeighborhoodStats(
 )
 
 data class AnalysisResultV2(
-    val totalRides: Int,
+    val offeredCount: Int,
+    val acceptedCount: Int,
+    val acceptanceRate: Double,
     val totalEarnings: Double,
     val totalKm: Double,
     val totalMinutes: Int,
     val avgPricePerKm: Double,
     val avgPricePerHour: Double,
-    val acceptedPercent: Double,
-    val declinedPercent: Double,
-    val expiredPercent: Double,
+    val avgRating: Double,
     val goodPercent: Double,
     val mediumPercent: Double,
     val badPercent: Double,
     val priorityImpact: BonusImpact,
     val dynamicImpact: BonusImpact,
-    val bestHourToAccept: HourStats,
-    val peakDynamicHour: HourStats,
+    val bestHourToAccept: Int,
+    val peakDynamicHour: Int,
     val hourlyData: List<HourStats>,
     val topCities: List<CityStats>,
     val topNeighborhoods: List<NeighborhoodStats>
@@ -58,23 +58,22 @@ data class AnalysisResultV2(
 
 object AnalysisHelperV2 {
 
-    fun calculate(rides: List<RideRecord>): AnalysisResultV2 {
-        val totalRides = rides.size
-        val totalEarnings = rides.mapNotNull { it.value }.sum()
-        val totalKm = rides.mapNotNull { it.distanceKm }.sum()
-        val totalMinutes = rides.mapNotNull { it.timeMin }.sum()
-        val avgPricePerKm = rides.mapNotNull { it.pricePerKm }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
-        val avgPricePerHour = rides.mapNotNull { it.pricePerHour }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+    fun calculate(rides: List<RideRecord>, dailyRides: List<DailyRide>): AnalysisResultV2 {
+        val completedRideIds = dailyRides.filter { it.isCompleted }.map { it.rideId }.toSet()
 
-        // 1. Status percentages
-        val acceptedCount = rides.count { it.status == "ACCEPTED" }
-        val declinedCount = rides.count { it.status == "DECLINED" }
-        val expiredCount = rides.count { it.status == "EXPIRED" }
-        val acceptedPercent = if (totalRides > 0) acceptedCount.toDouble() / totalRides * 100 else 0.0
-        val declinedPercent = if (totalRides > 0) declinedCount.toDouble() / totalRides * 100 else 0.0
-        val expiredPercent = if (totalRides > 0) expiredCount.toDouble() / totalRides * 100 else 0.0
+        val offered = rides
+        val accepted = rides.filter { it.id in completedRideIds }
+        val offeredCount = offered.size
+        val acceptedCount = accepted.size
+        val acceptanceRate = if (offeredCount > 0) acceptedCount.toDouble() / offeredCount * 100 else 0.0
 
-        // 2. Score evaluation (only on rides with scorePercent)
+        val totalEarnings = accepted.mapNotNull { it.value }.sum()
+        val totalKm = accepted.mapNotNull { it.distanceKm }.sum()
+        val totalMinutes = accepted.mapNotNull { it.timeMin }.sum()
+        val avgPricePerKm = accepted.mapNotNull { it.pricePerKm }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+        val avgPricePerHour = accepted.mapNotNull { it.pricePerHour }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+        val avgRating = accepted.mapNotNull { it.rating }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+
         val scored = rides.filter { it.scorePercent != null }
         val goodCount = scored.count { it.scorePercent!! >= 80 }
         val mediumCount = scored.count { it.scorePercent!! >= 50 && it.scorePercent!! < 80 }
@@ -84,25 +83,24 @@ object AnalysisHelperV2 {
         val mediumPercent = if (totalScored > 0) mediumCount.toDouble() / totalScored * 100 else 0.0
         val badPercent = if (totalScored > 0) badCount.toDouble() / totalScored * 100 else 0.0
 
-        // 3. Bonus impact
-        val withPriority = rides.filter { (it.priorityBonus ?: 0.0) > 0 }
-        val withoutPriority = rides.filter { (it.priorityBonus ?: 0.0) <= 0 }
-        val withDynamic = rides.filter { (it.dynamicBonus ?: 0.0) > 0 }
-        val withoutDynamic = rides.filter { (it.dynamicBonus ?: 0.0) <= 0 }
+        val withPriority = offered.filter { hasPriorityBonus(it) }
+        val withoutPriority = offered.filter { !hasPriorityBonus(it) }
+        val withDynamic = offered.filter { hasDynamicBonus(it) }
+        val withoutDynamic = offered.filter { !hasDynamicBonus(it) }
 
         val priorityImpact = BonusImpact(
             count = withPriority.size,
-            percentage = if (totalRides > 0) withPriority.size.toDouble() / totalRides * 100 else 0.0,
+            percentage = if (offeredCount > 0) withPriority.size.toDouble() / offeredCount * 100 else 0.0,
             avgPricePerKm = withPriority.mapNotNull { it.pricePerKm }.takeIf { it.isNotEmpty() }?.average() ?: 0.0,
             avgPricePerKmWithout = withoutPriority.mapNotNull { it.pricePerKm }.takeIf { it.isNotEmpty() }?.average() ?: 0.0,
             goodRatePercent = if (withPriority.isNotEmpty())
                 withPriority.count { (it.scorePercent ?: 0.0) >= 80.0 }.toDouble() / withPriority.size * 100 else 0.0,
-            avgBonusValue = withPriority.mapNotNull { it.priorityBonus }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+            avgBonusValue = withPriority.mapNotNull { it.priorityBonus ?: it.bonusAmount }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
         )
 
         val dynamicImpact = BonusImpact(
             count = withDynamic.size,
-            percentage = if (totalRides > 0) withDynamic.size.toDouble() / totalRides * 100 else 0.0,
+            percentage = if (offeredCount > 0) withDynamic.size.toDouble() / offeredCount * 100 else 0.0,
             avgPricePerKm = withDynamic.mapNotNull { it.pricePerKm }.takeIf { it.isNotEmpty() }?.average() ?: 0.0,
             avgPricePerKmWithout = withoutDynamic.mapNotNull { it.pricePerKm }.takeIf { it.isNotEmpty() }?.average() ?: 0.0,
             goodRatePercent = if (withDynamic.isNotEmpty())
@@ -110,23 +108,15 @@ object AnalysisHelperV2 {
             avgBonusValue = withDynamic.mapNotNull { it.dynamicBonus }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
         )
 
-        // 4. Hourly analysis
-        val acceptedRides = rides.filter { it.status == "ACCEPTED" && it.pricePerKm != null }
-        val byHour = acceptedRides.groupBy {
-            Calendar.getInstance().apply { timeInMillis = it.timestamp }.get(Calendar.HOUR_OF_DAY)
-        }
-
-        // All rides (including non-accepted) by hour for dynamic analysis
-        val allByHour = rides.groupBy {
-            Calendar.getInstance().apply { timeInMillis = it.timestamp }.get(Calendar.HOUR_OF_DAY)
-        }
+        val byHour = accepted.groupBy { getHourOfDay(it.timestamp) }
+        val allByHour = offered.groupBy { getHourOfDay(it.timestamp) }
 
         val hourlyData = (0..23).map { hour ->
             val hourRides = byHour[hour] ?: emptyList()
             val allHourRides = allByHour[hour] ?: emptyList()
             val avgPpk = hourRides.mapNotNull { it.pricePerKm }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
-            val dynamicCount = allHourRides.count { (it.dynamicBonus ?: 0.0) > 0 }
-            val dynPct = if (allHourRides.isNotEmpty()) dynamicCount.toDouble() / allHourRides.size * 100 else 0.0
+            val dynCount = allHourRides.count { hasDynamicBonus(it) }
+            val dynPct = if (allHourRides.isNotEmpty()) dynCount.toDouble() / allHourRides.size * 100 else 0.0
             HourStats(
                 hour = hour,
                 rideCount = hourRides.size,
@@ -135,21 +125,16 @@ object AnalysisHelperV2 {
             )
         }
 
-        val bestHourToAccept = hourlyData.filter { it.rideCount > 0 }.maxByOrNull { it.avgPricePerKm }
-            ?: HourStats(0, 0, 0.0, 0.0)
-        val peakDynamicHour = hourlyData.filter { it.rideCount > 0 }.maxByOrNull { it.dynamicPercentage }
-            ?: HourStats(0, 0, 0.0, 0.0)
+        val bestHourToAccept = hourlyData.filter { it.rideCount > 0 }.maxByOrNull { it.avgPricePerKm }?.hour ?: 0
+        val peakDynamicHour = hourlyData.filter { it.rideCount > 0 }.maxByOrNull { it.dynamicPercentage }?.hour ?: 0
 
-        // 5. City analysis (from dropoffAddress)
-        val cityRides = acceptedRides.filter { it.dropoffAddress != null }
+        val cityRides = accepted.filter { it.dropoffAddress != null }
         val byCity = cityRides.groupBy { extractCity(it.dropoffAddress) ?: "Desconhecido" }
         val topCities = byCity.map { (city, list) ->
-            val cityByHour = list.groupBy {
-                Calendar.getInstance().apply { timeInMillis = it.timestamp }.get(Calendar.HOUR_OF_DAY)
-            }
+            val cityByHour = list.groupBy { getHourOfDay(it.timestamp) }
             val bestHr = cityByHour.maxByOrNull { (_, rides) -> rides.size }?.key ?: 0
-            val allCityRides = rides.filter { extractCity(it.dropoffAddress) == city }
-            val dynCount = allCityRides.count { (it.dynamicBonus ?: 0.0) > 0 }
+            val allCityRides = offered.filter { extractCity(it.dropoffAddress) == city }
+            val dynCount = allCityRides.count { hasDynamicBonus(it) }
             CityStats(
                 city = city,
                 rideCount = list.size,
@@ -159,8 +144,7 @@ object AnalysisHelperV2 {
             )
         }.sortedByDescending { it.rideCount }.take(10)
 
-        // 6. Neighborhood analysis
-        val neighborhoodRides = acceptedRides.filter { it.dropoffAddress != null }
+        val neighborhoodRides = accepted.filter { it.dropoffAddress != null }
         val byNeighborhood = neighborhoodRides.groupBy {
             val hood = extractNeighborhood(it.dropoffAddress)
             val city = extractCity(it.dropoffAddress)
@@ -168,11 +152,11 @@ object AnalysisHelperV2 {
         }
         val topNeighborhoods = byNeighborhood.map { (key, list) ->
             val parts = key.split(" - ")
-            val allNbRides = rides.filter {
+            val allNbRides = offered.filter {
                 extractNeighborhood(it.dropoffAddress) == parts[0] &&
                     extractCity(it.dropoffAddress) == parts.getOrElse(1) { "" }
             }
-            val dynCount = allNbRides.count { (it.dynamicBonus ?: 0.0) > 0 }
+            val dynCount = allNbRides.count { hasDynamicBonus(it) }
             NeighborhoodStats(
                 neighborhood = parts[0],
                 city = parts.getOrElse(1) { "" },
@@ -183,15 +167,15 @@ object AnalysisHelperV2 {
         }.sortedByDescending { it.rideCount }.take(10)
 
         return AnalysisResultV2(
-            totalRides = totalRides,
+            offeredCount = offeredCount,
+            acceptedCount = acceptedCount,
+            acceptanceRate = acceptanceRate,
             totalEarnings = totalEarnings,
             totalKm = totalKm,
             totalMinutes = totalMinutes,
             avgPricePerKm = avgPricePerKm,
             avgPricePerHour = avgPricePerHour,
-            acceptedPercent = acceptedPercent,
-            declinedPercent = declinedPercent,
-            expiredPercent = expiredPercent,
+            avgRating = avgRating,
             goodPercent = goodPercent,
             mediumPercent = mediumPercent,
             badPercent = badPercent,
@@ -204,6 +188,24 @@ object AnalysisHelperV2 {
             topNeighborhoods = topNeighborhoods
         )
     }
+
+    private fun getTotalBonus(ride: RideRecord): Double {
+        var total = (ride.priorityBonus ?: 0.0) + (ride.dynamicBonus ?: 0.0)
+        if (total == 0.0 && ride.bonusAmount != null && ride.bonusAmount > 0) {
+            total = ride.bonusAmount
+        }
+        return total
+    }
+
+    private fun hasPriorityBonus(ride: RideRecord): Boolean =
+        (ride.priorityBonus != null && ride.priorityBonus > 0) ||
+        (ride.bonusAmount != null && ride.bonusAmount > 0)
+
+    private fun hasDynamicBonus(ride: RideRecord): Boolean =
+        ride.dynamicBonus != null && ride.dynamicBonus > 0
+
+    private fun getHourOfDay(timestamp: Long): Int =
+        Calendar.getInstance().apply { timeInMillis = timestamp }.get(Calendar.HOUR_OF_DAY)
 
     fun extractCity(address: String?): String? {
         if (address.isNullOrBlank()) return null

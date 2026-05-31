@@ -55,6 +55,7 @@ class AnalysisActivity : BaseActivity() {
         currentPeriod = days
         updateButtons()
 
+        val now = System.currentTimeMillis()
         val sinceMs = when (days) {
             0 -> Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, 0)
@@ -84,7 +85,8 @@ class AnalysisActivity : BaseActivity() {
         scrollView.visibility = View.GONE
         Thread {
             val records = db.getFiltered(sinceMs)
-            val result = AnalysisHelperV2.calculate(records)
+            val dailyRides = db.getDailyRidesByDateRange(sinceMs, now)
+            val result = AnalysisHelperV2.calculate(records, dailyRides)
             handler.post {
                 progressBar.visibility = View.GONE
                 scrollView.visibility = View.VISIBLE
@@ -234,40 +236,21 @@ class AnalysisActivity : BaseActivity() {
     private fun buildVisaoGeral(r: AnalysisResultV2) {
         val card = createCard("\uD83D\uDCCA Vis\u00E3o Geral")
 
-        addText(card, buildString {
-            append("${r.totalRides} corridas \u00B7 ")
-            append("R\$ ${AnalysisHelperV2.formatBr(r.totalEarnings)} total \u00B7 ")
-            append("${AnalysisHelperV2.formatBr1(r.totalKm)} km \u00B7 ")
-            append(AnalysisHelperV2.hoursMinutes(r.totalMinutes))
-        }, 12f, Color.parseColor("#555555"))
-        addText(card, buildString {
-            append("R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.avgPricePerKm)}")
-            append("  |  R\$/h m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.avgPricePerHour)}")
-        }, 12f, Color.parseColor("#666666"))
+        addText(card, "\uD83D\uDCCB Corridas ofertadas: ${r.offeredCount}", 13f, Color.parseColor("#333333"))
+        addText(card, "\u2705 Corridas aceitas: ${r.acceptedCount} (${"%.1f".format(r.acceptanceRate)}%)", 13f, Color.parseColor("#00A86B"))
+        addText(card, "\uD83D\uDCB0 Faturamento bruto: R\$ ${AnalysisHelperV2.formatBr(r.totalEarnings)}", 13f, Color.parseColor("#333333"))
+        addText(card, "\uD83D\uDEE3\uFE0F Km total: ${AnalysisHelperV2.formatBr1(r.totalKm)} km", 13f, Color.parseColor("#333333"))
+        addText(card, "\u23F1\uFE0F Tempo total: ${AnalysisHelperV2.hoursMinutes(r.totalMinutes)}", 13f, Color.parseColor("#333333"))
 
         addDivider(card)
-        addText(card, "Status das corridas", 13f, Color.parseColor("#333333"), true)
-
-        val statusBarColor = mapOf(
-            "Aceitas" to Color.parseColor("#00A86B"),
-            "Recusadas" to Color.parseColor("#EF4444"),
-            "Expiradas" to Color.parseColor("#F59E0B")
-        )
-        val statusContainer = LinearLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-            orientation = VERTICAL
-        }
-        addBar(statusContainer, "Aceitas", "${"%.0f".format(r.acceptedPercent)}%",
-            (r.acceptedPercent / 100).toFloat(), statusBarColor["Aceitas"]!!)
-        addBar(statusContainer, "Recusadas", "${"%.0f".format(r.declinedPercent)}%",
-            (r.declinedPercent / 100).toFloat(), statusBarColor["Recusadas"]!!)
-        addBar(statusContainer, "Expiradas", "${"%.0f".format(r.expiredPercent)}%",
-            (r.expiredPercent / 100).toFloat(), statusBarColor["Expiradas"]!!)
-        card.addView(statusContainer)
+        addText(card, "\uD83D\uDCCA M\u00E9dias", 13f, Color.parseColor("#333333"), true)
+        addText(card, "R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.avgPricePerKm)}", 12f, Color.parseColor("#555555"))
+        addText(card, "R\$/h m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.avgPricePerHour)}", 12f, Color.parseColor("#555555"))
+        addText(card, "Nota m\u00E9dia: ${"%.2f".format(r.avgRating)}", 12f, Color.parseColor("#555555"))
 
         if (r.goodPercent > 0 || r.mediumPercent > 0 || r.badPercent > 0) {
             addDivider(card)
-            addText(card, "Avalia\u00E7\u00E3o das corridas", 13f, Color.parseColor("#333333"), true)
+            addText(card, "Avalia\u00E7\u00E3o das ofertas", 13f, Color.parseColor("#333333"), true)
             val scoreColors = mapOf(
                 "Boa (\u226580)" to Color.parseColor("#00A86B"),
                 "M\u00E9dia (50-79)" to Color.parseColor("#F59E0B"),
@@ -318,12 +301,13 @@ class AnalysisActivity : BaseActivity() {
     // ─── CARD 3: Melhor Horário ───
     private fun buildMelhorHorario(r: AnalysisResultV2) {
         val card = createCard("\u23F0 Melhor hor\u00E1rio para aceitar")
+        val bestData = r.hourlyData.find { it.hour == r.bestHourToAccept }
 
-        if (r.bestHourToAccept.rideCount > 0) {
+        if (bestData != null && bestData.rideCount > 0) {
             addText(card, buildString {
-                append("\u2B50 Melhor hor\u00E1rio: ${r.bestHourToAccept.hour}h \u00E0s ${(r.bestHourToAccept.hour + 1) % 24}h")
-                append("  |  R\$ ${AnalysisHelperV2.formatBr(r.bestHourToAccept.avgPricePerKm)}/km")
-                append("  |  ${r.bestHourToAccept.rideCount} corridas")
+                append("\u2B50 Melhor hor\u00E1rio: ${bestData.hour}h \u00E0s ${(bestData.hour + 1) % 24}h")
+                append("  |  R\$ ${AnalysisHelperV2.formatBr(bestData.avgPricePerKm)}/km")
+                append("  |  ${bestData.rideCount} corridas")
             }, 12f, Color.parseColor("#00A86B"), true)
         }
 
@@ -356,11 +340,12 @@ class AnalysisActivity : BaseActivity() {
     // ─── CARD 4: Dinâmica por Horário ───
     private fun buildDinamicaHorario(r: AnalysisResultV2) {
         val card = createCard("\u26A1 Din\u00E2mica por hor\u00E1rio")
+        val peakData = r.hourlyData.find { it.hour == r.peakDynamicHour }
 
-        if (r.peakDynamicHour.rideCount > 0) {
+        if (peakData != null && peakData.rideCount > 0) {
             addText(card, buildString {
-                append("\u26A1 Pico de din\u00E2mica: ${r.peakDynamicHour.hour}h")
-                append("  |  ${"%.0f".format(r.peakDynamicHour.dynamicPercentage)}% com din\u00E2mica")
+                append("\u26A1 Pico de din\u00E2mica: ${peakData.hour}h")
+                append("  |  ${"%.0f".format(peakData.dynamicPercentage)}% com din\u00E2mica")
             }, 12f, Color.parseColor("#F59E0B"), true)
         }
 
@@ -456,7 +441,7 @@ class AnalysisActivity : BaseActivity() {
 
             row.addView(TextView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
-                text = "${n.neighborhood}"
+                text = n.neighborhood
                 textSize = 12f
                 setTextColor(Color.parseColor("#333333"))
                 setTypeface(null, android.graphics.Typeface.BOLD)
