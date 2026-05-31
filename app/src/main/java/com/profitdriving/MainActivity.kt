@@ -562,14 +562,14 @@ class HistoryAdapter(
         val dynamicBonus = r.dynamicBonus ?: 0.0
 
         if (priorityBonus > 0) {
-            holder.tvPriorityBonus.text = "\u2B50 +R$ ${String.format("%.2f", priorityBonus).replace(".", ",")} de prioridade"
+            holder.tvPriorityBonus.text = "\u2B50 R$ ${String.format("%.2f", priorityBonus).replace(".", ",")} de prioridade"
             holder.tvPriorityBonus.visibility = View.VISIBLE
         } else {
             holder.tvPriorityBonus.visibility = View.GONE
         }
 
         if (dynamicBonus > 0) {
-            holder.tvDynamicBonus.text = "\uD83D\uDCC8 +R$ ${String.format("%.2f", dynamicBonus).replace(".", ",")} de din\u00E2mica"
+            holder.tvDynamicBonus.text = "\uD83D\uDCC8 R$ ${String.format("%.2f", dynamicBonus).replace(".", ",")} de din\u00E2mica"
             holder.tvDynamicBonus.visibility = View.VISIBLE
         } else {
             holder.tvDynamicBonus.visibility = View.GONE
