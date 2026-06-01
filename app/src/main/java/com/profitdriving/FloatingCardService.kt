@@ -72,10 +72,9 @@ class FloatingCardService : Service() {
         val dynamicBonus = intent.getDoubleExtra("dynamicBonus", -1.0).let { if (it < 0) null else it }
         val pickupAddress = intent.getStringExtra("pickupAddress")
         val dropoffAddress = intent.getStringExtra("dropoffAddress")
-        val stops = intent.getIntExtra("stops", -1).let { if (it < 0) null else it }
-        val hasExactStopCount = intent.getBooleanExtra("hasExactStopCount", true)
+        val hasMultipleStops = intent.getBooleanExtra("hasMultipleStops", false)
 
-        val ride = RideData(value, distanceKm, timeMin, rating, appName, serviceType = serviceType, priorityBonus = priorityBonus, dynamicBonus = dynamicBonus, pickupAddress = pickupAddress, dropoffAddress = dropoffAddress, stops = stops, hasExactStopCount = hasExactStopCount)
+        val ride = RideData(value, distanceKm, timeMin, rating, appName, serviceType = serviceType, priorityBonus = priorityBonus, dynamicBonus = dynamicBonus, pickupAddress = pickupAddress, dropoffAddress = dropoffAddress, hasMultipleStops = hasMultipleStops)
 
         L.d(TAG, "Card: valor=$value km=$distanceKm tempo=$timeMin nota=$rating demo=$isDemo")
         showOverlay(ride, isDemo)
@@ -236,16 +235,10 @@ class FloatingCardService : Service() {
         val tvProfit = view.findViewById<TextView>(R.id.tvProfit)
         tvProfit.visibility = View.GONE
 
-        if (ride.stops != null && ride.stops > 0) {
-            val stopsText = if (!ride.hasExactStopCount) {
-                "\uD83D\uDD04 Várias paradas"
-            } else if (ride.stops == 1) {
-                "\uD83D\uDD04 1 parada"
-            } else {
-                "\uD83D\uDD04 ${ride.stops} paradas"
-            }
-            tvStops.text = stopsText
+        if (ride.hasMultipleStops) {
+            tvStops.text = "\uD83D\uDD04 Várias paradas"
             tvStops.visibility = View.VISIBLE
+            L.d(TAG, "Exibindo várias paradas no card")
         } else {
             tvStops.visibility = View.GONE
         }
@@ -359,7 +352,8 @@ class FloatingCardService : Service() {
 
         handler.removeCallbacks(dismissRunnable)
         if (!isDemo) {
-            handler.postDelayed(dismissRunnable, 30000L)
+            val durationMs = prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 30) * 1000L
+            handler.postDelayed(dismissRunnable, durationMs)
         }
     }
 

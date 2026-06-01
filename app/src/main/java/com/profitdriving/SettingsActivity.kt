@@ -69,6 +69,9 @@ class SettingsActivity : BaseActivity() {
     private lateinit var btnPage200: TextView
     private lateinit var btnPage500: TextView
     private var selectedPageSize = 100
+    private lateinit var seekCardDuration: SeekBar
+    private lateinit var tvCardDurationLabel: TextView
+    private var cardDurationSeconds = 30
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,6 +125,17 @@ class SettingsActivity : BaseActivity() {
         btnPage100 = findViewById(R.id.btnPage100)
         btnPage200 = findViewById(R.id.btnPage200)
         btnPage500 = findViewById(R.id.btnPage500)
+        seekCardDuration = findViewById(R.id.seekCardDuration)
+        tvCardDurationLabel = findViewById(R.id.tvCardDurationLabel)
+
+        seekCardDuration.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
+                cardDurationSeconds = 5 + (progress * 5)
+                tvCardDurationLabel.text = "Duração do card: ${cardDurationSeconds}s"
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {}
+        })
 
         loadValues()
 
@@ -243,8 +257,7 @@ class SettingsActivity : BaseActivity() {
                 putExtra("serviceType", "UberX")
                 putExtra("priorityBonus", 3.00)
                 putExtra("dynamicBonus", 2.50)
-                putExtra("stops", 1)
-                putExtra("hasExactStopCount", false)
+                putExtra("hasMultipleStops", true)
                 putExtra("pickupAddress", "Av. Paulista, 1000 - Bela Vista, São Paulo - SP")
                 putExtra("dropoffAddress", "Rua Augusta, 1500 - Cerqueira César - São Paulo - SP, 01305-000")
             }
@@ -481,6 +494,10 @@ class SettingsActivity : BaseActivity() {
 
         val pageSize = prefs.getInt(KEY_PAGE_SIZE, 100)
         selectPageSize(pageSize)
+
+        cardDurationSeconds = prefs.getInt(KEY_CARD_DURATION, 30)
+        seekCardDuration.progress = (cardDurationSeconds - 5) / 5
+        tvCardDurationLabel.text = "Duração do card: ${cardDurationSeconds}s"
     }
 
     private fun saveValues(showToast: Boolean = true) {
@@ -543,6 +560,7 @@ class SettingsActivity : BaseActivity() {
             putInt(KEY_THRESHOLD_ACEITAR, seekThresholdAceitar.progress + 50)
             putInt(KEY_THRESHOLD_ANALISAR, seekThresholdAnalisar.progress + 20)
             putInt(KEY_PAGE_SIZE, selectedPageSize)
+            putInt(KEY_CARD_DURATION, cardDurationSeconds)
             apply()
         }
 
@@ -658,6 +676,7 @@ class SettingsActivity : BaseActivity() {
         const val KEY_THRESHOLD_ACEITAR  = "threshold_aceitar"
         const val KEY_THRESHOLD_ANALISAR = "threshold_analisar"
         const val KEY_PAGE_SIZE = "page_size"
+        const val KEY_CARD_DURATION = "card_duration"
 
         const val DEFAULT_CARD_LAYOUT = "column"
         const val DEFAULT_CARD_SIDE = "left"

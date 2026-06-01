@@ -1,7 +1,10 @@
 package com.profitdriving
 
+import android.content.BroadcastReceiver
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
@@ -41,6 +44,14 @@ class MainActivity : BaseActivity() {
     private var pageSize = 100
     private var hasMore = false
     private val handler = Handler(Looper.getMainLooper())
+
+    private val dataUpdateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == "NEW_RIDE_SAVED") {
+                loadFilteredHistory()
+            }
+        }
+    }
 
     private val filterViews = mutableListOf<TextView>()
     private var scoreFilterViews = mutableListOf<TextView>()
@@ -147,6 +158,8 @@ class MainActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
 
+        registerReceiver(dataUpdateReceiver, IntentFilter("NEW_RIDE_SAVED"), Context.RECEIVER_NOT_EXPORTED)
+
         pageSize = getSharedPreferences(SettingsActivity.PREF_NAME, 0)
             .getInt(SettingsActivity.KEY_PAGE_SIZE, 100)
         loadServiceTypeFilters()
@@ -159,6 +172,11 @@ class MainActivity : BaseActivity() {
         if (isAccessibilityServiceEnabled() && overlayOk) {
             FloatingBubbleService.start(this)
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        try { unregisterReceiver(dataUpdateReceiver) } catch (_: Exception) {}
     }
 
     private fun setFilter(days: Int) {
@@ -474,7 +492,8 @@ class HistoryAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val r = records[position]
 
-        holder.tvServiceType.text = r.serviceType ?: r.appName
+        val serviceType = r.serviceType ?: r.appName
+        holder.tvServiceType.text = serviceType
 
         val iconRes = when {
             r.serviceType == null -> R.drawable.ic_ride_generic
@@ -495,6 +514,21 @@ class HistoryAdapter(
             else -> R.drawable.ic_ride_generic
         }
         holder.ivServiceTypeIcon.setImageResource(iconRes)
+
+        val (bgRes, textColor, iconColor) = when {
+            serviceType.contains("Black", ignoreCase = true) ->
+                Triple(R.drawable.bg_service_black, Color.WHITE, Color.WHITE)
+            serviceType.contains("Comfort", ignoreCase = true) || serviceType.contains("Confort", ignoreCase = true) ->
+                Triple(R.drawable.bg_service_blue, Color.WHITE, Color.WHITE)
+            serviceType.contains("Moto", ignoreCase = true) || serviceType.contains("Entrega", ignoreCase = true) ->
+                Triple(R.drawable.bg_service_green, Color.WHITE, Color.WHITE)
+            else ->
+                Triple(R.drawable.bg_service_default, 0xFF1A2C3E.toInt(), 0xFF5E6F8D.toInt())
+        }
+        holder.ivServiceTypeIcon.setBackgroundResource(bgRes)
+        holder.ivServiceTypeIcon.setColorFilter(iconColor)
+        holder.tvServiceType.setBackgroundResource(bgRes)
+        holder.tvServiceType.setTextColor(textColor)
 
         holder.tvPrice.text = r.value?.let {
             "R$ %.2f".format(it).replace(".", ",")
@@ -601,13 +635,8 @@ class HistoryAdapter(
             holder.tvDynamicBonus.visibility = View.GONE
         }
 
-        if (r.stops != null && r.stops > 0) {
-            val stopsText = if (r.stops == 1) {
-                "\uD83D\uDD04 Várias paradas"
-            } else {
-                "\uD83D\uDD04 ${r.stops} paradas"
-            }
-            holder.tvStops.text = stopsText
+        if (r.hasMultipleStops) {
+            holder.tvStops.text = "\uD83D\uDD04 Várias paradas"
             holder.tvStops.visibility = View.VISIBLE
         } else {
             holder.tvStops.visibility = View.GONE
@@ -619,7 +648,8 @@ class HistoryAdapter(
         if (isExpanded) {
             val rideValue = r.value ?: 0.0
             val distance = (r.pickupDistanceKm ?: 0.0) + (r.tripDistanceKm ?: r.distanceKm ?: 0.0)
-            val totalCost = distance * costPerKm
+            val usedCostPerKm = r.costPerKmAtTime ?: costPerKm
+            val totalCost = distance * usedCostPerKm
             val lucro = rideValue - totalCost
             val lucroPerc = if (rideValue > 0) (lucro / rideValue) * 100 else 0.0
 
@@ -627,7 +657,7 @@ class HistoryAdapter(
                 appendLine("\uD83D\uDCCA Detalhamento do Lucro:")
                 appendLine("─────────────────────────")
                 appendLine("Valor da corrida: R$ %.2f".format(rideValue).replace(".", ","))
-                appendLine("Custo por km: R$ %.2f".format(costPerKm).replace(".", ","))
+                appendLine("Custo por km: R$ %.2f".format(usedCostPerKm).replace(".", ","))
                 appendLine("Distância: %.1f km".format(distance).replace(".", ","))
                 appendLine("Custo total: R$ %.2f".format(totalCost).replace(".", ","))
                 appendLine("─────────────────────────")

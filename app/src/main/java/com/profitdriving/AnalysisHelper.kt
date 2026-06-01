@@ -129,14 +129,16 @@ object AnalysisHelperV2 {
         val peakDynamicHour = hourlyData.filter { it.rideCount > 0 }.maxByOrNull { it.dynamicPercentage }?.hour ?: 0
 
         val cityRides = accepted.filter { it.dropoffAddress != null }
-        val byCity = cityRides.groupBy { extractCity(it.dropoffAddress) ?: "Desconhecido" }
+        val byCity = cityRides.groupBy { extractCity(it.dropoffAddress) }
+            .mapValues { (_, list) -> list }
+            .filterKeys { it != null && it.isNotBlank() && !it.equals("Desconhecido", ignoreCase = true) }
         val topCities = byCity.map { (city, list) ->
             val cityByHour = list.groupBy { getHourOfDay(it.timestamp) }
             val bestHr = cityByHour.maxByOrNull { (_, rides) -> rides.size }?.key ?: 0
             val allCityRides = offered.filter { extractCity(it.dropoffAddress) == city }
             val dynCount = allCityRides.count { hasDynamicBonus(it) }
             CityStats(
-                city = city,
+                city = city!!,
                 rideCount = list.size,
                 avgPricePerKm = list.mapNotNull { it.pricePerKm }.takeIf { it.isNotEmpty() }?.average() ?: 0.0,
                 dynamicPercentage = if (allCityRides.isNotEmpty()) dynCount.toDouble() / allCityRides.size * 100 else 0.0,
@@ -145,11 +147,13 @@ object AnalysisHelperV2 {
         }.sortedByDescending { it.rideCount }.take(10)
 
         val neighborhoodRides = accepted.filter { it.dropoffAddress != null }
-        val byNeighborhood = neighborhoodRides.groupBy {
-            val hood = extractNeighborhood(it.dropoffAddress)
-            val city = extractCity(it.dropoffAddress)
-            "${hood ?: "Desconhecido"} - ${city ?: "?"}"
-        }
+        val byNeighborhood = neighborhoodRides.mapNotNull { ride ->
+            val hood = extractNeighborhood(ride.dropoffAddress)
+            val city = extractCity(ride.dropoffAddress)
+            if (hood != null && hood.isNotBlank() && !hood.equals("Desconhecido", ignoreCase = true)) {
+                Pair("${hood} - ${city ?: "?"}", ride)
+            } else null
+        }.groupBy { it.first }.mapValues { (_, list) -> list.map { it.second } }
         val topNeighborhoods = byNeighborhood.map { (key, list) ->
             val parts = key.split(" - ")
             val allNbRides = offered.filter {

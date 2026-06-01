@@ -820,6 +820,32 @@
 
             </LinearLayout>
 
+            <!-- Duração do card -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="⏱️ Duração do Card"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp" />
+
+            <TextView
+                android:id="@+id/tvCardDurationLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Duração do card: 30s"
+                android:textSize="12sp"
+                android:textColor="#6B7280"
+                android:layout_marginTop="4dp" />
+
+            <SeekBar
+                android:id="@+id/seekCardDuration"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="11"
+                android:progress="5"
+                android:layout_marginTop="8dp" />
+
         </LinearLayout>
 
         <!-- ============================================================ -->

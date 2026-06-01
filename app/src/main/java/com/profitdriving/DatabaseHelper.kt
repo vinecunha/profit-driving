@@ -100,6 +100,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_PRIORITY_BONUS REAL")
             db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_DYNAMIC_BONUS REAL")
         }
+        if (oldVersion < 16) {
+            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_COST_PER_KM_AT_TIME REAL")
+        }
+        if (oldVersion < 17) {
+            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_HAS_MULTIPLE_STOPS INTEGER DEFAULT 0")
+            db.execSQL("UPDATE $TABLE_NAME SET $COL_HAS_MULTIPLE_STOPS = 1 WHERE $COL_STOPS IS NOT NULL AND $COL_STOPS > 0")
+        }
     }
 
     fun updateStatus(id: Long, status: String) {
@@ -113,6 +120,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     fun insert(record: RideRecord): Long {
+        val currentCostPerKm = calculateCurrentCostPerKm()
         val db = writableDatabase
         return try {
             val cv = ContentValues().apply {
@@ -133,15 +141,27 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 put(COL_PRIORITY_BONUS, record.priorityBonus)
                 put(COL_DYNAMIC_BONUS, record.dynamicBonus)
                 put(COL_STATUS, record.status)
-                put(COL_STOPS, record.stops)
+                put(COL_HAS_MULTIPLE_STOPS, record.hasMultipleStops)
                 put(COL_SCORE_PERCENT, record.scorePercent)
                 put(COL_PICKUP_ADDRESS, record.pickupAddress)
                 put(COL_DROPOFF_ADDRESS, record.dropoffAddress)
+                if (currentCostPerKm != null) {
+                    put(COL_COST_PER_KM_AT_TIME, currentCostPerKm)
+                }
             }
             db.insert(TABLE_NAME, null, cv)
         } finally {
             db.close()
         }
+    }
+
+    private fun calculateCurrentCostPerKm(): Double? {
+        return try {
+            val refuels = getRefuels()
+            val expenses = getAllExpenses()
+            val monthlyKm = getMonthlyKm()
+            CostCalculator.calculateCostSummary(refuels, expenses, monthlyKm).totalCostPerKm
+        } catch (_: Exception) { null }
     }
 
     fun getAll(): List<RideRecord> {
@@ -204,8 +224,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     },
                     status = if (it.isNull(it.getColumnIndexOrThrow(COL_STATUS))) "EXPIRED"
                         else it.getString(it.getColumnIndexOrThrow(COL_STATUS)),
-                    stops = if (it.isNull(it.getColumnIndexOrThrow(COL_STOPS))) null
-                        else it.getInt(it.getColumnIndexOrThrow(COL_STOPS)),
+                    hasMultipleStops = it.getInt(it.getColumnIndexOrThrow(COL_HAS_MULTIPLE_STOPS)) == 1,
                     scorePercent = it.getDouble(it.getColumnIndexOrThrow(COL_SCORE_PERCENT)).let { v ->
                         if (it.isNull(it.getColumnIndexOrThrow(COL_SCORE_PERCENT))) null else v
                     },
@@ -218,7 +237,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     pickupAddress = if (it.isNull(it.getColumnIndexOrThrow(COL_PICKUP_ADDRESS))) null
                         else it.getString(it.getColumnIndexOrThrow(COL_PICKUP_ADDRESS)),
                     dropoffAddress = if (it.isNull(it.getColumnIndexOrThrow(COL_DROPOFF_ADDRESS))) null
-                        else it.getString(it.getColumnIndexOrThrow(COL_DROPOFF_ADDRESS))
+                        else it.getString(it.getColumnIndexOrThrow(COL_DROPOFF_ADDRESS)),
+                    costPerKmAtTime = it.getDouble(it.getColumnIndexOrThrow(COL_COST_PER_KM_AT_TIME)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_COST_PER_KM_AT_TIME))) null else v
+                    }
                 ))
             }
         }
@@ -656,8 +678,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     },
                     status = if (it.isNull(it.getColumnIndexOrThrow(COL_STATUS))) "EXPIRED"
                         else it.getString(it.getColumnIndexOrThrow(COL_STATUS)),
-                    stops = if (it.isNull(it.getColumnIndexOrThrow(COL_STOPS))) null
-                        else it.getInt(it.getColumnIndexOrThrow(COL_STOPS)),
+                    hasMultipleStops = it.getInt(it.getColumnIndexOrThrow(COL_HAS_MULTIPLE_STOPS)) == 1,
                     scorePercent = it.getDouble(it.getColumnIndexOrThrow(COL_SCORE_PERCENT)).let { v ->
                         if (it.isNull(it.getColumnIndexOrThrow(COL_SCORE_PERCENT))) null else v
                     },
@@ -666,8 +687,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     },
                     dynamicBonus = it.getDouble(it.getColumnIndexOrThrow(COL_DYNAMIC_BONUS)).let { v ->
                         if (it.isNull(it.getColumnIndexOrThrow(COL_DYNAMIC_BONUS))) null else v
+                    },
+                    costPerKmAtTime = it.getDouble(it.getColumnIndexOrThrow(COL_COST_PER_KM_AT_TIME)).let { v ->
+                        if (it.isNull(it.getColumnIndexOrThrow(COL_COST_PER_KM_AT_TIME))) null else v
                     }
-                )) // getRidesByDateRange
+                ))
             }
         }
         return list
@@ -851,7 +875,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 15
+        private const val DATABASE_VERSION = 17
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"
@@ -880,9 +904,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_DYNAMIC_BONUS = "dynamic_bonus"
         private const val COL_STATUS = "status"
         private const val COL_STOPS = "stops"
+        private const val COL_HAS_MULTIPLE_STOPS = "has_multiple_stops"
         private const val COL_SCORE_PERCENT = "score_percent"
         private const val COL_PICKUP_ADDRESS = "pickup_address"
         private const val COL_DROPOFF_ADDRESS = "dropoff_address"
+        private const val COL_COST_PER_KM_AT_TIME = "cost_per_km_at_time"
 
         // Fuel refuels columns
         private const val COL_R_TIMESTAMP = "timestamp"
@@ -1062,7 +1088,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_DYNAMIC_BONUS REAL,
                 $COL_STATUS TEXT DEFAULT 'EXPIRED',
                 $COL_STOPS INTEGER,
-                $COL_SCORE_PERCENT REAL
+                $COL_HAS_MULTIPLE_STOPS INTEGER DEFAULT 0,
+                $COL_SCORE_PERCENT REAL,
+                $COL_COST_PER_KM_AT_TIME REAL
             )
         """.trimIndent()
     }
@@ -1087,10 +1115,11 @@ data class RideRecord(
     val priorityBonus: Double? = null,
     val dynamicBonus: Double? = null,
     val status: String = "EXPIRED",
-    val stops: Int? = null,
+    val hasMultipleStops: Boolean = false,
     val scorePercent: Double? = null,
     val pickupAddress: String? = null,
-    val dropoffAddress: String? = null
+    val dropoffAddress: String? = null,
+    val costPerKmAtTime: Double? = null
 )
 
 data class RefuelRecord(

@@ -64,8 +64,7 @@ class RideAccessibilityService : AccessibilityService() {
                 }
             }
 
-            val delay = if (quickScanHasRideCard()) 500L else 800L
-            bgHandler.postDelayed(pendingRunnable!!, delay)
+            bgHandler.postDelayed(pendingRunnable!!, 300L)
             return
         }
 
@@ -91,7 +90,7 @@ class RideAccessibilityService : AccessibilityService() {
                 }
             }
 
-            bgHandler.postDelayed(pendingRunnable!!, 500)
+            bgHandler.postDelayed(pendingRunnable!!, 300L)
         }
     }
 
@@ -108,38 +107,47 @@ class RideAccessibilityService : AccessibilityService() {
     }
 
     private fun findUberWindow(): AccessibilityNodeInfo? {
-        val root = rootInActiveWindow
-        if (root != null) {
-            val pkg = root.packageName?.toString() ?: ""
-            if (pkg.contains("ubercab") || pkg.contains("taxis99") || pkg.contains("app99")) {
-                L.d(TAG, "Janela Uber/99 encontrada (rootInActiveWindow): $pkg")
-                return root
-            }
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                @Suppress("DEPRECATION")
-                root.recycle()
-            }
-        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return null
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            try {
-                val allWindows = windows ?: return null
-                val sortedWindows = allWindows.sortedByDescending { it.layer }
-                for (window in sortedWindows) {
-                    val windowRoot = window.root ?: continue
-                    val pkg = windowRoot.packageName?.toString() ?: ""
-                    if (pkg.contains("ubercab") || pkg.contains("taxis99") || pkg.contains("app99")) {
-                        L.d(TAG, "Janela Uber/99 encontrada em segundo plano: $pkg layer=${window.layer}")
-                        return windowRoot
-                    }
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                        @Suppress("DEPRECATION")
-                        windowRoot.recycle()
-                    }
-                }
-            } catch (e: Exception) {
-                L.e(TAG, "Erro ao varrer janelas: ${e.message}", e)
+        try {
+            val allWindows = windows ?: return null
+
+            L.d(TAG, "Total de janelas: ${allWindows.size}")
+            allWindows.forEachIndexed { i, w ->
+                L.d(TAG, "Janela $i: tipo=${w.type}, layer=${w.layer}, pkg=${w.root?.packageName}")
             }
+
+            val overlayWindows = allWindows.filter {
+                it.type == 6
+            }
+
+            for (window in overlayWindows) {
+                val root = window.root ?: continue
+                val pkg = root.packageName?.toString() ?: ""
+                if (pkg.contains("ubercab") || pkg.contains("taxis99")) {
+                    L.d(TAG, "Card overlay encontrado! tipo=${window.type}, layer=${window.layer}")
+                    return root
+                }
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    @Suppress("DEPRECATION")
+                    root.recycle()
+                }
+            }
+
+            for (window in allWindows) {
+                val root = window.root ?: continue
+                val pkg = root.packageName?.toString() ?: ""
+                if (pkg.contains("ubercab") || pkg.contains("taxis99")) {
+                    L.d(TAG, "Janela Uber normal encontrada: tipo=${window.type}")
+                    return root
+                }
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    @Suppress("DEPRECATION")
+                    root.recycle()
+                }
+            }
+        } catch (e: Exception) {
+            L.e(TAG, "Erro ao buscar janelas: ${e.message}")
         }
 
         return null
@@ -182,33 +190,6 @@ class RideAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun quickScanHasRideCard(): Boolean {
-        return try {
-            val root = findUberWindow() ?: return false
-            val texts = mutableListOf<String>()
-            collectTextsLimited(root, texts, maxNodes = 20)
-            val quick = texts.joinToString(" ")
-            quick.contains("Aceitar", ignoreCase = true) && quick.contains("R$")
-        } catch (e: Exception) { false }
-    }
-
-    private fun collectTextsLimited(node: AccessibilityNodeInfo, list: MutableList<String>, maxNodes: Int) {
-        if (list.size >= maxNodes) return
-        if (node.text?.toString()?.isNotBlank() == true) {
-            list.add(node.text.toString())
-        }
-        for (i in 0 until node.childCount) {
-            if (list.size >= maxNodes) break
-            node.getChild(i)?.let { child ->
-                collectTextsLimited(child, list, maxNodes)
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                    @Suppress("DEPRECATION")
-                    child.recycle()
-                }
-            }
-        }
-    }
-
     private fun buildCardHash(texts: List<String>): String {
         val cardTokens = texts.filter { text ->
             text.contains("R$") ||
@@ -228,16 +209,8 @@ class RideAccessibilityService : AccessibilityService() {
         L.d(TAG, "Textos coletados (${allTexts.size}): ${allTexts.take(10)}")
 
         val fullText = allTexts.joinToString(" ")
-        L.d(TAG, "Texto completo: $fullText")
 
-        val hasAccept = fullText.contains("Aceitar", ignoreCase = true) ||
-                        fullText.contains("Accept", ignoreCase = true) ||
-                        fullText.contains("Selecionar", ignoreCase = true)
-        val hasMoney = fullText.contains("R$")
-
-        L.d(TAG, "hasAccept=$hasAccept, hasMoney=$hasMoney")
-
-        if (!hasAccept || !hasMoney) {
+        if (!isRideRequestCard(allTexts)) {
             L.d(TAG, "Card não é de corrida — ignorando")
             if (cardVisible) {
                 L.d(TAG, "Card sumiu — resetando estado")
@@ -286,15 +259,16 @@ class RideAccessibilityService : AccessibilityService() {
     }
 
     private fun isRideRequestCard(texts: List<String>): Boolean {
-        val full = texts.joinToString(" ")
+        val full = texts.joinToString(" ").lowercase(Locale.ROOT)
 
-        val hasAccept = full.contains("Aceitar", ignoreCase = true) ||
-                        full.contains("Accept", ignoreCase = true) ||
-                        full.contains("Selecionar", ignoreCase = true)
+        val hasAccept = full.contains("aceitar") || full.contains("accept") || full.contains("selecionar")
+        val hasMoney = full.contains("r$")
+        val hasKm = full.contains("km")
+        val hasMin = full.contains("min")
 
-        val hasMoney = full.contains("R$")
+        L.d(TAG, "Validação card: Accept=$hasAccept, Money=$hasMoney, Km=$hasKm, Min=$hasMin")
 
-        return hasAccept && hasMoney
+        return hasAccept && hasMoney && hasKm && hasMin
     }
 
     private fun isValorSuspeito(valor: Double): Boolean {
@@ -335,8 +309,7 @@ class RideAccessibilityService : AccessibilityService() {
         val priorityBonus = extractPriorityBonus(text)
         val dynamicBonus = extractDynamicBonus(text)
 
-        val stops = extractStops(text)
-        val hasExactStopCount = stops != null && !text.contains("várias paradas", ignoreCase = true) && !text.contains("multiplas paradas", ignoreCase = true)
+        val hasMultipleStops = extractStops(text)
 
         val (pickupAddress, dropoffAddress) = extractAddresses(text)
 
@@ -358,12 +331,11 @@ class RideAccessibilityService : AccessibilityService() {
             tripDistanceKm = tripKm,
             tripTimeMin = tripTime,
             serviceType = serviceType,
-            stops = stops,
+            hasMultipleStops = hasMultipleStops,
             priorityBonus = priorityBonus,
             dynamicBonus = dynamicBonus,
             pickupAddress = pickupAddress,
-            dropoffAddress = dropoffAddress,
-            hasExactStopCount = hasExactStopCount
+            dropoffAddress = dropoffAddress
         )
     }
 
@@ -547,7 +519,7 @@ class RideAccessibilityService : AccessibilityService() {
             tripDistanceKm = ride.tripDistanceKm,
             tripTimeMin = ride.tripTimeMin,
             serviceType = ride.serviceType,
-            stops = ride.stops,
+            hasMultipleStops = ride.hasMultipleStops,
             scorePercent = result.scorePercent,
             priorityBonus = ride.priorityBonus,
             dynamicBonus = ride.dynamicBonus,
@@ -555,6 +527,8 @@ class RideAccessibilityService : AccessibilityService() {
             dropoffAddress = ride.dropoffAddress
         ))
         L.d(TAG, "Ride inserido com id=$lastInsertedId")
+
+        sendBroadcast(Intent("NEW_RIDE_SAVED"))
 
         getSharedPreferences(SettingsActivity.PREF_NAME, 0).edit().apply {
             ride.value?.let { putFloat("last_value", it.toFloat()) }
@@ -578,6 +552,7 @@ class RideAccessibilityService : AccessibilityService() {
             ride.dynamicBonus?.let { putExtra("dynamicBonus", it) }
             ride.pickupAddress?.let { putExtra("pickupAddress", it) }
             ride.dropoffAddress?.let { putExtra("dropoffAddress", it) }
+            putExtra("hasMultipleStops", ride.hasMultipleStops)
         })
 
         FloatingBubbleService.start(this, Intent().apply {
@@ -632,23 +607,17 @@ class RideAccessibilityService : AccessibilityService() {
         return if (v != null && v > 0) v else null
     }
 
-    private fun extractStops(text: String): Int? {
-        if (text.contains("várias paradas", ignoreCase = true) ||
-            text.contains("multiplas paradas", ignoreCase = true) ||
-            text.contains("múltiplas paradas", ignoreCase = true)) {
-            L.d(TAG, "Paradas detectadas: várias paradas")
-            return 1
-        }
-        val m = MULTIPLE_STOPS_REGEX.find(text) ?: return null
-        val fullMatch = m.groupValues[1].lowercase(Locale.ROOT)
-        L.d(TAG, "Paradas detectadas: $fullMatch")
+    private fun extractStops(text: String): Boolean {
+        val lowerText = text.lowercase(Locale.ROOT)
+        val hasStops = lowerText.contains("várias paradas") ||
+                lowerText.contains("multiplas paradas") ||
+                lowerText.contains("múltiplas paradas") ||
+                (lowerText.contains("paradas") && lowerText.contains("\uD83D\uDD04"))
 
-        if (fullMatch.contains("varias") || fullMatch.contains("multiplas")) {
-            return 1
+        if (hasStops) {
+            L.d(TAG, "Várias paradas detectado!")
         }
-
-        val digitMatch = Regex("""(\d+)""").find(fullMatch)
-        return digitMatch?.groupValues?.get(1)?.toIntOrNull()
+        return hasStops
     }
 
     private fun extractAddresses(text: String): Pair<String?, String?> {
@@ -729,6 +698,7 @@ class RideAccessibilityService : AccessibilityService() {
             "uber black" to "Black",
             "uber comfort" to "Comfort",
             "uber bag" to "Black Bag",
+            "uber priority" to "Prioridade",
             "business comfort" to "Business Comfort",
             "business black" to "Business Black",
             "envios moto" to "Envios Moto",
@@ -740,6 +710,7 @@ class RideAccessibilityService : AccessibilityService() {
             "black" to "Black",
             "bag" to "Black Bag",
             "comfort" to "Comfort",
+            "priority" to "Prioridade",
             "99pop" to "99Pop",
             "99top" to "99Top",
             "99black" to "99Black",
@@ -749,11 +720,6 @@ class RideAccessibilityService : AccessibilityService() {
             "pop" to "Pop",
             "top" to "Top",
             "entrega" to "Entrega"
-        )
-
-        private val MULTIPLE_STOPS_REGEX = Regex(
-            """(?:[🔄⏸🚏])?\s*(v[aá]rias\s+paradas|mult[ií]plas\s+paradas|\d+\s*paradas)""",
-            RegexOption.IGNORE_CASE
         )
 
         private val PRIORITY_BONUS_REGEX = Regex(

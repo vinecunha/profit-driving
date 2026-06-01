@@ -24,35 +24,33 @@ class NotificationListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         try {
             val pkg = sbn.packageName
-            val appMatch = matchApp(pkg)
-            if (appMatch == null) {
-                L.d(TAG, "Ignorando pacote: $pkg")
-                return
-            }
+
+            if (!pkg.startsWith("com.ubercab")) return
 
             val extras: Bundle = sbn.notification.extras ?: return
             val title = extras.getString(Notification.EXTRA_TITLE, "") ?: ""
             val text = extras.getString(Notification.EXTRA_TEXT, "") ?: ""
             val bigText = extras.getString(Notification.EXTRA_BIG_TEXT, "") ?: ""
-            val summary = extras.getString(Notification.EXTRA_SUMMARY_TEXT, "") ?: ""
-            val fullText = "$title $text $bigText $summary"
+            val fullText = "$title $text $bigText"
 
-            L.d(TAG, "Notificação recebida de $pkg => $appMatch")
+            val lower = fullText.lowercase()
 
-            val rideData = parseRideData(fullText, appMatch)
-            L.d(TAG, "Dados extraídos: valor=${rideData.value} km=${rideData.distanceKm} " +
-                    "tempo=${rideData.timeMin} nota=${rideData.rating}")
+            val isExclusive = lower.contains("exclusivo") ||
+                    lower.contains("match") ||
+                    lower.contains("sua corrida") ||
+                    (lower.contains("r$") && lower.contains("km") && lower.contains("min") && !lower.contains("radar"))
 
-            runOnUi(rideData)
+            if (isExclusive) {
+                L.d(TAG, "Card EXCLUSIVO detectado via notificação!")
+                val rideData = parseRideData(fullText, "Uber")
+                runOnUi(rideData)
+                return
+            }
+
+            L.d(TAG, "Notificação recebida de $pkg => Uber (não é exclusiva, ignorando)")
         } catch (e: Exception) {
             L.e(TAG, "Erro ao processar notificação", e)
         }
-    }
-
-    private fun matchApp(pkg: String): String? {
-        if (pkg.startsWith("com.ubercab")) return "Uber"
-        if (pkg.startsWith("com.taxis99") || pkg.startsWith("br.com.taxis99")) return "99"
-        return null
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {}
