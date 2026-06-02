@@ -107,6 +107,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_HAS_MULTIPLE_STOPS INTEGER DEFAULT 0")
             db.execSQL("UPDATE $TABLE_NAME SET $COL_HAS_MULTIPLE_STOPS = 1 WHERE $COL_STOPS IS NOT NULL AND $COL_STOPS > 0")
         }
+        if (oldVersion < 18) {
+            db.execSQL("ALTER TABLE $TABLE_DAILY_RIDES ADD COLUMN $COL_DR_CANCELLED_WITH_FEE INTEGER DEFAULT 0")
+            db.execSQL("ALTER TABLE $TABLE_DAILY_RIDES ADD COLUMN $COL_DR_FEE_VALUE REAL")
+        }
     }
 
     fun updateStatus(id: Long, status: String) {
@@ -709,6 +713,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 put(COL_DR_ADJUSTED_VALUE, dailyRide.adjustedValue)
                 put(COL_DR_TIP_AMOUNT, dailyRide.tipAmount)
                 put(COL_DR_IS_COMPLETED, if (dailyRide.isCompleted) 1 else 0)
+                put(COL_DR_CANCELLED_WITH_FEE, if (dailyRide.cancelledWithFee) 1 else 0)
                 put(COL_DR_NOTES, dailyRide.notes)
                 put(COL_DR_CREATED_AT, dailyRide.createdAt)
                 put(COL_DR_UPDATED_AT, dailyRide.updatedAt)
@@ -777,6 +782,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 put(COL_DR_ADJUSTED_VALUE, dailyRide.adjustedValue)
                 put(COL_DR_TIP_AMOUNT, dailyRide.tipAmount)
                 put(COL_DR_IS_COMPLETED, if (dailyRide.isCompleted) 1 else 0)
+                put(COL_DR_CANCELLED_WITH_FEE, if (dailyRide.cancelledWithFee) 1 else 0)
                 put(COL_DR_NOTES, dailyRide.notes)
                 put(COL_DR_UPDATED_AT, System.currentTimeMillis())
             }
@@ -866,6 +872,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 else cursor.getDouble(cursor.getColumnIndexOrThrow(COL_DR_ADJUSTED_VALUE)),
             tipAmount = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_DR_TIP_AMOUNT)),
             isCompleted = cursor.getInt(cursor.getColumnIndexOrThrow(COL_DR_IS_COMPLETED)) == 1,
+            cancelledWithFee = cursor.getInt(cursor.getColumnIndexOrThrow(COL_DR_CANCELLED_WITH_FEE)) == 1,
             notes = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_DR_NOTES))) null
                 else cursor.getString(cursor.getColumnIndexOrThrow(COL_DR_NOTES)),
             createdAt = cursor.getLong(cursor.getColumnIndexOrThrow(COL_DR_CREATED_AT)),
@@ -875,7 +882,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 17
+        private const val DATABASE_VERSION = 18
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"
@@ -963,6 +970,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_DR_ADJUSTED_VALUE = "adjusted_value"
         private const val COL_DR_TIP_AMOUNT = "tip_amount"
         private const val COL_DR_IS_COMPLETED = "is_completed"
+        private const val COL_DR_CANCELLED_WITH_FEE = "cancelled_with_fee"
+        private const val COL_DR_FEE_VALUE = "fee_value"
         private const val COL_DR_NOTES = "notes"
         private const val COL_DR_CREATED_AT = "created_at"
         private const val COL_DR_UPDATED_AT = "updated_at"
@@ -1057,6 +1066,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_DR_ADJUSTED_VALUE REAL,
                 $COL_DR_TIP_AMOUNT REAL DEFAULT 0,
                 $COL_DR_IS_COMPLETED INTEGER DEFAULT 0,
+                $COL_DR_CANCELLED_WITH_FEE INTEGER DEFAULT 0,
+                $COL_DR_FEE_VALUE REAL,
                 $COL_DR_NOTES TEXT,
                 $COL_DR_CREATED_AT INTEGER,
                 $COL_DR_UPDATED_AT INTEGER

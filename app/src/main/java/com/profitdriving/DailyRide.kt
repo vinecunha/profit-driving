@@ -8,6 +8,7 @@ data class DailyRide(
     val adjustedValue: Double? = null,
     val tipAmount: Double = 0.0,
     val isCompleted: Boolean = false,
+    val cancelledWithFee: Boolean = false,
     val notes: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()

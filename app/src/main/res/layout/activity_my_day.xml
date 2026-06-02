@@ -293,6 +293,27 @@
 
                 </LinearLayout>
 
+                <!-- Botão para expandir detalhes dos custos -->
+                <TextView
+                    android:id="@+id/btnToggleCostDetails"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="\u25BC Ver detalhes dos custos"
+                    android:textSize="11sp"
+                    android:textColor="#00A86B"
+                    android:paddingTop="4dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <!-- Container dos detalhes (expansível) -->
+                <LinearLayout
+                    android:id="@+id/layoutCostDetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
+
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"

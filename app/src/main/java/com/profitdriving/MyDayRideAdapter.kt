@@ -1,5 +1,6 @@
 package com.profitdriving
 
+import android.app.AlertDialog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +16,8 @@ class MyDayRideAdapter(
     private var costPerKm: Double = 0.0,
     private val onToggleCompleted: (DailyRide) -> Unit,
     private val onAddTip: (DailyRide) -> Unit,
-    private val onAdjust: (DailyRide) -> Unit
+    private val onAdjust: (DailyRide) -> Unit,
+    private val onCancelWithFee: (DailyRide) -> Unit
 ) : RecyclerView.Adapter<MyDayRideAdapter.ViewHolder>() {
 
     private val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -150,6 +152,27 @@ class MyDayRideAdapter(
             holder.tvDetailProfitPercent.visibility = View.GONE
         }
 
+        // Undo button
+        holder.btnUndo.visibility = if (ride.isCompleted) View.VISIBLE else View.GONE
+        holder.btnUndo.setOnClickListener { onToggleCompleted(ride) }
+
+        // Cancel with fee — hide only if already cancelled
+        holder.btnCancelWithFee.visibility = if (!ride.cancelledWithFee) View.VISIBLE else View.GONE
+        holder.btnCancelWithFee.setOnClickListener { onCancelWithFee(ride) }
+
+        // Long-press on checkbox for undo confirmation
+        holder.chkCompleted.setOnLongClickListener {
+            if (ride.isCompleted) {
+                AlertDialog.Builder(holder.itemView.context)
+                    .setTitle("Desmarcar corrida")
+                    .setMessage("Deseja realmente desmarcar esta corrida como realizada?")
+                    .setPositiveButton("Sim") { _, _ -> onToggleCompleted(ride) }
+                    .setNegativeButton("Não", null)
+                    .show()
+            }
+            true
+        }
+
         // Click listeners
         holder.chkCompleted.setOnClickListener { onToggleCompleted(ride) }
         holder.btnAddTip.setOnClickListener { onAddTip(ride) }
@@ -191,6 +214,8 @@ class MyDayRideAdapter(
         val tvDetailProfit: TextView = itemView.findViewById(R.id.tvDetailProfit)
         val tvDetailProfitPercent: TextView = itemView.findViewById(R.id.tvDetailProfitPercent)
         val layoutActions: LinearLayout = itemView.findViewById(R.id.layoutActions)
+        val btnUndo: TextView = itemView.findViewById(R.id.btnUndo)
+        val btnCancelWithFee: TextView = itemView.findViewById(R.id.btnCancelWithFee)
         val btnAddTip: TextView = itemView.findViewById(R.id.btnAddTip)
         val btnAdjust: TextView = itemView.findViewById(R.id.btnAdjust)
     }

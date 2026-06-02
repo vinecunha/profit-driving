@@ -12,6 +12,7 @@ import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.lifecycleScope
@@ -64,6 +65,12 @@ class MyDayActivity : BaseActivity() {
     private lateinit var tvRevenuePerKm: TextView
     private lateinit var tvRevenuePerHour: TextView
     private lateinit var tvAvgTip: TextView
+
+    // Cost breakdown views
+    private lateinit var btnToggleCostDetails: TextView
+    private lateinit var layoutCostDetails: LinearLayout
+    private var costBreakdownItems = listOf<CostBreakdownItem>()
+    private var costDetailsExpanded = false
 
     // Filter pills
     private lateinit var filterTimePills: List<TextView>
@@ -168,6 +175,10 @@ class MyDayActivity : BaseActivity() {
         tvRevenuePerHour = findViewById(R.id.tvRevenuePerHour)
         tvAvgTip = findViewById(R.id.tvAvgTip)
 
+        btnToggleCostDetails = findViewById(R.id.btnToggleCostDetails)
+        layoutCostDetails = findViewById(R.id.layoutCostDetails)
+        btnToggleCostDetails.setOnClickListener { toggleCostDetails() }
+
         filterTimePills = listOf(
             findViewById(R.id.filterMorning),
             findViewById(R.id.filterAfternoon),
@@ -201,7 +212,8 @@ class MyDayActivity : BaseActivity() {
             costPerKm = 0.0,
             onToggleCompleted = { onToggleCompleted(it) },
             onAddTip = { showTipDialog(it) },
-            onAdjust = { showAdjustmentDialog(it) }
+            onAdjust = { showAdjustmentDialog(it) },
+            onCancelWithFee = { onCancelWithFee(it) }
         )
         rvCompleted.layoutManager = LinearLayoutManager(this)
         rvCompleted.adapter = completedAdapter
@@ -690,15 +702,121 @@ class MyDayActivity : BaseActivity() {
         tvRevenuePerKm.text = "R\$/km: %.2f".format(revenuePerKm).replace(".", ",")
         tvRevenuePerHour.text = "R\$/h: %.2f".format(revenuePerHour).replace(".", ",")
         tvAvgTip.text = "M\u00E9dia gorjeta: R$ %.2f".format(avgTip).replace(".", ",")
+
+        updateCostBreakdown(totalKm)
+    }
+
+    private fun toggleCostDetails() {
+        costDetailsExpanded = !costDetailsExpanded
+        layoutCostDetails.visibility = if (costDetailsExpanded) View.VISIBLE else View.GONE
+        btnToggleCostDetails.text = if (costDetailsExpanded)
+            "\u25B2 Ocultar detalhes dos custos" else "\u25BC Ver detalhes dos custos"
+    }
+
+    private fun updateCostBreakdown(dayTotalKm: Double) {
+        lifecycleScope.launch {
+            try {
+                val summary = CostSummaryCache.getCurrentSummary(this@MyDayActivity)
+                costBreakdownItems = CostSummaryCache.getCostBreakdown(summary)
+
+                layoutCostDetails.removeAllViews()
+                val inflater = layoutInflater
+
+                for (item in costBreakdownItems) {
+                    val row = inflater.inflate(R.layout.item_cost_breakdown, layoutCostDetails, false)
+                    val tvName = row.findViewById<TextView>(R.id.tvBreakdownName)
+                    val tvValue = row.findViewById<TextView>(R.id.tvBreakdownValue)
+                    val tvDayTotal = row.findViewById<TextView>(R.id.tvBreakdownDayTotal)
+                    val tvPercent = row.findViewById<TextView>(R.id.tvBreakdownPercent)
+                    val progress = row.findViewById<ProgressBar>(R.id.progressBreakdown)
+
+                    val dayCost = item.costPerKm * dayTotalKm
+
+                    tvName.text = item.name
+                    tvValue.text = "R$ %.4f/km".format(item.costPerKm).replace(".", ",")
+                    tvDayTotal.text = "R$ %.2f".format(dayCost).replace(".", ",")
+                    tvPercent.text = "%d%%".format((item.percentage * 100).toInt())
+
+                    progress.progressDrawable = android.graphics.drawable.ClipDrawable(
+                        android.graphics.drawable.ColorDrawable(item.color),
+                        Gravity.START,
+                        android.graphics.drawable.ClipDrawable.HORIZONTAL
+                    )
+                    progress.progress = (item.percentage * 1000).toInt()
+                    progress.max = 1000
+
+                    layoutCostDetails.addView(row)
+                }
+            } catch (_: Exception) { }
+        }
     }
 
     private fun onToggleCompleted(ride: DailyRide) {
-        val idx = allDailyRides.indexOfFirst { it.id == ride.id }
-        if (idx < 0) return
-        val updated = ride.copy(isCompleted = !ride.isCompleted, updatedAt = System.currentTimeMillis())
-        allDailyRides[idx] = updated
-        db.updateDailyRide(updated)
-        applyFilters()
+        if (ride.isCompleted) {
+            AlertDialog.Builder(this)
+                .setTitle("Remover corrida")
+                .setMessage("Deseja remover esta corrida do dia? Ela será excluída do registro.")
+                .setPositiveButton("Remover") { _, _ ->
+                    db.deleteDailyRide(ride.id)
+                    allDailyRides.removeAll { it.id == ride.id }
+                    applyFilters()
+                    loadAvailableRides(reset = true)
+                    Toast.makeText(this, "Corrida removida!", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
+        } else {
+            val idx = allDailyRides.indexOfFirst { it.id == ride.id }
+            if (idx < 0) return
+            val updated = ride.copy(isCompleted = true, updatedAt = System.currentTimeMillis())
+            allDailyRides[idx] = updated
+            db.updateDailyRide(updated)
+            applyFilters()
+        }
+    }
+
+    private fun onCancelWithFee(ride: DailyRide) {
+        val record = allRideRecords[ride.rideId] ?: return
+        showCancelFeeDialog(ride, record)
+    }
+
+    private fun showCancelFeeDialog(ride: DailyRide, record: RideRecord) {
+        val builder = AlertDialog.Builder(this)
+        val view = layoutInflater.inflate(R.layout.dialog_cancel_fee, null)
+        val etFeeValue = view.findViewById<EditText>(R.id.etFeeValue)
+
+        builder.setView(view)
+            .setTitle("Valor da taxa de deslocamento")
+            .setMessage("O valor original (R$ ${String.format("%.2f", ride.originalValue).replace(".", ",")}) será substituído pela taxa.")
+            .setPositiveButton("Aplicar taxa") { _, _ ->
+                val feeValue = parseDecimal(etFeeValue.text.toString()) ?: 0.0
+
+                val idx = allDailyRides.indexOfFirst { it.id == ride.id }
+                if (idx >= 0) {
+                    val updated = ride.copy(
+                        adjustedValue = feeValue,
+                        cancelledWithFee = true,
+                        notes = "Cancelado com taxa - valor original: R$ ${String.format("%.2f", ride.originalValue)}",
+                        updatedAt = System.currentTimeMillis()
+                    )
+                    allDailyRides[idx] = updated
+                    db.updateDailyRide(updated)
+
+                    val updatedRecord = record.copy(
+                        value = feeValue,
+                        distanceKm = record.pickupDistanceKm ?: record.distanceKm,
+                        timeMin = record.pickupTimeMin ?: record.timeMin,
+                        tripDistanceKm = null,
+                        tripTimeMin = null
+                    )
+                    allRideRecords = allRideRecords + (record.id to updatedRecord)
+
+                    applyFilters()
+                    Toast.makeText(this, "Taxa de deslocamento aplicada!", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun onAddToDay(record: RideRecord) {
