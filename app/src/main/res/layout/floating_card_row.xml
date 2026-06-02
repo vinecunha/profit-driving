@@ -276,15 +276,31 @@
         android:layout_marginTop="1dp"
         android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/tvProfit"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="8sp"
-        android:textColor="#4ADE80"
+        android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginTop="1dp"
-        android:visibility="gone" />
+        android:layout_marginTop="1dp">
+
+        <TextView
+            android:id="@+id/tvProfitIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="10sp"
+            android:layout_marginEnd="2dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvProfit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="8sp"
+            android:textColor="#4ADE80"
+            android:gravity="center"
+            android:visibility="gone" />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tvStops"
