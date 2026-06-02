@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingVertical="6dp"
+    android:paddingVertical="8dp"
     android:paddingHorizontal="8dp">
 
     <TextView
@@ -12,7 +12,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="11sp"
+        android:textSize="12sp"
         android:textColor="#5E6F8D" />
 
     <TextView
@@ -20,7 +20,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="11sp"
+        android:textSize="12sp"
         android:textColor="#5E6F8D"
         android:gravity="center" />
 
@@ -29,7 +29,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="0.7"
-        android:textSize="11sp"
+        android:textSize="12sp"
         android:textStyle="bold"
         android:textColor="#1A2C3E"
         android:gravity="center" />
@@ -39,7 +39,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="11sp"
+        android:textSize="12sp"
         android:textColor="#5E6F8D"
         android:gravity="center" />
 
@@ -48,7 +48,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="11sp"
+        android:textSize="12sp"
         android:textStyle="bold"
         android:textColor="#1A2C3E"
         android:gravity="end" />

@@ -36,11 +36,11 @@
                     <TextView
                         android:id="@+id/btnModeDay"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="\uD83D\uDCC5 Dia"
-                        android:textSize="13sp"
+                        android:textSize="14sp"
                         android:textStyle="bold"
                         android:background="@drawable/pill_selected"
                         android:layout_marginEnd="4dp"
@@ -50,11 +50,11 @@
                     <TextView
                         android:id="@+id/btnModeWeek"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="\uD83D\uDCC6 Semana"
-                        android:textSize="13sp"
+                        android:textSize="14sp"
                         android:background="@drawable/pill_unselected"
                         android:layout_marginHorizontal="4dp"
                         android:clickable="true"
@@ -63,11 +63,11 @@
                     <TextView
                         android:id="@+id/btnModeMonth"
                         android:layout_width="0dp"
-                        android:layout_height="32dp"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="\uD83D\uDCCA M\u00EAs"
-                        android:textSize="13sp"
+                        android:textSize="14sp"
                         android:background="@drawable/pill_unselected"
                         android:layout_marginStart="4dp"
                         android:clickable="true"
@@ -122,7 +122,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="\uD83D\uDCCD Hoje"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:textColor="#00982B"
                     android:padding="8dp"
                     android:layout_gravity="center_horizontal"
@@ -145,10 +145,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="\uD83D\uDCCA RESUMO DO DIA"
-                    android:textSize="13sp"
+                    android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="#1A2C3E"
-                    android:layout_marginBottom="10dp" />
+                    android:layout_marginBottom="12dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -156,34 +156,34 @@
                     android:orientation="horizontal"
                     android:layout_marginBottom="4dp">
 
-                    <TextView
-                        android:id="@+id/tvRideCount"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Corridas: 0"
-                        android:textSize="12sp"
-                        android:textColor="#1A2C3E"
-                        android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/tvRideCount"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Corridas: 0"
+                    android:textSize="14sp"
+                    android:textColor="#1A2C3E"
+                    android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/tvTotalDistance"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Km: 0,0"
-                        android:textSize="12sp"
-                        android:textColor="#1A2C3E"
-                        android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/tvTotalDistance"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Km: 0,0"
+                    android:textSize="14sp"
+                    android:textColor="#1A2C3E"
+                    android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/tvTotalDuration"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Tempo: 0h 0min"
-                        android:textSize="12sp"
-                        android:textColor="#1A2C3E"
-                        android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/tvTotalDuration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tempo: 0h 0min"
+                    android:textSize="14sp"
+                    android:textColor="#1A2C3E"
+                    android:textStyle="bold" />
 
                 </LinearLayout>
 
@@ -204,7 +204,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Faturamento bruto:"
-                        android:textSize="12sp"
+                        android:textSize="14sp"
                         android:textColor="#6B7280" />
 
                     <TextView
@@ -212,7 +212,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$ 0,00"
-                        android:textSize="12sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="#1A1A2E" />
 
@@ -229,7 +229,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Gorjetas:"
-                        android:textSize="12sp"
+                        android:textSize="14sp"
                         android:textColor="#6B7280" />
 
                     <TextView
@@ -237,7 +237,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$ 0,00"
-                        android:textSize="12sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="#00A86B" />
 
@@ -254,7 +254,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Reajustes:"
-                        android:textSize="12sp"
+                        android:textSize="14sp"
                         android:textColor="#6B7280" />
 
                     <TextView
@@ -262,7 +262,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$ 0,00"
-                        android:textSize="12sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="#F97316" />
 
@@ -279,7 +279,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Custo total:"
-                        android:textSize="12sp"
+                        android:textSize="14sp"
                         android:textColor="#6B7280" />
 
                     <TextView
@@ -287,7 +287,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$ 0,00"
-                        android:textSize="12sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="#EF4444" />
 
@@ -304,7 +304,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="\u26FD Combust\u00EDvel utilizado:"
-                        android:textSize="11sp"
+                        android:textSize="14sp"
                         android:textColor="#6B7280" />
 
                     <TextView
@@ -312,7 +312,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$ 0,00"
-                        android:textSize="11sp"
+                        android:textSize="14sp"
                         android:textStyle="bold"
                         android:textColor="#3B82F6" />
 
@@ -334,7 +334,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="\uD83D\uDCB0 Abastecido hoje:"
-                            android:textSize="11sp"
+                            android:textSize="14sp"
                             android:textColor="#6B7280" />
 
                         <TextView
@@ -342,7 +342,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text=" \u24D8"
-                            android:textSize="11sp"
+                            android:textSize="14sp"
                             android:textColor="#9CA3AF"
                             android:layout_marginStart="2dp" />
 
@@ -353,7 +353,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$ 0,00"
-                        android:textSize="11sp"
+                        android:textSize="14sp"
                         android:textStyle="bold"
                         android:textColor="#F59E0B" />
 
@@ -365,7 +365,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="\u25BC Ver detalhes dos custos"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:textColor="#00A86B"
                     android:paddingTop="4dp"
                     android:clickable="true"
@@ -397,7 +397,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Lucro l\u00EDquido:"
-                        android:textSize="14sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="#1A2C3E" />
 
@@ -406,7 +406,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$ 0,00"
-                        android:textSize="16sp"
+                        android:textSize="18sp"
                         android:textStyle="bold"
                         android:textColor="#00A86B" />
 
@@ -417,7 +417,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0% de margem"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:textColor="#9CA3AF"
                     android:layout_marginBottom="6dp" />
 
@@ -438,7 +438,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="R\$/km: 0,00"
-                        android:textSize="11sp"
+                        android:textSize="12sp"
                         android:textColor="#5E6F8D"
                         android:textStyle="bold" />
 
@@ -448,7 +448,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="R\$/h: 0,00"
-                        android:textSize="11sp"
+                        android:textSize="12sp"
                         android:textColor="#5E6F8D"
                         android:textStyle="bold" />
 
@@ -457,7 +457,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="M\u00E9dia gorjeta: R$ 0,00"
-                        android:textSize="11sp"
+                        android:textSize="12sp"
                         android:textColor="#5E6F8D"
                         android:textStyle="bold" />
 
@@ -471,7 +471,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="\u2705 CORRIDAS REALIZADAS"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="#1A2C3E"
                 android:layout_marginBottom="6dp" />
@@ -574,7 +574,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="\uD83D\uDCCB CORRIDAS DISPON\u00CDVEIS"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:textStyle="bold"
                         android:textColor="#1A2C3E" />
 
@@ -600,7 +600,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="\uD83D\uDD0D FILTROS"
-                        android:textSize="11sp"
+                        android:textSize="12sp"
                         android:textColor="#5E6F8D"
                         android:textStyle="bold" />
 
@@ -614,11 +614,11 @@
                         <TextView
                             android:id="@+id/filterMorning"
                             android:layout_width="wrap_content"
-                            android:layout_height="28dp"
+                            android:layout_height="32dp"
                             android:paddingHorizontal="12dp"
                             android:gravity="center"
                             android:text="06-12h"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textColor="#5E6F8D"
                             android:background="@drawable/pill_unselected"
                             android:layout_marginEnd="6dp"
@@ -628,11 +628,11 @@
                         <TextView
                             android:id="@+id/filterAfternoon"
                             android:layout_width="wrap_content"
-                            android:layout_height="28dp"
+                            android:layout_height="32dp"
                             android:paddingHorizontal="12dp"
                             android:gravity="center"
                             android:text="12-18h"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textColor="#5E6F8D"
                             android:background="@drawable/pill_unselected"
                             android:layout_marginEnd="6dp"
@@ -642,11 +642,11 @@
                         <TextView
                             android:id="@+id/filterEvening"
                             android:layout_width="wrap_content"
-                            android:layout_height="28dp"
+                            android:layout_height="32dp"
                             android:paddingHorizontal="12dp"
                             android:gravity="center"
                             android:text="18-00h"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textColor="#5E6F8D"
                             android:background="@drawable/pill_unselected"
                             android:clickable="true"
@@ -664,11 +664,11 @@
                         <TextView
                             android:id="@+id/filterValue1"
                             android:layout_width="wrap_content"
-                            android:layout_height="28dp"
+                            android:layout_height="32dp"
                             android:paddingHorizontal="12dp"
                             android:gravity="center"
                             android:text="R$ 0-15"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textColor="#5E6F8D"
                             android:background="@drawable/pill_unselected"
                             android:layout_marginEnd="6dp"
@@ -678,11 +678,11 @@
                         <TextView
                             android:id="@+id/filterValue2"
                             android:layout_width="wrap_content"
-                            android:layout_height="28dp"
+                            android:layout_height="32dp"
                             android:paddingHorizontal="12dp"
                             android:gravity="center"
                             android:text="R$ 15-30"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textColor="#5E6F8D"
                             android:background="@drawable/pill_unselected"
                             android:layout_marginEnd="6dp"
@@ -692,11 +692,11 @@
                         <TextView
                             android:id="@+id/filterValue3"
                             android:layout_width="wrap_content"
-                            android:layout_height="28dp"
+                            android:layout_height="32dp"
                             android:paddingHorizontal="12dp"
                             android:gravity="center"
                             android:text="R$ 30-50"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textColor="#5E6F8D"
                             android:background="@drawable/pill_unselected"
                             android:layout_marginEnd="6dp"
@@ -706,11 +706,11 @@
                         <TextView
                             android:id="@+id/filterValue4"
                             android:layout_width="wrap_content"
-                            android:layout_height="28dp"
+                            android:layout_height="32dp"
                             android:paddingHorizontal="12dp"
                             android:gravity="center"
                             android:text="R$ 50+"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textColor="#5E6F8D"
                             android:background="@drawable/pill_unselected"
                             android:clickable="true"
@@ -729,7 +729,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="\uD83C\uDFF7\uFE0F Categoria"
-                            android:textSize="11sp"
+                            android:textSize="12sp"
                             android:textColor="#5E6F8D"
                             android:layout_marginBottom="4dp" />
 
@@ -741,11 +741,11 @@
                             <TextView
                                 android:id="@+id/filterCategoryAll"
                                 android:layout_width="wrap_content"
-                                android:layout_height="28dp"
-                                android:paddingHorizontal="12dp"
+                                android:layout_height="32dp"
+                                android:paddingHorizontal="14dp"
                                 android:gravity="center"
                                 android:text="Todas"
-                                android:textSize="11sp"
+                                android:textSize="13sp"
                                 android:background="@drawable/pill_selected"
                                 android:layout_marginEnd="6dp"
                                 android:layout_marginBottom="6dp"
@@ -762,7 +762,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="\u2716 Limpar filtros"
-                        android:textSize="10sp"
+                        android:textSize="11sp"
                         android:textColor="#F87171"
                         android:padding="4dp"
                         android:layout_marginTop="8dp"
