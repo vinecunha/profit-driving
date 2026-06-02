@@ -465,6 +465,15 @@ class AnalysisActivity : BaseActivity() {
         if (r.topNeighborhoods.isEmpty()) return
         val card = createCard("\uD83C\uDFE0 Melhores bairros")
 
+        card.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
+                setMargins(0, 0, 0, 8)
+            }
+            text = "\uD83D\uDCCA R\$/km = m\u00E9dia nas corridas aceitas | \uD83D\uDD25 % = corridas com din\u00E2mica no total ofertado"
+            textSize = 10f
+            setTextColor(Color.parseColor("#8E9AAF"))
+        })
+
         for (n in r.topNeighborhoods.take(6)) {
             val row = LinearLayout(this).apply {
                 layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
