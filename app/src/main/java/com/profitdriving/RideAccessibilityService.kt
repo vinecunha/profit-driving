@@ -25,6 +25,8 @@ class RideAccessibilityService : AccessibilityService() {
     private var lastInsertedId: Long = -1L
     private var statusLocked = false
     private var uberWindowWasVisible = false
+    private var lastProcessedRideId = ""
+    private var lastProcessedTime = 0L
     override fun onServiceConnected() {
         super.onServiceConnected()
         FloatingBubbleService.start(this)
@@ -254,6 +256,14 @@ class RideAccessibilityService : AccessibilityService() {
         L.d(TAG, "Card detectado em $pkg: valor=${ride.value} km=${ride.distanceKm} " +
                 "tempo=${ride.timeMin} nota=${ride.rating} " +
                 "R$/km=${ride.effectivePricePerKm} R$/h=${ride.effectivePricePerHour}")
+
+        val rideHash = "${ride.value}_${ride.distanceKm}_${ride.timeMin}"
+        if (rideHash == lastProcessedRideId && (now - lastProcessedTime) < 5000) {
+            L.d(TAG, "Corrida duplicada ignorada: $rideHash")
+            return
+        }
+        lastProcessedRideId = rideHash
+        lastProcessedTime = now
 
         saveAndShow(ride)
     }

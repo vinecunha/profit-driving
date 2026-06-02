@@ -371,6 +371,7 @@ class FloatingCardService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        L.d(TAG, "FloatingCardService destruído")
         serviceScope.cancel()
         handler.removeCallbacksAndMessages(null)
         dismiss()

@@ -293,6 +293,72 @@
 
                 </LinearLayout>
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="2dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="\u26FD Combust\u00EDvel utilizado:"
+                        android:textSize="11sp"
+                        android:textColor="#6B7280" />
+
+                    <TextView
+                        android:id="@+id/tvFuelUsed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="R$ 0,00"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#3B82F6" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="2dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="\uD83D\uDCB0 Abastecido hoje:"
+                            android:textSize="11sp"
+                            android:textColor="#6B7280" />
+
+                        <TextView
+                            android:id="@+id/tvFuelInfo"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=" \u24D8"
+                            android:textSize="11sp"
+                            android:textColor="#9CA3AF"
+                            android:layout_marginStart="2dp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvFuelDisbursed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="R$ 0,00"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#F59E0B" />
+
+                </LinearLayout>
+
                 <!-- Botão para expandir detalhes dos custos -->
                 <TextView
                     android:id="@+id/btnToggleCostDetails"

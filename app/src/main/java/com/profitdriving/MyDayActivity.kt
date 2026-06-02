@@ -60,6 +60,9 @@ class MyDayActivity : BaseActivity() {
     private lateinit var tvTotalTips: TextView
     private lateinit var tvTotalAdjustments: TextView
     private lateinit var tvTotalCost: TextView
+    private lateinit var tvFuelUsed: TextView
+    private lateinit var tvFuelDisbursed: TextView
+    private lateinit var tvFuelInfo: TextView
     private lateinit var tvNetProfit: TextView
     private lateinit var tvProfitPercent: TextView
     private lateinit var tvRevenuePerKm: TextView
@@ -94,6 +97,7 @@ class MyDayActivity : BaseActivity() {
     private var totalAvailableRides = 0
     private var isLoadingMore = false
     private var costPerKm = 0.0
+    private var fuelCostPerKm = 0.0
 
     // Filter state
     private var selectedTimeFilter: Int? = null
@@ -169,6 +173,9 @@ class MyDayActivity : BaseActivity() {
         tvTotalTips = findViewById(R.id.tvTotalTips)
         tvTotalAdjustments = findViewById(R.id.tvTotalAdjustments)
         tvTotalCost = findViewById(R.id.tvTotalCost)
+        tvFuelUsed = findViewById(R.id.tvFuelUsed)
+        tvFuelDisbursed = findViewById(R.id.tvFuelDisbursed)
+        tvFuelInfo = findViewById(R.id.tvFuelInfo)
         tvNetProfit = findViewById(R.id.tvNetProfit)
         tvProfitPercent = findViewById(R.id.tvProfitPercent)
         tvRevenuePerKm = findViewById(R.id.tvRevenuePerKm)
@@ -178,6 +185,16 @@ class MyDayActivity : BaseActivity() {
         btnToggleCostDetails = findViewById(R.id.btnToggleCostDetails)
         layoutCostDetails = findViewById(R.id.layoutCostDetails)
         btnToggleCostDetails.setOnClickListener { toggleCostDetails() }
+
+        tvFuelInfo.setOnClickListener {
+            android.app.AlertDialog.Builder(this)
+                .setTitle("\u26FD Abastecido hoje")
+                .setMessage("Valor total gasto em combust\u00EDvel registrado na data de hoje. " +
+                    "Pode incluir abastecimentos para dias futuros.\n\n" +
+                    "O lucro l\u00EDquido considera apenas o combust\u00EDvel utilizado nas corridas de hoje.")
+                .setPositiveButton("OK", null)
+                .show()
+        }
 
         filterTimePills = listOf(
             findViewById(R.id.filterMorning),
@@ -516,8 +533,10 @@ class MyDayActivity : BaseActivity() {
             try {
                 val summary = CostSummaryCache.getCurrentSummary(this@MyDayActivity)
                 costPerKm = summary.totalCostPerKm
+                fuelCostPerKm = summary.fuelCostPerKm
             } catch (_: Exception) {
                 costPerKm = 0.0
+                fuelCostPerKm = 0.0
             }
             applyFilters()
         }
@@ -671,6 +690,9 @@ class MyDayActivity : BaseActivity() {
         }
 
         val totalCost = totalKm * costPerKm
+        val fuelUsed = totalKm * fuelCostPerKm
+        val fuelDisbursed = getTotalFuelDisbursed()
+
         val netProfit = grossRevenue - totalCost
         val profitPercent = if (grossRevenue > 0) (netProfit / grossRevenue) * 100 else 0.0
         val revenuePerKm = if (totalKm > 0) grossRevenue / totalKm else 0.0
@@ -688,6 +710,8 @@ class MyDayActivity : BaseActivity() {
         tvTotalTips.text = "R$ %.2f".format(totalTips).replace(".", ",")
         tvTotalAdjustments.text = "R$ %.2f".format(totalAdjustments).replace(".", ",")
         tvTotalCost.text = "R$ %.2f".format(totalCost).replace(".", ",")
+        tvFuelUsed.text = "R$ %.2f".format(fuelUsed).replace(".", ",")
+        tvFuelDisbursed.text = "R$ %.2f".format(fuelDisbursed).replace(".", ",")
 
         tvNetProfit.text = "R$ %.2f".format(netProfit).replace(".", ",")
         tvNetProfit.setTextColor(
@@ -704,6 +728,13 @@ class MyDayActivity : BaseActivity() {
         tvAvgTip.text = "M\u00E9dia gorjeta: R$ %.2f".format(avgTip).replace(".", ",")
 
         updateCostBreakdown(totalKm)
+    }
+
+    private fun getTotalFuelDisbursed(): Double {
+        val (periodStart, periodEnd) = getPeriodTimestamps()
+        return db.getRefuels()
+            .filter { it.timestamp in periodStart..periodEnd }
+            .sumOf { it.totalValue }
     }
 
     private fun toggleCostDetails() {
