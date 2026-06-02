@@ -322,6 +322,7 @@ class MainActivity : BaseActivity() {
                             idealRating = prefs.getFloat(SettingsActivity.KEY_IDEAL_RATING, 0f),
                             costPerKm = costSummary.totalCostPerKm
                         )
+                        adapter!!.addFooter()
                         recyclerView.layoutManager = LinearLayoutManager(this)
                         recyclerView.adapter = adapter
                     } else {
@@ -428,11 +429,38 @@ class HistoryAdapter(
     private val minRating: Float,
     private val idealRating: Float,
     private val costPerKm: Double = 0.0
-) : RecyclerView.Adapter<HistoryAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val records = records.toMutableList()
     private val dateFormat = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
     private val expandedItems = mutableSetOf<Int>()
+
+    companion object {
+        private const val TYPE_NORMAL = 0
+        private const val TYPE_FOOTER = 1
+    }
+
+    fun addFooter() {
+        if (records.isEmpty() || records.last().id != -1L) {
+            records.add(RideRecord(
+                id = -1L, value = null, distanceKm = null, timeMin = null,
+                rating = null, pricePerKm = null, pricePerHour = null,
+                appName = "", timestamp = 0
+            ))
+            notifyItemInserted(records.size - 1)
+        }
+    }
+
+    fun removeFooter() {
+        if (records.isNotEmpty() && records.last().id == -1L) {
+            records.removeAt(records.size - 1)
+            notifyItemRemoved(records.size)
+        }
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return if (records[position].id == -1L) TYPE_FOOTER else TYPE_NORMAL
+    }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val cardRoot: androidx.cardview.widget.CardView = view.findViewById(R.id.cardRoot)
@@ -465,10 +493,18 @@ class HistoryAdapter(
         val tvStops: TextView = view.findViewById(R.id.tvStops)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_ride_card, parent, false)
-        return ViewHolder(view)
+    class FooterViewHolder(view: View) : RecyclerView.ViewHolder(view)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return if (viewType == TYPE_FOOTER) {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_footer_nyxion, parent, false)
+            FooterViewHolder(view)
+        } else {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_ride_card, parent, false)
+            ViewHolder(view)
+        }
     }
 
     private fun evaluateState(value: Double?, min: Float, ideal: Float): Int {
@@ -489,11 +525,14 @@ class HistoryAdapter(
         }
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val r = records[position]
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        if (holder is FooterViewHolder) return
+
+        val r = records[position] as RideRecord
+        val vh = holder as ViewHolder
 
         val serviceType = r.serviceType ?: r.appName
-        holder.tvServiceType.text = serviceType
+        vh.tvServiceType.text = serviceType
 
         val iconRes = when {
             r.serviceType == null -> R.drawable.ic_ride_generic
@@ -513,7 +552,7 @@ class HistoryAdapter(
             r.serviceType!!.startsWith("Manual - ") -> R.drawable.ic_car
             else -> R.drawable.ic_ride_generic
         }
-        holder.ivServiceTypeIcon.setImageResource(iconRes)
+        vh.ivServiceTypeIcon.setImageResource(iconRes)
 
         val (bgRes, textColor, iconColor) = when {
             serviceType.contains("Black", ignoreCase = true) ->
@@ -525,31 +564,31 @@ class HistoryAdapter(
             else ->
                 Triple(R.drawable.bg_service_default, 0xFF1A2C3E.toInt(), 0xFF5E6F8D.toInt())
         }
-        holder.ivServiceTypeIcon.setBackgroundResource(bgRes)
-        holder.ivServiceTypeIcon.setColorFilter(iconColor)
-        holder.tvServiceType.setBackgroundResource(bgRes)
-        holder.tvServiceType.setTextColor(textColor)
+        vh.ivServiceTypeIcon.setBackgroundResource(bgRes)
+        vh.ivServiceTypeIcon.setColorFilter(iconColor)
+        vh.tvServiceType.setBackgroundResource(bgRes)
+        vh.tvServiceType.setTextColor(textColor)
 
-        holder.tvPrice.text = r.value?.let {
+        vh.tvPrice.text = r.value?.let {
             "R$ %.2f".format(it).replace(".", ",")
         } ?: "---"
 
-        holder.tvRatingText.text = r.rating?.let {
+        vh.tvRatingText.text = r.rating?.let {
             "%.2f".format(it).replace(".", ",")
         } ?: "---"
 
-        holder.tvPricePerKm.text = r.pricePerKm?.let {
+        vh.tvPricePerKm.text = r.pricePerKm?.let {
             "%.2f".format(it).replace(".", ",")
         } ?: "---"
 
-        holder.tvPricePerHour.text = r.pricePerHour?.let {
+        vh.tvPricePerHour.text = r.pricePerHour?.let {
             "%.2f".format(it).replace(".", ",")
         } ?: "---"
 
         val pricePerMin = if (r.timeMin != null && r.timeMin > 0 && r.value != null) 
             r.value / r.timeMin 
         else null
-        holder.tvPricePerMin.text = pricePerMin?.let {
+        vh.tvPricePerMin.text = pricePerMin?.let {
             "%.2f".format(it).replace(".", ",")
         } ?: "---"
 
@@ -559,45 +598,45 @@ class HistoryAdapter(
         val ratingState = evaluateState(r.rating, minRating, idealRating)
 
         val (kmText, kmColor) = getBadgeTextAndColor(kmState)
-        holder.tvKmBadge.text = kmText
-        holder.tvKmBadge.setTextColor(kmColor)
+        vh.tvKmBadge.text = kmText
+        vh.tvKmBadge.setTextColor(kmColor)
 
         val (hourText, hourColor) = getBadgeTextAndColor(hourState)
-        holder.tvHourBadge.text = hourText
-        holder.tvHourBadge.setTextColor(hourColor)
+        vh.tvHourBadge.text = hourText
+        vh.tvHourBadge.setTextColor(hourColor)
 
         val (minText, minColor) = getBadgeTextAndColor(minState)
-        holder.tvMinBadge.text = minText
-        holder.tvMinBadge.setTextColor(minColor)
+        vh.tvMinBadge.text = minText
+        vh.tvMinBadge.setTextColor(minColor)
 
         val (_, ratingColor) = getBadgeTextAndColor(ratingState)
-        holder.tvRatingText.setTextColor(ratingColor)
+        vh.tvRatingText.setTextColor(ratingColor)
 
         // Embarque: distância · tempo · endereço (individual)
-        holder.tvPickupDistance.text = r.pickupDistanceKm?.let {
+        vh.tvPickupDistance.text = r.pickupDistanceKm?.let {
             "%.1f km".format(it).replace(".", ",")
         } ?: r.distanceKm?.let {
             "%.1f km".format(it).replace(".", ",")
         } ?: ""
-        holder.tvPickupTime.text = r.pickupTimeMin?.let { "${it} min" } ?: r.timeMin?.let { "${it} min" } ?: ""
-        holder.tvPickupAddress.text = maskAddress(r.pickupAddress)
+        vh.tvPickupTime.text = r.pickupTimeMin?.let { "${it} min" } ?: r.timeMin?.let { "${it} min" } ?: ""
+        vh.tvPickupAddress.text = maskAddress(r.pickupAddress)
 
         // Destino: distância · tempo · endereço (individual)
-        holder.tvDropoffDistance.text = r.tripDistanceKm?.let {
+        vh.tvDropoffDistance.text = r.tripDistanceKm?.let {
             "%.1f km".format(it).replace(".", ",")
         } ?: r.distanceKm?.let {
             "%.1f km".format(it).replace(".", ",")
         } ?: ""
-        holder.tvDropoffTime.text = r.tripTimeMin?.let { "${it} min" } ?: r.timeMin?.let { "${it} min" } ?: ""
-        holder.tvDropoffAddress.text = maskAddress(r.dropoffAddress)
+        vh.tvDropoffTime.text = r.tripTimeMin?.let { "${it} min" } ?: r.timeMin?.let { "${it} min" } ?: ""
+        vh.tvDropoffAddress.text = maskAddress(r.dropoffAddress)
 
         val totalParts = mutableListOf<String>()
         r.distanceKm?.let { totalParts.add("%.1f km".format(it).replace(".", ",")) }
         r.timeMin?.let { totalParts.add("${it} min") }
-        holder.tvTotalInfo.text = totalParts.joinToString(" · ")
+        vh.tvTotalInfo.text = totalParts.joinToString(" · ")
 
         val scoreText = r.scorePercent?.let { "${"%.0f".format(it)}%" } ?: ""
-        holder.tvScore.text = scoreText
+        vh.tvScore.text = scoreText
 
         val isKmGood = kmState == 0
         val isHourGood = hourState == 0
@@ -615,35 +654,35 @@ class HistoryAdapter(
             partial -> Color.parseColor("#ED6C02")
             else -> Color.parseColor("#D32F2F")
         }
-        holder.tvScore.setBackgroundColor(scoreBgColor)
-        holder.tvScore.setTextColor(scoreFgColor)
+        vh.tvScore.setBackgroundColor(scoreBgColor)
+        vh.tvScore.setTextColor(scoreFgColor)
 
         val priorityBonus = r.priorityBonus ?: 0.0
         val dynamicBonus = r.dynamicBonus ?: 0.0
 
         if (priorityBonus > 0) {
-            holder.tvPriorityBonus.text = "\u2B50 R$ ${String.format("%.2f", priorityBonus).replace(".", ",")} de prioridade"
-            holder.tvPriorityBonus.visibility = View.VISIBLE
+            vh.tvPriorityBonus.text = "\u2B50 R$ ${String.format("%.2f", priorityBonus).replace(".", ",")} de prioridade"
+            vh.tvPriorityBonus.visibility = View.VISIBLE
         } else {
-            holder.tvPriorityBonus.visibility = View.GONE
+            vh.tvPriorityBonus.visibility = View.GONE
         }
 
         if (dynamicBonus > 0) {
-            holder.tvDynamicBonus.text = "\uD83D\uDCC8 R$ ${String.format("%.2f", dynamicBonus).replace(".", ",")} de din\u00E2mica"
-            holder.tvDynamicBonus.visibility = View.VISIBLE
+            vh.tvDynamicBonus.text = "\uD83D\uDCC8 R$ ${String.format("%.2f", dynamicBonus).replace(".", ",")} de din\u00E2mica"
+            vh.tvDynamicBonus.visibility = View.VISIBLE
         } else {
-            holder.tvDynamicBonus.visibility = View.GONE
+            vh.tvDynamicBonus.visibility = View.GONE
         }
 
         if (r.hasMultipleStops) {
-            holder.tvStops.text = "\uD83D\uDD04 Várias paradas"
-            holder.tvStops.visibility = View.VISIBLE
+            vh.tvStops.text = "\uD83D\uDD04 Várias paradas"
+            vh.tvStops.visibility = View.VISIBLE
         } else {
-            holder.tvStops.visibility = View.GONE
+            vh.tvStops.visibility = View.GONE
         }
 
         val isExpanded = expandedItems.contains(position)
-        holder.expandableProfitDetails.visibility = if (isExpanded) View.VISIBLE else View.GONE
+        vh.expandableProfitDetails.visibility = if (isExpanded) View.VISIBLE else View.GONE
 
         if (isExpanded) {
             val rideValue = r.value ?: 0.0
@@ -665,12 +704,12 @@ class HistoryAdapter(
                 val percStr = "%.1f%%".format(lucroPerc).replace(".", ",")
                 append("\uD83D\uDCB5 Lucro: $lucroStr ($percStr)")
             }
-            holder.tvProfitDetail.text = detailText
+            vh.tvProfitDetail.text = detailText
         }
 
-        holder.btnExpandProfit.text = if (isExpanded) "- recolher detalhes" else "+ detalhar corrida"
+        vh.btnExpandProfit.text = if (isExpanded) "- recolher detalhes" else "+ detalhar corrida"
 
-        holder.btnExpandProfit.setOnClickListener {
+        vh.btnExpandProfit.setOnClickListener {
             val currentlyExpanded = expandedItems.contains(position)
             if (currentlyExpanded) {
                 expandedItems.remove(position)
@@ -680,19 +719,19 @@ class HistoryAdapter(
             notifyItemChanged(position)
         }
 
-        holder.tvStatus.text = when (r.status) {
+        vh.tvStatus.text = when (r.status) {
             "ACCEPTED" -> "\u2705 ACEITA"
             "DECLINED" -> "\u274C RECUSADA"
             else -> ""
         }
 
         when (r.status) {
-            "ACCEPTED" -> holder.cardRoot.setBackgroundResource(R.drawable.card_bg_accepted)
-            "DECLINED" -> holder.cardRoot.setBackgroundResource(R.drawable.card_bg_declined)
-            else -> holder.cardRoot.setBackgroundResource(android.R.color.white)
+            "ACCEPTED" -> vh.cardRoot.setBackgroundResource(R.drawable.card_bg_accepted)
+            "DECLINED" -> vh.cardRoot.setBackgroundResource(R.drawable.card_bg_declined)
+            else -> vh.cardRoot.setBackgroundResource(android.R.color.white)
         }
 
-        holder.tvTimestamp.text = dateFormat.format(java.util.Date(r.timestamp))
+        vh.tvTimestamp.text = dateFormat.format(java.util.Date(r.timestamp))
     }
 
     private fun maskAddress(fullAddress: String?): String {
@@ -732,22 +771,32 @@ class HistoryAdapter(
     }
 
     fun appendData(newRecords: List<RideRecord>) {
-        val startPos = records.size
-        records.addAll(newRecords)
-        notifyItemRangeInserted(startPos, newRecords.size)
+        val hasFooter = records.isNotEmpty() && records.last().id == -1L
+        val insertAt = if (hasFooter) records.size - 1 else records.size
+        records.addAll(insertAt, newRecords)
+        notifyItemRangeInserted(insertAt, newRecords.size)
     }
 
     fun updateData(newRecords: List<RideRecord>) {
+        val footerIndex = records.indexOfLast { it.id == -1L }
+        val oldList = if (footerIndex >= 0) {
+            records.toMutableList().also { it.removeAt(footerIndex) }
+        } else records.toList()
         val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-            override fun getOldListSize() = records.size
+            override fun getOldListSize() = oldList.size
             override fun getNewListSize() = newRecords.size
             override fun areItemsTheSame(o: Int, n: Int) =
-                records[o].id == newRecords[n].id
+                oldList[o].id == newRecords[n].id
             override fun areContentsTheSame(o: Int, n: Int) =
-                records[o] == newRecords[n]
+                oldList[o] == newRecords[n]
         })
         records.clear()
         records.addAll(newRecords)
+        if (footerIndex >= 0) records.add(RideRecord(
+            id = -1L, value = null, distanceKm = null, timeMin = null,
+            rating = null, pricePerKm = null, pricePerHour = null,
+            appName = "", timestamp = 0
+        ))
         diff.dispatchUpdatesTo(this)
     }
 
