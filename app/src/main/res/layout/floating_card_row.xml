@@ -4,25 +4,25 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="6dp"
-    android:minWidth="190dp"
+    android:padding="10dp"
+    android:minWidth="220dp"
     android:clickable="true"
-    android:focusable="true"
-    >
+    android:focusable="true">
 
     <!-- Linha 1: App + Valor + Tipo -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
 
         <TextView
             android:id="@+id/tvApp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#CCFFFFFF"
-            android:textSize="10sp"
+            android:textSize="11sp"
             android:textStyle="bold" />
 
         <TextView
@@ -31,19 +31,19 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="@android:color/white"
-            android:textSize="14sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:gravity="end"
-            android:layout_marginStart="6dp" />
+            android:layout_marginStart="8dp" />
 
         <TextView
             android:id="@+id/tvServiceType"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#FFD700"
-            android:textSize="9sp"
+            android:textSize="10sp"
             android:textStyle="bold"
-            android:layout_marginStart="6dp"
+            android:layout_marginStart="8dp"
             android:visibility="gone" />
 
     </LinearLayout>
@@ -54,6 +54,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginTop="4dp"
+        android:layout_marginBottom="2dp"
         android:gravity="center">
 
         <!-- Coluna R$/km -->
@@ -71,21 +72,21 @@
                 android:layout_height="wrap_content"
                 android:text="$/km"
                 android:textColor="#AAFFFFFF"
-                android:textSize="8sp" />
+                android:textSize="9sp" />
 
             <TextView
                 android:id="@+id/tvKm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@android:color/white"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <View
                 android:id="@+id/dotKm"
                 android:layout_width="5dp"
                 android:layout_height="5dp"
-                android:layout_marginTop="1dp"
+                android:layout_marginTop="2dp"
                 android:visibility="gone" />
 
         </LinearLayout>
@@ -105,21 +106,21 @@
                 android:layout_height="wrap_content"
                 android:text="$/h"
                 android:textColor="#AAFFFFFF"
-                android:textSize="8sp" />
+                android:textSize="9sp" />
 
             <TextView
                 android:id="@+id/tvHour"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@android:color/white"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <View
                 android:id="@+id/dotHour"
                 android:layout_width="5dp"
                 android:layout_height="5dp"
-                android:layout_marginTop="1dp"
+                android:layout_marginTop="2dp"
                 android:visibility="gone" />
 
         </LinearLayout>
@@ -139,21 +140,21 @@
                 android:layout_height="wrap_content"
                 android:text="$/min"
                 android:textColor="#AAFFFFFF"
-                android:textSize="8sp" />
+                android:textSize="9sp" />
 
             <TextView
                 android:id="@+id/tvMinute"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@android:color/white"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <View
                 android:id="@+id/dotMinute"
                 android:layout_width="5dp"
                 android:layout_height="5dp"
-                android:layout_marginTop="1dp"
+                android:layout_marginTop="2dp"
                 android:visibility="gone" />
 
         </LinearLayout>
@@ -173,21 +174,21 @@
                 android:layout_height="wrap_content"
                 android:text="★"
                 android:textColor="#AAFFFFFF"
-                android:textSize="8sp" />
+                android:textSize="9sp" />
 
             <TextView
                 android:id="@+id/tvRating"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@android:color/white"
-                android:textSize="12sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <View
                 android:id="@+id/dotRating"
                 android:layout_width="5dp"
                 android:layout_height="5dp"
-                android:layout_marginTop="1dp"
+                android:layout_marginTop="2dp"
                 android:visibility="gone" />
 
         </LinearLayout>
@@ -200,6 +201,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginTop="2dp"
+        android:layout_marginBottom="2dp"
         android:gravity="center">
 
         <TextView
@@ -208,7 +210,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="#CCFFFFFF"
-            android:textSize="9sp"
+            android:textSize="10sp"
             android:gravity="center" />
 
         <TextView
@@ -217,52 +219,60 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="#CCFFFFFF"
-            android:textSize="9sp"
+            android:textSize="10sp"
             android:gravity="center" />
 
     </LinearLayout>
 
     <!-- Linha 4: Bônus (se houver) -->
-    <TextView
-        android:id="@+id/tvBonus"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#FFD700"
-        android:textSize="9sp"
-        android:textStyle="bold"
-        android:layout_marginTop="2dp"
-        android:visibility="gone" />
+        android:orientation="vertical"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp">
 
-    <TextView
-        android:id="@+id/tvPriorityBonus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="#FFD700"
-        android:textSize="9sp"
-        android:textStyle="bold"
-        android:layout_marginTop="2dp"
-        android:visibility="gone" />
+        <TextView
+            android:id="@+id/tvBonus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFD700"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/tvDynamicBonus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="#FFD700"
-        android:textSize="9sp"
-        android:textStyle="bold"
-        android:layout_marginTop="1dp"
-        android:visibility="gone" />
+        <TextView
+            android:id="@+id/tvPriorityBonus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFD700"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:layout_marginTop="2dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvDynamicBonus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFD700"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:layout_marginTop="2dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
 
     <!-- Linha 5: Decisão (BOA/REVISAR/RUIM) -->
     <TextView
         android:id="@+id/tvDecision"
         android:layout_width="match_parent"
-        android:layout_height="20dp"
+        android:layout_height="24dp"
         android:gravity="center"
-        android:textSize="9sp"
+        android:textSize="11sp"
         android:textStyle="bold"
         android:textColor="#FFFFFF"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="4dp"
         android:visibility="gone" />
 
     <!-- Linha 6: Pontuação (opcional) -->
@@ -270,57 +280,65 @@
         android:id="@+id/tvScore"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="8sp"
+        android:textSize="9sp"
         android:textColor="#88FFFFFF"
         android:gravity="center"
-        android:layout_marginTop="1dp"
+        android:layout_marginTop="2dp"
         android:visibility="gone" />
 
+    <!-- Linha 7: Lucro -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginTop="1dp">
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="2dp">
 
         <TextView
-            android:id="@+id/tvProfitIcon"
+            android:id="@+id/tvProfitLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="10sp"
-            android:layout_marginEnd="2dp"
+            android:textStyle="bold"
+            android:textColor="#AAFFFFFF"
+            android:layout_marginEnd="4dp"
             android:visibility="gone" />
 
         <TextView
             android:id="@+id/tvProfit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="8sp"
+            android:textSize="10sp"
+            android:textStyle="bold"
             android:textColor="#4ADE80"
-            android:gravity="center"
+            android:singleLine="true"
+            android:ellipsize="end"
             android:visibility="gone" />
 
     </LinearLayout>
 
+    <!-- Linha 8: Stops -->
     <TextView
         android:id="@+id/tvStops"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="10sp"
+        android:textSize="11sp"
         android:textColor="#FF9800"
-        android:layout_marginTop="1dp"
+        android:layout_marginTop="4dp"
         android:visibility="gone" />
 
+    <!-- Linha 9: Destino conhecido -->
     <TextView
         android:id="@+id/tvKnownDestination"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="9sp"
+        android:textSize="10sp"
         android:textStyle="bold"
         android:textColor="#F5A623"
-        android:paddingHorizontal="8dp"
-        android:paddingVertical="3dp"
-        android:layout_marginTop="4dp"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="4dp"
+        android:layout_marginTop="6dp"
         android:layout_gravity="center"
         android:background="@drawable/badge_known_bg"
         android:visibility="gone" />

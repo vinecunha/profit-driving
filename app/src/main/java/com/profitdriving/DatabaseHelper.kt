@@ -123,6 +123,18 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
+    fun updateRideValue(rideId: Long, newValue: Double) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_VALUE, newValue)
+            }
+            db.update(TABLE_NAME, cv, "$COL_ID = ?", arrayOf(rideId.toString()))
+        } finally {
+            db.close()
+        }
+    }
+
     fun insert(record: RideRecord): Long {
         val currentCostPerKm = calculateCurrentCostPerKm()
         val db = writableDatabase

@@ -233,9 +233,9 @@ class FloatingCardService : Service() {
         tvScore.text = "${"%.0f".format(result.scorePercent)}% (${result.totalPoints.toInt()}/${result.maxPoints.toInt()} pts)"
 
         val tvProfit = view.findViewById<TextView>(R.id.tvProfit)
-        val tvProfitIcon = view.findViewById<TextView>(R.id.tvProfitIcon)
+        val tvProfitLabel = view.findViewById<TextView>(R.id.tvProfitLabel)
         tvProfit.visibility = View.GONE
-        tvProfitIcon.visibility = View.GONE
+        tvProfitLabel.visibility = View.GONE
 
         if (ride.hasMultipleStops) {
             tvStops.text = "\uD83D\uDD04 Várias paradas"
@@ -275,25 +275,22 @@ class FloatingCardService : Service() {
                 val estimatedProfitPercent = CostCalculator.estimateProfitPercent(
                     ride.value, ride.distanceKm, frozenCostPerKm
                 )
+                applyDecisionBorder(cardRoot, result.decision)
+
                 if (estimatedProfit != null && estimatedProfitPercent != null) {
-                    val profitRange = getProfitRange(estimatedProfitPercent)
-                    val profitBg = GradientDrawable()
-                    profitBg.setColor(Color.parseColor(profitRange.bgColor))
-                    profitBg.cornerRadius = 14f * resources.displayMetrics.density
-                    cardRoot.background = profitBg
+                    val profitRange = ProfitRange.fromPercent(estimatedProfitPercent)
 
-                    val textColor = Color.parseColor(profitRange.textColor)
-                    tvApp.setTextColor(textColor)
-                    tvValue.setTextColor(textColor)
-                    tvDistance.setTextColor(textColor)
-                    tvTime.setTextColor(textColor)
+                    tvProfitLabel.text = profitRange.label
+                    tvProfitLabel.setTextColor(profitRange.color)
+                    tvProfitLabel.visibility = View.VISIBLE
 
-                    tvProfitIcon.text = profitRange.icon
-                    tvProfitIcon.visibility = View.VISIBLE
-
-                    val profitText = "${profitRange.label}: R$ ${String.format("%.2f", estimatedProfit).replace(".", ",")} (${String.format("%.0f", estimatedProfitPercent)}%)"
-                    tvProfit.text = profitText
-                    tvProfit.setTextColor(textColor)
+                    val profitValue = if (estimatedProfit >= 0) {
+                        "R$ ${String.format("%.2f", estimatedProfit).replace(".", ",")} (${String.format("%.0f", estimatedProfitPercent)}%)"
+                    } else {
+                        "-R$ ${String.format("%.2f", -estimatedProfit).replace(".", ",")} (${String.format("%.0f", estimatedProfitPercent)}%)"
+                    }
+                    tvProfit.text = profitValue
+                    tvProfit.setTextColor(profitRange.color)
                     tvProfit.visibility = View.VISIBLE
                 }
             } catch (_: Exception) {}
@@ -390,21 +387,20 @@ class FloatingCardService : Service() {
         super.onDestroy()
     }
 
-    enum class ProfitRange(val bgColor: String, val textColor: String, val icon: String, val label: String) {
-        CRITICAL("#DC2626", "#FFFFFF", "\uD83D\uDD34", "PREJUÍZO!"),
-        LOW("#FEF2F2", "#DC2626", "\u26A0\uFE0F", "Lucro baixo"),
-        MEDIUM("#FFF7ED", "#F97316", "\uD83D\uDCC8", "Lucro médio"),
-        GOOD("#F0FDF4", "#00A86B", "\uD83D\uDCB0", "Lucro excelente!")
+    private fun applyDecisionBorder(view: View, decision: DecisionEngine.Decision) {
+        val borderColor = when (decision) {
+            DecisionEngine.Decision.ACEITAR -> "#00A86B"
+            DecisionEngine.Decision.ANALISAR -> "#F97316"
+            DecisionEngine.Decision.RECUSAR -> "#DC2626"
+        }
+        val gd = GradientDrawable()
+        gd.setColor(Color.parseColor("#FF1A1A2E"))
+        gd.cornerRadius = 14f * resources.displayMetrics.density
+        gd.setStroke(3.dpToPx(), Color.parseColor(borderColor))
+        view.background = gd
     }
 
-    private fun getProfitRange(profitPercent: Double): ProfitRange {
-        return when {
-            profitPercent < 0 -> ProfitRange.CRITICAL
-            profitPercent < 20 -> ProfitRange.LOW
-            profitPercent < 50 -> ProfitRange.MEDIUM
-            else -> ProfitRange.GOOD
-        }
-    }
+    private fun Int.dpToPx(): Int = (this * resources.displayMetrics.density).toInt()
 
     companion object {
         private const val TAG = "CorridaCerta"

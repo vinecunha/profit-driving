@@ -87,20 +87,19 @@
             android:orientation="horizontal"
             android:gravity="end"
             android:layout_marginTop="6dp"
-            android:paddingTop="6dp"
-            android:divider="?android:attr/dividerVertical"
-            android:showDividers="middle">
+            android:paddingTop="6dp">
 
             <TextView
                 android:id="@+id/btnPayPartial"
                 android:layout_width="wrap_content"
                 android:layout_height="28dp"
                 android:gravity="center"
-                android:text="\uD83D\uDCB0 Pagar"
+                android:text="💰 Pagar Parcialmente"
                 android:textSize="10sp"
                 android:textColor="#1A2C3E"
                 android:background="@drawable/pill_unselected"
                 android:paddingHorizontal="10dp"
+                android:layout_marginEnd="8dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:visibility="gone" />
@@ -110,32 +109,36 @@
                 android:layout_width="wrap_content"
                 android:layout_height="28dp"
                 android:gravity="center"
-                android:text="\u2705 Quitar"
+                android:text="✅ Quitar"
                 android:textSize="10sp"
                 android:textColor="#FFFFFF"
                 android:background="@drawable/pill_selected"
                 android:paddingHorizontal="10dp"
+                android:layout_marginEnd="8dp"          
                 android:clickable="true"
                 android:focusable="true"
                 android:visibility="gone" />
 
             <TextView
                 android:id="@+id/btnEditExpense"
-                android:layout_width="28dp"
+                android:layout_width="wrap_content"
                 android:layout_height="28dp"
                 android:gravity="center"
-                android:text="\u270F\uFE0F"
-                android:textSize="13sp"
+                android:text="✏️ Editar"
+                android:textSize="12sp"
+                android:paddingHorizontal="10dp"
+                android:layout_marginEnd="4dp"          
                 android:clickable="true"
                 android:focusable="true" />
 
             <TextView
                 android:id="@+id/btnDeleteExpense"
-                android:layout_width="28dp"
+                android:layout_width="wrap_content"
                 android:layout_height="28dp"
                 android:gravity="center"
-                android:text="\uD83D\uDDD1"
-                android:textSize="13sp"
+                android:text="🗑️ Apagar"
+                android:textSize="12sp"
+                android:paddingHorizontal="10dp"
                 android:clickable="true"
                 android:focusable="true" />
 

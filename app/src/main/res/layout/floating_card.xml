@@ -256,10 +256,11 @@
         android:layout_marginTop="2dp">
 
         <TextView
-            android:id="@+id/tvProfitIcon"
+            android:id="@+id/tvProfitLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
+            android:textSize="10sp"
+            android:textColor="#AAFFFFFF"
             android:layout_marginEnd="4dp"
             android:visibility="gone" />
 
@@ -268,8 +269,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="10sp"
+            android:textStyle="bold"
             android:textColor="#4ADE80"
             android:gravity="center"
+            android:singleLine="true"
+            android:ellipsize="end"
             android:visibility="gone" />
 
     </LinearLayout>

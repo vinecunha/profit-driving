@@ -491,6 +491,9 @@ class HistoryAdapter(
         val tvDropoffTime: TextView = view.findViewById(R.id.tvDropoffTime)
         val tvDropoffAddress: TextView = view.findViewById(R.id.tvDropoffAddress)
         val tvStops: TextView = view.findViewById(R.id.tvStops)
+        val tvProfitIcon: TextView = view.findViewById(R.id.tvProfitIcon)
+        val tvProfitLabel: TextView = view.findViewById(R.id.tvProfitLabel)
+        val tvProfitValue: TextView = view.findViewById(R.id.tvProfitValue)
     }
 
     class FooterViewHolder(view: View) : RecyclerView.ViewHolder(view)
@@ -674,6 +677,18 @@ class HistoryAdapter(
             vh.tvDynamicBonus.visibility = View.GONE
         }
 
+        // Lucro
+        val profitRange = getProfitRangeForRide(r)
+        val profitValue = formatProfitValue(r)
+        vh.tvProfitIcon.text = profitRange.icon
+        vh.tvProfitIcon.visibility = View.VISIBLE
+        vh.tvProfitLabel.text = profitRange.label
+        vh.tvProfitLabel.setTextColor(profitRange.color)
+        vh.tvProfitLabel.visibility = View.VISIBLE
+        vh.tvProfitValue.text = profitValue
+        vh.tvProfitValue.setTextColor(profitRange.color)
+        vh.tvProfitValue.visibility = View.VISIBLE
+
         if (r.hasMultipleStops) {
             vh.tvStops.text = "\uD83D\uDD04 Várias paradas"
             vh.tvStops.visibility = View.VISIBLE
@@ -728,7 +743,15 @@ class HistoryAdapter(
         when (r.status) {
             "ACCEPTED" -> vh.cardRoot.setBackgroundResource(R.drawable.card_bg_accepted)
             "DECLINED" -> vh.cardRoot.setBackgroundResource(R.drawable.card_bg_declined)
-            else -> vh.cardRoot.setBackgroundResource(android.R.color.white)
+            else -> {
+                val borderDrawable = when {
+                    r.scorePercent != null && r.scorePercent >= 80 -> R.drawable.card_border_green
+                    r.scorePercent != null && r.scorePercent >= 50 -> R.drawable.card_border_orange
+                    else -> R.drawable.card_border_red
+                }
+                vh.cardRoot.setBackgroundResource(borderDrawable)
+                vh.cardRoot.cardElevation = 0f
+            }
         }
 
         vh.tvTimestamp.text = dateFormat.format(java.util.Date(r.timestamp))
@@ -768,6 +791,30 @@ class HistoryAdapter(
         }
 
         return masked
+    }
+
+    private fun getProfitRangeForRide(ride: RideRecord): ProfitRange {
+        val rideValue = ride.value ?: 0.0
+        val distance = (ride.pickupDistanceKm ?: 0.0) + (ride.tripDistanceKm ?: ride.distanceKm ?: 0.0)
+        val usedCostPerKm = ride.costPerKmAtTime ?: costPerKm
+        val totalCost = distance * usedCostPerKm
+        val profit = rideValue - totalCost
+        val profitPercent = if (rideValue > 0) (profit / rideValue) * 100 else 0.0
+        return ProfitRange.fromPercent(profitPercent)
+    }
+
+    private fun formatProfitValue(ride: RideRecord): String {
+        val rideValue = ride.value ?: 0.0
+        val distance = (ride.pickupDistanceKm ?: 0.0) + (ride.tripDistanceKm ?: ride.distanceKm ?: 0.0)
+        val usedCostPerKm = ride.costPerKmAtTime ?: costPerKm
+        val totalCost = distance * usedCostPerKm
+        val profit = rideValue - totalCost
+        val profitPercent = if (rideValue > 0) (profit / rideValue) * 100 else 0.0
+        return if (profit >= 0) {
+            "R$ ${String.format("%.2f", profit).replace(".", ",")} (${String.format("%.0f", profitPercent)}%)"
+        } else {
+            "-R$ ${String.format("%.2f", -profit).replace(".", ",")} (${String.format("%.0f", profitPercent)}%)"
+        }
     }
 
     fun appendData(newRecords: List<RideRecord>) {
