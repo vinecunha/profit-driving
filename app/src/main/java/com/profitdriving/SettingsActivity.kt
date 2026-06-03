@@ -526,35 +526,29 @@ class SettingsActivity : BaseActivity() {
             return
         }
 
-        val minKm = parseBr(etMinKm.text.toString())
-        val idealKm = parseBr(etIdealKm.text.toString())
-        val minHour = parseBr(etMinHour.text.toString())
-        val idealHour = parseBr(etIdealHour.text.toString())
-        val minMinute = parseBr(etMinMinute.text.toString())
-        val idealMinute = parseBr(etIdealMinute.text.toString())
-        val minRating = parseBr(etMinRating.text.toString())
-        val idealRating = parseBr(etIdealRating.text.toString())
-
-        if (minKm == null) { etMinKm.error = "Valor inv\u00e1lido"; return }
-        if (idealKm == null) { etIdealKm.error = "Valor inv\u00e1lido"; return }
-        if (minHour == null) { etMinHour.error = "Valor inv\u00e1lido"; return }
-        if (idealHour == null) { etIdealHour.error = "Valor inv\u00e1lido"; return }
-        if (minMinute == null) { etMinMinute.error = "Valor inv\u00e1lido"; return }
-        if (idealMinute == null) { etIdealMinute.error = "Valor inv\u00e1lido"; return }
-        if (minRating == null) { etMinRating.error = "Valor inv\u00e1lido"; return }
-        if (idealRating == null) { etIdealRating.error = "Valor inv\u00e1lido"; return }
-
-        if (minKm < 0.5f || minKm > 50f) {
-            etMinKm.error = "Digite um valor entre 0,50 e 50,00"
-            return
+        val minKm = parseBr(etMinKm.text.toString(), 0.5f, 50f) ?: run {
+            etMinKm.error = "Digite um valor entre 0,50 e 50,00"; return
         }
-        if (minHour < 5f || minHour > 500f) {
-            etMinHour.error = "Digite um valor entre 5,00 e 500,00"
-            return
+        val idealKm = parseBr(etIdealKm.text.toString(), 0.5f, 50f) ?: run {
+            etIdealKm.error = "Digite um valor entre 0,50 e 50,00"; return
         }
-        if (minRating < 1f || minRating > 5f) {
-            etMinRating.error = "Digite um valor entre 1,00 e 5,00"
-            return
+        val minHour = parseBr(etMinHour.text.toString(), 5f, 500f) ?: run {
+            etMinHour.error = "Digite um valor entre 5,00 e 500,00"; return
+        }
+        val idealHour = parseBr(etIdealHour.text.toString(), 5f, 500f) ?: run {
+            etIdealHour.error = "Digite um valor entre 5,00 e 500,00"; return
+        }
+        val minMinute = parseBr(etMinMinute.text.toString(), 0.1f, 10f) ?: run {
+            etMinMinute.error = "Valor inv\u00e1lido"; return
+        }
+        val idealMinute = parseBr(etIdealMinute.text.toString(), 0.1f, 10f) ?: run {
+            etIdealMinute.error = "Valor inv\u00e1lido"; return
+        }
+        val minRating = parseBr(etMinRating.text.toString(), 1f, 5f) ?: run {
+            etMinRating.error = "Digite um valor entre 1,00 e 5,00"; return
+        }
+        val idealRating = parseBr(etIdealRating.text.toString(), 1f, 5f) ?: run {
+            etIdealRating.error = "Digite um valor entre 1,00 e 5,00"; return
         }
 
         prefs.edit().apply {
@@ -673,10 +667,11 @@ class SettingsActivity : BaseActivity() {
         else -> "\u274C"
     }
 
-    private fun parseBr(value: String): Float? {
+    private fun parseBr(value: String, min: Float = 0f, max: Float = Float.MAX_VALUE): Float? {
         if (value.isBlank()) return null
         val cleaned = value.trim().replace(",", ".")
-        return cleaned.toFloatOrNull()
+        val parsed = cleaned.toFloatOrNull()
+        return if (parsed != null && parsed >= min && parsed <= max) parsed else null
     }
 
     companion object {

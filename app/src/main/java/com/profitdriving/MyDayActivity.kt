@@ -522,7 +522,9 @@ class MyDayActivity : BaseActivity() {
 
         val allRecords = db.getRidesByDateRange(periodStart, periodEnd)
         allRideRecords.clear()
-        allRideRecords.putAll(allRecords.associateBy { it.id })
+        for (record in allRecords) {
+            allRideRecords[record.id] = record
+        }
 
         loadCostSummary()
         applyFilters()
@@ -535,7 +537,8 @@ class MyDayActivity : BaseActivity() {
                 val summary = CostSummaryCache.getCurrentSummary(this@MyDayActivity)
                 costPerKm = summary.totalCostPerKm
                 fuelCostPerKm = summary.fuelCostPerKm
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                L.e(TAG, "Erro ao carregar resumo de custos: ${e.message}", e)
                 costPerKm = 0.0
                 fuelCostPerKm = 0.0
             }
@@ -597,7 +600,8 @@ class MyDayActivity : BaseActivity() {
                     showProgressAvailable(false)
                     isLoadingMore = false
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                L.e(TAG, "Erro ao carregar corridas disponíveis: ${e.message}", e)
                 withContext(Dispatchers.Main) {
                     showProgressAvailable(false)
                     isLoadingMore = false
@@ -779,22 +783,30 @@ class MyDayActivity : BaseActivity() {
 
                     layoutCostDetails.addView(row)
                 }
-            } catch (_: Exception) { }
+            } catch (e: Exception) { L.e(TAG, "Erro ao atualizar detalhamento de custos: ${e.message}", e) }
         }
     }
 
     private fun onToggleCompleted(ride: DailyRide) {
-        val idx = allDailyRides.indexOfFirst { it.id == ride.id }
-        if (idx < 0) return
-        val updated = ride.copy(
-            isCompleted = !ride.isCompleted,
-            updatedAt = System.currentTimeMillis()
-        )
-        allDailyRides[idx] = updated
-        db.updateDailyRide(updated)
-        applyFilters()
-        val status = if (updated.isCompleted) "marcada" else "desmarcada"
-        Toast.makeText(this, "Corrida $status!", Toast.LENGTH_SHORT).show()
+        if (ride.isCompleted) {
+            val idx = allDailyRides.indexOfFirst { it.id == ride.id }
+            if (idx < 0) return
+            allDailyRides.removeAt(idx)
+            db.deleteDailyRide(ride.id)
+            loadDataForCurrentPeriod()
+            Toast.makeText(this, "Corrida removida e disponível novamente!", Toast.LENGTH_SHORT).show()
+        } else {
+            val idx = allDailyRides.indexOfFirst { it.id == ride.id }
+            if (idx < 0) return
+            val updated = ride.copy(
+                isCompleted = true,
+                updatedAt = System.currentTimeMillis()
+            )
+            allDailyRides[idx] = updated
+            db.updateDailyRide(updated)
+            applyFilters()
+            Toast.makeText(this, "Corrida marcada como realizada!", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun onCancelWithFee(ride: DailyRide) {
@@ -1030,5 +1042,9 @@ class MyDayActivity : BaseActivity() {
     private fun parseDecimal(text: String): Double? {
         val cleaned = text.trim().replace(",", ".")
         return cleaned.toDoubleOrNull()
+    }
+
+    companion object {
+        private const val TAG = "CorridaCerta"
     }
 }

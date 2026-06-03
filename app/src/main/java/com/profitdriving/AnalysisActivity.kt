@@ -703,8 +703,8 @@ class AnalysisActivity : BaseActivity() {
             })
 
             addDetailRow(hourContainer, "\uD83D\uDCB0", "Ganho m\u00E9dio",
-                "R\$ ${AnalysisHelperV2.formatBr(hour.avgEarningsPerHour)}/hora", true)
-            addDetailRow(hourContainer, "\uD83D\uDE97", "Corridas", "${hour.rideCount}", true)
+                "R\$ ${AnalysisHelperV2.formatBr(hour.avgEarningsPerHour)}/hora", Color.parseColor("#1A2C3E"))
+            addDetailRow(hourContainer, "\uD83D\uDE97", "Corridas", "${hour.rideCount}", Color.parseColor("#1A2C3E"))
 
             val dinamicaColor = if (hour.dynamicPercent >= 30) Color.parseColor("#00A86B") else Color.parseColor("#F97316")
             addDetailRow(hourContainer, "\u26A1", "Din\u00E2mica",

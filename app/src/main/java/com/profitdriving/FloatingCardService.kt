@@ -108,7 +108,7 @@ class FloatingCardService : Service() {
 
     private fun showOverlay(ride: RideData, isDemo: Boolean = false) {
         overlayView?.let { view ->
-            try { windowManager.removeView(view) } catch (_: Exception) {}
+            try { windowManager.removeView(view) } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay existente: ${e.message}", e) }
             overlayView = null
         }
         showCard(ride, isDemo)
@@ -295,7 +295,7 @@ class FloatingCardService : Service() {
                     tvProfit.setTextColor(profitRange.color)
                     tvProfit.visibility = View.VISIBLE
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) { L.e(TAG, "Erro ao calcular lucro estimado: ${e.message}", e) }
         }
 
         @Suppress("DEPRECATION")
@@ -377,7 +377,7 @@ class FloatingCardService : Service() {
         overlayView?.let { view ->
             try {
                 windowManager.removeView(view)
-            } catch (_: Exception) {}
+            } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay view no dismiss: ${e.message}", e) }
         }
         overlayView = null
         handler.postDelayed({ stopSelf() }, 200)

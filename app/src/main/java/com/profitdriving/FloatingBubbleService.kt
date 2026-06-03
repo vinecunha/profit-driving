@@ -20,11 +20,16 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 
 class FloatingBubbleService : Service() {
 
     private lateinit var windowManager: WindowManager
     private lateinit var prefs: SharedPreferences
+    private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var bubbleView: View? = null
     private var initialX = 0
     private var initialY = 0
@@ -158,7 +163,7 @@ class FloatingBubbleService : Service() {
                 MotionEvent.ACTION_MOVE -> {
                     params.x = initialX + (event.rawX - initialTouchX).toInt()
                     params.y = initialY + (event.rawY - initialTouchY).toInt()
-                    try { windowManager.updateViewLayout(v, params) } catch (_: Exception) {}
+                    try { windowManager.updateViewLayout(v, params) } catch (e: Exception) { L.e(TAG, "Erro ao atualizar layout bubble: ${e.message}", e) }
                     true
                 }
                 MotionEvent.ACTION_UP -> {
@@ -252,7 +257,7 @@ class FloatingBubbleService : Service() {
 
     private fun dismiss() {
         bubbleView?.let { view ->
-            try { windowManager.removeView(view) } catch (_: Exception) {}
+            try { windowManager.removeView(view) } catch (e: Exception) { L.e(TAG, "Erro ao remover bubble view no dismiss: ${e.message}", e) }
         }
         bubbleView = null
         stopSelf()
@@ -261,8 +266,9 @@ class FloatingBubbleService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        serviceScope.cancel()
         bubbleView?.let {
-            try { windowManager.removeView(it) } catch (_: Exception) {}
+            try { windowManager.removeView(it) } catch (e: Exception) { L.e(TAG, "Erro ao remover bubble view no onDestroy: ${e.message}", e) }
         }
         bubbleView = null
         super.onDestroy()

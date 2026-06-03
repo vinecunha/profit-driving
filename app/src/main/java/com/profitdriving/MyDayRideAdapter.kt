@@ -163,10 +163,10 @@ class MyDayRideAdapter(
         holder.chkCompleted.setOnLongClickListener {
             if (ride.isCompleted) {
                 AlertDialog.Builder(holder.itemView.context)
-                    .setTitle("Desmarcar corrida")
-                    .setMessage("Deseja realmente desmarcar esta corrida como realizada?")
-                    .setPositiveButton("Sim") { _, _ -> onToggleCompleted(ride) }
-                    .setNegativeButton("Não", null)
+                    .setTitle("Remover corrida")
+                    .setMessage("Esta corrida voltará para a lista de disponíveis e não será mais contabilizada no resumo do dia.\n\nDeseja continuar?")
+                    .setPositiveButton("Sim, remover") { _, _ -> onToggleCompleted(ride) }
+                    .setNegativeButton("Cancelar", null)
                     .show()
             }
             true

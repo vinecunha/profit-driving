@@ -600,7 +600,7 @@ class RideAccessibilityService : AccessibilityService() {
                     vibrator.vibrate(100)
                 }
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) { L.e(TAG, "Erro no feedback vibratório: ${e.message}", e) }
     }
 
     private fun extractServiceType(text: String): String? {

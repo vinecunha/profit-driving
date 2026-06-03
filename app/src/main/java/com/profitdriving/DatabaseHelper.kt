@@ -113,7 +113,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
-    fun updateStatus(id: Long, status: String) {
+    fun updateStatus(id: Long, status: String) = synchronized(dbLock) {
         val db = writableDatabase
         try {
             val cv = ContentValues().apply { put(COL_STATUS, status) }
@@ -123,7 +123,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
-    fun updateRideValue(rideId: Long, newValue: Double) {
+    fun updateRideValue(rideId: Long, newValue: Double) = synchronized(dbLock) {
         val db = writableDatabase
         try {
             val cv = ContentValues().apply {
@@ -135,10 +135,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
-    fun insert(record: RideRecord): Long {
+    fun insert(record: RideRecord): Long = synchronized(dbLock) {
         val currentCostPerKm = calculateCurrentCostPerKm()
         val db = writableDatabase
-        return try {
+        try {
             val cv = ContentValues().apply {
                 put(COL_VALUE, record.value)
                 put(COL_DISTANCE_KM, record.distanceKm)
@@ -177,7 +177,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             val expenses = getAllExpenses()
             val monthlyKm = getMonthlyKm()
             CostCalculator.calculateCostSummary(refuels, expenses, monthlyKm).totalCostPerKm
-        } catch (_: Exception) { null }
+        } catch (e: Exception) { L.e("CorridaCerta", "Erro ao calcular custo/km atual: ${e.message}", e); null }
     }
 
     fun getAll(): List<RideRecord> {
@@ -242,7 +242,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return 0
     }
 
-    fun deleteAll() {
+    fun deleteAll() = synchronized(dbLock) {
         val db = writableDatabase
         try {
             db.delete(TABLE_NAME, null, null)
@@ -253,9 +253,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     // ── Fuel Refuels ──
 
-    fun insertRefuel(r: RefuelRecord): Long {
+    fun insertRefuel(r: RefuelRecord): Long = synchronized(dbLock) {
         val db = writableDatabase
-        return try {
+        try {
             val cv = ContentValues().apply {
                 put(COL_R_TIMESTAMP, r.timestamp)
                 put(COL_R_ODOMETER, r.odometerKm)
@@ -302,18 +302,43 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     // ── Fixed Expenses ──
 
-    fun insertExpense(e: FixedExpense): Long {
+    fun insertExpense(e: FixedExpense): Long = synchronized(dbLock) {
         val db = writableDatabase
-        return try {
+        try {
             val cv = ContentValues().apply {
                 put(COL_E_NAME, e.name)
                 put(COL_E_VALUE, e.value)
-                put(COL_E_CATEGORY, e.category)
-                put(COL_E_CREATED_AT, e.createdAt)
                 put(COL_E_PERIODICITY, e.periodicity)
+                put(COL_E_CATEGORY, e.category)
+                put(COL_E_CREATED_AT, System.currentTimeMillis())
                 put(COL_E_USEFUL_LIFE, e.usefulLifeMonths)
             }
             db.insert(TABLE_FIXED_EXPENSES, null, cv)
+        } finally {
+            db.close()
+        }
+    }
+
+    fun updateExpense(e: FixedExpense) = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_E_NAME, e.name)
+                put(COL_E_VALUE, e.value)
+                put(COL_E_PERIODICITY, e.periodicity)
+                put(COL_E_CATEGORY, e.category)
+                put(COL_E_USEFUL_LIFE, e.usefulLifeMonths)
+            }
+            db.update(TABLE_FIXED_EXPENSES, cv, "$COL_ID = ?", arrayOf(e.id.toString()))
+        } finally {
+            db.close()
+        }
+    }
+
+    fun deleteExpense(id: Long) = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            db.delete(TABLE_FIXED_EXPENSES, "$COL_ID = ?", arrayOf(id.toString()))
         } finally {
             db.close()
         }
@@ -341,31 +366,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return list
     }
 
-    fun updateExpense(e: FixedExpense) {
-        val db = writableDatabase
-        try {
-            val cv = ContentValues().apply {
-                put(COL_E_NAME, e.name)
-                put(COL_E_VALUE, e.value)
-                put(COL_E_CATEGORY, e.category)
-                put(COL_E_PERIODICITY, e.periodicity)
-                put(COL_E_USEFUL_LIFE, e.usefulLifeMonths)
-            }
-            db.update(TABLE_FIXED_EXPENSES, cv, "$COL_ID = ?", arrayOf(e.id.toString()))
-        } finally {
-            db.close()
-        }
-    }
-
-    fun deleteExpense(id: Long) {
-        writableDatabase.delete(TABLE_FIXED_EXPENSES, "$COL_ID = ?", arrayOf(id.toString()))
-    }
-
     // ── Variable Costs ──
 
-    fun insertVariableCost(vc: VariableCost): Long {
+    fun insertVariableCost(vc: VariableCost): Long = synchronized(dbLock) {
         val db = writableDatabase
-        return try {
+        try {
             val cv = ContentValues().apply {
                 put(COL_VC_NAME, vc.name)
                 put(COL_VC_COST_PER_KM, vc.costPerKm)
@@ -398,15 +403,15 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return list
     }
 
-    fun deleteVariableCost(id: Long) {
+    fun deleteVariableCost(id: Long) = synchronized(dbLock) {
         writableDatabase.delete(TABLE_VARIABLE_COSTS, "$COL_ID = ?", arrayOf(id.toString()))
     }
 
     // ── Unified Expenses ──
 
-    fun insertExpenseItem(e: Expense): Long {
+    fun insertExpenseItem(e: Expense): Long = synchronized(dbLock) {
         val db = writableDatabase
-        return try {
+        try {
             val cv = ContentValues().apply {
                 put(COL_E_NAME, e.name)
                 put(COL_E_VALUE, e.value)
@@ -461,7 +466,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return list
     }
 
-    fun updateExpenseItem(e: Expense) {
+    fun updateExpenseItem(e: Expense) = synchronized(dbLock) {
         val db = writableDatabase
         try {
             val cv = ContentValues().apply {
@@ -488,7 +493,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
-    fun deleteExpenseItem(id: Long) {
+    fun deleteExpenseItem(id: Long) = synchronized(dbLock) {
         writableDatabase.delete(TABLE_EXPENSES, "$COL_ID = ?", arrayOf(id.toString()))
     }
 
@@ -643,9 +648,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     // ── Daily Rides ──
 
-    fun insertDailyRide(dailyRide: DailyRide): Long {
+    fun insertDailyRide(dailyRide: DailyRide): Long = synchronized(dbLock) {
         val db = writableDatabase
-        return try {
+        try {
             val cv = ContentValues().apply {
                 put(COL_DR_RIDE_ID, dailyRide.rideId)
                 put(COL_DR_DATE, dailyRide.date)
@@ -712,7 +717,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return list
     }
 
-    fun updateDailyRide(dailyRide: DailyRide) {
+    fun updateDailyRide(dailyRide: DailyRide) = synchronized(dbLock) {
         val db = writableDatabase
         try {
             val cv = ContentValues().apply {
@@ -732,7 +737,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
-    fun deleteDailyRide(id: Long) {
+    fun deleteDailyRide(id: Long) = synchronized(dbLock) {
         writableDatabase.delete(TABLE_DAILY_RIDES, "$COL_ID = ?", arrayOf(id.toString()))
     }
 
@@ -750,9 +755,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             .filter { it.serviceType == null || !it.serviceType!!.startsWith("Manual -") }
     }
 
-    fun insertManualRide(serviceType: String, value: Double, distanceKm: Double, timeMin: Int): Long {
+    fun insertManualRide(serviceType: String, value: Double, distanceKm: Double, timeMin: Int): Long = synchronized(dbLock) {
         val db = writableDatabase
-        return try {
+        try {
             val cv = ContentValues().apply {
                 put(COL_VALUE, value)
                 put(COL_DISTANCE_KM, distanceKm)
@@ -823,6 +828,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     companion object {
+        private val dbLock = Any()
         private const val DATABASE_NAME = "profit_driving.db"
         private const val DATABASE_VERSION = 18
         private const val TABLE_NAME = "ride_history"
