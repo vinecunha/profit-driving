@@ -6,6 +6,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import com.profitdriving.SecurePreferences
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
@@ -20,6 +21,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.view.WindowManager.BadTokenException
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
@@ -43,10 +45,10 @@ class FloatingCardService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
         startForeground(NOTIF_ID, buildNotification())
+        createNotificationChannel()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        prefs = getSharedPreferences(SettingsActivity.PREF_NAME, Context.MODE_PRIVATE)
+        prefs = SecurePreferences.get(this)
         handler = Handler(Looper.getMainLooper())
     }
 
@@ -353,6 +355,10 @@ class FloatingCardService : Service() {
             windowManager.addView(view, params)
             overlayView = view
             L.d(TAG, "Card exibido com sucesso: isDemo=$isDemo decisao=${DecisionEngine.decisionText(result.decision)}")
+        } catch (e: WindowManager.BadTokenException) {
+            L.e(TAG, "BadTokenException ao adicionar overlay: ${e.message}")
+            stopSelf()
+            return
         } catch (e: Exception) {
             L.e(TAG, "Falha ao adicionar overlay view: ${e.message}", e)
             stopSelf()
@@ -378,6 +384,13 @@ class FloatingCardService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        serviceScope.cancel()
+        dismiss()
+        stopSelf()
+    }
 
     override fun onDestroy() {
         L.d(TAG, "FloatingCardService destruído")

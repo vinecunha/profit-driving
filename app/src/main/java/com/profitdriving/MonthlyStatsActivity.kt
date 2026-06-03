@@ -136,7 +136,6 @@ class MonthlyStatsActivity : BaseActivity() {
         labelView.layoutParams = LinearLayout.LayoutParams(220, LinearLayout.LayoutParams.WRAP_CONTENT)
 
         val progress = android.widget.ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal)
-        val progressWidth = 0
         progress.max = 100
         progress.progress = ((value / maxValue) * 100).toInt().coerceIn(0, 100)
         progress.progressTintList = android.content.res.ColorStateList.valueOf(
@@ -225,7 +224,6 @@ class MonthlyStatsActivity : BaseActivity() {
                     avgConsumption = consumptionData[period] ?: 0.0
                 )
             }
-            loadData()
         }
     }
 }

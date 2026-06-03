@@ -20,8 +20,9 @@ object CostSummaryCache {
 
     suspend fun getCurrentSummary(context: Context): CostSummary {
         return withContext(Dispatchers.IO) {
+            val appContext = context.applicationContext
             if (cachedSummary == null || System.currentTimeMillis() - lastUpdateTime > CACHE_DURATION) {
-                val db = DatabaseHelper(context)
+                val db = DatabaseHelper(appContext)
                 val refuels = db.getRefuels()
                 val expenses = db.getAllExpenses()
                 val monthlyKm = db.getMonthlyKm()

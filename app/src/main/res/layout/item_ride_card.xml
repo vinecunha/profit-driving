@@ -15,7 +15,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Header: Service badge + Price + Rating -->
+        <!-- Header: Service badge + Decision badge + Rating -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -47,6 +47,18 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/tvDecisionBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:paddingHorizontal="8dp"
+                android:gravity="center"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/layoutRating"
@@ -98,27 +110,40 @@
                     android:textStyle="bold"
                     android:textColor="#1A2C3E" />
 
-                <TextView
-                    android:id="@+id/tvPriorityBonus"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:textSize="11sp"
-                    android:textColor="#F57C00"
-                    android:background="#FFF8E1"
-                    android:padding="4dp"
-                    android:layout_marginStart="12dp"
-                    android:visibility="gone" />
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="end"
+                    android:layout_marginStart="8dp">
 
-                <TextView
-                    android:id="@+id/tvDynamicBonus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="11sp"
-                    android:textColor="#F57C00"
-                    android:background="#FFF8E1"
-                    android:padding="4dp"
-                    android:layout_marginStart="8dp"
-                    android:visibility="gone" />
+                    <TextView
+                        android:id="@+id/tvPriorityBonus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:textSize="10sp"
+                        android:textColor="#F57C00"
+                        android:background="#FFF8E1"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="2dp"
+                        android:layout_marginEnd="4dp"
+                        android:gravity="center"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tvDynamicBonus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="24dp"
+                        android:textSize="10sp"
+                        android:textColor="#F57C00"
+                        android:background="#FFF8E1"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="2dp"
+                        android:gravity="center"
+                        android:visibility="gone" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
@@ -478,15 +503,32 @@
         </LinearLayout>
 
         <!-- Stops -->
-        <TextView
-            android:id="@+id/tvStops"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:textColor="#FF9800"
-            android:layout_marginTop="4dp"
-            android:visibility="gone" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="4dp">
+
+            <ImageView
+                android:id="@+id/ivStops"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_multiple_stops"
+                android:tint="#FF9800"
+                android:layout_marginEnd="4dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvStops"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="#FF9800"
+                android:visibility="gone" />
+
+        </LinearLayout>
 
         <!-- Expandable Profit Details -->
         <LinearLayout

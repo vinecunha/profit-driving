@@ -3,9 +3,10 @@ package com.profitdriving
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import com.profitdriving.SecurePreferences
+import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -16,10 +17,13 @@ import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 import androidx.appcompat.app.AlertDialog
-
 
 class SettingsActivity : BaseActivity() {
 
@@ -55,6 +59,7 @@ class SettingsActivity : BaseActivity() {
     private lateinit var tvWeightRatingStars: TextView
     private lateinit var seekThresholdAceitar: SeekBar
     private lateinit var tvThresholdAceitarLabel: TextView
+    private var debounceJob: Job? = null
     private lateinit var seekThresholdAnalisar: SeekBar
     private lateinit var tvThresholdAnalisarLabel: TextView
     private lateinit var pvKm: TextView
@@ -79,7 +84,7 @@ class SettingsActivity : BaseActivity() {
         setupBottomNav(Screen.PARAMS)
         setupToolbar(title = "Par\u00e2metros", showBack = true, actionText = "\uD83D\uDCBE Salvar", actionListener = { saveValues() })
 
-        prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs = SecurePreferences.get(this)
 
         etMinKm = findViewById(R.id.etMinKm)
         etIdealKm = findViewById(R.id.etIdealKm)
@@ -131,7 +136,7 @@ class SettingsActivity : BaseActivity() {
         seekCardDuration.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
                 cardDurationSeconds = 5 + (progress * 5)
-                tvCardDurationLabel.text = "Duração do card: ${cardDurationSeconds}s"
+                tvCardDurationLabel.text = "Dura\u00e7\u00e3o do card: ${cardDurationSeconds}s"
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
             override fun onStopTrackingTouch(sb: SeekBar?) {}
@@ -142,7 +147,7 @@ class SettingsActivity : BaseActivity() {
         val textWatcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) { updatePreview() }
+            override fun afterTextChanged(s: Editable?) { debouncedUpdatePreview() }
         }
         etMinKm.addTextChangedListener(textWatcher)
         etIdealKm.addTextChangedListener(textWatcher)
@@ -162,7 +167,7 @@ class SettingsActivity : BaseActivity() {
                     val cleaned = text.trim().replace(",", ".")
                     val v = cleaned.toFloatOrNull()
                     if (v == null || v <= 0) {
-                        (s as? EditText)?.error = "Valor inválido"
+                        (s as? EditText)?.error = "Valor inv\u00e1lido"
                     } else {
                         (s as? EditText)?.error = null
                     }
@@ -205,8 +210,8 @@ class SettingsActivity : BaseActivity() {
             seek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
                     val w = progress + 1
-                    stars.text = "★".repeat(w) + "☆".repeat(5 - w)
-                    updatePreview()
+                    stars.text = "\u2605".repeat(w) + "\u2606".repeat(5 - w)
+                    debouncedUpdatePreview()
                 }
                 override fun onStartTrackingTouch(sb: SeekBar?) {}
                 override fun onStopTrackingTouch(sb: SeekBar?) {}
@@ -219,24 +224,24 @@ class SettingsActivity : BaseActivity() {
 
         seekThresholdAceitar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-                tvThresholdAceitarLabel.text = "ACEITAR se pontuação ≥ ${progress + 50}%"
+                tvThresholdAceitarLabel.text = "ACEITAR se pontua\u00e7\u00e3o \u2265 ${progress + 50}%"
                 if (fromUser && (progress + 20) >= (seekThresholdAceitar.progress + 50)) {
                     seekThresholdAnalisar.progress = (seekThresholdAceitar.progress + 20).coerceAtMost(29) - 20
                 }
-                updatePreview()
+                debouncedUpdatePreview()
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
             override fun onStopTrackingTouch(sb: SeekBar?) {}
         })
         seekThresholdAnalisar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-                tvThresholdAnalisarLabel.text = "ANALISAR se pontuação ≥ ${progress + 20}%"
+                tvThresholdAnalisarLabel.text = "ANALISAR se pontua\u00e7\u00e3o \u2265 ${progress + 20}%"
                 if (fromUser && (progress + 20) >= (seekThresholdAceitar.progress + 50)) {
                     Toast.makeText(this@SettingsActivity,
                         "O threshold de ANALISAR deve ser menor que o threshold de ACEITAR",
                         Toast.LENGTH_SHORT).show()
                 }
-                updatePreview()
+                debouncedUpdatePreview()
             }
             override fun onStartTrackingTouch(sb: SeekBar?) {}
             override fun onStopTrackingTouch(sb: SeekBar?) {}
@@ -245,6 +250,18 @@ class SettingsActivity : BaseActivity() {
         updatePreview()
 
         btnDemo.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                AlertDialog.Builder(this)
+                    .setTitle("Permiss\u00e3o necess\u00e1ria")
+                    .setMessage("O card flutuante precisa da permiss\u00e3o de desenhar sobre outros aplicativos. Conceda a permiss\u00e3o nas configura\u00e7\u00f5es.")
+                    .setPositiveButton("Abrir configura\u00e7\u00f5es") { _, _ ->
+                        startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+                return@setOnClickListener
+            }
+
             saveValues(showToast = false)
 
             val intent = Intent().apply {
@@ -258,12 +275,12 @@ class SettingsActivity : BaseActivity() {
                 putExtra("priorityBonus", 3.00)
                 putExtra("dynamicBonus", 2.50)
                 putExtra("hasMultipleStops", true)
-                putExtra("pickupAddress", "Av. Paulista, 1000 - Bela Vista, São Paulo - SP")
-                putExtra("dropoffAddress", "Rua Augusta, 1500 - Cerqueira César - São Paulo - SP, 01305-000")
+                putExtra("pickupAddress", "Av. Paulista, 1000 - Bela Vista, S\u00e3o Paulo - SP")
+                putExtra("dropoffAddress", "Rua Augusta, 1500 - Cerqueira C\u00e9sar - S\u00e3o Paulo - SP, 01305-000")
             }
 
             FloatingCardService.start(this, intent)
-            Toast.makeText(this, "Card de demonstração exibido!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Card de demonstra\u00e7\u00e3o exibido!", Toast.LENGTH_SHORT).show()
         }
 
         findViewById<TextView>(R.id.btnSuggestFromCosts).setOnClickListener { showMarginSelector() }
@@ -309,7 +326,7 @@ class SettingsActivity : BaseActivity() {
         for ((index, margin) in margins.withIndex()) {
             val radioMin = RadioButton(this).apply {
                 id = View.generateViewId()
-                text = "${margin.first} → ${formatCurrency(margin.second)}/km"
+                text = "${margin.first} \u2192 ${formatCurrency(margin.second)}/km"
                 setPadding(8, 8, 8, 8)
                 tag = margin.second
             }
@@ -317,7 +334,7 @@ class SettingsActivity : BaseActivity() {
 
             val radioIdeal = RadioButton(this).apply {
                 id = View.generateViewId()
-                text = "${margin.first} → ${formatCurrency(margin.second)}/km"
+                text = "${margin.first} \u2192 ${formatCurrency(margin.second)}/km"
                 setPadding(8, 8, 8, 8)
                 tag = margin.second
             }
@@ -337,14 +354,14 @@ class SettingsActivity : BaseActivity() {
         radioGroupIdeal.setOnCheckedChangeListener { _, _ -> validateAndUpdateWarning() }
 
         AlertDialog.Builder(this)
-            .setTitle("\uD83D\uDCCA Escolha seus parâmetros")
+            .setTitle("\uD83D\uDCCA Escolha seus par\u00e2metros")
             .setView(view)
             .setPositiveButton("Aplicar") { _, _ ->
                 val minValue = getSelectedValue(radioGroupMin)
                 val idealValue = getSelectedValue(radioGroupIdeal)
 
                 if (minValue >= idealValue) {
-                    Toast.makeText(this, "O valor MÍNIMO deve ser menor que o IDEAL", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "O valor M\u00cdNIMO deve ser menor que o IDEAL", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
 
@@ -361,8 +378,8 @@ class SettingsActivity : BaseActivity() {
                 etMinMinute.setText(formatCurrencySimple(minMinute))
                 etIdealMinute.setText(formatCurrencySimple(idealMinute))
 
-                updatePreview()
-                Toast.makeText(this, "Parâmetros atualizados! Revise e salve se desejar.", Toast.LENGTH_LONG).show()
+                debouncedUpdatePreview()
+                Toast.makeText(this, "Par\u00e2metros atualizados! Revise e salve se desejar.", Toast.LENGTH_LONG).show()
             }
             .setNegativeButton("Cancelar", null)
             .show()
@@ -453,8 +470,7 @@ class SettingsActivity : BaseActivity() {
         val layout = prefs.getString(KEY_CARD_LAYOUT, DEFAULT_CARD_LAYOUT)
         toggleLayout(isColumn = layout == "column")
 
-        val side = prefs.getString(KEY_CARD_SIDE, DEFAULT_CARD_SIDE) ?: DEFAULT_CARD_SIDE
-        val position = prefs.getString(KEY_CARD_POSITION, side) ?: side
+        val position = prefs.getString(KEY_CARD_POSITION, DEFAULT_CARD_POSITION) ?: DEFAULT_CARD_POSITION
         togglePosition(position)
 
         val yPct = prefs.getInt(KEY_CARD_Y_PERCENT, DEFAULT_CARD_Y_PERCENT)
@@ -478,7 +494,7 @@ class SettingsActivity : BaseActivity() {
         fun loadWeight(seek: SeekBar, stars: TextView, key: String, def: Int) {
             val w = prefs.getInt(key, def)
             seek.progress = w - 1
-            stars.text = "★".repeat(w) + "☆".repeat(5 - w)
+            stars.text = "\u2605".repeat(w) + "\u2606".repeat(5 - w)
         }
         loadWeight(seekWeightKm, tvWeightKmStars, KEY_WEIGHT_KM, 5)
         loadWeight(seekWeightHour, tvWeightHourStars, KEY_WEIGHT_HOUR, 4)
@@ -487,17 +503,17 @@ class SettingsActivity : BaseActivity() {
 
         val ta = prefs.getInt(KEY_THRESHOLD_ACEITAR, 80)
         seekThresholdAceitar.progress = ta - 50
-        tvThresholdAceitarLabel.text = "ACEITAR se pontuação ≥ ${ta}%"
+        tvThresholdAceitarLabel.text = "ACEITAR se pontua\u00e7\u00e3o \u2265 ${ta}%"
         val an = prefs.getInt(KEY_THRESHOLD_ANALISAR, 50)
         seekThresholdAnalisar.progress = an - 20
-        tvThresholdAnalisarLabel.text = "ANALISAR se pontuação ≥ ${an}%"
+        tvThresholdAnalisarLabel.text = "ANALISAR se pontua\u00e7\u00e3o \u2265 ${an}%"
 
         val pageSize = prefs.getInt(KEY_PAGE_SIZE, 100)
         selectPageSize(pageSize)
 
         cardDurationSeconds = prefs.getInt(KEY_CARD_DURATION, 30)
         seekCardDuration.progress = (cardDurationSeconds - 5) / 5
-        tvCardDurationLabel.text = "Duração do card: ${cardDurationSeconds}s"
+        tvCardDurationLabel.text = "Dura\u00e7\u00e3o do card: ${cardDurationSeconds}s"
     }
 
     private fun saveValues(showToast: Boolean = true) {
@@ -519,28 +535,37 @@ class SettingsActivity : BaseActivity() {
         val minRating = parseBr(etMinRating.text.toString())
         val idealRating = parseBr(etIdealRating.text.toString())
 
-        if (minKm != null && (minKm < 0.5f || minKm > 50f)) {
+        if (minKm == null) { etMinKm.error = "Valor inv\u00e1lido"; return }
+        if (idealKm == null) { etIdealKm.error = "Valor inv\u00e1lido"; return }
+        if (minHour == null) { etMinHour.error = "Valor inv\u00e1lido"; return }
+        if (idealHour == null) { etIdealHour.error = "Valor inv\u00e1lido"; return }
+        if (minMinute == null) { etMinMinute.error = "Valor inv\u00e1lido"; return }
+        if (idealMinute == null) { etIdealMinute.error = "Valor inv\u00e1lido"; return }
+        if (minRating == null) { etMinRating.error = "Valor inv\u00e1lido"; return }
+        if (idealRating == null) { etIdealRating.error = "Valor inv\u00e1lido"; return }
+
+        if (minKm < 0.5f || minKm > 50f) {
             etMinKm.error = "Digite um valor entre 0,50 e 50,00"
             return
         }
-        if (minHour != null && (minHour < 5f || minHour > 500f)) {
+        if (minHour < 5f || minHour > 500f) {
             etMinHour.error = "Digite um valor entre 5,00 e 500,00"
             return
         }
-        if (minRating != null && (minRating < 1f || minRating > 5f)) {
+        if (minRating < 1f || minRating > 5f) {
             etMinRating.error = "Digite um valor entre 1,00 e 5,00"
             return
         }
 
         prefs.edit().apply {
-            putFloat(KEY_MIN_KM, minKm ?: 2.5f)
-            putFloat(KEY_IDEAL_KM, idealKm ?: 4.0f)
-            putFloat(KEY_MIN_HOUR, minHour ?: 30f)
-            putFloat(KEY_IDEAL_HOUR, idealHour ?: 60f)
-            putFloat(KEY_MIN_MINUTE, minMinute ?: 0.5f)
-            putFloat(KEY_IDEAL_MINUTE, idealMinute ?: 1.0f)
-            putFloat(KEY_MIN_RATING, minRating ?: 4.85f)
-            putFloat(KEY_IDEAL_RATING, idealRating ?: 4.93f)
+            putFloat(KEY_MIN_KM, minKm)
+            putFloat(KEY_IDEAL_KM, idealKm)
+            putFloat(KEY_MIN_HOUR, minHour)
+            putFloat(KEY_IDEAL_HOUR, idealHour)
+            putFloat(KEY_MIN_MINUTE, minMinute)
+            putFloat(KEY_IDEAL_MINUTE, idealMinute)
+            putFloat(KEY_MIN_RATING, minRating)
+            putFloat(KEY_IDEAL_RATING, idealRating)
             putString(KEY_CARD_LAYOUT, if (btnColuna.isSelected) "column" else "row")
             val position = when {
                 btnCentro.isSelected -> "center"
@@ -565,11 +590,22 @@ class SettingsActivity : BaseActivity() {
         }
 
         if (showToast) {
-            btnSave.text = "✓ Salvo!"
+            btnSave.text = "\u2713 Salvo!"
             btnSave.isEnabled = false
-            Handler(Looper.getMainLooper()).postDelayed({
+            lifecycleScope.launch {
+                delay(800)
+                if (isFinishing) return@launch
                 finish()
-            }, 800)
+            }
+        }
+    }
+
+    private fun debouncedUpdatePreview() {
+        debounceJob?.cancel()
+        debounceJob = lifecycleScope.launch {
+            delay(300)
+            if (isFinishing) return@launch
+            updatePreview()
         }
     }
 
@@ -638,6 +674,7 @@ class SettingsActivity : BaseActivity() {
     }
 
     private fun parseBr(value: String): Float? {
+        if (value.isBlank()) return null
         val cleaned = value.trim().replace(",", ".")
         return cleaned.toFloatOrNull()
     }
@@ -661,7 +698,6 @@ class SettingsActivity : BaseActivity() {
         const val KEY_LAST_TIMESTAMP = "last_timestamp"
 
         const val KEY_CARD_LAYOUT = "card_layout"
-        const val KEY_CARD_SIDE = "card_side"
         const val KEY_CARD_POSITION = "card_position"
         const val KEY_CARD_Y_PERCENT = "card_y_percent"
         const val KEY_SHOW_KM = "show_km"
@@ -679,7 +715,6 @@ class SettingsActivity : BaseActivity() {
         const val KEY_CARD_DURATION = "card_duration"
 
         const val DEFAULT_CARD_LAYOUT = "column"
-        const val DEFAULT_CARD_SIDE = "left"
         const val DEFAULT_CARD_POSITION = "left"
         const val DEFAULT_CARD_Y_PERCENT = 30
     }

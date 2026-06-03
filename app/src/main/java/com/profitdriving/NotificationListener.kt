@@ -4,6 +4,7 @@ import android.app.Notification
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import com.profitdriving.SecurePreferences
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -18,7 +19,7 @@ class NotificationListener : NotificationListenerService() {
 
     override fun onCreate() {
         super.onCreate()
-        prefs = getSharedPreferences(SettingsActivity.PREF_NAME, Context.MODE_PRIVATE)
+        prefs = SecurePreferences.get(this)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {

@@ -9,7 +9,7 @@ import java.util.Date
 import java.util.Locale
 
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(
-    context, DATABASE_NAME, null, DATABASE_VERSION
+    context.applicationContext, DATABASE_NAME, null, DATABASE_VERSION
 ) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(CREATE_TABLE)
@@ -200,63 +200,29 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         cursor.use {
             while (it.moveToNext()) {
                 list.add(RideRecord(
-                    id = it.getLong(it.getColumnIndexOrThrow(COL_ID)),
-                    value = it.getDouble(it.getColumnIndexOrThrow(COL_VALUE)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_VALUE))) null else v
-                    },
-                    distanceKm = it.getDouble(it.getColumnIndexOrThrow(COL_DISTANCE_KM)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_DISTANCE_KM))) null else v
-                    },
-                    timeMin = it.getInt(it.getColumnIndexOrThrow(COL_TIME_MIN)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_TIME_MIN))) null else v
-                    },
-                    rating = it.getDouble(it.getColumnIndexOrThrow(COL_RATING)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_RATING))) null else v
-                    },
-                    pricePerKm = it.getDouble(it.getColumnIndexOrThrow(COL_PRICE_PER_KM)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_PRICE_PER_KM))) null else v
-                    },
-                    pricePerHour = it.getDouble(it.getColumnIndexOrThrow(COL_PRICE_PER_HOUR)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_PRICE_PER_HOUR))) null else v
-                    },
-                    appName = it.getString(it.getColumnIndexOrThrow(COL_APP_NAME)),
-                    timestamp = it.getLong(it.getColumnIndexOrThrow(COL_TIMESTAMP)),
-                    pickupDistanceKm = it.getDouble(it.getColumnIndexOrThrow(COL_PICKUP_DISTANCE)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_PICKUP_DISTANCE))) null else v
-                    },
-                    pickupTimeMin = it.getInt(it.getColumnIndexOrThrow(COL_PICKUP_TIME)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_PICKUP_TIME))) null else v
-                    },
-                    tripDistanceKm = it.getDouble(it.getColumnIndexOrThrow(COL_TRIP_DISTANCE)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_TRIP_DISTANCE))) null else v
-                    },
-                    tripTimeMin = it.getInt(it.getColumnIndexOrThrow(COL_TRIP_TIME)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_TRIP_TIME))) null else v
-                    },
-                    serviceType = if (it.isNull(it.getColumnIndexOrThrow(COL_SERVICE_TYPE))) null
-                        else it.getString(it.getColumnIndexOrThrow(COL_SERVICE_TYPE)),
-                    bonusAmount = it.getDouble(it.getColumnIndexOrThrow(COL_BONUS_AMOUNT)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_BONUS_AMOUNT))) null else v
-                    },
-                    status = if (it.isNull(it.getColumnIndexOrThrow(COL_STATUS))) "EXPIRED"
-                        else it.getString(it.getColumnIndexOrThrow(COL_STATUS)),
-                    hasMultipleStops = it.getInt(it.getColumnIndexOrThrow(COL_HAS_MULTIPLE_STOPS)) == 1,
-                    scorePercent = it.getDouble(it.getColumnIndexOrThrow(COL_SCORE_PERCENT)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_SCORE_PERCENT))) null else v
-                    },
-                    priorityBonus = it.getDouble(it.getColumnIndexOrThrow(COL_PRIORITY_BONUS)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_PRIORITY_BONUS))) null else v
-                    },
-                    dynamicBonus = it.getDouble(it.getColumnIndexOrThrow(COL_DYNAMIC_BONUS)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_DYNAMIC_BONUS))) null else v
-                    },
-                    pickupAddress = if (it.isNull(it.getColumnIndexOrThrow(COL_PICKUP_ADDRESS))) null
-                        else it.getString(it.getColumnIndexOrThrow(COL_PICKUP_ADDRESS)),
-                    dropoffAddress = if (it.isNull(it.getColumnIndexOrThrow(COL_DROPOFF_ADDRESS))) null
-                        else it.getString(it.getColumnIndexOrThrow(COL_DROPOFF_ADDRESS)),
-                    costPerKmAtTime = it.getDouble(it.getColumnIndexOrThrow(COL_COST_PER_KM_AT_TIME)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_COST_PER_KM_AT_TIME))) null else v
-                    }
+                    id = it.getSafeLong(COL_ID) ?: 0L,
+                    value = it.getSafeDouble(COL_VALUE),
+                    distanceKm = it.getSafeDouble(COL_DISTANCE_KM),
+                    timeMin = it.getSafeInt(COL_TIME_MIN),
+                    rating = it.getSafeDouble(COL_RATING),
+                    pricePerKm = it.getSafeDouble(COL_PRICE_PER_KM),
+                    pricePerHour = it.getSafeDouble(COL_PRICE_PER_HOUR),
+                    appName = it.getSafeString(COL_APP_NAME) ?: "",
+                    timestamp = it.getSafeLong(COL_TIMESTAMP) ?: 0L,
+                    pickupDistanceKm = it.getSafeDouble(COL_PICKUP_DISTANCE),
+                    pickupTimeMin = it.getSafeInt(COL_PICKUP_TIME),
+                    tripDistanceKm = it.getSafeDouble(COL_TRIP_DISTANCE),
+                    tripTimeMin = it.getSafeInt(COL_TRIP_TIME),
+                    serviceType = it.getSafeString(COL_SERVICE_TYPE),
+                    bonusAmount = it.getSafeDouble(COL_BONUS_AMOUNT),
+                    status = it.getSafeString(COL_STATUS) ?: "EXPIRED",
+                    hasMultipleStops = it.getSafe(COL_HAS_MULTIPLE_STOPS, false),
+                    scorePercent = it.getSafeDouble(COL_SCORE_PERCENT),
+                    priorityBonus = it.getSafeDouble(COL_PRIORITY_BONUS),
+                    dynamicBonus = it.getSafeDouble(COL_DYNAMIC_BONUS),
+                    pickupAddress = it.getSafeString(COL_PICKUP_ADDRESS),
+                    dropoffAddress = it.getSafeString(COL_DROPOFF_ADDRESS),
+                    costPerKmAtTime = it.getSafeDouble(COL_COST_PER_KM_AT_TIME)
                 ))
             }
         }
@@ -315,16 +281,15 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         cursor.use {
             while (it.moveToNext()) {
                 list.add(RefuelRecord(
-                    id = it.getLong(it.getColumnIndexOrThrow(COL_ID)),
-                    timestamp = it.getLong(it.getColumnIndexOrThrow(COL_R_TIMESTAMP)),
-                    odometerKm = it.getDouble(it.getColumnIndexOrThrow(COL_R_ODOMETER)),
-                    liters = it.getDouble(it.getColumnIndexOrThrow(COL_R_LITERS)),
-                    pricePerLiter = it.getDouble(it.getColumnIndexOrThrow(COL_R_PRICE)),
-                    totalValue = it.getDouble(it.getColumnIndexOrThrow(COL_R_TOTAL)),
-                    isFullTank = it.getInt(it.getColumnIndexOrThrow(COL_R_FULL_TANK)) == 1,
-                    fuelType = it.getString(it.getColumnIndexOrThrow(COL_R_FUEL_TYPE)),
-                    notes = if (it.isNull(it.getColumnIndexOrThrow(COL_R_NOTES))) null
-                        else it.getString(it.getColumnIndexOrThrow(COL_R_NOTES))
+                    id = it.getSafeLong(COL_ID) ?: 0L,
+                    timestamp = it.getSafeLong(COL_R_TIMESTAMP) ?: 0L,
+                    odometerKm = it.getSafeDouble(COL_R_ODOMETER) ?: 0.0,
+                    liters = it.getSafeDouble(COL_R_LITERS) ?: 0.0,
+                    pricePerLiter = it.getSafeDouble(COL_R_PRICE) ?: 0.0,
+                    totalValue = it.getSafeDouble(COL_R_TOTAL) ?: 0.0,
+                    isFullTank = it.getSafe(COL_R_FULL_TANK, false),
+                    fuelType = it.getSafeString(COL_R_FUEL_TYPE) ?: "",
+                    notes = it.getSafeString(COL_R_NOTES)
                 ))
             }
         }
@@ -363,13 +328,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         cursor.use {
             while (it.moveToNext()) {
                 list.add(FixedExpense(
-                    id = it.getLong(it.getColumnIndexOrThrow(COL_ID)),
-                    name = it.getString(it.getColumnIndexOrThrow(COL_E_NAME)),
-                    value = it.getDouble(it.getColumnIndexOrThrow(COL_E_VALUE)),
-                    category = it.getString(it.getColumnIndexOrThrow(COL_E_CATEGORY)),
-                    createdAt = it.getLong(it.getColumnIndexOrThrow(COL_E_CREATED_AT)),
-                    periodicity = it.getString(it.getColumnIndexOrThrow(COL_E_PERIODICITY)),
-                    usefulLifeMonths = it.getInt(it.getColumnIndexOrThrow(COL_E_USEFUL_LIFE))
+                    id = it.getSafeLong(COL_ID) ?: 0L,
+                    name = it.getSafeString(COL_E_NAME) ?: "",
+                    value = it.getSafeDouble(COL_E_VALUE) ?: 0.0,
+                    category = it.getSafeString(COL_E_CATEGORY) ?: "",
+                    createdAt = it.getSafeLong(COL_E_CREATED_AT) ?: 0L,
+                    periodicity = it.getSafeString(COL_E_PERIODICITY) ?: "monthly",
+                    usefulLifeMonths = it.getSafeInt(COL_E_USEFUL_LIFE) ?: 1
                 ))
             }
         }
@@ -422,11 +387,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         cursor.use {
             while (it.moveToNext()) {
                 list.add(VariableCost(
-                    id = it.getLong(it.getColumnIndexOrThrow(COL_ID)),
-                    name = it.getString(it.getColumnIndexOrThrow(COL_VC_NAME)),
-                    costPerKm = it.getDouble(it.getColumnIndexOrThrow(COL_VC_COST_PER_KM)),
-                    category = it.getString(it.getColumnIndexOrThrow(COL_VC_CATEGORY)),
-                    createdAt = it.getLong(it.getColumnIndexOrThrow(COL_VC_CREATED_AT))
+                    id = it.getSafeLong(COL_ID) ?: 0L,
+                    name = it.getSafeString(COL_VC_NAME) ?: "",
+                    costPerKm = it.getSafeDouble(COL_VC_COST_PER_KM) ?: 0.0,
+                    category = it.getSafeString(COL_VC_CATEGORY) ?: "",
+                    createdAt = it.getSafeLong(COL_VC_CREATED_AT) ?: 0L
                 ))
             }
         }
@@ -529,36 +494,32 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     private fun expenseFromCursor(cursor: android.database.Cursor): Expense {
         return Expense(
-            id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_ID)),
-            name = cursor.getString(cursor.getColumnIndexOrThrow(COL_E_NAME)),
-            value = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_E_VALUE)),
-            costType = CostType.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COL_EX_COST_TYPE)).uppercase()),
+            id = cursor.getSafeLong(COL_ID) ?: 0L,
+            name = cursor.getSafeString(COL_E_NAME) ?: "",
+            value = cursor.getSafeDouble(COL_E_VALUE) ?: 0.0,
+            costType = try {
+                CostType.valueOf(cursor.getSafeString(COL_EX_COST_TYPE)?.uppercase() ?: "fixed")
+            } catch (_: IllegalArgumentException) { CostType.FIXED },
             periodicity = try {
-                if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_EX_PERIODICITY))) null
-                else Periodicity.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COL_EX_PERIODICITY)).uppercase())
+                cursor.getSafeString(COL_EX_PERIODICITY)
+                    ?.uppercase()
+                    ?.let { Periodicity.valueOf(it) }
             } catch (_: IllegalArgumentException) { null },
-            usefulLifeMonths = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_E_USEFUL_LIFE))) null
-                else cursor.getInt(cursor.getColumnIndexOrThrow(COL_E_USEFUL_LIFE)),
-            percentageOfProfit = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_EX_PROFIT_PCT))) null
-                else cursor.getInt(cursor.getColumnIndexOrThrow(COL_EX_PROFIT_PCT)),
-            estimatedEventsPerMonth = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_EX_EVENTS_PER_MONTH))) null
-                else cursor.getInt(cursor.getColumnIndexOrThrow(COL_EX_EVENTS_PER_MONTH)),
+            usefulLifeMonths = cursor.getSafeInt(COL_E_USEFUL_LIFE),
+            percentageOfProfit = cursor.getSafeInt(COL_EX_PROFIT_PCT),
+            estimatedEventsPerMonth = cursor.getSafeInt(COL_EX_EVENTS_PER_MONTH),
             category = try {
-                ExpenseCategory.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COL_E_CATEGORY)).uppercase())
+                ExpenseCategory.valueOf(cursor.getSafeString(COL_E_CATEGORY)?.uppercase() ?: "other")
             } catch (_: IllegalArgumentException) { ExpenseCategory.OTHER },
-            notes = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_R_NOTES))) null
-                else cursor.getString(cursor.getColumnIndexOrThrow(COL_R_NOTES)),
-            createdAt = cursor.getLong(cursor.getColumnIndexOrThrow(COL_E_CREATED_AT)),
-            totalOriginalValue = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_E_TOTAL_ORIGINAL))) null
-                else cursor.getDouble(cursor.getColumnIndexOrThrow(COL_E_TOTAL_ORIGINAL)),
-            paymentStatus = cursor.getString(cursor.getColumnIndexOrThrow(COL_E_PAYMENT_STATUS)),
-            paidAmount = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_E_PAID_AMOUNT)),
-            installmentTotal = cursor.getInt(cursor.getColumnIndexOrThrow(COL_E_INSTALLMENT_TOTAL)),
-            installmentCurrent = cursor.getInt(cursor.getColumnIndexOrThrow(COL_E_INSTALLMENT_CURRENT)),
-            dueDate = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_E_DUE_DATE))) null
-                else cursor.getLong(cursor.getColumnIndexOrThrow(COL_E_DUE_DATE)),
-            lastPaymentDate = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_E_LAST_PAYMENT))) null
-                else cursor.getLong(cursor.getColumnIndexOrThrow(COL_E_LAST_PAYMENT))
+            notes = cursor.getSafeString(COL_R_NOTES),
+            createdAt = cursor.getSafeLong(COL_E_CREATED_AT) ?: 0L,
+            totalOriginalValue = cursor.getSafeDouble(COL_E_TOTAL_ORIGINAL),
+            paymentStatus = cursor.getSafeString(COL_E_PAYMENT_STATUS) ?: "PENDING",
+            paidAmount = cursor.getSafeDouble(COL_E_PAID_AMOUNT) ?: 0.0,
+            installmentTotal = cursor.getSafeInt(COL_E_INSTALLMENT_TOTAL) ?: 1,
+            installmentCurrent = cursor.getSafeInt(COL_E_INSTALLMENT_CURRENT) ?: 1,
+            dueDate = cursor.getSafeLong(COL_E_DUE_DATE),
+            lastPaymentDate = cursor.getSafeLong(COL_E_LAST_PAYMENT)
         )
     }
 
@@ -589,13 +550,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         cursor.use {
             while (it.moveToNext()) {
                 list.add(MonthlyStat(
-                    id = it.getLong(it.getColumnIndexOrThrow(COL_ID)),
-                    year = it.getInt(it.getColumnIndexOrThrow(COL_MS_YEAR)),
-                    month = it.getInt(it.getColumnIndexOrThrow(COL_MS_MONTH)),
-                    totalKm = it.getDouble(it.getColumnIndexOrThrow(COL_MS_TOTAL_KM)),
-                    totalFuelCost = it.getDouble(it.getColumnIndexOrThrow(COL_MS_TOTAL_FUEL_COST)),
-                    avgConsumption = if (it.isNull(it.getColumnIndexOrThrow(COL_MS_AVG_CONSUMPTION))) null
-                        else it.getDouble(it.getColumnIndexOrThrow(COL_MS_AVG_CONSUMPTION))
+                    id = it.getSafeLong(COL_ID) ?: 0L,
+                    year = it.getSafeInt(COL_MS_YEAR) ?: 0,
+                    month = it.getSafeInt(COL_MS_MONTH) ?: 0,
+                    totalKm = it.getSafeDouble(COL_MS_TOTAL_KM) ?: 0.0,
+                    totalFuelCost = it.getSafeDouble(COL_MS_TOTAL_FUEL_COST) ?: 0.0,
+                    avgConsumption = it.getSafeDouble(COL_MS_AVG_CONSUMPTION)
                 ))
             }
         }
@@ -609,7 +569,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             TABLE_COST_SETTINGS, null, "$COL_ID = 1", null, null, null, null
         )
         cursor.use {
-            if (it.moveToFirst()) return it.getInt(it.getColumnIndexOrThrow(COL_CS_MONTHLY_KM))
+            if (it.moveToFirst()) return it.getSafeInt(COL_CS_MONTHLY_KM) ?: 3000
         }
         return 3000
     }
@@ -654,59 +614,27 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         cursor.use {
             while (it.moveToNext()) {
                 list.add(RideRecord(
-                    id = it.getLong(it.getColumnIndexOrThrow(COL_ID)),
-                    value = it.getDouble(it.getColumnIndexOrThrow(COL_VALUE)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_VALUE))) null else v
-                    },
-                    distanceKm = it.getDouble(it.getColumnIndexOrThrow(COL_DISTANCE_KM)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_DISTANCE_KM))) null else v
-                    },
-                    timeMin = it.getInt(it.getColumnIndexOrThrow(COL_TIME_MIN)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_TIME_MIN))) null else v
-                    },
-                    rating = it.getDouble(it.getColumnIndexOrThrow(COL_RATING)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_RATING))) null else v
-                    },
-                    pricePerKm = it.getDouble(it.getColumnIndexOrThrow(COL_PRICE_PER_KM)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_PRICE_PER_KM))) null else v
-                    },
-                    pricePerHour = it.getDouble(it.getColumnIndexOrThrow(COL_PRICE_PER_HOUR)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_PRICE_PER_HOUR))) null else v
-                    },
-                    appName = it.getString(it.getColumnIndexOrThrow(COL_APP_NAME)),
-                    timestamp = it.getLong(it.getColumnIndexOrThrow(COL_TIMESTAMP)),
-                    pickupDistanceKm = it.getDouble(it.getColumnIndexOrThrow(COL_PICKUP_DISTANCE)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_PICKUP_DISTANCE))) null else v
-                    },
-                    pickupTimeMin = it.getInt(it.getColumnIndexOrThrow(COL_PICKUP_TIME)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_PICKUP_TIME))) null else v
-                    },
-                    tripDistanceKm = it.getDouble(it.getColumnIndexOrThrow(COL_TRIP_DISTANCE)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_TRIP_DISTANCE))) null else v
-                    },
-                    tripTimeMin = it.getInt(it.getColumnIndexOrThrow(COL_TRIP_TIME)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_TRIP_TIME))) null else v
-                    },
-                    serviceType = if (it.isNull(it.getColumnIndexOrThrow(COL_SERVICE_TYPE))) null
-                        else it.getString(it.getColumnIndexOrThrow(COL_SERVICE_TYPE)),
-                    bonusAmount = it.getDouble(it.getColumnIndexOrThrow(COL_BONUS_AMOUNT)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_BONUS_AMOUNT))) null else v
-                    },
-                    status = if (it.isNull(it.getColumnIndexOrThrow(COL_STATUS))) "EXPIRED"
-                        else it.getString(it.getColumnIndexOrThrow(COL_STATUS)),
-                    hasMultipleStops = it.getInt(it.getColumnIndexOrThrow(COL_HAS_MULTIPLE_STOPS)) == 1,
-                    scorePercent = it.getDouble(it.getColumnIndexOrThrow(COL_SCORE_PERCENT)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_SCORE_PERCENT))) null else v
-                    },
-                    priorityBonus = it.getDouble(it.getColumnIndexOrThrow(COL_PRIORITY_BONUS)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_PRIORITY_BONUS))) null else v
-                    },
-                    dynamicBonus = it.getDouble(it.getColumnIndexOrThrow(COL_DYNAMIC_BONUS)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_DYNAMIC_BONUS))) null else v
-                    },
-                    costPerKmAtTime = it.getDouble(it.getColumnIndexOrThrow(COL_COST_PER_KM_AT_TIME)).let { v ->
-                        if (it.isNull(it.getColumnIndexOrThrow(COL_COST_PER_KM_AT_TIME))) null else v
-                    }
+                    id = it.getSafeLong(COL_ID) ?: 0L,
+                    value = it.getSafeDouble(COL_VALUE),
+                    distanceKm = it.getSafeDouble(COL_DISTANCE_KM),
+                    timeMin = it.getSafeInt(COL_TIME_MIN),
+                    rating = it.getSafeDouble(COL_RATING),
+                    pricePerKm = it.getSafeDouble(COL_PRICE_PER_KM),
+                    pricePerHour = it.getSafeDouble(COL_PRICE_PER_HOUR),
+                    appName = it.getSafeString(COL_APP_NAME) ?: "",
+                    timestamp = it.getSafeLong(COL_TIMESTAMP) ?: 0L,
+                    pickupDistanceKm = it.getSafeDouble(COL_PICKUP_DISTANCE),
+                    pickupTimeMin = it.getSafeInt(COL_PICKUP_TIME),
+                    tripDistanceKm = it.getSafeDouble(COL_TRIP_DISTANCE),
+                    tripTimeMin = it.getSafeInt(COL_TRIP_TIME),
+                    serviceType = it.getSafeString(COL_SERVICE_TYPE),
+                    bonusAmount = it.getSafeDouble(COL_BONUS_AMOUNT),
+                    status = it.getSafeString(COL_STATUS) ?: "EXPIRED",
+                    hasMultipleStops = it.getSafe(COL_HAS_MULTIPLE_STOPS, false),
+                    scorePercent = it.getSafeDouble(COL_SCORE_PERCENT),
+                    priorityBonus = it.getSafeDouble(COL_PRIORITY_BONUS),
+                    dynamicBonus = it.getSafeDouble(COL_DYNAMIC_BONUS),
+                    costPerKmAtTime = it.getSafeDouble(COL_COST_PER_KM_AT_TIME)
                 ))
             }
         }
@@ -845,6 +773,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     fun getCompletedVisitsCountForAddress(address: String): Int {
         if (address.isBlank()) return 0
 
+        val sanitized = address
+            .replace("%", "\\%")
+            .replace("_", "\\_")
+
         val db = readableDatabase
         val cursor = db.rawQuery(
             """SELECT COUNT(*)
@@ -852,7 +784,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                INNER JOIN $TABLE_DAILY_RIDES dr ON r.$COL_ID = dr.$COL_DR_RIDE_ID
                WHERE r.$COL_DROPOFF_ADDRESS LIKE ?
                AND dr.$COL_DR_IS_COMPLETED = 1""",
-            arrayOf("%$address%")
+            arrayOf("%$sanitized%")
         )
         cursor.use {
             if (it.moveToFirst()) {
@@ -876,19 +808,17 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     private fun dailyRideFromCursor(cursor: android.database.Cursor): DailyRide {
         return DailyRide(
-            id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_ID)),
-            rideId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_DR_RIDE_ID)),
-            date = cursor.getString(cursor.getColumnIndexOrThrow(COL_DR_DATE)),
-            originalValue = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_DR_ORIGINAL_VALUE)),
-            adjustedValue = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_DR_ADJUSTED_VALUE))) null
-                else cursor.getDouble(cursor.getColumnIndexOrThrow(COL_DR_ADJUSTED_VALUE)),
-            tipAmount = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_DR_TIP_AMOUNT)),
-            isCompleted = cursor.getInt(cursor.getColumnIndexOrThrow(COL_DR_IS_COMPLETED)) == 1,
-            cancelledWithFee = cursor.getInt(cursor.getColumnIndexOrThrow(COL_DR_CANCELLED_WITH_FEE)) == 1,
-            notes = if (cursor.isNull(cursor.getColumnIndexOrThrow(COL_DR_NOTES))) null
-                else cursor.getString(cursor.getColumnIndexOrThrow(COL_DR_NOTES)),
-            createdAt = cursor.getLong(cursor.getColumnIndexOrThrow(COL_DR_CREATED_AT)),
-            updatedAt = cursor.getLong(cursor.getColumnIndexOrThrow(COL_DR_UPDATED_AT))
+            id = cursor.getSafeLong(COL_ID) ?: 0L,
+            rideId = cursor.getSafeLong(COL_DR_RIDE_ID) ?: 0L,
+            date = cursor.getSafeString(COL_DR_DATE) ?: "",
+            originalValue = cursor.getSafeDouble(COL_DR_ORIGINAL_VALUE) ?: 0.0,
+            adjustedValue = cursor.getSafeDouble(COL_DR_ADJUSTED_VALUE),
+            tipAmount = cursor.getSafeDouble(COL_DR_TIP_AMOUNT) ?: 0.0,
+            isCompleted = cursor.getSafe(COL_DR_IS_COMPLETED, false),
+            cancelledWithFee = cursor.getSafe(COL_DR_CANCELLED_WITH_FEE, false),
+            notes = cursor.getSafeString(COL_DR_NOTES),
+            createdAt = cursor.getSafeLong(COL_DR_CREATED_AT) ?: 0L,
+            updatedAt = cursor.getSafeLong(COL_DR_UPDATED_AT) ?: 0L
         )
     }
 
@@ -1070,7 +1000,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         """.trimIndent()
 
         private val CREATE_DAILY_RIDES = """
-            CREATE TABLE $TABLE_DAILY_RIDES (
+            CREATE TABLE IF NOT EXISTS $TABLE_DAILY_RIDES (
                 $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $COL_DR_RIDE_ID INTEGER NOT NULL,
                 $COL_DR_DATE TEXT NOT NULL,

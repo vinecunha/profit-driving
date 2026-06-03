@@ -7,26 +7,43 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout
 import android.widget.LinearLayout.HORIZONTAL
 import android.widget.LinearLayout.VERTICAL
-import android.widget.ProgressBar
 import android.widget.TextView
 
-import androidx.core.content.ContextCompat
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 class AnalysisActivity : BaseActivity() {
 
     private lateinit var db: DatabaseHelper
     private lateinit var cardsContainer: LinearLayout
-    private lateinit var progressBar: ProgressBar
+    private lateinit var skeletonContainer: LinearLayout
     private lateinit var scrollView: View
-    private var currentPeriod = 0
+    private lateinit var btnModeDay: TextView
+    private lateinit var btnModeWeek: TextView
+    private lateinit var btnModeMonth: TextView
+    private lateinit var btnPrevPeriod: TextView
+    private lateinit var btnNextPeriod: TextView
+    private lateinit var btnToday: TextView
+    private lateinit var tvPeriodTitle: TextView
+
+    private var currentMode = ViewMode.DAY
+    private var referenceCalendar = Calendar.getInstance()
     private val handler = Handler(Looper.getMainLooper())
+
+    private val dayFormatter = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("pt", "BR"))
+    private val weekFormatter = SimpleDateFormat("dd/MM", Locale("pt", "BR"))
+    private val monthFormatter = SimpleDateFormat("MMMM, yyyy", Locale("pt", "BR"))
+
+    private val GREEN = Color.parseColor("#00A86B")
+    private val ORANGE = Color.parseColor("#F59E0B")
+    private val RED = Color.parseColor("#EF4444")
+    private val BLUE = Color.parseColor("#3B82F6")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,15 +52,20 @@ class AnalysisActivity : BaseActivity() {
         setupToolbar(title = "An\u00E1lise", showBack = true)
 
         cardsContainer = findViewById(R.id.cardsContainer)
-        progressBar = findViewById(R.id.progressBar)
+        skeletonContainer = findViewById(R.id.skeletonContainer)
         scrollView = findViewById(R.id.scrollView)
         db = DatabaseHelper(this)
 
-        findViewById<TextView>(R.id.btnPeriodToday).setOnClickListener { setPeriod(0) }
-        findViewById<TextView>(R.id.btnPeriodWeek).setOnClickListener { setPeriod(7) }
-        findViewById<TextView>(R.id.btnPeriodMonth).setOnClickListener { setPeriod(30) }
+        btnModeDay = findViewById(R.id.btnModeDay)
+        btnModeWeek = findViewById(R.id.btnModeWeek)
+        btnModeMonth = findViewById(R.id.btnModeMonth)
+        btnPrevPeriod = findViewById(R.id.btnPrevPeriod)
+        btnNextPeriod = findViewById(R.id.btnNextPeriod)
+        btnToday = findViewById(R.id.btnToday)
+        tvPeriodTitle = findViewById(R.id.tvPeriodTitle)
 
-        setPeriod(0)
+        setupPeriodNavigation()
+        setViewMode(ViewMode.DAY)
     }
 
     override fun onDestroy() {
@@ -51,63 +73,170 @@ class AnalysisActivity : BaseActivity() {
         super.onDestroy()
     }
 
-    private fun setPeriod(days: Int) {
-        currentPeriod = days
-        updateButtons()
+    private fun loadDataForCurrentPeriod() {
+        showSkeleton()
+        val (periodStart, periodEnd) = getPeriodTimestamps()
 
-        val now = System.currentTimeMillis()
-        val sinceMs = when (days) {
-            0 -> Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
-            7 -> Calendar.getInstance().apply {
-                set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
-            30 -> Calendar.getInstance().apply {
-                set(Calendar.DAY_OF_MONTH, 1)
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
-            else -> 0L
-        }
-
-        progressBar.visibility = View.VISIBLE
-        cardsContainer.visibility = View.GONE
-        scrollView.visibility = View.GONE
         Thread {
-            val records = db.getFiltered(sinceMs)
-            val dailyRides = db.getDailyRidesByDateRange(sinceMs, now)
+            val records = db.getFiltered(periodStart)
+            val dailyRides = db.getDailyRidesByDateRange(periodStart, periodEnd)
             val result = AnalysisHelperV2.calculate(records, dailyRides)
             handler.post {
-                progressBar.visibility = View.GONE
-                scrollView.visibility = View.VISIBLE
-                cardsContainer.visibility = View.VISIBLE
+                hideSkeleton()
                 buildCards(result)
             }
         }.start()
     }
 
-    private fun updateButtons() {
-        val today = findViewById<TextView>(R.id.btnPeriodToday)
-        val week = findViewById<TextView>(R.id.btnPeriodWeek)
-        val month = findViewById<TextView>(R.id.btnPeriodMonth)
-        val sel = R.drawable.pill_selected
-        val unsel = R.drawable.pill_unselected
-        today.background = ContextCompat.getDrawable(this, if (currentPeriod == 0) sel else unsel)
-        today.setTextColor(if (currentPeriod == 0) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-        week.background = ContextCompat.getDrawable(this, if (currentPeriod == 7) sel else unsel)
-        week.setTextColor(if (currentPeriod == 7) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-        month.background = ContextCompat.getDrawable(this, if (currentPeriod == 30) sel else unsel)
-        month.setTextColor(if (currentPeriod == 30) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+    private fun showSkeleton() {
+        skeletonContainer.removeAllViews()
+        for (i in 0..2) {
+            val skeleton = layoutInflater.inflate(R.layout.skeleton_card, skeletonContainer, false)
+            skeletonContainer.addView(skeleton)
+        }
+        skeletonContainer.visibility = View.VISIBLE
+        cardsContainer.visibility = View.GONE
+        scrollView.visibility = View.GONE
+    }
+
+    private fun hideSkeleton() {
+        skeletonContainer.visibility = View.GONE
+        cardsContainer.visibility = View.VISIBLE
+        scrollView.visibility = View.VISIBLE
+        skeletonContainer.removeAllViews()
+    }
+
+    private fun setupPeriodNavigation() {
+        btnModeDay.setOnClickListener { setViewMode(ViewMode.DAY) }
+        btnModeWeek.setOnClickListener { setViewMode(ViewMode.WEEK) }
+        btnModeMonth.setOnClickListener { setViewMode(ViewMode.MONTH) }
+        btnPrevPeriod.setOnClickListener { navigatePeriod(-1) }
+        btnNextPeriod.setOnClickListener { navigatePeriod(1) }
+        btnToday.setOnClickListener { goToToday() }
+    }
+
+    private fun setViewMode(mode: ViewMode) {
+        currentMode = mode
+        referenceCalendar = when (mode) {
+            ViewMode.DAY -> referenceCalendar
+            ViewMode.WEEK -> getWeekStart(referenceCalendar)
+            ViewMode.MONTH -> {
+                val cal = referenceCalendar.clone() as Calendar
+                cal.set(Calendar.DAY_OF_MONTH, 1)
+                cal
+            }
+        }
+        updateModeStyles()
+        updatePeriodTitle()
+        loadDataForCurrentPeriod()
+    }
+
+    private fun updateModeStyles() {
+        btnModeDay.setBackgroundResource(if (currentMode == ViewMode.DAY) R.drawable.pill_selected else R.drawable.pill_unselected)
+        btnModeWeek.setBackgroundResource(if (currentMode == ViewMode.WEEK) R.drawable.pill_selected else R.drawable.pill_unselected)
+        btnModeMonth.setBackgroundResource(if (currentMode == ViewMode.MONTH) R.drawable.pill_selected else R.drawable.pill_unselected)
+
+        btnModeDay.setTextColor(if (currentMode == ViewMode.DAY) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+        btnModeWeek.setTextColor(if (currentMode == ViewMode.WEEK) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+        btnModeMonth.setTextColor(if (currentMode == ViewMode.MONTH) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+    }
+
+    private fun updatePeriodTitle() {
+        tvPeriodTitle.text = when (currentMode) {
+            ViewMode.DAY -> dayFormatter.format(referenceCalendar.time)
+            ViewMode.WEEK -> {
+                val start = getWeekStart(referenceCalendar)
+                val end = getWeekEnd(referenceCalendar)
+                "${weekFormatter.format(start.time)} - ${weekFormatter.format(end.time)}"
+            }
+            ViewMode.MONTH -> monthFormatter.format(referenceCalendar.time)
+        }
+    }
+
+    private fun getWeekStart(calendar: Calendar): Calendar {
+        val cal = calendar.clone() as Calendar
+        cal.firstDayOfWeek = Calendar.MONDAY
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        return cal
+    }
+
+    private fun getWeekEnd(weekStart: Calendar): Calendar {
+        val cal = weekStart.clone() as Calendar
+        cal.add(Calendar.DAY_OF_MONTH, 6)
+        cal.set(Calendar.HOUR_OF_DAY, 23)
+        cal.set(Calendar.MINUTE, 59)
+        cal.set(Calendar.SECOND, 59)
+        cal.set(Calendar.MILLISECOND, 999)
+        return cal
+    }
+
+    private fun navigatePeriod(direction: Int) {
+        when (currentMode) {
+            ViewMode.DAY -> referenceCalendar.add(Calendar.DAY_OF_MONTH, direction)
+            ViewMode.WEEK -> referenceCalendar.add(Calendar.DAY_OF_MONTH, direction * 7)
+            ViewMode.MONTH -> referenceCalendar.add(Calendar.MONTH, direction)
+        }
+        updatePeriodTitle()
+        loadDataForCurrentPeriod()
+    }
+
+    private fun goToToday() {
+        referenceCalendar = Calendar.getInstance()
+        if (currentMode != ViewMode.DAY) {
+            referenceCalendar = when (currentMode) {
+                ViewMode.WEEK -> getWeekStart(referenceCalendar)
+                ViewMode.MONTH -> {
+                    val cal = referenceCalendar.clone() as Calendar
+                    cal.set(Calendar.DAY_OF_MONTH, 1)
+                    cal
+                }
+                else -> referenceCalendar
+            }
+        }
+        updatePeriodTitle()
+        loadDataForCurrentPeriod()
+    }
+
+    private fun getPeriodTimestamps(): Pair<Long, Long> {
+        return when (currentMode) {
+            ViewMode.DAY -> {
+                val start = referenceCalendar.clone() as Calendar
+                start.set(Calendar.HOUR_OF_DAY, 0)
+                start.set(Calendar.MINUTE, 0)
+                start.set(Calendar.SECOND, 0)
+                start.set(Calendar.MILLISECOND, 0)
+                val end = start.clone() as Calendar
+                end.set(Calendar.HOUR_OF_DAY, 23)
+                end.set(Calendar.MINUTE, 59)
+                end.set(Calendar.SECOND, 59)
+                end.set(Calendar.MILLISECOND, 999)
+                Pair(start.timeInMillis, end.timeInMillis)
+            }
+            ViewMode.WEEK -> {
+                val start = getWeekStart(referenceCalendar)
+                val end = getWeekEnd(start)
+                Pair(start.timeInMillis, end.timeInMillis)
+            }
+            ViewMode.MONTH -> {
+                val start = referenceCalendar.clone() as Calendar
+                start.set(Calendar.DAY_OF_MONTH, 1)
+                start.set(Calendar.HOUR_OF_DAY, 0)
+                start.set(Calendar.MINUTE, 0)
+                start.set(Calendar.SECOND, 0)
+                start.set(Calendar.MILLISECOND, 0)
+                val end = start.clone() as Calendar
+                end.set(Calendar.DAY_OF_MONTH, start.getActualMaximum(Calendar.DAY_OF_MONTH))
+                end.set(Calendar.HOUR_OF_DAY, 23)
+                end.set(Calendar.MINUTE, 59)
+                end.set(Calendar.SECOND, 59)
+                end.set(Calendar.MILLISECOND, 999)
+                Pair(start.timeInMillis, end.timeInMillis)
+            }
+        }
     }
 
     private fun buildCards(r: AnalysisResultV2) {
@@ -119,6 +248,12 @@ class AnalysisActivity : BaseActivity() {
         buildDinamicaHorario(r)
         buildCidades(r)
         buildBairros(r)
+        buildHourlyForecast(r)
+        buildAcceptanceByValue(r)
+        buildLostRides(r)
+        buildDynamicTrend(r)
+        buildDailyProjection(r)
+        buildWeekdayRanking(r)
     }
 
     private var cardIndex = 0
@@ -132,6 +267,7 @@ class AnalysisActivity : BaseActivity() {
         val bg = cardBgColors[cardIndex % cardBgColors.size]
         cardIndex++
         return LinearLayout(this).apply {
+            contentDescription = "Card de análise: $title"
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -146,6 +282,7 @@ class AnalysisActivity : BaseActivity() {
             elevation = 2 * resources.displayMetrics.density
 
             addView(TextView(this@AnalysisActivity).apply {
+                contentDescription = "Título: $title"
                 layoutParams = LinearLayout.LayoutParams(
                     MATCH_PARENT, WRAP_CONTENT
                 ).apply { setMargins(0, 0, 0, 10) }
@@ -162,6 +299,7 @@ class AnalysisActivity : BaseActivity() {
         color: Int = Color.parseColor("#444444"), bold: Boolean = false
     ) {
         card.addView(TextView(this).apply {
+            contentDescription = text
             layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
                 .apply { setMargins(0, 2, 0, 2) }
             this.text = text
@@ -173,9 +311,10 @@ class AnalysisActivity : BaseActivity() {
 
     private fun addBar(
         container: LinearLayout, label: String, valueText: String,
-        fraction: Float, barColor: Int = Color.parseColor("#00A86B")
+        fraction: Float, barColor: Int = GREEN
     ) {
         val row = LinearLayout(this).apply {
+            contentDescription = "Barra de $label: $valueText"
             layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
             orientation = HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -224,6 +363,44 @@ class AnalysisActivity : BaseActivity() {
         container.addView(row)
     }
 
+    private fun addBarSimple(
+        container: LinearLayout, label: String, valueText: String,
+        fraction: Float, barColor: Int = GREEN
+    ) {
+        val row = LinearLayout(this).apply {
+            contentDescription = "Barra de $label: $valueText"
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 3, 0, 3)
+        }
+
+        row.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.25f)
+            text = label
+            textSize = 11f
+            setTextColor(Color.parseColor("#555555"))
+        })
+
+        row.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.55f)
+            text = "\u2588".repeat((fraction.coerceIn(0f, 1f) * 20).toInt().coerceAtLeast(1))
+            textSize = 11f
+            setTextColor(barColor)
+            maxLines = 1
+        })
+
+        row.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.2f)
+            text = valueText
+            textSize = 11f
+            setTextColor(Color.parseColor("#333333"))
+            gravity = Gravity.END
+        })
+
+        container.addView(row)
+    }
+
     private fun addDivider(card: LinearLayout) {
         card.addView(View(this).apply {
             layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 1)
@@ -237,7 +414,7 @@ class AnalysisActivity : BaseActivity() {
         val card = createCard("\uD83D\uDCCA Vis\u00E3o Geral")
 
         addText(card, "\uD83D\uDCCB Corridas ofertadas: ${r.offeredCount}", 13f, Color.parseColor("#333333"))
-        addText(card, "\u2705 Corridas aceitas: ${r.acceptedCount} (${"%.1f".format(r.acceptanceRate)}%)", 13f, Color.parseColor("#00A86B"))
+        addText(card, "\u2705 Corridas aceitas: ${r.acceptedCount} (${"%.1f".format(r.acceptanceRate)}%)", 13f, GREEN)
         addText(card, "\uD83D\uDCB0 Faturamento bruto: R\$ ${AnalysisHelperV2.formatBr(r.totalEarnings)}", 13f, Color.parseColor("#333333"))
         addText(card, "\uD83D\uDEE3\uFE0F Km total: ${AnalysisHelperV2.formatBr1(r.totalKm)} km", 13f, Color.parseColor("#333333"))
         addText(card, "\u23F1\uFE0F Tempo total: ${AnalysisHelperV2.hoursMinutes(r.totalMinutes)}", 13f, Color.parseColor("#333333"))
@@ -252,9 +429,9 @@ class AnalysisActivity : BaseActivity() {
             addDivider(card)
             addText(card, "Avalia\u00E7\u00E3o das ofertas", 13f, Color.parseColor("#333333"), true)
             val scoreColors = mapOf(
-                "Boa (\u226580)" to Color.parseColor("#00A86B"),
-                "M\u00E9dia (50-79)" to Color.parseColor("#F59E0B"),
-                "Ruim (<50)" to Color.parseColor("#EF4444")
+                "Boa (\u226580)" to GREEN,
+                "M\u00E9dia (50-79)" to ORANGE,
+                "Ruim (<50)" to RED
             )
             val scoreContainer = LinearLayout(this).apply {
                 layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
@@ -281,7 +458,6 @@ class AnalysisActivity : BaseActivity() {
 
         addDivider(card)
 
-        // Prioridade
         val p = r.priorityImpact
         addText(card, "\u2B06 Prioridade", 13f, Color.parseColor("#333333"), true)
         if (p.count >= MIN_DATA) {
@@ -297,14 +473,13 @@ class AnalysisActivity : BaseActivity() {
             }, 12f, Color.parseColor("#555555"))
             addText(card, buildString {
                 append("\u2B06 ${"%.0f".format(diffPctP)}% melhor R\$/km  |  ${"%.0f".format(goodDiffP)}% mais corridas \"boas\"")
-            }, 12f, Color.parseColor("#00A86B"), true)
+            }, 12f, GREEN, true)
         } else {
             addText(card, "Dados insuficientes (m\u00EDn. $MIN_DATA corridas com prioridade)", 12f, Color.parseColor("#999999"))
         }
 
         addDivider(card)
 
-        // Dinâmica
         val d = r.dynamicImpact
         addText(card, "\u26A1 Din\u00E2mica", 13f, Color.parseColor("#333333"), true)
         if (d.count >= MIN_DATA) {
@@ -320,7 +495,7 @@ class AnalysisActivity : BaseActivity() {
             }, 12f, Color.parseColor("#555555"))
             addText(card, buildString {
                 append("\u2B06 ${"%.0f".format(diffPctD)}% melhor R\$/km  |  ${"%.0f".format(goodDiffD)}% mais corridas \"boas\"")
-            }, 12f, Color.parseColor("#00A86B"), true)
+            }, 12f, GREEN, true)
         } else {
             addText(card, "Dados insuficientes (m\u00EDn. $MIN_DATA corridas com din\u00E2mica)", 12f, Color.parseColor("#999999"))
         }
@@ -342,7 +517,7 @@ class AnalysisActivity : BaseActivity() {
                 append("\u2B50 Melhor hor\u00E1rio: ${bestData.hour}h \u00E0s ${(bestData.hour + 1) % 24}h")
                 append("  |  R\$ ${AnalysisHelperV2.formatBr(bestData.avgPricePerKm)}/km")
                 append("  |  ${bestData.rideCount} corridas")
-            }, 12f, Color.parseColor("#00A86B"), true)
+            }, 12f, GREEN, true)
         }
 
         addDivider(card)
@@ -380,7 +555,7 @@ class AnalysisActivity : BaseActivity() {
             addText(card, buildString {
                 append("\u26A1 Pico de din\u00E2mica: ${peakData.hour}h")
                 append("  |  ${"%.0f".format(peakData.dynamicPercentage)}% com din\u00E2mica")
-            }, 12f, Color.parseColor("#F59E0B"), true)
+            }, 12f, ORANGE, true)
         }
 
         addDivider(card)
@@ -399,7 +574,7 @@ class AnalysisActivity : BaseActivity() {
             }
             for (h in topDynamic) {
                 addBar(dContainer, "${h.hour}h", "${"%.0f".format(h.dynamicPercentage)}%",
-                    (h.dynamicPercentage / maxVal).toFloat(), Color.parseColor("#F59E0B"))
+                    (h.dynamicPercentage / maxVal).toFloat(), ORANGE)
             }
             card.addView(dContainer)
         } else {
@@ -501,5 +676,273 @@ class AnalysisActivity : BaseActivity() {
         }
 
         cardsContainer.addView(card)
+    }
+
+    // ─── CARD 7: Previsão de Ganhos por Horário ───
+    private fun buildHourlyForecast(r: AnalysisResultV2) {
+        if (r.hourlyForecast.isEmpty()) return
+
+        val card = createCard("\uD83D\uDCCA PREVIS\u00C3O DE GANHOS POR HOR\u00C1RIO")
+        val maxGanho = r.hourlyForecast.maxOfOrNull { it.avgEarningsPerHour } ?: 1.0
+
+        for (hour in r.hourlyForecast) {
+            val hourContainer = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                orientation = VERTICAL
+                setPadding(0, 8, 0, 8)
+            }
+
+            val label = hour.slotLabel.replace("-", " \u00E0s ")
+
+            hourContainer.addView(TextView(this).apply {
+                text = "\uD83D\uDCC5 $label"
+                textSize = 14f
+                setTextColor(Color.parseColor("#1A2C3E"))
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            })
+
+            addDetailRow(hourContainer, "\uD83D\uDCB0", "Ganho m\u00E9dio",
+                "R\$ ${AnalysisHelperV2.formatBr(hour.avgEarningsPerHour)}/hora", true)
+            addDetailRow(hourContainer, "\uD83D\uDE97", "Corridas", "${hour.rideCount}", true)
+
+            val dinamicaColor = if (hour.dynamicPercent >= 30) Color.parseColor("#00A86B") else Color.parseColor("#F97316")
+            addDetailRow(hourContainer, "\u26A1", "Din\u00E2mica",
+                "${String.format("%.0f", hour.dynamicPercent)}%", dinamicaColor)
+
+            val fraction = (hour.avgEarningsPerHour / maxGanho).toFloat()
+            val progressContainer = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 8)
+                    .apply { topMargin = 8 }
+                val bg = GradientDrawable()
+                bg.setColor(Color.parseColor("#E5E7EB"))
+                bg.cornerRadius = (4 * resources.displayMetrics.density)
+                background = bg
+            }
+            hourContainer.addView(progressContainer)
+
+            progressContainer.post {
+                val fillWidth = (progressContainer.width * fraction).toInt()
+                if (fillWidth > 0) {
+                    val fillView = View(this).apply {
+                        layoutParams = LinearLayout.LayoutParams(fillWidth, MATCH_PARENT)
+                        val fillBg = GradientDrawable()
+                        fillBg.setColor(Color.parseColor("#00A86B"))
+                        fillBg.cornerRadius = (4 * resources.displayMetrics.density)
+                        background = fillBg
+                    }
+                    progressContainer.addView(fillView)
+                }
+            }
+
+            if (hour != r.hourlyForecast.last()) {
+                hourContainer.addView(View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 1)
+                        .apply { setMargins(0, 8, 0, 0) }
+                    setBackgroundColor(Color.parseColor("#EEF2F6"))
+                })
+            }
+
+            card.addView(hourContainer)
+        }
+
+        cardsContainer.addView(card)
+    }
+
+    // ─── CARD 8: Análise de Aceitação por Valor ───
+    private fun buildAcceptanceByValue(r: AnalysisResultV2) {
+        if (r.acceptanceByValue.isEmpty()) return
+        val card = createCard("\u2705 An\u00E1lise de aceita\u00E7\u00E3o por valor")
+
+        val maxFrac = r.acceptanceByValue.maxOfOrNull { it.barFraction }?.coerceAtLeast(0.01f) ?: 1f
+        for (v in r.acceptanceByValue) {
+            val line = "${v.rangeLabel}  ${v.offered} ofertadas \u2192 ${v.accepted} aceitas (${"%.0f".format(v.acceptanceRate)}%)"
+            addBarSimple(card, v.rangeLabel,
+                "${v.offered} ofertadas \u2192 ${v.accepted} aceitas (${"%.0f".format(v.acceptanceRate)}%)",
+                v.barFraction / maxFrac, BLUE)
+        }
+
+        cardsContainer.addView(card)
+    }
+
+    // ─── CARD 9: Corridas Perdidas ───
+    private fun buildLostRides(r: AnalysisResultV2) {
+        val lost = r.lostRides
+        if (lost.lostCount == 0) return
+        val card = createCard("\u274C Corridas perdidas (n\u00E3o aceitas)")
+
+        addText(card, "\uD83D\uDCB0 Valor m\u00E9dio perdido: R\$ ${AnalysisHelperV2.formatBr(lost.avgLostValue)}")
+        addText(card, "\uD83D\uDCCA R\$/km m\u00E9dio perdido: R\$ ${AnalysisHelperV2.formatBr(lost.avgLostPricePerKm)}")
+        addText(card, "\u23F0 Hor\u00E1rio com mais perdas: ${lost.peakLossHour} (${"%.0f".format(lost.peakLossPercent)}%)")
+        addText(card, "\uD83D\uDE97 Categoria: ${lost.topLostCategory} (${"%.0f".format(lost.topLostCategoryPercent)}% das perdas)")
+        addText(card, "\uD83D\uDCCD Cidade: ${lost.topLostCity} (${"%.0f".format(lost.topLostCityPercent)}% das perdas)")
+
+        cardsContainer.addView(card)
+    }
+
+    // ─── CARD 10: Tendência de Dinâmica ───
+    private fun buildDynamicTrend(r: AnalysisResultV2) {
+        if (r.dynamicTrend.size < 2) return
+        val card = createCard("\uD83D\uDCC8 Tend\u00EAncia de din\u00E2mica (7 dias)")
+
+        val maxFrac = r.dynamicTrend.maxOfOrNull { it.barFraction }?.coerceAtLeast(0.01f) ?: 1f
+        for (d in r.dynamicTrend) {
+            val arrow = if (d.isUp) "\uD83D\uDD3C" else "\uD83D\uDD3B"
+            addBarSimple(card, d.dayLabel,
+                "${"%.0f".format(d.dynamicPercent)}% $arrow",
+                d.barFraction / maxFrac, if (d.isUp) GREEN else RED)
+        }
+
+        cardsContainer.addView(card)
+    }
+
+    // ─── CARD 11: Projeção do Dia ───
+    private fun buildDailyProjection(r: AnalysisResultV2) {
+        val p = r.dailyProjection
+        if (p.completedRides == 0) return
+        val card = createCard("\uD83C\uDFAF Proje\u00E7\u00E3o do dia")
+
+        addText(card, "\uD83D\uDCB0 Ganho atual: R\$ ${AnalysisHelperV2.formatBr(p.currentEarnings)} (${p.completedRides} corridas)")
+        addText(card, "\u23F1\uFE0F Horas trabalhadas: ${"%.1f".format(p.hoursWorked)}h")
+        addText(card, "\uD83D\uDCC8 Ganho m\u00E9dio/h: R\$ ${AnalysisHelperV2.formatBr(p.avgPerHour)}")
+
+        addDivider(card)
+
+        addText(card, "\uD83C\uDFAF Meta do dia: R\$ ${AnalysisHelperV2.formatBr(p.targetDay)}")
+        addText(card, "\uD83D\uDCCA Proje\u00E7\u00E3o (${"%.0f".format(p.targetHours)}h): R\$ ${AnalysisHelperV2.formatBr(p.projectedWithTargetHours)}")
+
+        val remainingColor = if (p.remaining <= 0) GREEN else ORANGE
+        val remainingText = if (p.remaining <= 0) {
+            "\u2705 Meta atingida! Excedente: R\$ ${AnalysisHelperV2.formatBr(-p.remaining)}"
+        } else {
+            "\u26A0\uFE0F Faltam R\$ ${AnalysisHelperV2.formatBr(p.remaining)} para bater a meta"
+        }
+        addText(card, remainingText, 12f, remainingColor, true)
+
+        cardsContainer.addView(card)
+    }
+
+    // ─── CARD 12: Dias Mais Lucrativos ───
+    private fun buildWeekdayRanking(r: AnalysisResultV2) {
+        if (r.weekdayRanking.isEmpty()) return
+
+        val card = createCard("\uD83C\uDFC6 DIAS MAIS LUCRATIVOS")
+        val maxProfit = r.weekdayRanking.maxOfOrNull { it.avgEarnings } ?: 1.0
+
+        for ((index, day) in r.weekdayRanking.withIndex()) {
+            val dayContainer = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                orientation = VERTICAL
+                setPadding(0, 8, 0, 8)
+            }
+
+            dayContainer.addView(TextView(this).apply {
+                text = "${index + 1}. ${getDayName(day.dayOfWeek)}"
+                textSize = 14f
+                setTextColor(Color.parseColor("#1A2C3E"))
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            })
+
+            addDetailRow(dayContainer, "\uD83D\uDCB0", "Lucro m\u00E9dio",
+                "R\$ ${AnalysisHelperV2.formatBr(day.avgEarnings)}", day.avgEarnings > 0)
+            addDetailRow(dayContainer, "\uD83D\uDE97", "Corridas", "${day.rideCount}", true)
+            addDetailRow(dayContainer, "\uD83D\uDCCA", "R\$/km m\u00E9dio",
+                "R\$ ${AnalysisHelperV2.formatBr(day.avgPricePerKm)}", true)
+
+            val fraction = (day.avgEarnings / maxProfit).toFloat()
+            val progressContainer = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 8)
+                    .apply { topMargin = 8 }
+                val bg = GradientDrawable()
+                bg.setColor(Color.parseColor("#E5E7EB"))
+                bg.cornerRadius = (4 * resources.displayMetrics.density)
+                background = bg
+            }
+            dayContainer.addView(progressContainer)
+
+            progressContainer.post {
+                val fillWidth = (progressContainer.width * fraction).toInt()
+                if (fillWidth > 0) {
+                    val fillView = View(this).apply {
+                        layoutParams = LinearLayout.LayoutParams(fillWidth, MATCH_PARENT)
+                        val fillBg = GradientDrawable()
+                        fillBg.setColor(Color.parseColor("#00A86B"))
+                        fillBg.cornerRadius = (4 * resources.displayMetrics.density)
+                        background = fillBg
+                    }
+                    progressContainer.addView(fillView)
+                }
+            }
+
+            if (index < r.weekdayRanking.size - 1) {
+                dayContainer.addView(View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 1)
+                        .apply { setMargins(0, 8, 0, 0) }
+                    setBackgroundColor(Color.parseColor("#EEF2F6"))
+                })
+            }
+
+            card.addView(dayContainer)
+        }
+
+        cardsContainer.addView(card)
+    }
+
+    private fun addDetailRow(
+        container: LinearLayout,
+        icon: String,
+        label: String,
+        value: String,
+        color: Any = false
+    ) {
+        val row = LinearLayout(this).apply {
+            contentDescription = "$icon $label: $value"
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(16, 2, 16, 2)
+        }
+
+        row.addView(TextView(this).apply {
+            contentDescription = null
+            text = icon
+            textSize = 12f
+            layoutParams = LinearLayout.LayoutParams(28, WRAP_CONTENT)
+        })
+
+        row.addView(TextView(this).apply {
+            contentDescription = null
+            text = "$label: "
+            textSize = 12f
+            setTextColor(Color.parseColor("#6B7280"))
+        })
+
+        val textColor = when (color) {
+            is Int -> color
+            is Boolean -> if (color) Color.parseColor("#1A2C3E") else Color.parseColor("#6B7280")
+            else -> Color.parseColor("#1A2C3E")
+        }
+
+        row.addView(TextView(this).apply {
+            contentDescription = null
+            text = value
+            textSize = 12f
+            setTextColor(textColor)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        })
+
+        container.addView(row)
+    }
+
+    private fun getDayName(dayOfWeek: Int): String = when (dayOfWeek) {
+        Calendar.MONDAY -> "Segunda-feira"
+        Calendar.TUESDAY -> "Ter\u00E7a-feira"
+        Calendar.WEDNESDAY -> "Quarta-feira"
+        Calendar.THURSDAY -> "Quinta-feira"
+        Calendar.FRIDAY -> "Sexta-feira"
+        Calendar.SATURDAY -> "S\u00E1bado"
+        Calendar.SUNDAY -> "Domingo"
+        else -> "?"
     }
 }

@@ -44,9 +44,8 @@ class MyDayRideAdapter(
         val record = rideRecords[ride.rideId]
         val isExpanded = expandedPosition == position
 
-        val cal = java.util.Calendar.getInstance()
-        if (record != null) cal.timeInMillis = record.timestamp
-        holder.tvTime.text = if (record != null) dateFormat.format(cal.time) else "--:--"
+        holder.tvTime.text = if (record != null)
+            dateFormat.format(java.util.Date(record.timestamp)) else "--:--"
         holder.tvService.text = record?.serviceType ?: "Corrida"
         holder.tvOriginalValue.text = "R$ %.2f".format(ride.originalValue).replace(".", ",")
         holder.tvFinalValue.text = "R$ %.2f".format(ride.finalValue).replace(".", ",")

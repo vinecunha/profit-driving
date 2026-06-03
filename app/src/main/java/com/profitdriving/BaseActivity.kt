@@ -99,22 +99,27 @@ abstract class BaseActivity : AppCompatActivity() {
 
         when (currentScreen) {
             Screen.HOME -> {
+                iconHome?.alpha = 1.0f
                 iconHome?.setTextColor(0xFF00A86B.toInt())
                 labelHome?.setTextColor(0xFF00A86B.toInt())
             }
             Screen.PARAMS -> {
+                iconParams?.alpha = 1.0f
                 iconParams?.setTextColor(0xFF00A86B.toInt())
                 labelParams?.setTextColor(0xFF00A86B.toInt())
             }
             Screen.MY_DAY -> {
+                iconMyDay?.alpha = 1.0f
                 iconMyDay?.setTextColor(0xFF00A86B.toInt())
                 labelMyDay?.setTextColor(0xFF00A86B.toInt())
             }
             Screen.COSTS -> {
+                iconCosts?.alpha = 1.0f
                 iconCosts?.setTextColor(0xFF00A86B.toInt())
                 labelCosts?.setTextColor(0xFF00A86B.toInt())
             }
             Screen.ANALYSIS -> {
+                iconAnalysis?.alpha = 1.0f
                 iconAnalysis?.setTextColor(0xFF00A86B.toInt())
                 labelAnalysis?.setTextColor(0xFF00A86B.toInt())
             }

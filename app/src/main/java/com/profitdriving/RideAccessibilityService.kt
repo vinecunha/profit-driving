@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.CombinedVibration
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -13,11 +14,13 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
 import java.util.Locale
+import com.profitdriving.SecurePreferences
 
 class RideAccessibilityService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
-    private val bgHandler = Handler(Looper.getMainLooper())
+    private val bgThread = HandlerThread("BgThread").apply { start() }
+    private val bgHandler = Handler(bgThread.looper)
     private var pendingRunnable: Runnable? = null
     private var lastHash = ""
     private var lastSaveTime = 0L
@@ -106,6 +109,7 @@ class RideAccessibilityService : AccessibilityService() {
         FloatingBubbleService.stop(this)
         handler.removeCallbacksAndMessages(null)
         bgHandler.removeCallbacksAndMessages(null)
+        bgThread.quitSafely()
         super.onDestroy()
     }
 
@@ -176,28 +180,11 @@ class RideAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun logAllWindows() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return
-        try {
-            val wins = windows ?: run {
-                L.d(TAG, "windows = null")
-                return
-            }
-            L.d(TAG, "Total de janelas abertas: ${wins.size}")
-            wins.forEachIndexed { i, w ->
-                val pkg = w.root?.packageName ?: "?"
-                L.d(TAG, "Janela $i: pkg=$pkg tipo=${w.type} layer=${w.layer} focada=${w.isFocused} ativa=${w.isActive}")
-            }
-        } catch (e: Exception) {
-            L.e(TAG, "Erro ao listar janelas", e)
-        }
-    }
-
     private fun detectRideCard(root: AccessibilityNodeInfo, pkg: String) {
         L.d(TAG, "=== detectRideCard iniciado para $pkg ===")
 
         val allTexts = mutableListOf<String>()
-        collectTexts(root, allTexts)
+        collectTexts(root, allTexts, 150)
         L.d(TAG, "Textos coletados (${allTexts.size}): ${allTexts.take(10)}")
 
         val fullText = allTexts.joinToString(" ")
@@ -288,13 +275,15 @@ class RideAccessibilityService : AccessibilityService() {
         return valor == valor.toLong().toDouble() && valor >= 30.0
     }
 
-    private fun collectTexts(node: AccessibilityNodeInfo, list: MutableList<String>) {
+    private fun collectTexts(node: AccessibilityNodeInfo, list: MutableList<String>, maxCount: Int = 150, depth: Int = 0) {
+        if (list.size >= maxCount || depth > 50) return
         if (node.text?.toString()?.isNotBlank() == true) {
             list.add(node.text.toString())
         }
         for (i in 0 until node.childCount) {
+            if (list.size >= maxCount) break
             node.getChild(i)?.let { child ->
-                collectTexts(child, list)
+                collectTexts(child, list, maxCount, depth + 1)
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                     @Suppress("DEPRECATION")
                     child.recycle()
@@ -488,7 +477,7 @@ class RideAccessibilityService : AccessibilityService() {
             }
         }
 
-        if (lower.contains("recusar") || lower.contains("negar") || lower.contains("x")) {
+        if (lower.contains("recusar") || lower.contains("negar")) {
             L.d(TAG, "Clique em Recusar detectado: $texto")
             if (lastInsertedId >= 0) {
                 db.updateStatus(lastInsertedId, "DECLINED")
@@ -512,7 +501,7 @@ class RideAccessibilityService : AccessibilityService() {
         val pricePerMin = ride.value.let { v ->
             ride.timeMin?.let { t -> if (t > 0) v / t.toDouble() else null }
         }
-        val prefs = getSharedPreferences(SettingsActivity.PREF_NAME, 0)
+        val prefs = SecurePreferences.get(this)
         val result = DecisionEngine.evaluate(
             kmValue     = ride.effectivePricePerKm,
             hourValue   = ride.effectivePricePerHour,
@@ -541,40 +530,42 @@ class RideAccessibilityService : AccessibilityService() {
         ))
         L.d(TAG, "Ride inserido com id=$lastInsertedId")
 
-        sendBroadcast(Intent("NEW_RIDE_SAVED"))
+        handler.post {
+            sendBroadcast(Intent("NEW_RIDE_SAVED"))
 
-        getSharedPreferences(SettingsActivity.PREF_NAME, 0).edit().apply {
-            ride.value?.let { putFloat("last_value", it.toFloat()) }
-            ride.distanceKm?.let { putFloat("last_distance", it.toFloat()) }
-            ride.timeMin?.let { putInt("last_time", it) }
-            ride.rating?.let { putFloat("last_rating", it.toFloat()) }
-            putString("last_app", ride.appName)
-            putLong("last_timestamp", System.currentTimeMillis())
-            ride.serviceType?.let { putString("last_service_type", it) }
-            apply()
+            SecurePreferences.edit(this).apply {
+                ride.value?.let { putFloat("last_value", it.toFloat()) }
+                ride.distanceKm?.let { putFloat("last_distance", it.toFloat()) }
+                ride.timeMin?.let { putInt("last_time", it) }
+                ride.rating?.let { putFloat("last_rating", it.toFloat()) }
+                putString("last_app", ride.appName)
+                putLong("last_timestamp", System.currentTimeMillis())
+                ride.serviceType?.let { putString("last_service_type", it) }
+                apply()
+            }
+
+            FloatingCardService.start(this@RideAccessibilityService, Intent().apply {
+                ride.value?.let { putExtra("value", it) }
+                ride.distanceKm?.let { putExtra("distanceKm", it) }
+                ride.timeMin?.let { putExtra("timeMin", it) }
+                ride.rating?.let { putExtra("rating", it) }
+                putExtra("appName", ride.appName)
+                ride.serviceType?.let { putExtra("serviceType", it) }
+                ride.priorityBonus?.let { putExtra("priorityBonus", it) }
+                ride.dynamicBonus?.let { putExtra("dynamicBonus", it) }
+                ride.pickupAddress?.let { putExtra("pickupAddress", it) }
+                ride.dropoffAddress?.let { putExtra("dropoffAddress", it) }
+                putExtra("hasMultipleStops", ride.hasMultipleStops)
+            })
+
+            FloatingBubbleService.start(this@RideAccessibilityService, Intent().apply {
+                ride.value?.let { putExtra("value", it) }
+                ride.distanceKm?.let { putExtra("distanceKm", it) }
+                ride.timeMin?.let { putExtra("timeMin", it) }
+                ride.rating?.let { putExtra("rating", it) }
+                putExtra("decision", result.decision.name)
+            })
         }
-
-        FloatingCardService.start(this, Intent().apply {
-            ride.value?.let { putExtra("value", it) }
-            ride.distanceKm?.let { putExtra("distanceKm", it) }
-            ride.timeMin?.let { putExtra("timeMin", it) }
-            ride.rating?.let { putExtra("rating", it) }
-            putExtra("appName", ride.appName)
-            ride.serviceType?.let { putExtra("serviceType", it) }
-            ride.priorityBonus?.let { putExtra("priorityBonus", it) }
-            ride.dynamicBonus?.let { putExtra("dynamicBonus", it) }
-            ride.pickupAddress?.let { putExtra("pickupAddress", it) }
-            ride.dropoffAddress?.let { putExtra("dropoffAddress", it) }
-            putExtra("hasMultipleStops", ride.hasMultipleStops)
-        })
-
-        FloatingBubbleService.start(this, Intent().apply {
-            ride.value?.let { putExtra("value", it) }
-            ride.distanceKm?.let { putExtra("distanceKm", it) }
-            ride.timeMin?.let { putExtra("timeMin", it) }
-            ride.rating?.let { putExtra("rating", it) }
-            putExtra("decision", result.decision.name)
-        })
     }
 
     private fun updateFloatingCard(ride: RideData) {
@@ -650,6 +641,11 @@ class RideAccessibilityService : AccessibilityService() {
         return hasStops
     }
 
+    private fun maskAddressForLog(address: String?): String {
+        if (address.isNullOrBlank()) return "null"
+        return address.take(20) + "..."
+    }
+
     private fun extractAddresses(text: String): Pair<String?, String?> {
         var pickupAddress: String? = null
         var dropoffAddress: String? = null
@@ -658,14 +654,14 @@ class RideAccessibilityService : AccessibilityService() {
         if (pickupMatch != null) {
             pickupAddress = pickupMatch.groupValues[1].trim()
             pickupAddress = cleanupAddress(pickupAddress)
-            L.d(TAG, "Endereço de embarque encontrado: $pickupAddress")
+            L.d(TAG, "Endereço de embarque encontrado: ${maskAddressForLog(pickupAddress)}")
         }
 
         val dropoffMatch = DROPOFF_ADDRESS_REGEX.find(text)
         if (dropoffMatch != null) {
             dropoffAddress = dropoffMatch.groupValues[1].trim()
             dropoffAddress = cleanupAddress(dropoffAddress)
-            L.d(TAG, "Endereço de viagem encontrado: $dropoffAddress")
+            L.d(TAG, "Endereço de viagem encontrado: ${maskAddressForLog(dropoffAddress)}")
         }
 
         return Pair(pickupAddress, dropoffAddress)

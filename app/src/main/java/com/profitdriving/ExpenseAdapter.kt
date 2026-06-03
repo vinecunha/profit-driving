@@ -26,7 +26,6 @@ class ExpenseAdapter(
         val valueText = when (expense.costType) {
             CostType.FIXED -> {
                 if (expense.periodicity == Periodicity.YEARLY) {
-                    val monthly = expense.value / 12
                     "R\$ ${"%.2f".format(expense.value)}/ano"
                 } else {
                     "R\$ ${"%.2f".format(expense.value)}/m\u00EAs"

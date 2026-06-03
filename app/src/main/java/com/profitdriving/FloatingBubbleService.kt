@@ -6,6 +6,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import com.profitdriving.SecurePreferences
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
@@ -32,10 +33,10 @@ class FloatingBubbleService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
         startForeground(NOTIF_ID, buildNotification())
+        createNotificationChannel()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        prefs = getSharedPreferences(SettingsActivity.PREF_NAME, Context.MODE_PRIVATE)
+        prefs = SecurePreferences.get(this)
         showBubble(null)
     }
 

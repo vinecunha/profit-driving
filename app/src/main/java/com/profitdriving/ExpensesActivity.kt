@@ -195,7 +195,7 @@ class ExpensesActivity : BaseActivity() {
     }
 
     private fun updateSummary(allExpenses: List<Expense>) {
-        val monthlyKm = 3000
+        val monthlyKm = db.getMonthlyKm()
 
         val fixedMonthly = allExpenses.filter { it.costType == CostType.FIXED }.sumOf { e ->
             when (e.periodicity ?: Periodicity.MONTHLY) {

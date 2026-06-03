@@ -25,8 +25,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-
-enum class ViewMode { DAY, WEEK, MONTH }
+import java.util.concurrent.CopyOnWriteArrayList
 
 class MyDayActivity : BaseActivity() {
 
@@ -82,8 +81,8 @@ class MyDayActivity : BaseActivity() {
     private lateinit var completedAdapter: MyDayRideAdapter
     private lateinit var availableAdapter: AvailableRideAdapter
 
-    private var allDailyRides = mutableListOf<DailyRide>()
-    private var allRideRecords = mapOf<Long, RideRecord>()
+    private val allDailyRides = CopyOnWriteArrayList<DailyRide>()
+    private val allRideRecords = mutableMapOf<Long, RideRecord>()
     private var availableRidesList = mutableListOf<RideRecord>()
 
     // Period navigation state
@@ -516,12 +515,14 @@ class MyDayActivity : BaseActivity() {
             }
         }
 
-        allDailyRides = dateStrings.flatMap { dateStr ->
+        allDailyRides.clear()
+        allDailyRides.addAll(dateStrings.flatMap { dateStr ->
             db.getDailyRidesByDate(dateStr)
-        }.toMutableList()
+        })
 
         val allRecords = db.getRidesByDateRange(periodStart, periodEnd)
-        allRideRecords = allRecords.associateBy { it.id }
+        allRideRecords.clear()
+        allRideRecords.putAll(allRecords.associateBy { it.id })
 
         loadCostSummary()
         applyFilters()
@@ -783,27 +784,17 @@ class MyDayActivity : BaseActivity() {
     }
 
     private fun onToggleCompleted(ride: DailyRide) {
-        if (ride.isCompleted) {
-            AlertDialog.Builder(this)
-                .setTitle("Remover corrida")
-                .setMessage("Deseja remover esta corrida do dia? Ela será excluída do registro.")
-                .setPositiveButton("Remover") { _, _ ->
-                    db.deleteDailyRide(ride.id)
-                    allDailyRides.removeAll { it.id == ride.id }
-                    applyFilters()
-                    loadAvailableRides(reset = true)
-                    Toast.makeText(this, "Corrida removida!", Toast.LENGTH_SHORT).show()
-                }
-                .setNegativeButton("Cancelar", null)
-                .show()
-        } else {
-            val idx = allDailyRides.indexOfFirst { it.id == ride.id }
-            if (idx < 0) return
-            val updated = ride.copy(isCompleted = true, updatedAt = System.currentTimeMillis())
-            allDailyRides[idx] = updated
-            db.updateDailyRide(updated)
-            applyFilters()
-        }
+        val idx = allDailyRides.indexOfFirst { it.id == ride.id }
+        if (idx < 0) return
+        val updated = ride.copy(
+            isCompleted = !ride.isCompleted,
+            updatedAt = System.currentTimeMillis()
+        )
+        allDailyRides[idx] = updated
+        db.updateDailyRide(updated)
+        applyFilters()
+        val status = if (updated.isCompleted) "marcada" else "desmarcada"
+        Toast.makeText(this, "Corrida $status!", Toast.LENGTH_SHORT).show()
     }
 
     private fun onCancelWithFee(ride: DailyRide) {
@@ -840,7 +831,7 @@ class MyDayActivity : BaseActivity() {
                         tripDistanceKm = null,
                         tripTimeMin = null
                     )
-                    allRideRecords = allRideRecords + (record.id to updatedRecord)
+                    allRideRecords[record.id] = updatedRecord
 
                     applyFilters()
                     Toast.makeText(this, "Taxa de deslocamento aplicada!", Toast.LENGTH_SHORT).show()
@@ -1023,7 +1014,7 @@ class MyDayActivity : BaseActivity() {
                         serviceType = "Manual - $service",
                         status = "COMPLETED"
                     )
-                    allRideRecords = allRideRecords + (rideId to manualRecord)
+                    allRideRecords[rideId] = manualRecord
                 }
                 applyFilters()
                 loadAvailableRides(reset = true)

@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import com.profitdriving.SecurePreferences
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
@@ -160,7 +161,7 @@ class MainActivity : BaseActivity() {
 
         registerReceiver(dataUpdateReceiver, IntentFilter("NEW_RIDE_SAVED"), Context.RECEIVER_NOT_EXPORTED)
 
-        pageSize = getSharedPreferences(SettingsActivity.PREF_NAME, 0)
+        pageSize = SecurePreferences.get(this)
             .getInt(SettingsActivity.KEY_PAGE_SIZE, 100)
         loadServiceTypeFilters()
         loadFilteredHistory()
@@ -305,7 +306,7 @@ class MainActivity : BaseActivity() {
                 } else {
                     recyclerView.visibility = View.VISIBLE
                     emptyState.visibility = View.GONE
-                    val prefs = getSharedPreferences(SettingsActivity.PREF_NAME, 0)
+                    val prefs = SecurePreferences.get(this)
                     if (reset || adapter == null) {
                         val costSummary = CostCalculator.calculateCostSummary(
                             db.getRefuels(), db.getAllExpenses(), db.getMonthlyKm()
@@ -490,6 +491,8 @@ class HistoryAdapter(
         val tvDropoffDistance: TextView = view.findViewById(R.id.tvDropoffDistance)
         val tvDropoffTime: TextView = view.findViewById(R.id.tvDropoffTime)
         val tvDropoffAddress: TextView = view.findViewById(R.id.tvDropoffAddress)
+        val tvDecisionBadge: TextView = view.findViewById(R.id.tvDecisionBadge)
+        val ivStops: ImageView = view.findViewById(R.id.ivStops)
         val tvStops: TextView = view.findViewById(R.id.tvStops)
         val tvProfitIcon: TextView = view.findViewById(R.id.tvProfitIcon)
         val tvProfitLabel: TextView = view.findViewById(R.id.tvProfitLabel)
@@ -572,6 +575,20 @@ class HistoryAdapter(
         vh.tvServiceType.setBackgroundResource(bgRes)
         vh.tvServiceType.setTextColor(textColor)
 
+        val decisionText = when {
+            r.scorePercent != null && r.scorePercent >= 80 -> "\u2705 BOA (${"%.0f".format(r.scorePercent)}%)"
+            r.scorePercent != null && r.scorePercent >= 50 -> "\u26A0\uFE0F M\u00C9DIA (${"%.0f".format(r.scorePercent)}%)"
+            else -> "\u274C RUIM (${"%.0f".format(r.scorePercent ?: 0)}%)"
+        }
+        val decisionColor = when {
+            r.scorePercent != null && r.scorePercent >= 80 -> Color.parseColor("#00A86B")
+            r.scorePercent != null && r.scorePercent >= 50 -> Color.parseColor("#F97316")
+            else -> Color.parseColor("#DC2626")
+        }
+        vh.tvDecisionBadge.text = decisionText
+        vh.tvDecisionBadge.setBackgroundColor(decisionColor)
+        vh.tvDecisionBadge.visibility = if (r.scorePercent != null) View.VISIBLE else View.GONE
+
         vh.tvPrice.text = r.value?.let {
             "R$ %.2f".format(it).replace(".", ",")
         } ?: "---"
@@ -638,40 +655,20 @@ class HistoryAdapter(
         r.timeMin?.let { totalParts.add("${it} min") }
         vh.tvTotalInfo.text = totalParts.joinToString(" · ")
 
-        val scoreText = r.scorePercent?.let { "${"%.0f".format(it)}%" } ?: ""
-        vh.tvScore.text = scoreText
-
-        val isKmGood = kmState == 0
-        val isHourGood = hourState == 0
-        val isRatingGood = ratingState == 0
-        val allGood = isKmGood && isHourGood && isRatingGood
-        val partial = isKmGood || isHourGood
-
-        val scoreBgColor = when {
-            allGood -> Color.parseColor("#E8F5E9")
-            partial -> Color.parseColor("#FFF3E0")
-            else -> Color.parseColor("#FFEBEE")
-        }
-        val scoreFgColor = when {
-            allGood -> Color.parseColor("#2E7D32")
-            partial -> Color.parseColor("#ED6C02")
-            else -> Color.parseColor("#D32F2F")
-        }
-        vh.tvScore.setBackgroundColor(scoreBgColor)
-        vh.tvScore.setTextColor(scoreFgColor)
+        vh.tvScore.visibility = View.GONE
 
         val priorityBonus = r.priorityBonus ?: 0.0
         val dynamicBonus = r.dynamicBonus ?: 0.0
 
         if (priorityBonus > 0) {
-            vh.tvPriorityBonus.text = "\u2B50 R$ ${String.format("%.2f", priorityBonus).replace(".", ",")} de prioridade"
+            vh.tvPriorityBonus.text = "\u26A1 ${String.format("%.2f", priorityBonus).replace(".", ",")} prioridade"
             vh.tvPriorityBonus.visibility = View.VISIBLE
         } else {
             vh.tvPriorityBonus.visibility = View.GONE
         }
 
         if (dynamicBonus > 0) {
-            vh.tvDynamicBonus.text = "\uD83D\uDCC8 R$ ${String.format("%.2f", dynamicBonus).replace(".", ",")} de din\u00E2mica"
+            vh.tvDynamicBonus.text = "\uD83D\uDD25 ${String.format("%.2f", dynamicBonus).replace(".", ",")} din\u00E2mica"
             vh.tvDynamicBonus.visibility = View.VISIBLE
         } else {
             vh.tvDynamicBonus.visibility = View.GONE
@@ -690,10 +687,12 @@ class HistoryAdapter(
         vh.tvProfitValue.visibility = View.VISIBLE
 
         if (r.hasMultipleStops) {
-            vh.tvStops.text = "\uD83D\uDD04 Várias paradas"
+            vh.tvStops.text = "V\u00E1rias paradas"
             vh.tvStops.visibility = View.VISIBLE
+            vh.ivStops.visibility = View.VISIBLE
         } else {
             vh.tvStops.visibility = View.GONE
+            vh.ivStops.visibility = View.GONE
         }
 
         val isExpanded = expandedItems.contains(position)

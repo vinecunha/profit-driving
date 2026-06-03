@@ -2,4 +2,5 @@
 <resources>
     <string name="app_name">CorridaCerta</string>
     <string name="accessibility_description">CorridaCerta analisa cards de corrida do Uber e 99 para calcular R$/km, R$/h e nota, exibindo um card flutuante com a avaliação.</string>
+    <string name="accessibility_service_description">O CorridaCerta usa este serviço para ler informações das corridas exibidas no Uber Driver e 99 Driver, ajudando você a analisar a rentabilidade em tempo real.</string>
 </resources>
