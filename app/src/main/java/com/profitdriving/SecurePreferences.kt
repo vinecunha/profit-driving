@@ -4,6 +4,9 @@ import android.content.Context
 import android.content.SharedPreferences
 
 object SecurePreferences {
+    const val KEY_LAST_KM_PANEL = "driver_km_panel"
+    const val KEY_LAST_HOURS_WORKED = "driver_hours_worked"
+
     fun get(context: Context): SharedPreferences =
         ProfitDrivingApp.getInstance().prefs
 

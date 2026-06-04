@@ -370,74 +370,19 @@
 
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/layoutActions"
+    <TextView
+        android:id="@+id/btnActions"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="end"
-        android:layout_marginTop="8dp">
-
-        <TextView
-            android:id="@+id/btnUndo"
-            android:layout_width="wrap_content"
-            android:layout_height="32dp"
-            android:paddingHorizontal="12dp"
-            android:gravity="center"
-            android:text="\u21BA Remover"
-            android:textSize="12sp"
-            android:textColor="#F44336"
-            android:textStyle="bold"
-            android:background="@drawable/pill_unselected"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_marginEnd="6dp"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/btnCancelWithFee"
-            android:layout_width="wrap_content"
-            android:layout_height="32dp"
-            android:paddingHorizontal="12dp"
-            android:gravity="center"
-            android:text="\uD83D\uDEAB Cancelar"
-            android:textSize="12sp"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
-            android:background="@drawable/pill_selected"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_marginEnd="6dp" />
-
-        <TextView
-            android:id="@+id/btnAddTip"
-            android:layout_width="wrap_content"
-            android:layout_height="32dp"
-            android:paddingHorizontal="12dp"
-            android:gravity="center"
-            android:text="+ Gorjeta"
-            android:textSize="12sp"
-            android:textColor="#00982B"
-            android:textStyle="bold"
-            android:background="@drawable/pill_unselected"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_marginEnd="6dp" />
-
-        <TextView
-            android:id="@+id/btnAdjust"
-            android:layout_width="wrap_content"
-            android:layout_height="32dp"
-            android:paddingHorizontal="12dp"
-            android:gravity="center"
-            android:text="\u21BB Reajustar"
-            android:textSize="12sp"
-            android:textColor="#F97316"
-            android:textStyle="bold"
-            android:background="@drawable/pill_unselected"
-            android:clickable="true"
-            android:focusable="true" />
-
-    </LinearLayout>
+        android:layout_height="36dp"
+        android:gravity="center"
+        android:text="\u2699\uFE0F A\u00E7\u00F5es"
+        android:textSize="12sp"
+        android:textColor="#5E6F8D"
+        android:textStyle="bold"
+        android:background="@drawable/pill_unselected"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true" />
 
 </LinearLayout>

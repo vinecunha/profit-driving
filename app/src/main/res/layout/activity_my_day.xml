@@ -16,22 +16,28 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="12dp"
+            android:paddingBottom="24dp">
 
-            <!-- Cabeçalho de Navegação entre Períodos -->
+            <!-- ==================================== -->
+            <!-- CARD DE NAVEGAÇÃO DE PERÍODO          -->
+            <!-- ==================================== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="12dp"
-                android:background="#F8F9FE"
-                android:layout_marginBottom="8dp">
+                android:background="@drawable/card_bg"
+                android:elevation="2dp"
+                android:padding="16dp"
+                android:layout_marginBottom="12dp">
 
+                <!-- Botões de modo Dia/Semana/Mês -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:layout_marginBottom="12dp">
 
                     <TextView
                         android:id="@+id/btnModeDay"
@@ -40,7 +46,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="\uD83D\uDCC5 Dia"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textStyle="bold"
                         android:background="@drawable/pill_selected"
                         android:layout_marginEnd="4dp"
@@ -54,7 +60,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="\uD83D\uDCC6 Semana"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:background="@drawable/pill_unselected"
                         android:layout_marginHorizontal="4dp"
                         android:clickable="true"
@@ -67,7 +73,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="\uD83D\uDCCA M\u00EAs"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:background="@drawable/pill_unselected"
                         android:layout_marginStart="4dp"
                         android:clickable="true"
@@ -75,12 +81,13 @@
 
                 </LinearLayout>
 
+                <!-- Navegação por período -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginTop="12dp">
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:id="@+id/btnPrevPeriod"
@@ -88,7 +95,7 @@
                         android:layout_height="40dp"
                         android:gravity="center"
                         android:text="\u25C0"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textColor="#1A2C3E"
                         android:clickable="true"
                         android:focusable="true" />
@@ -99,7 +106,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Carregando..."
-                        android:textSize="16sp"
+                        android:textSize="14sp"
                         android:textStyle="bold"
                         android:textColor="#1A2C3E"
                         android:gravity="center" />
@@ -110,296 +117,213 @@
                         android:layout_height="40dp"
                         android:gravity="center"
                         android:text="\u25B6"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textColor="#1A2C3E"
                         android:clickable="true"
                         android:focusable="true" />
 
                 </LinearLayout>
 
+                <!-- Botão Hoje -->
                 <TextView
                     android:id="@+id/btnToday"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="\uD83D\uDCCD Hoje"
+                    android:layout_height="32dp"
+                    android:text="Hoje"
                     android:textSize="12sp"
-                    android:textColor="#00982B"
-                    android:padding="8dp"
+                    android:textColor="#00A86B"
+                    android:paddingHorizontal="16dp"
+                    android:gravity="center"
                     android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="4dp"
+                    android:background="@drawable/pill_unselected"
                     android:clickable="true"
                     android:focusable="true" />
 
             </LinearLayout>
 
-            <!-- Resumo do Dia expandido -->
+            <!-- ==================================== -->
+            <!-- CARD DE RESUMO DO PERÍODO             -->
+            <!-- ==================================== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/card_bg_costs"
+                android:background="@drawable/card_bg"
+                android:elevation="2dp"
                 android:padding="16dp"
                 android:layout_marginBottom="12dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="\uD83D\uDCCA RESUMO DO DIA"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="#1A2C3E"
-                    android:layout_marginBottom="12dp" />
-
+                <!-- Cabeçalho do resumo -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="4dp">
-
-                <TextView
-                    android:id="@+id/tvRideCount"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Corridas: 0"
-                    android:textSize="14sp"
-                    android:textColor="#1A2C3E"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvTotalDistance"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Km: 0,0"
-                    android:textSize="14sp"
-                    android:textColor="#1A2C3E"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvTotalDuration"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tempo: 0h 0min"
-                    android:textSize="14sp"
-                    android:textColor="#1A2C3E"
-                    android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#EEF2F6"
-                    android:layout_marginVertical="6dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="6dp">
+                    android:layout_marginBottom="12dp">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Faturamento bruto:"
+                        android:text="\uD83D\uDCCA RESUMO"
                         android:textSize="14sp"
-                        android:textColor="#6B7280" />
+                        android:textStyle="bold"
+                        android:textColor="#1A2C3E" />
 
                     <TextView
-                        android:id="@+id/tvGrossRevenue"
+                        android:id="@+id/tvPeriodBadge"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="R$ 0,00"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#1A1A2E" />
+                        android:layout_height="24dp"
+                        android:text="hoje"
+                        android:textSize="10sp"
+                        android:textColor="#00A86B"
+                        android:background="@drawable/badge_efficiency"
+                        android:paddingHorizontal="8dp"
+                        android:gravity="center" />
 
                 </LinearLayout>
 
+                <!-- Métricas principais em grid 2x2 (duas linhas) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="6dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Gorjetas:"
-                        android:textSize="14sp"
-                        android:textColor="#6B7280" />
-
-                    <TextView
-                        android:id="@+id/tvTotalTips"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="R$ 0,00"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#00A86B" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="6dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Reajustes:"
-                        android:textSize="14sp"
-                        android:textColor="#6B7280" />
-
-                    <TextView
-                        android:id="@+id/tvTotalAdjustments"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="R$ 0,00"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#F97316" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="6dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Custo total:"
-                        android:textSize="14sp"
-                        android:textColor="#6B7280" />
-
-                    <TextView
-                        android:id="@+id/tvTotalCost"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="R$ 0,00"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#EF4444" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="6dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="\u26FD Combust\u00EDvel utilizado:"
-                        android:textSize="14sp"
-                        android:textColor="#6B7280" />
-
-                    <TextView
-                        android:id="@+id/tvFuelUsed"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="R$ 0,00"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#3B82F6" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="6dp">
+                    android:layout_marginBottom="8dp">
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="horizontal">
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="4dp">
+
+                        <TextView
+                            android:id="@+id/tvRideCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#1A2C3E" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="\uD83D\uDCB0 Abastecido hoje:"
-                            android:textSize="14sp"
+                            android:text="Corridas"
+                            android:textSize="10sp"
                             android:textColor="#6B7280" />
-
-                        <TextView
-                            android:id="@+id/tvFuelInfo"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text=" \u24D8"
-                            android:textSize="14sp"
-                            android:textColor="#9CA3AF"
-                            android:layout_marginStart="2dp" />
 
                     </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/tvFuelDisbursed"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="R$ 0,00"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#F59E0B" />
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="4dp">
+
+                        <TextView
+                            android:id="@+id/tvTotalDistance"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#1A2C3E" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Km"
+                            android:textSize="10sp"
+                            android:textColor="#6B7280" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
-
-                <!-- Botão para expandir detalhes dos custos -->
-                <TextView
-                    android:id="@+id/btnToggleCostDetails"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="\u25BC Ver detalhes dos custos"
-                    android:textSize="12sp"
-                    android:textColor="#00A86B"
-                    android:paddingTop="4dp"
-                    android:clickable="true"
-                    android:focusable="true" />
-
-                <!-- Container dos detalhes (expansível) -->
-                <LinearLayout
-                    android:id="@+id/layoutCostDetails"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginTop="8dp"
-                    android:visibility="gone" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#EEF2F6"
-                    android:layout_marginVertical="6dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginBottom="6dp">
+                    android:layout_marginBottom="12dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="4dp">
+
+                        <TextView
+                            android:id="@+id/tvTotalDuration"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0h"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#1A2C3E" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Horas"
+                            android:textSize="10sp"
+                            android:textColor="#6B7280" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="4dp">
+
+                        <TextView
+                            android:id="@+id/tvGrossRevenue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="R$0"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#00A86B" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Faturamento"
+                            android:textSize="10sp"
+                            android:textColor="#6B7280" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Linha de lucro destacada -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#EEF2F6"
+                    android:layout_marginVertical="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Lucro l\u00EDquido:"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#1A2C3E" />
+                        android:text="\uD83D\uDCB0 Lucro l\u00EDquido"
+                        android:textSize="14sp"
+                        android:textColor="#1A2C3E"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvNetProfit"
@@ -412,99 +336,146 @@
 
                 </LinearLayout>
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="4dp">
+
+                    <TextView
+                        android:id="@+id/tvProfitPercent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0% de margem"
+                        android:textSize="11sp"
+                        android:textColor="#9CA3AF" />
+
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="4dp"
+                        android:background="#D1D5DB"
+                        android:layout_marginHorizontal="6dp"
+                        android:layout_gravity="center" />
+
+                    <TextView
+                        android:id="@+id/tvRevenuePerKm"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="R$/km: 0,00"
+                        android:textSize="11sp"
+                        android:textColor="#6B7280" />
+
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="4dp"
+                        android:background="#D1D5DB"
+                        android:layout_marginHorizontal="6dp"
+                        android:layout_gravity="center" />
+
+                    <TextView
+                        android:id="@+id/tvRevenuePerHour"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="R$/h: 0,00"
+                        android:textSize="11sp"
+                        android:textColor="#6B7280" />
+
+                </LinearLayout>
+
+                <!-- Botão expandir custos -->
                 <TextView
-                    android:id="@+id/tvProfitPercent"
+                    android:id="@+id/btnToggleCostDetails"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0% de margem"
-                    android:textSize="12sp"
-                    android:textColor="#9CA3AF"
-                    android:layout_marginBottom="6dp" />
+                    android:text="\u25BC Ver detalhes dos custos"
+                    android:textSize="11sp"
+                    android:textColor="#00A86B"
+                    android:paddingTop="12dp"
+                    android:clickable="true"
+                    android:focusable="true" />
 
-                <View
+                <LinearLayout
+                    android:id="@+id/layoutCostDetails"
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="#EEF2F6"
-                    android:layout_marginVertical="4dp" />
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+            <!-- ==================================== -->
+            <!-- SEÇÃO: CORRIDAS REALIZADAS            -->
+            <!-- ==================================== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="12dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
 
                     <TextView
-                        android:id="@+id/tvRevenuePerKm"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="R\$/km: 0,00"
-                        android:textSize="12sp"
-                        android:textColor="#5E6F8D"
-                        android:textStyle="bold" />
+                        android:text="\u2705 CORRIDAS REALIZADAS"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A2C3E" />
 
                     <TextView
-                        android:id="@+id/tvRevenuePerHour"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="R\$/h: 0,00"
-                        android:textSize="12sp"
-                        android:textColor="#5E6F8D"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvAvgTip"
+                        android:id="@+id/tvCompletedCount"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="M\u00E9dia gorjeta: R$ 0,00"
-                        android:textSize="12sp"
-                        android:textColor="#5E6F8D"
-                        android:textStyle="bold" />
+                        android:layout_height="20dp"
+                        android:text="0"
+                        android:textSize="11sp"
+                        android:textColor="#FFFFFF"
+                        android:background="#00A86B"
+                        android:paddingHorizontal="8dp"
+                        android:gravity="center" />
 
                 </LinearLayout>
 
+                <TextView
+                    android:id="@+id/emptyCompleted"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Nenhuma corrida adicionada."
+                    android:textSize="12sp"
+                    android:textColor="#9CA3AF"
+                    android:gravity="center"
+                    android:padding="32dp"
+                    android:background="@drawable/card_bg"
+                    android:visibility="visible" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvCompletedRides"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:visibility="gone" />
+
             </LinearLayout>
 
-            <!-- Corridas Realizadas -->
-            <TextView
-                android:id="@+id/tvCompletedHeader"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="\u2705 CORRIDAS REALIZADAS"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="#1A2C3E"
-                android:layout_marginBottom="6dp" />
-
-            <TextView
-                android:id="@+id/emptyCompleted"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Nenhuma corrida adicionada hoje."
-                android:textSize="12sp"
-                android:textColor="#9CA3AF"
-                android:gravity="center"
-                android:paddingVertical="20dp"
-                android:visibility="visible" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvCompletedRides"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                android:visibility="gone" />
-
-            <!-- Card de Adição Manual -->
+            <!-- ==================================== -->
+            <!-- CARD: ADICIONAR CORRIDA MANUAL        -->
+            <!-- ==================================== -->
             <LinearLayout
                 android:id="@+id/btnAddManualRide"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:padding="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp"
-                android:background="#F0F9FF"
+                android:padding="14dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/card_bg"
+                android:elevation="1dp"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -512,9 +483,9 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:gravity="center"
-                    android:text="\uD83D\uDCA1"
+                    android:text="\u2795"
                     android:textSize="18sp"
-                    android:background="#E6F7FF"
+                    android:background="#E8F5E9"
                     android:padding="6dp" />
 
                 <LinearLayout
@@ -527,7 +498,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Sua corrida n\u00E3o est\u00E1 no hist\u00F3rico?"
+                        android:text="Adicionar corrida manual"
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:textColor="#1A2C3E" />
@@ -535,28 +506,27 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Adicione manualmente uma corrida que n\u00E3o foi detectada"
+                        android:text="Corrida n\u00E3o foi detectada?"
                         android:textSize="10sp"
-                        android:textColor="#6B7280"
-                        android:layout_marginTop="2dp" />
+                        android:textColor="#6B7280" />
 
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
-                    android:layout_height="32dp"
+                    android:layout_height="28dp"
                     android:gravity="center"
-                    android:text="\u2795 Adicionar"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
+                    android:text="Adicionar"
+                    android:textSize="11sp"
                     android:textColor="#FFFFFF"
-                    android:background="#00982B"
-                    android:paddingHorizontal="16dp"
-                    android:layout_marginStart="8dp" />
+                    android:background="#00A86B"
+                    android:paddingHorizontal="12dp" />
 
             </LinearLayout>
 
-            <!-- Corridas Disponiveis -->
+            <!-- ==================================== -->
+            <!-- SEÇÃO: CORRIDAS DISPONÍVEIS           -->
+            <!-- ==================================== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -567,14 +537,14 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginTop="16dp">
+                    android:layout_marginBottom="8dp">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="\uD83D\uDCCB CORRIDAS DISPON\u00CDVEIS"
-                        android:textSize="15sp"
+                        android:textSize="13sp"
                         android:textStyle="bold"
                         android:textColor="#1A2C3E" />
 
@@ -582,118 +552,156 @@
                         android:id="@+id/tvHistoryInfo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="11sp"
-                        android:textColor="#5E6F8D" />
+                        android:textSize="10sp"
+                        android:textColor="#9CA3AF" />
 
                 </LinearLayout>
 
-                <!-- Container de filtros -->
+                <!-- Card de Filtros (colapsável) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
+                    android:background="@drawable/card_bg"
                     android:padding="12dp"
-                    android:background="#F8F9FE"
-                    android:layout_marginTop="8dp">
+                    android:layout_marginBottom="12dp">
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="\uD83D\uDD0D FILTROS"
-                        android:textSize="12sp"
-                        android:textColor="#5E6F8D"
-                        android:textStyle="bold" />
-
-                    <!-- Busca textual -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:background="#F0F2F8"
-                        android:padding="10dp"
-                        android:layout_marginTop="8dp">
+                        android:clickable="true"
+                        android:id="@+id/btnToggleFilters">
 
                         <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="🔍"
-                            android:textSize="14sp"
-                            android:layout_marginEnd="8dp" />
-
-                        <EditText
-                            android:id="@+id/etSearchRides"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:hint="Buscar por tipo, endereço, app..."
-                            android:textSize="12sp"
-                            android:background="@null"
-                            android:inputType="text"
-                            android:maxLines="1" />
+                            android:text="\uD83D\uDD0D FILTROS"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="#5E6F8D" />
 
                         <TextView
-                            android:id="@+id/btnClearSearch"
+                            android:id="@+id/tvFilterToggleIcon"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="✖"
-                            android:textSize="12sp"
-                            android:textColor="#9CA3AF"
-                            android:padding="4dp"
-                            android:visibility="gone" />
+                            android:text="\u25BC"
+                            android:textSize="10sp"
+                            android:textColor="#9CA3AF" />
 
                     </LinearLayout>
 
-                    <!-- Filtro Horário -->
+                    <!-- Container de filtros colapsável -->
                     <LinearLayout
-                        android:id="@+id/timeFilterContainer"
+                        android:id="@+id/filterContainer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="12dp"
+                        android:visibility="gone">
 
-                    <!-- Filtro Valor -->
-                    <LinearLayout
-                        android:id="@+id/valueFilterContainer"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="4dp" />
+                        <!-- Busca -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:background="#F0F2F8"
+                            android:padding="8dp"
+                            android:layout_marginBottom="12dp">
 
-                    <!-- Filtro Categoria -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="8dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="\uD83D\uDD0E"
+                                android:textSize="12sp"
+                                android:layout_marginEnd="8dp" />
 
+                            <EditText
+                                android:id="@+id/etSearchRides"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:hint="Buscar por tipo, local..."
+                                android:textSize="11sp"
+                                android:background="@null"
+                                android:inputType="text"
+                                android:maxLines="1" />
+
+                            <TextView
+                                android:id="@+id/btnClearSearch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="\u2716"
+                                android:textSize="11sp"
+                                android:textColor="#9CA3AF"
+                                android:padding="4dp"
+                                android:visibility="gone" />
+
+                        </LinearLayout>
+
+                        <!-- Horário -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="\uD83C\uDFF7\uFE0F Categoria"
-                            android:textSize="12sp"
-                            android:textColor="#5E6F8D"
-                            android:layout_marginBottom="4dp" />
+                            android:text="\u23F0 Horário"
+                            android:textSize="11sp"
+                            android:textColor="#6B7280"
+                            android:layout_marginBottom="6dp" />
+
+                        <LinearLayout
+                            android:id="@+id/timeFilterContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="12dp" />
+
+                        <!-- Valor -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="\uD83D\uDCB0 Valor"
+                            android:textSize="11sp"
+                            android:textColor="#6B7280"
+                            android:layout_marginBottom="6dp" />
+
+                        <LinearLayout
+                            android:id="@+id/valueFilterContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="12dp" />
+
+                        <!-- Categoria -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="\uD83D\uDE97 Categoria"
+                            android:textSize="11sp"
+                            android:textColor="#6B7280"
+                            android:layout_marginBottom="6dp" />
 
                         <com.profitdriving.WrapContentFlowLayout
                             android:id="@+id/filterCategoryContainer"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="12dp" />
+
+                        <!-- Limpar Filtros -->
+                        <TextView
+                            android:id="@+id/btnClearFilters"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Limpar filtros"
+                            android:textSize="11sp"
+                            android:textColor="#F87171"
+                            android:padding="4dp"
+                            android:clickable="true"
+                            android:focusable="true" />
 
                     </LinearLayout>
-
-                    <!-- Limpar Filtros -->
-                    <TextView
-                        android:id="@+id/btnClearFilters"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="\u2716 Limpar filtros"
-                        android:textSize="11sp"
-                        android:textColor="#F87171"
-                        android:padding="4dp"
-                        android:layout_marginTop="8dp"
-                        android:clickable="true"
-                        android:focusable="true" />
 
                 </LinearLayout>
 
@@ -701,11 +709,12 @@
                     android:id="@+id/emptyAvailable"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Todas as corridas de hoje j\u00E1 foram adicionadas."
+                    android:text="Todas as corridas j\u00E1 foram adicionadas."
                     android:textSize="12sp"
                     android:textColor="#9CA3AF"
                     android:gravity="center"
-                    android:paddingVertical="20dp"
+                    android:padding="32dp"
+                    android:background="@drawable/card_bg"
                     android:visibility="gone" />
 
                 <androidx.recyclerview.widget.RecyclerView
@@ -718,13 +727,13 @@
                 <TextView
                     android:id="@+id/btnLoadMoreAvailable"
                     android:layout_width="match_parent"
-                    android:layout_height="44dp"
+                    android:layout_height="40dp"
                     android:gravity="center"
-                    android:text="Ver mais corridas"
-                    android:textSize="13sp"
+                    android:text="Ver mais"
+                    android:textSize="12sp"
                     android:textColor="#1A2C3E"
-                    android:textStyle="bold"
                     android:background="#F0F2F8"
+                    android:layout_marginTop="8dp"
                     android:visibility="gone"
                     android:clickable="true"
                     android:focusable="true" />

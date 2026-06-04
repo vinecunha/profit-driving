@@ -751,3 +751,37 @@ object AnalysisHelperV2 {
     fun hoursMinutes(totalMin: Int): String =
         if (totalMin > 0) "${totalMin / 60}h${totalMin % 60}min" else "0min"
 }
+
+data class DriverInputData(
+    val totalKmPanel: Double,
+    val totalHoursWorked: Double
+)
+
+data class AnalysisExtendedResult(
+    val base: AnalysisResultV2,
+    val emptyKm: Double,
+    val efficiencyPercent: Double,
+    val actualConsumption: Double,
+    val driverInput: DriverInputData?
+)
+
+fun AnalysisHelperV2.calculateEfficiency(
+    result: AnalysisResultV2,
+    driverInput: DriverInputData?
+): AnalysisExtendedResult {
+    if (driverInput == null || driverInput.totalKmPanel <= 0) {
+        return AnalysisExtendedResult(result, 0.0, 100.0, 0.0, null)
+    }
+
+    val totalKmFromRides = result.totalKm
+    val emptyKm = maxOf(0.0, driverInput.totalKmPanel - totalKmFromRides)
+    val efficiencyPercent = if (driverInput.totalKmPanel > 0) {
+        maxOf(0.0, 100.0 - (emptyKm / driverInput.totalKmPanel * 100))
+    } else 100.0
+
+    val actualConsumption = if (driverInput.totalHoursWorked > 0) {
+        driverInput.totalKmPanel / driverInput.totalHoursWorked
+    } else 0.0
+
+    return AnalysisExtendedResult(result, emptyKm, efficiencyPercent, actualConsumption, driverInput)
+}

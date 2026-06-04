@@ -7,18 +7,24 @@
 
     <include layout="@layout/toolbar_default" />
 
+    <!-- Card de navegação de período (mesmo layout do Meu Dia) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="12dp"
-        android:background="#F8F9FE">
+        android:background="@drawable/card_bg"
+        android:elevation="2dp"
+        android:padding="16dp"
+        android:layout_margin="12dp"
+        android:layout_marginBottom="0dp">
 
+        <!-- Botões de modo Dia/Semana/Mês -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center">
+            android:gravity="center"
+            android:layout_marginBottom="12dp">
 
             <TextView
                 android:id="@+id/btnModeDay"
@@ -27,7 +33,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="\uD83D\uDCC5 Dia"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:textStyle="bold"
                 android:background="@drawable/pill_selected"
                 android:layout_marginEnd="4dp"
@@ -41,7 +47,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="\uD83D\uDCC6 Semana"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:background="@drawable/pill_unselected"
                 android:layout_marginHorizontal="4dp"
                 android:clickable="true"
@@ -54,7 +60,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="\uD83D\uDCCA M\u00EAs"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:background="@drawable/pill_unselected"
                 android:layout_marginStart="4dp"
                 android:clickable="true"
@@ -62,12 +68,13 @@
 
         </LinearLayout>
 
+        <!-- Navegação por período -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginTop="12dp">
+            android:layout_marginBottom="8dp">
 
             <TextView
                 android:id="@+id/btnPrevPeriod"
@@ -75,7 +82,7 @@
                 android:layout_height="40dp"
                 android:gravity="center"
                 android:text="\u25C0"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textColor="#1A2C3E"
                 android:clickable="true"
                 android:focusable="true" />
@@ -86,7 +93,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Carregando..."
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="#1A2C3E"
                 android:gravity="center" />
@@ -97,22 +104,25 @@
                 android:layout_height="40dp"
                 android:gravity="center"
                 android:text="\u25B6"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textColor="#1A2C3E"
                 android:clickable="true"
                 android:focusable="true" />
 
         </LinearLayout>
 
+        <!-- Botão Hoje -->
         <TextView
             android:id="@+id/btnToday"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="\uD83D\uDCCD Hoje"
+            android:layout_height="32dp"
+            android:text="Hoje"
             android:textSize="12sp"
-            android:textColor="#00982B"
-            android:padding="8dp"
-            android:layout_gravity="center"
+            android:textColor="#00A86B"
+            android:paddingHorizontal="16dp"
+            android:gravity="center"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/pill_unselected"
             android:clickable="true"
             android:focusable="true" />
 

@@ -242,39 +242,41 @@ class AnalysisActivity : BaseActivity() {
         }
     }
 
+    private fun loadDriverInput(): DriverInputData? {
+        val km = SecurePreferences.getFloat(this, SecurePreferences.KEY_LAST_KM_PANEL, -1f)
+        val hours = SecurePreferences.getFloat(this, SecurePreferences.KEY_LAST_HOURS_WORKED, -1f)
+        if (km < 0 || hours < 0) return null
+        return DriverInputData(km.toDouble(), hours.toDouble())
+    }
+
     private fun buildCards(r: AnalysisResultV2) {
         cardsContainer.removeAllViews()
         cardIndex = 0
 
-        // NÍVEL 1 - VISÃO GERAL
-        buildVisaoGeral(r)
-        buildResumoFinanceiro(r)
-        buildComparativoPeriodo(r)
-        addSpacer()
+        var section = buildExpandableSection("\uD83D\uDCCA", "Vis\u00E3o Geral", cardsContainer)
+        buildVisaoGeral(r, section)
+        buildScoreDistribution(r, section)
+        buildLostRides(r, section)
+        buildAcceptanceByValue(r, section)
 
-        // NÍVEL 2 - QUALIDADE DAS OFERTAS
-        buildScoreDistribution(r)
-        buildLostRides(r)
-        buildAcceptanceByValue(r)
-        addSpacer()
+        section = buildExpandableSection("\uD83D\uDCB0", "Financeiro", cardsContainer)
+        buildResumoFinanceiro(r, section)
+        buildComparativoPeriodo(r, section)
+        buildBonusImpact(r, section)
 
-        // NÍVEL 3 - FATORES DE SUCESSO
-        buildBonusImpact(r)
-        buildMelhorHorario(r)
-        buildDinamicaHorario(r)
-        buildCidades(r)
-        buildBairros(r)
-        addSpacer()
+        section = buildExpandableSection("\u23F0", "Desempenho", cardsContainer)
+        buildMelhorHorario(r, section)
+        buildDinamicaHorario(r, section)
+        buildCidades(r, section)
+        buildBairros(r, section)
+        buildHourlyForecast(r, section)
+        buildDynamicTrend(r, section)
+        buildWeekdayRanking(r, section)
 
-        // NÍVEL 4 - PROJEÇÕES
-        buildHourlyForecast(r)
-        buildDynamicTrend(r)
-        buildWeekdayRanking(r)
-        addSpacer()
-
-        // NÍVEL 5 - INSIGHTS E OTIMIZAÇÃO
-        buildDailyProjection(r)
-        buildInsights(r)
+        section = buildExpandableSection("\uD83D\uDE80", "Otimiza\u00E7\u00E3o", cardsContainer)
+        buildDailyProjection(r, section)
+        buildEfficiencyCard(r, section)
+        buildInsights(r, section)
     }
 
     private fun addSpacer() {
@@ -436,8 +438,71 @@ class AnalysisActivity : BaseActivity() {
         })
     }
 
+    private fun buildExpandableSection(
+        icon: String,
+        title: String,
+        container: LinearLayout,
+        initiallyExpanded: Boolean = true
+    ): LinearLayout {
+        val sectionWrapper = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                .apply { bottomMargin = 12 }
+            orientation = VERTICAL
+            val bg = GradientDrawable().apply {
+                setColor(Color.parseColor("#F8FAFC"))
+                cornerRadius = 12 * resources.displayMetrics.density
+            }
+            background = bg
+            elevation = 2 * resources.displayMetrics.density
+        }
+
+        val arrowIcon = TextView(this).apply {
+            text = if (initiallyExpanded) "\u25BC" else "\u25B6"
+            textSize = 10f
+            setTextColor(Color.parseColor("#6B7280"))
+            layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
+                .apply { rightMargin = 8 }
+        }
+
+        val header = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(16, 14, 16, 14)
+            isClickable = true
+            isFocusable = true
+            addView(arrowIcon)
+            addView(TextView(this@AnalysisActivity).apply {
+                text = "$icon $title"
+                textSize = 16f
+                setTextColor(Color.parseColor("#1A2C3E"))
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
+            })
+        }
+
+        sectionWrapper.addView(header)
+
+        val content = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = VERTICAL
+            setPadding(12, 0, 12, 12)
+            visibility = if (initiallyExpanded) View.VISIBLE else View.GONE
+        }
+        sectionWrapper.addView(content)
+
+        header.setOnClickListener {
+            val isVisible = content.visibility == View.VISIBLE
+            arrowIcon.text = if (isVisible) "\u25B6" else "\u25BC"
+            content.visibility = if (isVisible) View.GONE else View.VISIBLE
+        }
+
+        container.addView(sectionWrapper)
+        return content
+    }
+
     // ─── CARD 1: Visão Geral ───
-    private fun buildVisaoGeral(r: AnalysisResultV2) {
+    private fun buildVisaoGeral(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         val card = createCard("\uD83D\uDCCA Vis\u00E3o Geral")
 
         addText(card, "\uD83D\uDCCB Corridas ofertadas: ${r.offeredCount}", 13f, Color.parseColor("#333333"))
@@ -452,11 +517,11 @@ class AnalysisActivity : BaseActivity() {
         addText(card, "R\$/h m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.avgPricePerHour)}", 12f, Color.parseColor("#555555"))
         addText(card, "Nota m\u00E9dia: ${"%.2f".format(r.avgRating)}", 12f, Color.parseColor("#555555"))
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     // ─── CARD 2: Impacto dos Bônus ───
-    private fun buildBonusImpact(r: AnalysisResultV2) {
+    private fun buildBonusImpact(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         val card = createCard("\uD83D\uDCB0 Impacto dos B\u00F4nus")
         val MIN_DATA = 3
 
@@ -510,11 +575,11 @@ class AnalysisActivity : BaseActivity() {
         addText(card, "\uD83D\uDCA1 O que significa? B\u00F4nus de prioridade s\u00E3o oferecidos pela Uber para incentivar aceita\u00E7\u00E3o em \u00E1reas de alta demanda. O indicador mostra o impacto real no ganho por km \u2014 quanto maior a diferen\u00E7a, mais vale a pena priorizar essas corridas.",
             11f, Color.parseColor("#888888"))
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     // ─── CARD 3: Melhor Horário ───
-    private fun buildMelhorHorario(r: AnalysisResultV2) {
+    private fun buildMelhorHorario(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         val card = createCard("\u23F0 Melhor hor\u00E1rio para aceitar")
         val bestData = r.hourlyData.find { it.hour == r.bestHourToAccept }
 
@@ -549,11 +614,11 @@ class AnalysisActivity : BaseActivity() {
             addText(card, "Nenhuma corrida aceita no per\u00EDodo", 12f, Color.parseColor("#999999"))
         }
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     // ─── CARD 4: Dinâmica por Horário ───
-    private fun buildDinamicaHorario(r: AnalysisResultV2) {
+    private fun buildDinamicaHorario(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         val card = createCard("\u26A1 Din\u00E2mica por hor\u00E1rio")
         val peakData = r.hourlyData.find { it.hour == r.peakDynamicHour }
 
@@ -587,11 +652,11 @@ class AnalysisActivity : BaseActivity() {
             addText(card, "Nenhuma corrida com din\u00E2mica no per\u00EDodo", 12f, Color.parseColor("#999999"))
         }
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     // ─── CARD 5: Melhores Cidades ───
-    private fun buildCidades(r: AnalysisResultV2) {
+    private fun buildCidades(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         if (r.topCities.isEmpty()) return
         val card = createCard("\uD83D\uDCCD Melhores cidades")
 
@@ -638,11 +703,11 @@ class AnalysisActivity : BaseActivity() {
             card.addView(row)
         }
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     // ─── CARD 6: Melhores Bairros ───
-    private fun buildBairros(r: AnalysisResultV2) {
+    private fun buildBairros(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         if (r.topNeighborhoods.isEmpty()) return
         val card = createCard("\uD83C\uDFE0 Melhores bairros")
 
@@ -681,11 +746,11 @@ class AnalysisActivity : BaseActivity() {
             card.addView(row)
         }
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     // ─── CARD 7: Previsão de Ganhos por Horário ───
-    private fun buildHourlyForecast(r: AnalysisResultV2) {
+    private fun buildHourlyForecast(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         if (r.hourlyForecast.isEmpty()) return
 
         val card = createCard("\uD83D\uDCCA PREVIS\u00C3O DE GANHOS POR HOR\u00C1RIO")
@@ -752,11 +817,11 @@ class AnalysisActivity : BaseActivity() {
             card.addView(hourContainer)
         }
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     // ─── CARD 8: Análise de Aceitação por Valor ───
-    private fun buildAcceptanceByValue(r: AnalysisResultV2) {
+    private fun buildAcceptanceByValue(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         if (r.acceptanceByValue.isEmpty()) return
         val card = createCard("\u2705 An\u00E1lise de aceita\u00E7\u00E3o por valor")
 
@@ -768,11 +833,11 @@ class AnalysisActivity : BaseActivity() {
                 v.barFraction / maxFrac, BLUE)
         }
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     // ─── CARD 9: Corridas Perdidas ───
-    private fun buildLostRides(r: AnalysisResultV2) {
+    private fun buildLostRides(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         val lost = r.lostRides
         if (lost.lostCount == 0) return
         val card = createCard("\u274C Corridas perdidas (n\u00E3o aceitas)")
@@ -783,11 +848,11 @@ class AnalysisActivity : BaseActivity() {
         addText(card, "\uD83D\uDE97 Categoria: ${lost.topLostCategory} (${"%.0f".format(lost.topLostCategoryPercent)}% das perdas)")
         addText(card, "\uD83D\uDCCD Cidade: ${lost.topLostCity} (${"%.0f".format(lost.topLostCityPercent)}% das perdas)")
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     // ─── CARD 10: Tendência de Dinâmica ───
-    private fun buildDynamicTrend(r: AnalysisResultV2) {
+    private fun buildDynamicTrend(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         if (r.dynamicTrend.size < 2) return
         val card = createCard("\uD83D\uDCC8 Tend\u00EAncia de din\u00E2mica (7 dias)")
 
@@ -799,11 +864,11 @@ class AnalysisActivity : BaseActivity() {
                 d.barFraction / maxFrac, if (d.isUp) GREEN else RED)
         }
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     // ─── CARD 11: Projeção do Dia ───
-    private fun buildDailyProjection(r: AnalysisResultV2) {
+    private fun buildDailyProjection(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         val p = r.dailyProjection
         if (p.completedRides == 0) return
         val card = createCard("\uD83C\uDFAF Proje\u00E7\u00E3o do dia")
@@ -825,11 +890,48 @@ class AnalysisActivity : BaseActivity() {
         }
         addText(card, remainingText, 12f, remainingColor, true)
 
-        cardsContainer.addView(card)
+        container.addView(card)
+    }
+
+    // ─── CARD: Eficiência ───
+    private fun buildEfficiencyCard(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
+        val driverInput = loadDriverInput()
+
+        if (driverInput == null) {
+            val card = createCard("\uD83D\uDE80 Efici\u00EAncia")
+            addText(card, "Toque em \"\uD83D\uDCCA Meus dados\" no topo para informar km do painel e horas trabalhadas", 13f)
+            container.addView(card)
+            return
+        }
+
+        val extended = AnalysisHelperV2.calculateEfficiency(r, driverInput)
+
+        val card = createCard("\uD83D\uDE80 Efici\u00EAncia")
+
+        addInfoRow(card, "Km hod\u00F4metro", "${AnalysisHelperV2.formatBr1(driverInput.totalKmPanel)} km", "#1A2C3E")
+        addInfoRow(card, "Km corridas", "${AnalysisHelperV2.formatBr1(r.totalKm)} km", "#3B82F6")
+
+        val emptyKmColor = if (extended.emptyKm > 20) "#EF4444" else if (extended.emptyKm > 10) "#F59E0B" else "#00A86B"
+        addInfoRow(card, "Km vazio", "${AnalysisHelperV2.formatBr1(extended.emptyKm)} km", emptyKmColor)
+
+        addDivider(card)
+
+        addText(card, "Aproveitamento", 12f, Color.parseColor("#333333"), true)
+
+        val effColor = if (extended.efficiencyPercent >= 80) GREEN else if (extended.efficiencyPercent >= 60) ORANGE else RED
+        addBar(card, "Efici\u00EAncia", "${"%.0f".format(extended.efficiencyPercent)}%",
+            (extended.efficiencyPercent / 100).toFloat(), effColor)
+
+        addDivider(card)
+
+        addInfoRow(card, "Horas trabalhadas", "${AnalysisHelperV2.formatBr1(driverInput.totalHoursWorked)} h", "#6B7280")
+        addInfoRow(card, "M\u00E9dia km/h", "${AnalysisHelperV2.formatBr1(extended.actualConsumption)} km/h", "#6B7280")
+
+        container.addView(card)
     }
 
     // ─── CARD 12: Dias Mais Lucrativos ───
-    private fun buildWeekdayRanking(r: AnalysisResultV2) {
+    private fun buildWeekdayRanking(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         if (r.weekdayRanking.isEmpty()) return
 
         val card = createCard("\uD83C\uDFC6 DIAS MAIS LUCRATIVOS")
@@ -892,11 +994,11 @@ class AnalysisActivity : BaseActivity() {
             card.addView(dayContainer)
         }
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     // ─── CARD: Resumo Financeiro ───
-    private fun buildResumoFinanceiro(r: AnalysisResultV2) {
+    private fun buildResumoFinanceiro(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         val card = createCard("💰 RESUMO FINANCEIRO")
 
         val netProfit = r.totalEarnings - r.totalCost
@@ -910,7 +1012,7 @@ class AnalysisActivity : BaseActivity() {
         addInfoRow(card, "Margem líquida", "${"%.1f".format(r.profitMargin)}%",
             if (r.profitMargin >= 20) "#00A86B" else if (r.profitMargin >= 0) "#F59E0B" else "#EF4444")
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     private fun addInfoRow(container: LinearLayout, label: String, value: String, colorHex: String, bold: Boolean = false) {
@@ -936,7 +1038,7 @@ class AnalysisActivity : BaseActivity() {
     }
 
     // ─── CARD: Distribuição de Scores ───
-    private fun buildScoreDistribution(r: AnalysisResultV2) {
+    private fun buildScoreDistribution(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         val card = createCard("🎯 DISTRIBUIÇÃO DAS OFERTAS")
 
         addText(card, "Total de ofertas: ${r.offeredCount}", 13f, Color.parseColor("#333333"))
@@ -969,11 +1071,11 @@ class AnalysisActivity : BaseActivity() {
             }
         }, 11f, Color.parseColor("#666666"))
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     // ─── CARD: Comparativo com Período Anterior ───
-    private fun buildComparativoPeriodo(r: AnalysisResultV2) {
+    private fun buildComparativoPeriodo(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         if (r.previousPeriodEarnings <= 0 && r.previousPeriodRides <= 0) return
 
         val card = createCard("📈 COMPARATIVO COM PERÍODO ANTERIOR")
@@ -996,7 +1098,7 @@ class AnalysisActivity : BaseActivity() {
             "${r.previousPeriodRides}",
             ridesDiff.toDouble(), ridesPct)
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     private fun addComparisonRow(container: LinearLayout, label: String, current: String, previous: String, diff: Double, pct: Double) {
@@ -1032,7 +1134,7 @@ class AnalysisActivity : BaseActivity() {
     }
 
     // ─── CARD: Insights e Recomendações ───
-    private fun buildInsights(r: AnalysisResultV2) {
+    private fun buildInsights(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         val insights = mutableListOf<String>()
 
         if (r.acceptanceRate < 50) {
@@ -1079,7 +1181,7 @@ class AnalysisActivity : BaseActivity() {
             }
         }
 
-        cardsContainer.addView(card)
+        container.addView(card)
     }
 
     private fun addDetailRow(

@@ -39,7 +39,7 @@ class MyDayActivity : BaseActivity() {
     private lateinit var btnAddManualRide: LinearLayout
     private lateinit var filterCategoryContainer: WrapContentFlowLayout
     private lateinit var btnClearFilters: TextView
-    private lateinit var tvCompletedHeader: TextView
+    private lateinit var tvCompletedCount: TextView
     private lateinit var tvHistoryInfo: TextView
     private lateinit var btnLoadMoreAvailable: TextView
     private lateinit var progressAvailable: ProgressBar
@@ -58,23 +58,22 @@ class MyDayActivity : BaseActivity() {
     private lateinit var tvTotalDistance: TextView
     private lateinit var tvTotalDuration: TextView
     private lateinit var tvGrossRevenue: TextView
-    private lateinit var tvTotalTips: TextView
-    private lateinit var tvTotalAdjustments: TextView
-    private lateinit var tvTotalCost: TextView
-    private lateinit var tvFuelUsed: TextView
-    private lateinit var tvFuelDisbursed: TextView
-    private lateinit var tvFuelInfo: TextView
     private lateinit var tvNetProfit: TextView
     private lateinit var tvProfitPercent: TextView
     private lateinit var tvRevenuePerKm: TextView
     private lateinit var tvRevenuePerHour: TextView
-    private lateinit var tvAvgTip: TextView
+    private lateinit var tvPeriodBadge: TextView
 
     // Cost breakdown views
     private lateinit var btnToggleCostDetails: TextView
     private lateinit var layoutCostDetails: LinearLayout
     private var costBreakdownItems = listOf<CostBreakdownItem>()
     private var costDetailsExpanded = false
+
+    // Filter toggle views
+    private lateinit var btnToggleFilters: LinearLayout
+    private lateinit var filterContainer: LinearLayout
+    private lateinit var tvFilterToggleIcon: TextView
 
     private lateinit var filterManager: FilterManager
     private lateinit var etSearchRides: EditText
@@ -155,7 +154,7 @@ class MyDayActivity : BaseActivity() {
         btnAddManualRide = findViewById(R.id.btnAddManualRide)
         filterCategoryContainer = findViewById(R.id.filterCategoryContainer)
         btnClearFilters = findViewById(R.id.btnClearFilters)
-        tvCompletedHeader = findViewById(R.id.tvCompletedHeader)
+        tvCompletedCount = findViewById(R.id.tvCompletedCount)
         tvHistoryInfo = findViewById(R.id.tvHistoryInfo)
         btnLoadMoreAvailable = findViewById(R.id.btnLoadMoreAvailable)
         progressAvailable = findViewById(R.id.progressAvailable)
@@ -174,31 +173,20 @@ class MyDayActivity : BaseActivity() {
         tvTotalDistance = findViewById(R.id.tvTotalDistance)
         tvTotalDuration = findViewById(R.id.tvTotalDuration)
         tvGrossRevenue = findViewById(R.id.tvGrossRevenue)
-        tvTotalTips = findViewById(R.id.tvTotalTips)
-        tvTotalAdjustments = findViewById(R.id.tvTotalAdjustments)
-        tvTotalCost = findViewById(R.id.tvTotalCost)
-        tvFuelUsed = findViewById(R.id.tvFuelUsed)
-        tvFuelDisbursed = findViewById(R.id.tvFuelDisbursed)
-        tvFuelInfo = findViewById(R.id.tvFuelInfo)
         tvNetProfit = findViewById(R.id.tvNetProfit)
         tvProfitPercent = findViewById(R.id.tvProfitPercent)
         tvRevenuePerKm = findViewById(R.id.tvRevenuePerKm)
         tvRevenuePerHour = findViewById(R.id.tvRevenuePerHour)
-        tvAvgTip = findViewById(R.id.tvAvgTip)
+        tvPeriodBadge = findViewById(R.id.tvPeriodBadge)
 
         btnToggleCostDetails = findViewById(R.id.btnToggleCostDetails)
         layoutCostDetails = findViewById(R.id.layoutCostDetails)
         btnToggleCostDetails.setOnClickListener { toggleCostDetails() }
 
-        tvFuelInfo.setOnClickListener {
-            android.app.AlertDialog.Builder(this)
-                .setTitle("\u26FD Abastecido hoje")
-                .setMessage("Valor total gasto em combust\u00EDvel registrado na data de hoje. " +
-                    "Pode incluir abastecimentos para dias futuros.\n\n" +
-                    "O lucro l\u00EDquido considera apenas o combust\u00EDvel utilizado nas corridas de hoje.")
-                .setPositiveButton("OK", null)
-                .show()
-        }
+        btnToggleFilters = findViewById(R.id.btnToggleFilters)
+        filterContainer = findViewById(R.id.filterContainer)
+        tvFilterToggleIcon = findViewById(R.id.tvFilterToggleIcon)
+        btnToggleFilters.setOnClickListener { toggleFilters() }
 
         etSearchRides = findViewById(R.id.etSearchRides)
         btnClearSearch = findViewById(R.id.btnClearSearch)
@@ -420,6 +408,12 @@ class MyDayActivity : BaseActivity() {
             ViewMode.MONTH -> monthFormatter.format(referenceCalendar.time)
         }
         tvPeriodTitle.text = title
+
+        tvPeriodBadge.text = when (currentMode) {
+            ViewMode.DAY -> "hoje"
+            ViewMode.WEEK -> "esta semana"
+            ViewMode.MONTH -> "este m\u00EAs"
+        }
     }
 
     private fun getWeekStart(calendar: Calendar): Calendar {
@@ -562,7 +556,7 @@ class MyDayActivity : BaseActivity() {
 
         completedAdapter.updateData(filteredCompleted, allRideRecords, costPerKm)
 
-        tvCompletedHeader.text = "\u2705 CORRIDAS REALIZADAS (${filteredCompleted.size})"
+        tvCompletedCount.text = "${filteredCompleted.size}"
 
         emptyCompleted.visibility = if (filteredCompleted.isEmpty()) View.VISIBLE else View.GONE
         rvCompleted.visibility = if (filteredCompleted.isEmpty()) View.GONE else View.VISIBLE
@@ -733,16 +727,11 @@ class MyDayActivity : BaseActivity() {
         val hours = totalDuration / 60
         val minutes = totalDuration % 60
 
-        tvRideCount.text = "Corridas: $count"
-        tvTotalDistance.text = "Km: %.1f".format(totalKm).replace(".", ",")
-        tvTotalDuration.text = "Tempo: ${hours}h ${minutes}min"
+        tvRideCount.text = "$count"
+        tvTotalDistance.text = "%.1f".format(totalKm).replace(".", ",")
+        tvTotalDuration.text = "${hours}h ${minutes}min"
 
         tvGrossRevenue.text = "R$ %.2f".format(grossRevenue).replace(".", ",")
-        tvTotalTips.text = "R$ %.2f".format(totalTips).replace(".", ",")
-        tvTotalAdjustments.text = "R$ %.2f".format(totalAdjustments).replace(".", ",")
-        tvTotalCost.text = "R$ %.2f".format(totalCost).replace(".", ",")
-        tvFuelUsed.text = "R$ %.2f".format(fuelUsed).replace(".", ",")
-        tvFuelDisbursed.text = "R$ %.2f".format(fuelDisbursed).replace(".", ",")
 
         tvNetProfit.text = "R$ %.2f".format(netProfit).replace(".", ",")
         tvNetProfit.setTextColor(
@@ -756,7 +745,6 @@ class MyDayActivity : BaseActivity() {
 
         tvRevenuePerKm.text = "R\$/km: %.2f".format(revenuePerKm).replace(".", ",")
         tvRevenuePerHour.text = "R\$/h: %.2f".format(revenuePerHour).replace(".", ",")
-        tvAvgTip.text = "M\u00E9dia gorjeta: R$ %.2f".format(avgTip).replace(".", ",")
 
         updateCostBreakdown(totalKm)
     }
@@ -773,6 +761,12 @@ class MyDayActivity : BaseActivity() {
         layoutCostDetails.visibility = if (costDetailsExpanded) View.VISIBLE else View.GONE
         btnToggleCostDetails.text = if (costDetailsExpanded)
             "\u25B2 Ocultar detalhes dos custos" else "\u25BC Ver detalhes dos custos"
+    }
+
+    private fun toggleFilters() {
+        val isVisible = filterContainer.visibility == View.VISIBLE
+        filterContainer.visibility = if (isVisible) View.GONE else View.VISIBLE
+        tvFilterToggleIcon.text = if (isVisible) "\u25BC" else "\u25B2"
     }
 
     private fun updateCostBreakdown(dayTotalKm: Double) {

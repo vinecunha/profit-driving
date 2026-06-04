@@ -71,7 +71,7 @@ class MyDayRideAdapter(
 
         holder.tvExpandHint.text = if (isExpanded) "\u25B2" else "\u25BC"
         holder.layoutDetail.visibility = if (isExpanded) View.VISIBLE else View.GONE
-        holder.layoutActions.visibility = if (ride.isCompleted) View.VISIBLE else View.GONE
+        holder.btnActions.visibility = if (ride.isCompleted) View.VISIBLE else View.GONE
 
         // Total distance/time = pickup + trip
         val pickupDist = record?.pickupDistanceKm ?: 0.0
@@ -151,14 +151,6 @@ class MyDayRideAdapter(
             holder.tvDetailProfitPercent.visibility = View.GONE
         }
 
-        // Undo button
-        holder.btnUndo.visibility = if (ride.isCompleted) View.VISIBLE else View.GONE
-        holder.btnUndo.setOnClickListener { onToggleCompleted(ride) }
-
-        // Cancel with fee — hide only if already cancelled
-        holder.btnCancelWithFee.visibility = if (!ride.cancelledWithFee) View.VISIBLE else View.GONE
-        holder.btnCancelWithFee.setOnClickListener { onCancelWithFee(ride) }
-
         // Long-press on checkbox for undo confirmation
         holder.chkCompleted.setOnLongClickListener {
             if (ride.isCompleted) {
@@ -172,10 +164,32 @@ class MyDayRideAdapter(
             true
         }
 
-        // Click listeners
+        // Single action button with dialog
         holder.chkCompleted.setOnClickListener { onToggleCompleted(ride) }
-        holder.btnAddTip.setOnClickListener { onAddTip(ride) }
-        holder.btnAdjust.setOnClickListener { onAdjust(ride) }
+        holder.btnActions.setOnClickListener {
+            val context = holder.itemView.context
+            val options = mutableListOf<String>()
+            val actions = mutableListOf<() -> Unit>()
+
+            if (!ride.cancelledWithFee) {
+                options.add("\uD83D\uDEAB Cancelar com taxa")
+                actions.add { onCancelWithFee(ride) }
+            }
+            options.add("\uD83C\uDF6F Adicionar gorjeta")
+            actions.add { onAddTip(ride) }
+            options.add("\u21BB Reajustar valor")
+            actions.add { onAdjust(ride) }
+            options.add("\u21BA Remover da lista")
+            actions.add { onToggleCompleted(ride) }
+
+            AlertDialog.Builder(context)
+                .setTitle("A\u00E7\u00F5es")
+                .setItems(options.toTypedArray()) { _, which ->
+                    actions.getOrNull(which)?.invoke()
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
+        }
 
         holder.root.setOnClickListener {
             if (expandedPosition == position) {
@@ -212,10 +226,6 @@ class MyDayRideAdapter(
         val tvDetailCost: TextView = itemView.findViewById(R.id.tvDetailCost)
         val tvDetailProfit: TextView = itemView.findViewById(R.id.tvDetailProfit)
         val tvDetailProfitPercent: TextView = itemView.findViewById(R.id.tvDetailProfitPercent)
-        val layoutActions: LinearLayout = itemView.findViewById(R.id.layoutActions)
-        val btnUndo: TextView = itemView.findViewById(R.id.btnUndo)
-        val btnCancelWithFee: TextView = itemView.findViewById(R.id.btnCancelWithFee)
-        val btnAddTip: TextView = itemView.findViewById(R.id.btnAddTip)
-        val btnAdjust: TextView = itemView.findViewById(R.id.btnAdjust)
+        val btnActions: TextView = itemView.findViewById(R.id.btnActions)
     }
 }
