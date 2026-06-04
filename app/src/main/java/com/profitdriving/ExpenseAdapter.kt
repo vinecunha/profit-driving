@@ -48,6 +48,8 @@ class ExpenseAdapter(
         } else ""
         holder.detail.text = detail
 
+        holder.btnEdit.visibility = View.VISIBLE
+        holder.btnDelete.visibility = View.VISIBLE
         holder.btnEdit.setOnClickListener { onEdit(expense, position) }
         holder.btnDelete.setOnClickListener { onDelete(expense, position) }
     }

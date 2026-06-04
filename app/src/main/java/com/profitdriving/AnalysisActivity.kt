@@ -80,7 +80,10 @@ class AnalysisActivity : BaseActivity() {
         Thread {
             val records = db.getFiltered(periodStart)
             val dailyRides = db.getDailyRidesByDateRange(periodStart, periodEnd)
-            val result = AnalysisHelperV2.calculate(records, dailyRides)
+            val costPerKm = kotlinx.coroutines.runBlocking {
+                CostSummaryCache.getCurrentSummary(this@AnalysisActivity).totalCostPerKm
+            }
+            val result = AnalysisHelperV2.calculate(records, dailyRides, costPerKm)
             handler.post {
                 hideSkeleton()
                 buildCards(result)
@@ -242,18 +245,42 @@ class AnalysisActivity : BaseActivity() {
     private fun buildCards(r: AnalysisResultV2) {
         cardsContainer.removeAllViews()
         cardIndex = 0
+
+        // NÍVEL 1 - VISÃO GERAL
         buildVisaoGeral(r)
+        buildResumoFinanceiro(r)
+        buildComparativoPeriodo(r)
+        addSpacer()
+
+        // NÍVEL 2 - QUALIDADE DAS OFERTAS
+        buildScoreDistribution(r)
+        buildLostRides(r)
+        buildAcceptanceByValue(r)
+        addSpacer()
+
+        // NÍVEL 3 - FATORES DE SUCESSO
         buildBonusImpact(r)
         buildMelhorHorario(r)
         buildDinamicaHorario(r)
         buildCidades(r)
         buildBairros(r)
+        addSpacer()
+
+        // NÍVEL 4 - PROJEÇÕES
         buildHourlyForecast(r)
-        buildAcceptanceByValue(r)
-        buildLostRides(r)
         buildDynamicTrend(r)
-        buildDailyProjection(r)
         buildWeekdayRanking(r)
+        addSpacer()
+
+        // NÍVEL 5 - INSIGHTS E OTIMIZAÇÃO
+        buildDailyProjection(r)
+        buildInsights(r)
+    }
+
+    private fun addSpacer() {
+        cardsContainer.addView(View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 16)
+        })
     }
 
     private var cardIndex = 0
@@ -424,27 +451,6 @@ class AnalysisActivity : BaseActivity() {
         addText(card, "R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.avgPricePerKm)}", 12f, Color.parseColor("#555555"))
         addText(card, "R\$/h m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.avgPricePerHour)}", 12f, Color.parseColor("#555555"))
         addText(card, "Nota m\u00E9dia: ${"%.2f".format(r.avgRating)}", 12f, Color.parseColor("#555555"))
-
-        if (r.goodPercent > 0 || r.mediumPercent > 0 || r.badPercent > 0) {
-            addDivider(card)
-            addText(card, "Avalia\u00E7\u00E3o das ofertas", 13f, Color.parseColor("#333333"), true)
-            val scoreColors = mapOf(
-                "Boa (\u226580)" to GREEN,
-                "M\u00E9dia (50-79)" to ORANGE,
-                "Ruim (<50)" to RED
-            )
-            val scoreContainer = LinearLayout(this).apply {
-                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-                orientation = VERTICAL
-            }
-            addBar(scoreContainer, "Boa (\u226580)", "${"%.0f".format(r.goodPercent)}%",
-                (r.goodPercent / 100).toFloat(), scoreColors["Boa (\u226580)"]!!)
-            addBar(scoreContainer, "M\u00E9dia (50-79)", "${"%.0f".format(r.mediumPercent)}%",
-                (r.mediumPercent / 100).toFloat(), scoreColors["M\u00E9dia (50-79)"]!!)
-            addBar(scoreContainer, "Ruim (<50)", "${"%.0f".format(r.badPercent)}%",
-                (r.badPercent / 100).toFloat(), scoreColors["Ruim (<50)"]!!)
-            card.addView(scoreContainer)
-        }
 
         cardsContainer.addView(card)
     }
@@ -884,6 +890,193 @@ class AnalysisActivity : BaseActivity() {
             }
 
             card.addView(dayContainer)
+        }
+
+        cardsContainer.addView(card)
+    }
+
+    // ─── CARD: Resumo Financeiro ───
+    private fun buildResumoFinanceiro(r: AnalysisResultV2) {
+        val card = createCard("💰 RESUMO FINANCEIRO")
+
+        val netProfit = r.totalEarnings - r.totalCost
+
+        addInfoRow(card, "Faturamento bruto", "R$ ${AnalysisHelperV2.formatBr(r.totalEarnings)}", "#1A2C3E")
+        addInfoRow(card, "Custo total", "-R$ ${AnalysisHelperV2.formatBr(r.totalCost)}", "#EF4444")
+        addDivider(card)
+        addInfoRow(card, "Lucro líquido", "R$ ${AnalysisHelperV2.formatBr(netProfit)}",
+            if (netProfit >= 0) "#00A86B" else "#EF4444", bold = true)
+        addInfoRow(card, "Custo por km", "R$ ${AnalysisHelperV2.formatBr(r.totalCostPerKm)}", "#6B7280")
+        addInfoRow(card, "Margem líquida", "${"%.1f".format(r.profitMargin)}%",
+            if (r.profitMargin >= 20) "#00A86B" else if (r.profitMargin >= 0) "#F59E0B" else "#EF4444")
+
+        cardsContainer.addView(card)
+    }
+
+    private fun addInfoRow(container: LinearLayout, label: String, value: String, colorHex: String, bold: Boolean = false) {
+        val row = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 4, 0, 4)
+        }
+        row.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
+            text = label
+            textSize = 13f
+            setTextColor(Color.parseColor("#666666"))
+        })
+        row.addView(TextView(this).apply {
+            text = value
+            textSize = 13f
+            setTextColor(Color.parseColor(colorHex))
+            if (bold) setTypeface(null, android.graphics.Typeface.BOLD)
+        })
+        container.addView(row)
+    }
+
+    // ─── CARD: Distribuição de Scores ───
+    private fun buildScoreDistribution(r: AnalysisResultV2) {
+        val card = createCard("🎯 DISTRIBUIÇÃO DAS OFERTAS")
+
+        addText(card, "Total de ofertas: ${r.offeredCount}", 13f, Color.parseColor("#333333"))
+
+        addDivider(card)
+
+        val scoreContainer = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = VERTICAL
+        }
+
+        addBar(scoreContainer, "✅ Boa (≥80%)", "${"%.0f".format(r.goodPercent)}%",
+            (r.goodPercent / 100).toFloat(), Color.parseColor("#00A86B"))
+        addBar(scoreContainer, "⚠️ Média (50-79%)", "${"%.0f".format(r.mediumPercent)}%",
+            (r.mediumPercent / 100).toFloat(), Color.parseColor("#F59E0B"))
+        addBar(scoreContainer, "❌ Ruim (<50%)", "${"%.0f".format(r.badPercent)}%",
+            (r.badPercent / 100).toFloat(), Color.parseColor("#EF4444"))
+
+        card.addView(scoreContainer)
+
+        addDivider(card)
+
+        addText(card, "📊 Taxa de aceitação: ${"%.1f".format(r.acceptanceRate)}%", 13f,
+            if (r.acceptanceRate >= 70) Color.parseColor("#00A86B") else Color.parseColor("#F59E0B"), true)
+
+        addText(card, buildString {
+            append("→ Você aceitou ${r.acceptedCount} de ${r.offeredCount} corridas")
+            if (r.offeredCount - r.acceptedCount > 0) {
+                append("\n→ ${r.offeredCount - r.acceptedCount} corridas foram recusadas ou expiraram")
+            }
+        }, 11f, Color.parseColor("#666666"))
+
+        cardsContainer.addView(card)
+    }
+
+    // ─── CARD: Comparativo com Período Anterior ───
+    private fun buildComparativoPeriodo(r: AnalysisResultV2) {
+        if (r.previousPeriodEarnings <= 0 && r.previousPeriodRides <= 0) return
+
+        val card = createCard("📈 COMPARATIVO COM PERÍODO ANTERIOR")
+
+        val earningsDiff = r.totalEarnings - r.previousPeriodEarnings
+        val earningsPct = if (r.previousPeriodEarnings > 0)
+            (earningsDiff / r.previousPeriodEarnings) * 100 else 0.0
+
+        val ridesDiff = r.acceptedCount - r.previousPeriodRides
+        val ridesPct = if (r.previousPeriodRides > 0)
+            (ridesDiff.toDouble() / r.previousPeriodRides) * 100 else 0.0
+
+        addComparisonRow(card, "Faturamento",
+            "R$ ${AnalysisHelperV2.formatBr(r.totalEarnings)}",
+            "R$ ${AnalysisHelperV2.formatBr(r.previousPeriodEarnings)}",
+            earningsDiff, earningsPct)
+
+        addComparisonRow(card, "Corridas",
+            "${r.acceptedCount}",
+            "${r.previousPeriodRides}",
+            ridesDiff.toDouble(), ridesPct)
+
+        cardsContainer.addView(card)
+    }
+
+    private fun addComparisonRow(container: LinearLayout, label: String, current: String, previous: String, diff: Double, pct: Double) {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, 8, 0, 8)
+        }
+
+        val headerRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+        }
+        headerRow.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.4f)
+            text = label
+            textSize = 12f
+            setTextColor(Color.parseColor("#666666"))
+        })
+        headerRow.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.6f)
+            text = "Atual: $current  |  Anterior: $previous"
+            textSize = 11f
+            setTextColor(Color.parseColor("#888888"))
+        })
+        row.addView(headerRow)
+
+        val arrowIcon = if (diff > 0) "▲" else if (diff < 0) "▼" else "●"
+        val arrowColor = if (diff > 0) "#00A86B" else if (diff < 0) "#EF4444" else "#888888"
+
+        addText(row, "$arrowIcon ${"%.1f".format(Math.abs(pct))}% (${if (diff > 0) "+" else ""}${AnalysisHelperV2.formatBr(diff)})",
+            11f, Color.parseColor(arrowColor))
+
+        container.addView(row)
+    }
+
+    // ─── CARD: Insights e Recomendações ───
+    private fun buildInsights(r: AnalysisResultV2) {
+        val insights = mutableListOf<String>()
+
+        if (r.acceptanceRate < 50) {
+            insights.add("⚠️ Sua taxa de aceitação está baixa (${"%.0f".format(r.acceptanceRate)}%). Reveja seus critérios de recusa.")
+        } else if (r.acceptanceRate > 85) {
+            insights.add("✅ Ótima taxa de aceitação! Continue assim.")
+        }
+
+        if (r.profitMargin < 20 && r.profitMargin >= 0) {
+            insights.add("💰 Sua margem está abaixo do ideal (${"%.0f".format(r.profitMargin)}%). Busque corridas com R$/km mais alto.")
+        } else if (r.profitMargin < 0) {
+            insights.add("🔴 Você está tendo prejuízo! Revise seus custos ou aceite corridas com valor mais alto.")
+        }
+
+        val bestHour = r.hourlyData.maxByOrNull { it.avgPricePerKm }
+        if (bestHour != null && bestHour.rideCount >= 3) {
+            insights.add("⏰ Melhor horário para trabalhar: ${bestHour.hour}h (R$ ${AnalysisHelperV2.formatBr(bestHour.avgPricePerKm)}/km)")
+        }
+
+        if (r.priorityImpact.count > 0 && r.priorityImpact.avgPricePerKm > r.priorityImpact.avgPricePerKmWithout) {
+            val diff = r.priorityImpact.avgPricePerKm - r.priorityImpact.avgPricePerKmWithout
+            insights.add("✨ Prioridade aumenta seu R$/km em R$ ${AnalysisHelperV2.formatBr(diff)}. Vale a pena priorizar!")
+        }
+
+        if (r.lostRides.lostCount > 0 && r.lostRides.avgLostPricePerKm > 0) {
+            insights.add("📉 Você deixou de ganhar R$ ${AnalysisHelperV2.formatBr(r.lostRides.avgLostValue)} em média por corrida não aceita.")
+        }
+
+        if (insights.isEmpty()) {
+            insights.add("📊 Continue monitorando. Nenhum insight crítico no momento.")
+        }
+
+        val card = createCard("💡 INSIGHTS E RECOMENDAÇÕES")
+
+        for (insight in insights.take(5)) {
+            addText(card, insight, 12f,
+                if (insight.startsWith("✅") || insight.startsWith("✨")) Color.parseColor("#00A86B")
+                else if (insight.startsWith("⚠️") || insight.startsWith("📉")) Color.parseColor("#F59E0B")
+                else if (insight.startsWith("🔴")) Color.parseColor("#EF4444")
+                else Color.parseColor("#333333"))
+
+            if (insight != insights.last()) {
+                addDivider(card)
+            }
         }
 
         cardsContainer.addView(card)

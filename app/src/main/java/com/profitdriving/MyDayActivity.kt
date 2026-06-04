@@ -5,6 +5,8 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
@@ -74,9 +76,9 @@ class MyDayActivity : BaseActivity() {
     private var costBreakdownItems = listOf<CostBreakdownItem>()
     private var costDetailsExpanded = false
 
-    // Filter pills
-    private lateinit var filterTimePills: List<TextView>
-    private lateinit var filterValuePills: List<TextView>
+    private lateinit var filterManager: FilterManager
+    private lateinit var etSearchRides: EditText
+    private lateinit var btnClearSearch: TextView
 
     private lateinit var completedAdapter: MyDayRideAdapter
     private lateinit var availableAdapter: AvailableRideAdapter
@@ -133,7 +135,10 @@ class MyDayActivity : BaseActivity() {
         initViews()
         setupPeriodNavigation()
         setupRecyclerViews()
-        setupFilters()
+        setupTimeFilters()
+        setupValueFilters()
+        setupCategoryFilters()
+        setupSearchFilter()
         setViewMode(ViewMode.DAY)
     }
 
@@ -195,18 +200,8 @@ class MyDayActivity : BaseActivity() {
                 .show()
         }
 
-        filterTimePills = listOf(
-            findViewById(R.id.filterMorning),
-            findViewById(R.id.filterAfternoon),
-            findViewById(R.id.filterEvening)
-        )
-
-        filterValuePills = listOf(
-            findViewById(R.id.filterValue1),
-            findViewById(R.id.filterValue2),
-            findViewById(R.id.filterValue3),
-            findViewById(R.id.filterValue4)
-        )
+        etSearchRides = findViewById(R.id.etSearchRides)
+        btnClearSearch = findViewById(R.id.btnClearSearch)
 
         btnAddManualRide.setOnClickListener { showManualRideDialog() }
         btnClearFilters.setOnClickListener {
@@ -214,7 +209,9 @@ class MyDayActivity : BaseActivity() {
             selectedValueFilter = null
             selectedCategory = null
             searchQuery = ""
-            updatePillStyles()
+            etSearchRides.setText("")
+            setupTimeFilters()
+            setupValueFilters()
             setupCategoryFilters()
             applyFilters()
             loadAvailableRides(reset = true)
@@ -242,41 +239,64 @@ class MyDayActivity : BaseActivity() {
         rvAvailable.adapter = availableAdapter
     }
 
-    private fun setupFilters() {
-        for (i in filterTimePills.indices) {
-            val idx = i
-            filterTimePills[i].setOnClickListener {
-                if (selectedTimeFilter == idx) {
-                    selectedTimeFilter = null
-                } else {
-                    selectedTimeFilter = idx
+    private fun setupTimeFilters() {
+        filterManager = FilterManager(this)
+        val container = findViewById<LinearLayout>(R.id.timeFilterContainer)
+        filterManager.clearContainer(container)
+        val options = listOf(
+            FilterManager.FilterOption("0", "06-12h", "🌅"),
+            FilterManager.FilterOption("1", "12-18h", "☀️"),
+            FilterManager.FilterOption("2", "18-00h", "🌙")
+        )
+        val selected = selectedTimeFilter?.let { setOf(it.toString()) } ?: emptySet()
+        val view = filterManager.createFilterSection(
+            parent = container,
+            title = "🕐 Horário",
+            options = options,
+            selectedIds = selected,
+            singleSelection = true,
+            callback = object : FilterManager.FilterCallback {
+                override fun onFilterChanged(filterId: String, isSelected: Boolean) {
+                    selectedTimeFilter = if (isSelected) filterId.toIntOrNull() else null
+                    applyFilters()
+                    loadAvailableRides(reset = true)
                 }
-                updatePillStyles()
-                applyFilters()
-                loadAvailableRides(reset = true)
+                override fun onClearAll() {}
             }
-        }
+        )
+        container.addView(view)
+    }
 
-        for (i in filterValuePills.indices) {
-            val idx = i
-            filterValuePills[i].setOnClickListener {
-                if (selectedValueFilter == idx) {
-                    selectedValueFilter = null
-                } else {
-                    selectedValueFilter = idx
+    private fun setupValueFilters() {
+        val container = findViewById<LinearLayout>(R.id.valueFilterContainer)
+        filterManager.clearContainer(container)
+        val options = listOf(
+            FilterManager.FilterOption("0", "R\$ 0-15", "💰"),
+            FilterManager.FilterOption("1", "R\$ 15-30", "💰"),
+            FilterManager.FilterOption("2", "R\$ 30-50", "💰"),
+            FilterManager.FilterOption("3", "R\$ 50+", "💰")
+        )
+        val selected = selectedValueFilter?.let { setOf(it.toString()) } ?: emptySet()
+        val view = filterManager.createFilterSection(
+            parent = container,
+            title = "💰 Valor",
+            options = options,
+            selectedIds = selected,
+            singleSelection = true,
+            callback = object : FilterManager.FilterCallback {
+                override fun onFilterChanged(filterId: String, isSelected: Boolean) {
+                    selectedValueFilter = if (isSelected) filterId.toIntOrNull() else null
+                    applyFilters()
+                    loadAvailableRides(reset = true)
                 }
-                updatePillStyles()
-                applyFilters()
-                loadAvailableRides(reset = true)
+                override fun onClearAll() {}
             }
-        }
-
-        setupCategoryFilters()
+        )
+        container.addView(view)
     }
 
     private fun setupCategoryFilters() {
         val categories = db.getDistinctServiceTypes()
-        val allButton = filterCategoryContainer.findViewById<TextView>(R.id.filterCategoryAll)
         filterCategoryContainer.removeAllViews()
         if (categories.isEmpty()) {
             filterCategoryContainer.visibility = View.GONE
@@ -284,40 +304,43 @@ class MyDayActivity : BaseActivity() {
         }
         filterCategoryContainer.visibility = View.VISIBLE
 
-        allButton.setTextColor(if (selectedCategory == null) 0xFFFFFFFF.toInt() else 0xFF5E6F8D.toInt())
-        allButton.setBackgroundResource(if (selectedCategory == null) R.drawable.pill_selected else R.drawable.pill_unselected)
-        allButton.setOnClickListener {
+        val allOpt = FilterManager.FilterOption("__all__", "Todas")
+        val allPill = filterManager.createPill(allOpt, selectedCategory == null)
+        allPill.setOnClickListener {
             selectedCategory = null
             setupCategoryFilters()
             applyFilters()
             loadAvailableRides(reset = true)
         }
-        filterCategoryContainer.addView(allButton)
+        filterCategoryContainer.addView(allPill)
 
-        val density = resources.displayMetrics.density
         for (cat in categories) {
-            val chip = TextView(this).apply {
-                text = cat
-                tag = cat
-                textSize = 11f
-                setTextColor(if (selectedCategory == cat) 0xFFFFFFFF.toInt() else 0xFF5E6F8D.toInt())
-                setBackgroundResource(if (selectedCategory == cat) R.drawable.pill_selected else R.drawable.pill_unselected)
-                gravity = Gravity.CENTER
-                setPadding((12 * density).toInt(), (6 * density).toInt(), (12 * density).toInt(), (6 * density).toInt())
-                isClickable = true
-                isFocusable = true
-                layoutParams = ViewGroup.MarginLayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    (28 * density).toInt()
-                ).apply { marginEnd = (6 * density).toInt(); bottomMargin = (6 * density).toInt() }
-                setOnClickListener {
-                    selectedCategory = cat
-                    setupCategoryFilters()
-                    applyFilters()
-                    loadAvailableRides(reset = true)
-                }
+            val opt = FilterManager.FilterOption(cat, cat)
+            val pill = filterManager.createPill(opt, selectedCategory == cat)
+            pill.setOnClickListener {
+                selectedCategory = cat
+                setupCategoryFilters()
+                applyFilters()
+                loadAvailableRides(reset = true)
             }
-            filterCategoryContainer.addView(chip)
+            filterCategoryContainer.addView(pill)
+        }
+    }
+
+    private fun setupSearchFilter() {
+        etSearchRides.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                searchQuery = s?.toString() ?: ""
+                btnClearSearch.visibility = if (searchQuery.isNotEmpty()) View.VISIBLE else View.GONE
+                applyFilters()
+                loadAvailableRides(reset = true)
+            }
+        })
+
+        btnClearSearch.setOnClickListener {
+            etSearchRides.setText("")
         }
     }
 
@@ -478,25 +501,10 @@ class MyDayActivity : BaseActivity() {
 
     private fun currentDateStr(): String = isoDateFormat.format(referenceCalendar.time)
 
-    private fun updatePillStyles() {
-        for (i in filterTimePills.indices) {
-            val isSelected = selectedTimeFilter == i
-            filterTimePills[i].setBackgroundResource(
-                if (isSelected) R.drawable.pill_selected else R.drawable.pill_unselected
-            )
-            filterTimePills[i].setTextColor(
-                if (isSelected) 0xFFFFFFFF.toInt() else 0xFF5E6F8D.toInt()
-            )
-        }
-        for (i in filterValuePills.indices) {
-            val isSelected = selectedValueFilter == i
-            filterValuePills[i].setBackgroundResource(
-                if (isSelected) R.drawable.pill_selected else R.drawable.pill_unselected
-            )
-            filterValuePills[i].setTextColor(
-                if (isSelected) 0xFFFFFFFF.toInt() else 0xFF5E6F8D.toInt()
-            )
-        }
+    private fun rebuildFilterSections() {
+        setupTimeFilters()
+        setupValueFilters()
+        setupCategoryFilters()
     }
 
     private fun loadDataForCurrentPeriod() {
@@ -667,7 +675,25 @@ class MyDayActivity : BaseActivity() {
 
         if (searchQuery.isNotEmpty()) {
             val st = record?.serviceType ?: ""
-            if (!st.contains(searchQuery, ignoreCase = true)) return false
+            val pa = record?.pickupAddress ?: ""
+            val da = record?.dropoffAddress ?: ""
+            val an = record?.appName ?: ""
+            val valueStr = "R\$ %.2f".format(rideValue).replace(".", ",")
+            val hour = if (record != null) Calendar.getInstance().apply { timeInMillis = record.timestamp }
+                .get(Calendar.HOUR_OF_DAY) else -1
+            val timeDesc = when (hour) {
+                in 6 until 12 -> "manhã"
+                in 12 until 18 -> "tarde"
+                in 18 until 24 -> "noite"
+                else -> ""
+            }
+            val searchLower = searchQuery.lowercase()
+            if (!st.contains(searchQuery, ignoreCase = true) &&
+                !pa.contains(searchQuery, ignoreCase = true) &&
+                !da.contains(searchQuery, ignoreCase = true) &&
+                !an.contains(searchQuery, ignoreCase = true) &&
+                !valueStr.contains(searchQuery, ignoreCase = true) &&
+                !timeDesc.contains(searchLower)) return false
         }
 
         return true

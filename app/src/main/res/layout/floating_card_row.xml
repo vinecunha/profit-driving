@@ -241,25 +241,32 @@
             android:textStyle="bold"
             android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/tvPriorityBonus"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#FFD700"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:layout_marginTop="2dp"
-            android:visibility="gone" />
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp">
 
-        <TextView
-            android:id="@+id/tvDynamicBonus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="#FFD700"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:layout_marginTop="2dp"
-            android:visibility="gone" />
+            <TextView
+                android:id="@+id/tvPriorityBonus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFD700"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvDynamicBonus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFD700"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:layout_marginStart="8dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -319,14 +326,32 @@
     </LinearLayout>
 
     <!-- Linha 8: Stops -->
-    <TextView
-        android:id="@+id/tvStops"
+    <LinearLayout
+        android:id="@+id/layoutStops"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="11sp"
-        android:textColor="#FF9800"
-        android:layout_marginTop="4dp"
-        android:visibility="gone" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginStart="8dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/ivStops"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:src="@drawable/ic_multiple_stops"
+            android:tint="#FF9800" />
+
+        <TextView
+            android:id="@+id/tvStops"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" Várias paradas"
+            android:textSize="9sp"
+            android:textColor="#FF9800"
+            android:layout_marginStart="4dp" />
+
+    </LinearLayout>
 
     <!-- Linha 9: Destino conhecido -->
     <TextView

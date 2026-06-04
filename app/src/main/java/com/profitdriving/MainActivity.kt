@@ -39,8 +39,9 @@ class MainActivity : BaseActivity() {
     private lateinit var btnRadar: View
     private var adapter: HistoryAdapter? = null
     private var filterDays = 0
-    private var currentTypeFilter = "all"
-    private var currentScoreFilter = "all"
+    private var selectedPeriodFilter: String? = null
+    private var selectedTypeFilter = "all"
+    private var selectedScoreFilter = "all"
     private var currentPage = 0
     private var pageSize = 100
     private var hasMore = false
@@ -54,10 +55,8 @@ class MainActivity : BaseActivity() {
         }
     }
 
-    private val filterViews = mutableListOf<TextView>()
-    private var scoreFilterViews = mutableListOf<TextView>()
+    private lateinit var filterManager: FilterManager
     private var filtersExpanded = false
-    private val serviceTypePills = mutableListOf<TextView>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,18 +95,24 @@ class MainActivity : BaseActivity() {
         emptyState = findViewById(R.id.emptyState)
         progressBar = findViewById(R.id.progressBar)
 
-        filterViews.addAll(listOf(
-            findViewById(R.id.btnFilterToday),
-            findViewById(R.id.btnFilter7d),
-            findViewById(R.id.btnFilter30d),
-            findViewById(R.id.btnFilterAll)
-        ))
-
-        currentTypeFilter = savedInstanceState?.getString("typeFilter", "all") ?: "all"
-        currentScoreFilter = savedInstanceState?.getString("scoreFilter", "all") ?: "all"
+        selectedTypeFilter = savedInstanceState?.getString("typeFilter", "all") ?: "all"
+        selectedScoreFilter = savedInstanceState?.getString("scoreFilter", "all") ?: "all"
         filtersExpanded = savedInstanceState?.getBoolean("filtersExpanded", false) ?: false
 
-        findViewById<TextView>(R.id.btnFilterAllTypes).setOnClickListener { setTypeFilter("all") }
+        tvA11yBadge = findViewById(R.id.tvAccessibilityBadge)
+        btnRadar = findViewById(R.id.btnRadar)
+
+        val btnLoadMore = findViewById<TextView>(R.id.btnLoadMore)
+        btnLoadMore.setOnClickListener { loadNextPage() }
+
+        btnRadar.setOnClickListener {
+            openPermissionSettings()
+        }
+
+        filterManager = FilterManager(this)
+        setupPeriodFilter()
+        setupTypeFilter()
+        setupScoreFilter()
 
         val filterToggle = findViewById<LinearLayout>(R.id.btnFilterToggle)
         val filterContainer = findViewById<LinearLayout>(R.id.filterContainer)
@@ -122,38 +127,16 @@ class MainActivity : BaseActivity() {
             tvFilterToggleIcon.text = if (filtersExpanded) "\u25B2" else "\u25BC"
         }
 
-        loadServiceTypeFilters()
-
-        val btnFilterAllScores = findViewById<TextView>(R.id.btnFilterAllScores)
-        val btnFilterGood = findViewById<TextView>(R.id.btnFilterGood)
-        val btnFilterMedium = findViewById<TextView>(R.id.btnFilterMedium)
-        val btnFilterBad = findViewById<TextView>(R.id.btnFilterBad)
-        scoreFilterViews = mutableListOf(btnFilterAllScores, btnFilterGood, btnFilterMedium, btnFilterBad)
-
-        btnFilterAllScores.setOnClickListener { setScoreFilter("all") }
-        btnFilterGood.setOnClickListener { setScoreFilter("good") }
-        btnFilterMedium.setOnClickListener { setScoreFilter("medium") }
-        btnFilterBad.setOnClickListener { setScoreFilter("bad") }
-
-        tvA11yBadge = findViewById(R.id.tvAccessibilityBadge)
-        btnRadar = findViewById(R.id.btnRadar)
-
-        val btnLoadMore = findViewById<TextView>(R.id.btnLoadMore)
-
-        findViewById<TextView>(R.id.btnFilterToday).setOnClickListener { setFilter(0) }
-        findViewById<TextView>(R.id.btnFilter7d).setOnClickListener { setFilter(7) }
-        findViewById<TextView>(R.id.btnFilter30d).setOnClickListener { setFilter(30) }
-        findViewById<TextView>(R.id.btnFilterAll).setOnClickListener { setFilter(-1) }
-
-        btnLoadMore.setOnClickListener { loadNextPage() }
-
-        btnRadar.setOnClickListener {
-            openPermissionSettings()
+        findViewById<TextView>(R.id.btnClearFilters).setOnClickListener {
+            filterDays = 0
+            selectedPeriodFilter = null
+            selectedTypeFilter = "all"
+            selectedScoreFilter = "all"
+            setupPeriodFilter()
+            setupTypeFilter()
+            setupScoreFilter()
+            loadFilteredHistory()
         }
-
-        updateTypeFilterButtons()
-        updateScoreFilterButtons()
-        setFilter(filterDays)
     }
 
     override fun onResume() {
@@ -163,7 +146,7 @@ class MainActivity : BaseActivity() {
 
         pageSize = SecurePreferences.get(this)
             .getInt(SettingsActivity.KEY_PAGE_SIZE, 100)
-        loadServiceTypeFilters()
+        setupTypeFilter()
         loadFilteredHistory()
         updateStatus()
 
@@ -178,82 +161,6 @@ class MainActivity : BaseActivity() {
     override fun onPause() {
         super.onPause()
         try { unregisterReceiver(dataUpdateReceiver) } catch (_: Exception) {}
-    }
-
-    private fun setFilter(days: Int) {
-        filterDays = days
-        filterViews.forEachIndexed { i, v ->
-            val selected = (i == 0 && days == 0) ||
-                    (i == 1 && days == 7) ||
-                    (i == 2 && days == 30) ||
-                    (i == 3 && days == -1)
-            v.setBackgroundResource(
-                if (selected) R.drawable.pill_selected else R.drawable.pill_unselected
-            )
-            v.setTextColor(
-                if (selected) 0xFFFFFFFF.toInt() else 0xFF8E9AAF.toInt()
-            )
-        }
-        loadFilteredHistory()
-    }
-
-    private fun updateTypeFilterButtons() {
-        for (btn in serviceTypePills) {
-            val value = btn.tag as? String ?: continue
-            val selected = currentTypeFilter == value
-            btn.setBackgroundResource(if (selected) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btn.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF8E9AAF.toInt())
-        }
-    }
-
-    private fun updateScoreFilterButtons() {
-        val options = listOf("all" to 0, "good" to 1, "medium" to 2, "bad" to 3)
-        for ((value, index) in options) {
-            val selected = currentScoreFilter == value
-            val btn = scoreFilterViews[index]
-            btn.setBackgroundResource(if (selected) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btn.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF8E9AAF.toInt())
-        }
-    }
-
-    private fun setTypeFilter(type: String) {
-        currentTypeFilter = type
-        updateTypeFilterButtons()
-        loadFilteredHistory()
-    }
-
-    private fun setScoreFilter(score: String) {
-        currentScoreFilter = score
-        updateScoreFilterButtons()
-        loadFilteredHistory()
-    }
-
-    private fun loadServiceTypeFilters() {
-        val container = findViewById<LinearLayout>(R.id.serviceTypeContainer)
-        val types = db.getDistinctServiceTypes().sorted()
-        serviceTypePills.clear()
-        findViewById<TextView>(R.id.btnFilterAllTypes).tag = "all"
-        serviceTypePills.add(findViewById(R.id.btnFilterAllTypes))
-
-        var i = container.childCount - 1
-        while (i >= 0) {
-            val child = container.getChildAt(i)
-            if (child.id != R.id.btnFilterAllTypes) {
-                container.removeViewAt(i)
-            }
-            i--
-        }
-
-        for (type in types) {
-            val pill = LayoutInflater.from(this).inflate(R.layout.item_pill_filter, container, false) as TextView
-            pill.text = type
-            pill.tag = type
-            pill.setOnClickListener { setTypeFilter(type) }
-            container.addView(pill)
-            serviceTypePills.add(pill)
-        }
-
-        updateTypeFilterButtons()
     }
 
     private fun loadFilteredHistory() {
@@ -282,11 +189,11 @@ class MainActivity : BaseActivity() {
 
             var allRecords = if (sinceMs != null) db.getFiltered(sinceMs) else db.getAll()
 
-            if (currentTypeFilter != "all") {
-                allRecords = allRecords.filter { it.serviceType == currentTypeFilter }
+            if (selectedTypeFilter != "all") {
+                allRecords = allRecords.filter { it.serviceType == selectedTypeFilter }
             }
 
-            allRecords = when (currentScoreFilter) {
+            allRecords = when (selectedScoreFilter) {
                 "good" -> allRecords.filter { it.scorePercent != null && it.scorePercent >= 80.0 }
                 "medium" -> allRecords.filter { it.scorePercent != null && it.scorePercent >= 50.0 && it.scorePercent < 80.0 }
                 "bad" -> allRecords.filter { it.scorePercent != null && it.scorePercent < 50.0 }
@@ -323,7 +230,6 @@ class MainActivity : BaseActivity() {
                             idealRating = prefs.getFloat(SettingsActivity.KEY_IDEAL_RATING, 0f),
                             costPerKm = costSummary.totalCostPerKm
                         )
-                        adapter!!.addFooter()
                         recyclerView.layoutManager = LinearLayoutManager(this)
                         recyclerView.adapter = adapter
                     } else {
@@ -400,6 +306,84 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    private fun setupPeriodFilter() {
+        val container = findViewById<ViewGroup>(R.id.periodFilterContainer)
+        filterManager.clearContainer(container)
+        val options = listOf(
+            FilterManager.FilterOption("0", "Hoje"),
+            FilterManager.FilterOption("7", "7 dias"),
+            FilterManager.FilterOption("30", "30 dias")
+        )
+        val selected = selectedPeriodFilter?.let { setOf(it) } ?: emptySet()
+        val view = filterManager.createFilterSection(
+            parent = container,
+            title = "📅 Período",
+            options = options,
+            selectedIds = selected,
+            singleSelection = true,
+            callback = object : FilterManager.FilterCallback {
+                override fun onFilterChanged(filterId: String, isSelected: Boolean) {
+                    selectedPeriodFilter = if (isSelected) filterId else null
+                    filterDays = selectedPeriodFilter?.toIntOrNull() ?: 0
+                    loadFilteredHistory()
+                }
+                override fun onClearAll() {}
+            }
+        )
+        container.addView(view)
+    }
+
+    private fun setupTypeFilter() {
+        val container = findViewById<ViewGroup>(R.id.typeFilterContainer)
+        filterManager.clearContainer(container)
+        val types = db.getDistinctServiceTypes()
+        val options = listOf(FilterManager.FilterOption("all", "Todas")) +
+            types.map { FilterManager.FilterOption(it, it) }
+        val selected = if (selectedTypeFilter == "all") emptySet() else setOf(selectedTypeFilter)
+        val view = filterManager.createFilterSection(
+            parent = container,
+            title = "🚗 Tipo",
+            options = options,
+            selectedIds = selected,
+            singleSelection = true,
+            callback = object : FilterManager.FilterCallback {
+                override fun onFilterChanged(filterId: String, isSelected: Boolean) {
+                    selectedTypeFilter = if (isSelected) filterId else "all"
+                    loadFilteredHistory()
+                }
+                override fun onClearAll() {}
+            }
+        )
+        container.addView(view)
+    }
+
+    private fun setupScoreFilter() {
+        val container = findViewById<ViewGroup>(R.id.scoreFilterContainer)
+        filterManager.clearContainer(container)
+        val options = listOf(
+            FilterManager.FilterOption("all", "Todas", "⭐"),
+            FilterManager.FilterOption("good", "Boas (80%+)", "✅"),
+            FilterManager.FilterOption("medium", "Médias (50-80%)", "⚠️"),
+            FilterManager.FilterOption("bad", "Ruins (<50%)", "❌")
+        )
+        val selected = if (selectedScoreFilter == "all") emptySet() else setOf(selectedScoreFilter)
+        val view = filterManager.createFilterSection(
+            parent = container,
+            title = "🏆 Pontuação",
+            options = options,
+            selectedIds = selected,
+            singleSelection = true,
+            callback = object : FilterManager.FilterCallback {
+                override fun onFilterChanged(filterId: String, isSelected: Boolean) {
+                    selectedScoreFilter = if (isSelected) filterId else "all"
+                    loadFilteredHistory()
+                }
+                override fun onClearAll() {}
+            }
+        )
+        container.addView(view)
+    }
+
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
         db.close()
@@ -409,14 +393,14 @@ class MainActivity : BaseActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt("filterDays", filterDays)
-        outState.putString("typeFilter", currentTypeFilter)
-        outState.putString("scoreFilter", currentScoreFilter)
+        outState.putString("typeFilter", selectedTypeFilter)
+        outState.putString("scoreFilter", selectedScoreFilter)
         outState.putBoolean("filtersExpanded", filtersExpanded)
     }
 }
 
 // ============================================================
-// HISTORY ADAPTER CORRIGIDO - Usa os thresholds MIN e IDEAL
+// HISTORY ADAPTER CORRIGIDO - Com funções seguras de formatação
 // ============================================================
 
 class HistoryAdapter(
@@ -438,29 +422,38 @@ class HistoryAdapter(
 
     companion object {
         private const val TYPE_NORMAL = 0
-        private const val TYPE_FOOTER = 1
     }
 
-    fun addFooter() {
-        if (records.isEmpty() || records.last().id != -1L) {
-            records.add(RideRecord(
-                id = -1L, value = null, distanceKm = null, timeMin = null,
-                rating = null, pricePerKm = null, pricePerHour = null,
-                appName = "", timestamp = 0
-            ))
-            notifyItemInserted(records.size - 1)
-        }
+    // ============================================================
+    // FUNÇÕES SEGURAS DE FORMATAÇÃO
+    // ============================================================
+    
+    private fun formatMoney(value: Double?): String {
+        return value?.let { "R$ %.2f".format(it).replace(".", ",") } ?: "---"
     }
 
-    fun removeFooter() {
-        if (records.isNotEmpty() && records.last().id == -1L) {
-            records.removeAt(records.size - 1)
-            notifyItemRemoved(records.size)
-        }
+    private fun formatDecimal(value: Double?): String {
+        return value?.let { "%.2f".format(it).replace(".", ",") } ?: "---"
+    }
+
+    private fun formatPercent(value: Double?): String {
+        return value?.let { "%.0f".format(it) } ?: "0"
+    }
+
+    private fun formatDistance(value: Double?): String {
+        return value?.let { "%.1f km".format(it).replace(".", ",") } ?: ""
+    }
+
+    private fun formatTime(value: Int?): String {
+        return value?.let { "${it} min" } ?: ""
+    }
+
+    private fun formatBonus(value: Double?): String {
+        return value?.let { "%.2f".format(it).replace(".", ",") } ?: "0,00"
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (records[position].id == -1L) TYPE_FOOTER else TYPE_NORMAL
+        return TYPE_NORMAL
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -499,18 +492,10 @@ class HistoryAdapter(
         val tvProfitValue: TextView = view.findViewById(R.id.tvProfitValue)
     }
 
-    class FooterViewHolder(view: View) : RecyclerView.ViewHolder(view)
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return if (viewType == TYPE_FOOTER) {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_footer_nyxion, parent, false)
-            FooterViewHolder(view)
-        } else {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_ride_card, parent, false)
-            ViewHolder(view)
-        }
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_ride_card, parent, false)
+        return ViewHolder(view)
     }
 
     private fun evaluateState(value: Double?, min: Float, ideal: Float): Int {
@@ -532,8 +517,6 @@ class HistoryAdapter(
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        if (holder is FooterViewHolder) return
-
         val r = records[position] as RideRecord
         val vh = holder as ViewHolder
 
@@ -575,10 +558,11 @@ class HistoryAdapter(
         vh.tvServiceType.setBackgroundResource(bgRes)
         vh.tvServiceType.setTextColor(textColor)
 
+        // Usando funções seguras de formatação
         val decisionText = when {
-            r.scorePercent != null && r.scorePercent >= 80 -> "\u2705 BOA (${"%.0f".format(r.scorePercent)}%)"
-            r.scorePercent != null && r.scorePercent >= 50 -> "\u26A0\uFE0F M\u00C9DIA (${"%.0f".format(r.scorePercent)}%)"
-            else -> "\u274C RUIM (${"%.0f".format(r.scorePercent ?: 0)}%)"
+            r.scorePercent != null && r.scorePercent >= 80 -> "\u2705 BOA (${formatPercent(r.scorePercent)}%)"
+            r.scorePercent != null && r.scorePercent >= 50 -> "\u26A0\uFE0F M\u00C9DIA (${formatPercent(r.scorePercent)}%)"
+            else -> "\u274C RUIM (${formatPercent(r.scorePercent)}%)"
         }
         val decisionColor = when {
             r.scorePercent != null && r.scorePercent >= 80 -> Color.parseColor("#00A86B")
@@ -589,28 +573,15 @@ class HistoryAdapter(
         vh.tvDecisionBadge.setBackgroundColor(decisionColor)
         vh.tvDecisionBadge.visibility = if (r.scorePercent != null) View.VISIBLE else View.GONE
 
-        vh.tvPrice.text = r.value?.let {
-            "R$ %.2f".format(it).replace(".", ",")
-        } ?: "---"
-
-        vh.tvRatingText.text = r.rating?.let {
-            "%.2f".format(it).replace(".", ",")
-        } ?: "---"
-
-        vh.tvPricePerKm.text = r.pricePerKm?.let {
-            "%.2f".format(it).replace(".", ",")
-        } ?: "---"
-
-        vh.tvPricePerHour.text = r.pricePerHour?.let {
-            "%.2f".format(it).replace(".", ",")
-        } ?: "---"
+        vh.tvPrice.text = formatMoney(r.value)
+        vh.tvRatingText.text = formatDecimal(r.rating)
+        vh.tvPricePerKm.text = formatDecimal(r.pricePerKm)
+        vh.tvPricePerHour.text = formatDecimal(r.pricePerHour)
 
         val pricePerMin = if (r.timeMin != null && r.timeMin > 0 && r.value != null) 
             r.value / r.timeMin 
         else null
-        vh.tvPricePerMin.text = pricePerMin?.let {
-            "%.2f".format(it).replace(".", ",")
-        } ?: "---"
+        vh.tvPricePerMin.text = formatDecimal(pricePerMin)
 
         val kmState = evaluateState(r.pricePerKm, minKm, idealKm)
         val hourState = evaluateState(r.pricePerHour, minHour, idealHour)
@@ -632,43 +603,36 @@ class HistoryAdapter(
         val (_, ratingColor) = getBadgeTextAndColor(ratingState)
         vh.tvRatingText.setTextColor(ratingColor)
 
-        // Embarque: distância · tempo · endereço (individual)
-        vh.tvPickupDistance.text = r.pickupDistanceKm?.let {
-            "%.1f km".format(it).replace(".", ",")
-        } ?: r.distanceKm?.let {
-            "%.1f km".format(it).replace(".", ",")
-        } ?: ""
-        vh.tvPickupTime.text = r.pickupTimeMin?.let { "${it} min" } ?: r.timeMin?.let { "${it} min" } ?: ""
+        // Embarque: distância · tempo · endereço
+        vh.tvPickupDistance.text = formatDistance(r.pickupDistanceKm ?: r.distanceKm)
+        vh.tvPickupTime.text = formatTime(r.pickupTimeMin ?: r.timeMin)
         vh.tvPickupAddress.text = maskAddress(r.pickupAddress)
 
-        // Destino: distância · tempo · endereço (individual)
-        vh.tvDropoffDistance.text = r.tripDistanceKm?.let {
-            "%.1f km".format(it).replace(".", ",")
-        } ?: r.distanceKm?.let {
-            "%.1f km".format(it).replace(".", ",")
-        } ?: ""
-        vh.tvDropoffTime.text = r.tripTimeMin?.let { "${it} min" } ?: r.timeMin?.let { "${it} min" } ?: ""
+        // Destino: distância · tempo · endereço
+        vh.tvDropoffDistance.text = formatDistance(r.tripDistanceKm ?: r.distanceKm)
+        vh.tvDropoffTime.text = formatTime(r.tripTimeMin ?: r.timeMin)
         vh.tvDropoffAddress.text = maskAddress(r.dropoffAddress)
 
         val totalParts = mutableListOf<String>()
-        r.distanceKm?.let { totalParts.add("%.1f km".format(it).replace(".", ",")) }
+        r.distanceKm?.let { totalParts.add(formatDistance(it)) }
         r.timeMin?.let { totalParts.add("${it} min") }
         vh.tvTotalInfo.text = totalParts.joinToString(" · ")
 
         vh.tvScore.visibility = View.GONE
 
-        val priorityBonus = r.priorityBonus ?: 0.0
-        val dynamicBonus = r.dynamicBonus ?: 0.0
+        // Bônus - com safe-call
+        val priorityBonus = r.priorityBonus
+        val dynamicBonus = r.dynamicBonus
 
-        if (priorityBonus > 0) {
-            vh.tvPriorityBonus.text = "\u26A1 ${String.format("%.2f", priorityBonus).replace(".", ",")} prioridade"
+        if (priorityBonus != null && priorityBonus > 0) {
+            vh.tvPriorityBonus.text = "\u26A1 R$ ${formatBonus(priorityBonus)} prioridade"
             vh.tvPriorityBonus.visibility = View.VISIBLE
         } else {
             vh.tvPriorityBonus.visibility = View.GONE
         }
 
-        if (dynamicBonus > 0) {
-            vh.tvDynamicBonus.text = "\uD83D\uDD25 ${String.format("%.2f", dynamicBonus).replace(".", ",")} din\u00E2mica"
+        if (dynamicBonus != null && dynamicBonus > 0) {
+            vh.tvDynamicBonus.text = "\uD83D\uDD25 R$ ${formatBonus(dynamicBonus)} din\u00E2mica"
             vh.tvDynamicBonus.visibility = View.VISIBLE
         } else {
             vh.tvDynamicBonus.visibility = View.GONE
@@ -709,14 +673,14 @@ class HistoryAdapter(
             val detailText = buildString {
                 appendLine("\uD83D\uDCCA Detalhamento do Lucro:")
                 appendLine("─────────────────────────")
-                appendLine("Valor da corrida: R$ %.2f".format(rideValue).replace(".", ","))
-                appendLine("Custo por km: R$ %.2f".format(usedCostPerKm).replace(".", ","))
-                appendLine("Distância: %.1f km".format(distance).replace(".", ","))
-                appendLine("Custo total: R$ %.2f".format(totalCost).replace(".", ","))
+                appendLine("Valor da corrida: ${formatMoney(rideValue)}")
+                appendLine("Custo por km: ${formatDecimal(usedCostPerKm)}")
+                appendLine("Distância: ${formatDistance(distance)}")
+                appendLine("Custo total: ${formatMoney(totalCost)}")
                 appendLine("─────────────────────────")
-                val lucroStr = "R$ %.2f".format(lucro).replace(".", ",")
-                val percStr = "%.1f%%".format(lucroPerc).replace(".", ",")
-                append("\uD83D\uDCB5 Lucro: $lucroStr ($percStr)")
+                val lucroStr = formatMoney(lucro)
+                val percStr = formatDecimal(lucroPerc)
+                append("\uD83D\uDCB5 Lucro: $lucroStr ($percStr%)")
             }
             vh.tvProfitDetail.text = detailText
         }
@@ -809,40 +773,33 @@ class HistoryAdapter(
         val totalCost = distance * usedCostPerKm
         val profit = rideValue - totalCost
         val profitPercent = if (rideValue > 0) (profit / rideValue) * 100 else 0.0
+        
+        val profitFormatted = formatMoney(profit)
+        val percentFormatted = formatDecimal(profitPercent)
+        
         return if (profit >= 0) {
-            "R$ ${String.format("%.2f", profit).replace(".", ",")} (${String.format("%.0f", profitPercent)}%)"
+            "$profitFormatted ($percentFormatted%)"
         } else {
-            "-R$ ${String.format("%.2f", -profit).replace(".", ",")} (${String.format("%.0f", profitPercent)}%)"
+            "-${profitFormatted.replace("R$", "").trim()} ($percentFormatted%)"
         }
     }
 
     fun appendData(newRecords: List<RideRecord>) {
-        val hasFooter = records.isNotEmpty() && records.last().id == -1L
-        val insertAt = if (hasFooter) records.size - 1 else records.size
-        records.addAll(insertAt, newRecords)
-        notifyItemRangeInserted(insertAt, newRecords.size)
+        records.addAll(newRecords)
+        notifyItemRangeInserted(records.size - newRecords.size, newRecords.size)
     }
 
     fun updateData(newRecords: List<RideRecord>) {
-        val footerIndex = records.indexOfLast { it.id == -1L }
-        val oldList = if (footerIndex >= 0) {
-            records.toMutableList().also { it.removeAt(footerIndex) }
-        } else records.toList()
         val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-            override fun getOldListSize() = oldList.size
+            override fun getOldListSize() = records.size
             override fun getNewListSize() = newRecords.size
             override fun areItemsTheSame(o: Int, n: Int) =
-                oldList[o].id == newRecords[n].id
+                records[o].id == newRecords[n].id
             override fun areContentsTheSame(o: Int, n: Int) =
-                oldList[o] == newRecords[n]
+                records[o] == newRecords[n]
         })
         records.clear()
         records.addAll(newRecords)
-        if (footerIndex >= 0) records.add(RideRecord(
-            id = -1L, value = null, distanceKm = null, timeMin = null,
-            rating = null, pricePerKm = null, pricePerHour = null,
-            appName = "", timestamp = 0
-        ))
         diff.dispatchUpdatesTo(this)
     }
 

@@ -42,6 +42,8 @@ class FloatingCardService : Service() {
     private val dismissRunnable = Runnable { dismiss() }
     private var lastRideHash = ""
     private var lastRideTime = 0L
+    private var isProcessingCard = false
+    private var currentCardRideHash: String? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -115,17 +117,40 @@ class FloatingCardService : Service() {
     }
 
     private fun showCard(ride: RideData, isDemo: Boolean) {
-        L.d(TAG, "=== showCard INICIADO ===")
-        L.d(TAG, "isDemo=$isDemo value=${ride.value} km=${ride.distanceKm} time=${ride.timeMin} rating=${ride.rating}")
-
         val rideHash = "${ride.value}_${ride.distanceKm}_${ride.timeMin}_${ride.rating}"
-        val now = System.currentTimeMillis()
-        if (rideHash == lastRideHash && (now - lastRideTime) < 5000L) {
-            L.d(TAG, "Mesmo card detectado em menos de 5s — ignorando")
+
+        // Evitar processamento paralelo do mesmo card
+        if (isProcessingCard && currentCardRideHash == rideHash) {
+            L.d(TAG, "Card já está sendo processado, ignorando")
             return
         }
-        lastRideHash = rideHash
-        lastRideTime = now
+
+        isProcessingCard = true
+        currentCardRideHash = rideHash
+
+        try {
+            L.d(TAG, "=== showCard INICIADO ===")
+            L.d(TAG, "isDemo=$isDemo value=${ride.value} km=${ride.distanceKm} time=${ride.timeMin} rating=${ride.rating}")
+
+            // Cancelar qualquer dismiss pendente antes de processar novo card
+            handler.removeCallbacks(dismissRunnable)
+
+            val now = System.currentTimeMillis()
+
+            // Aumentar debounce para 10s e verificar se o card já está visível
+            if (rideHash == lastRideHash && (now - lastRideTime) < 10000L) {
+                L.d(TAG, "Mesmo card detectado em menos de 10s — ignorando (já exibindo)")
+                return
+            }
+
+            if (overlayView != null && rideHash == lastRideHash) {
+                L.d(TAG, "Card já está visível, apenas resetando timer")
+                handler.postDelayed(dismissRunnable, prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 30) * 1000L)
+                return
+            }
+
+            lastRideHash = rideHash
+            lastRideTime = now
 
         if (!::windowManager.isInitialized) {
             windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -177,12 +202,12 @@ class FloatingCardService : Service() {
         tvBonus.visibility = View.GONE
 
         tvPriorityBonus.text = ride.priorityBonus
-            ?.let { "+R$ %.2f Prioridade".format(it).replace(".", ",") } ?: ""
+            ?.let { "\u26A1 R$ ${"%.2f".format(it).replace(".", ",")}" } ?: ""
         tvPriorityBonus.visibility =
             if (ride.priorityBonus != null) View.VISIBLE else View.GONE
 
         tvDynamicBonus.text = ride.dynamicBonus
-            ?.let { "+R$ %.2f Dinâmica".format(it).replace(".", ",") } ?: ""
+            ?.let { "\uD83D\uDD25 R$ ${"%.2f".format(it).replace(".", ",")}" } ?: ""
         tvDynamicBonus.visibility =
             if (ride.dynamicBonus != null) View.VISIBLE else View.GONE
 
@@ -239,12 +264,12 @@ class FloatingCardService : Service() {
         tvProfit.visibility = View.GONE
         tvProfitLabel.visibility = View.GONE
 
+        val layoutStops = view.findViewById<View>(R.id.layoutStops)
         if (ride.hasMultipleStops) {
-            tvStops.text = "\uD83D\uDD04 Várias paradas"
-            tvStops.visibility = View.VISIBLE
+            layoutStops.visibility = View.VISIBLE
             L.d(TAG, "Exibindo várias paradas no card")
         } else {
-            tvStops.visibility = View.GONE
+            layoutStops.visibility = View.GONE
         }
 
         val tvKnownDestination = view.findViewById<TextView>(R.id.tvKnownDestination)
@@ -370,6 +395,12 @@ class FloatingCardService : Service() {
             val durationMs = prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 30) * 1000L
             handler.postDelayed(dismissRunnable, durationMs)
         }
+
+        } catch (e: Exception) {
+            L.e(TAG, "Erro ao exibir card: ${e.message}", e)
+        } finally {
+            isProcessingCard = false
+        }
     }
 
     private fun dismiss() {
@@ -380,7 +411,8 @@ class FloatingCardService : Service() {
             } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay view no dismiss: ${e.message}", e) }
         }
         overlayView = null
-        handler.postDelayed({ stopSelf() }, 200)
+        currentCardRideHash = null
+        // Não chamar stopSelf() imediatamente - deixar o serviço vivo
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

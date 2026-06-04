@@ -70,7 +70,7 @@ class RideAccessibilityService : AccessibilityService() {
                 }
             }
 
-            bgHandler.postDelayed(pendingRunnable!!, 300L)
+            bgHandler.postDelayed(pendingRunnable!!, 800L)
             return
         }
 
@@ -96,7 +96,7 @@ class RideAccessibilityService : AccessibilityService() {
                 }
             }
 
-            bgHandler.postDelayed(pendingRunnable!!, 300L)
+            bgHandler.postDelayed(pendingRunnable!!, 800L)
         }
     }
 
@@ -183,6 +183,12 @@ class RideAccessibilityService : AccessibilityService() {
     private fun detectRideCard(root: AccessibilityNodeInfo, pkg: String) {
         L.d(TAG, "=== detectRideCard iniciado para $pkg ===")
 
+        // Se já estamos processando um card e ele ainda está visível, ignorar
+        if (statusLocked && System.currentTimeMillis() - lastSaveTime < 5000L) {
+            L.d(TAG, "Card já processado recentemente, aguardando...")
+            return
+        }
+
         val allTexts = mutableListOf<String>()
         collectTexts(root, allTexts, 150)
         L.d(TAG, "Textos coletados (${allTexts.size}): ${allTexts.take(10)}")
@@ -228,7 +234,7 @@ class RideAccessibilityService : AccessibilityService() {
         }.hashCode().toString()
         val now = System.currentTimeMillis()
 
-        if (rideHash == lastProcessedRideHash && (now - lastProcessedRideTime) < 30_000L) {
+        if (rideHash == lastProcessedRideHash && (now - lastProcessedRideTime) < 60_000L) {
             if (ride.value != null && lastProcessedRideDbId >= 0) {
                 val db = DatabaseHelper(this)
                 db.updateRideValue(lastProcessedRideDbId, ride.value)
@@ -619,12 +625,8 @@ class RideAccessibilityService : AccessibilityService() {
     }
 
     private fun extractDynamicBonus(text: String): Double? {
-        val matches = DYNAMIC_BONUS_REGEX.findAll(text).filter { m ->
-            val full = m.value.lowercase(Locale.ROOT)
-            !full.contains("prioridade")
-        }.toList()
-        if (matches.isEmpty()) return null
-        val v = matches.firstOrNull()?.let { parseBr(it.groupValues[1]) }
+        val match = DYNAMIC_BONUS_REGEX.find(text) ?: return null
+        val v = parseBr(match.groupValues[1])
         return if (v != null && v > 0) v else null
     }
 
@@ -754,7 +756,7 @@ class RideAccessibilityService : AccessibilityService() {
         )
 
         private val DYNAMIC_BONUS_REGEX = Regex(
-            """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do""",
+            """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do(?!\s*para\s*prioridade)""",
             RegexOption.IGNORE_CASE
         )
 

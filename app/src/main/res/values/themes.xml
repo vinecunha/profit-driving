@@ -1,11 +1,160 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Tema Base do Aplicativo -->
     <style name="Theme.CorridaCerta" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimary">#FF2E7D32</item>
-        <item name="colorPrimaryDark">#FF1B5E20</item>
-        <item name="colorAccent">#FF4CAF50</item>
+        <!-- Cores principais -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
+
+        <!-- Status Bar -->
+        <item name="android:statusBarColor">@color/bg_screen</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Navigation Bar -->
+        <item name="android:navigationBarColor">@color/bg_card</item>
+        <item name="android:windowLightNavigationBar">true</item>
+
+        <!-- Fundo da janela -->
+        <item name="android:windowBackground">@color/bg_screen</item>
+
+        <!-- Estilos dos elementos da toolbar -->
+        <item name="toolbarStyle">@style/Widget.CorridaCerta.Toolbar</item>
+
+        <!-- Estilos de texto padrão -->
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+
+        <!-- Estilos de botão -->
+        <item name="buttonStyle">@style/Widget.CorridaCerta.Button</item>
+        <item name="borderlessButtonStyle">@style/Widget.CorridaCerta.Button.Borderless</item>
+
+        <!-- Animações de transição -->
+        <item name="android:windowAnimationStyle">@style/Animation.CorridaCerta.Window</item>
+
+        <!-- Shape dos cards (Material Design 3 ready) -->
+        <item name="cardViewStyle">@style/Widget.CorridaCerta.Card</item>
+
+        <!-- Android 12+ splash screen compatível -->
+        <item name="android:windowSplashScreenBackground">@color/bg_screen</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher</item>
     </style>
+
+    <!-- ============================================================ -->
+    <!-- SPLASH THEME                                                 -->
+    <!-- ============================================================ -->
+
     <style name="Theme.CorridaCerta.Splash" parent="Theme.CorridaCerta">
+        <!-- Fundo customizado para splash -->
         <item name="android:windowBackground">@drawable/splash_screen</item>
+
+        <!-- Desabilitar barra de status na splash (opcional) -->
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- WIDGET STYLES                                                -->
+    <!-- ============================================================ -->
+
+    <!-- Toolbar -->
+    <style name="Widget.CorridaCerta.Toolbar" parent="Widget.AppCompat.Toolbar">
+        <item name="android:background">@color/bg_card</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="titleTextColor">@color/text_primary</item>
+    </style>
+
+    <!-- Botão Padrão -->
+    <style name="Widget.CorridaCerta.Button" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/button_background</item>
+        <item name="android:textColor">@color/pill_active_text</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Botão Sem Borda (Pill Style) -->
+    <style name="Widget.CorridaCerta.Button.Borderless" parent="Widget.AppCompat.Button.Borderless">
+        <item name="android:background">@drawable/pill_unselected</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="android:minHeight">0dp</item>
+    </style>
+
+    <!-- CardView -->
+    <style name="Widget.CorridaCerta.Card" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">@dimen/card_corner_radius</item>
+        <item name="cardElevation">@dimen/card_elevation</item>
+        <item name="cardBackgroundColor">@color/bg_card</item>
+        <item name="cardUseCompatPadding">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- TEXT APPEARANCES                                             -->
+    <!-- ============================================================ -->
+
+    <!-- TextAppearance base -->
+    <style name="TextAppearance.CorridaCerta" parent="TextAppearance.AppCompat" />
+
+    <!-- Título da Toolbar -->
+    <style name="TextAppearance.CorridaCerta.ToolbarTitle" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Título de Seção -->
+    <style name="TextAppearance.CorridaCerta.SectionTitle" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- Subtítulo -->
+    <style name="TextAppearance.CorridaCerta.Subtitle">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <!-- Corpo do Texto -->
+    <style name="TextAppearance.CorridaCerta.Body">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <!-- Texto Pequeno -->
+    <style name="TextAppearance.CorridaCerta.Caption">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+
+    <!-- Valor Monetário -->
+    <style name="TextAppearance.CorridaCerta.MoneyValue">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_price</item>
+        <item name="android:fontFamily">monospace</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- ANIMAÇÕES                                                    -->
+    <!-- ============================================================ -->
+
+    <style name="Animation.CorridaCerta.Window" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_left</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
     </style>
 </resources>

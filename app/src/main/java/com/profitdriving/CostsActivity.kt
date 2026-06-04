@@ -304,25 +304,6 @@ class CostsActivity : BaseActivity() {
                 }
             }
 
-            row.findViewById<TextView>(R.id.btnEditExpense).setOnClickListener {
-                AddExpenseDialog(this, expense) { updated ->
-                    db.updateExpenseItem(updated)
-                    loadData()
-                }.show()
-            }
-
-            row.findViewById<TextView>(R.id.btnDeleteExpense).setOnClickListener {
-                AlertDialog.Builder(this)
-                    .setTitle("Excluir despesa")
-                    .setMessage("Remover \"${expense.name}\"?")
-                    .setPositiveButton("Excluir") { _, _ ->
-                        db.deleteExpenseItem(expense.id)
-                        loadData()
-                    }
-                    .setNegativeButton("Cancelar", null)
-                    .show()
-            }
-
             container.addView(row)
         }
     }

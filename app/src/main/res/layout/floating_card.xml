@@ -52,25 +52,32 @@
         android:textStyle="bold"
         android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/tvPriorityBonus"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#FFD700"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        android:layout_marginTop="4dp"
-        android:visibility="gone" />
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp">
 
-    <TextView
-        android:id="@+id/tvDynamicBonus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="#FFD700"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        android:layout_marginTop="2dp"
-        android:visibility="gone" />
+        <TextView
+            android:id="@+id/tvPriorityBonus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFD700"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvDynamicBonus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFD700"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/kmRow"
@@ -278,15 +285,32 @@
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvStops"
-        android:layout_width="match_parent"
+    <LinearLayout
+        android:id="@+id/layoutStops"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="10sp"
-        android:textColor="#FF9800"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:layout_marginTop="4dp"
-        android:gravity="center"
-        android:visibility="gone" />
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/ivStops"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:src="@drawable/ic_multiple_stops"
+            android:tint="#FF9800" />
+
+        <TextView
+            android:id="@+id/tvStops"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" Várias paradas"
+            android:textSize="10sp"
+            android:textColor="#FF9800"
+            android:layout_marginStart="4dp" />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tvKnownDestination"
