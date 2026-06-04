@@ -242,13 +242,6 @@ class AnalysisActivity : BaseActivity() {
         }
     }
 
-    private fun loadDriverInput(): DriverInputData? {
-        val km = SecurePreferences.getFloat(this, SecurePreferences.KEY_LAST_KM_PANEL, -1f)
-        val hours = SecurePreferences.getFloat(this, SecurePreferences.KEY_LAST_HOURS_WORKED, -1f)
-        if (km < 0 || hours < 0) return null
-        return DriverInputData(km.toDouble(), hours.toDouble())
-    }
-
     private fun buildCards(r: AnalysisResultV2) {
         cardsContainer.removeAllViews()
         cardIndex = 0
@@ -275,7 +268,6 @@ class AnalysisActivity : BaseActivity() {
 
         section = buildExpandableSection("\uD83D\uDE80", "Otimiza\u00E7\u00E3o", cardsContainer)
         buildDailyProjection(r, section)
-        buildEfficiencyCard(r, section)
         buildInsights(r, section)
     }
 
@@ -889,43 +881,6 @@ class AnalysisActivity : BaseActivity() {
             "\u26A0\uFE0F Faltam R\$ ${AnalysisHelperV2.formatBr(p.remaining)} para bater a meta"
         }
         addText(card, remainingText, 12f, remainingColor, true)
-
-        container.addView(card)
-    }
-
-    // ─── CARD: Eficiência ───
-    private fun buildEfficiencyCard(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
-        val driverInput = loadDriverInput()
-
-        if (driverInput == null) {
-            val card = createCard("\uD83D\uDE80 Efici\u00EAncia")
-            addText(card, "Toque em \"\uD83D\uDCCA Meus dados\" no topo para informar km do painel e horas trabalhadas", 13f)
-            container.addView(card)
-            return
-        }
-
-        val extended = AnalysisHelperV2.calculateEfficiency(r, driverInput)
-
-        val card = createCard("\uD83D\uDE80 Efici\u00EAncia")
-
-        addInfoRow(card, "Km hod\u00F4metro", "${AnalysisHelperV2.formatBr1(driverInput.totalKmPanel)} km", "#1A2C3E")
-        addInfoRow(card, "Km corridas", "${AnalysisHelperV2.formatBr1(r.totalKm)} km", "#3B82F6")
-
-        val emptyKmColor = if (extended.emptyKm > 20) "#EF4444" else if (extended.emptyKm > 10) "#F59E0B" else "#00A86B"
-        addInfoRow(card, "Km vazio", "${AnalysisHelperV2.formatBr1(extended.emptyKm)} km", emptyKmColor)
-
-        addDivider(card)
-
-        addText(card, "Aproveitamento", 12f, Color.parseColor("#333333"), true)
-
-        val effColor = if (extended.efficiencyPercent >= 80) GREEN else if (extended.efficiencyPercent >= 60) ORANGE else RED
-        addBar(card, "Efici\u00EAncia", "${"%.0f".format(extended.efficiencyPercent)}%",
-            (extended.efficiencyPercent / 100).toFloat(), effColor)
-
-        addDivider(card)
-
-        addInfoRow(card, "Horas trabalhadas", "${AnalysisHelperV2.formatBr1(driverInput.totalHoursWorked)} h", "#6B7280")
-        addInfoRow(card, "M\u00E9dia km/h", "${AnalysisHelperV2.formatBr1(extended.actualConsumption)} km/h", "#6B7280")
 
         container.addView(card)
     }
