@@ -89,22 +89,18 @@ object UberCardExtractor {
     }
 
     private fun findTripNode(texts: List<String>, cardType: CardType): String? {
-        if (cardType == CardType.RADAR) {
-            for (text in texts) {
-                if (VIAGEM_PATTERN.containsMatchIn(text)) return text
+        return when (cardType) {
+            CardType.RADAR -> {
+                texts.firstOrNull { VIAGEM_PATTERN.containsMatchIn(it) }
+            }
+            CardType.EXCLUSIVE, CardType.UNKNOWN -> {
+                texts.firstOrNull { VIAGEM_PATTERN.containsMatchIn(it) }
+                    ?: texts.firstOrNull { VIAGEM_EXCLUSIVO_PATTERN.containsMatchIn(it) }
+            }
+            CardType.APP_99 -> {
+                texts.firstOrNull { VIAGEM_PATTERN.containsMatchIn(it) }
             }
         }
-        if (cardType == CardType.EXCLUSIVE || cardType == CardType.UNKNOWN) {
-            for (text in texts) {
-                if (VIAGEM_EXCLUSIVO_PATTERN.containsMatchIn(text)) return text
-            }
-        }
-        if (cardType == CardType.RADAR) {
-            for (text in texts) {
-                if (VIAGEM_EXCLUSIVO_PATTERN.containsMatchIn(text)) return text
-            }
-        }
-        return null
     }
 
     private fun findRatingNode(texts: List<String>): String? {
@@ -183,7 +179,8 @@ object UberCardExtractor {
         RegexOption.IGNORE_CASE
     )
     private val VIAGEM_PATTERN = Regex(
-        """[Vv]iagem\s+de\s+(?:(\d+)\s*[Hh]\s*e\s*)?(\d+)\s*(?:[Mm]in(?:uto)?s?)\s*\((\d+[.,]\d+)\s*km\)"""
+        """[Vv]iagem\s+de\s+(?:(\d+)\s*[Hh](?:ora(?:s)?)?\s*e\s*)?(\d+)\s*[Mm]in(?:uto)?s?\s*\((\d+[.,]\d+)\s*km\)""",
+        RegexOption.IGNORE_CASE
     )
     private val VIAGEM_EXCLUSIVO_PATTERN = Regex(
         """(\d+)\s*(?:[Mm]in(?:uto)?s?)\s*\((\d+[.,]\d+)\s*km\)(?!\s*de\s*dist[âa]ncia)"""

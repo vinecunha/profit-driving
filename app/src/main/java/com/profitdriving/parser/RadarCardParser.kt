@@ -266,7 +266,8 @@ class RadarCardParser : RideDataParser {
         )
 
         private val VIAGEM_REGEX = Regex(
-            """[Vv]iagem\s+de\s+(?:(\d+)\s*[Hh]\s*e\s*)?(\d+)\s*(?:[Mm]in(?:uto)?s?)\s*\((\d+[.,]\d+)\s*km\)"""
+            """[Vv]iagem\s+de\s+(?:(\d+)\s*[Hh](?:ora(?:s)?)?\s*e\s*)?(\d+)\s*[Mm]in(?:uto)?s?\s*\((\d+[.,]\d+)\s*km\)""",
+            RegexOption.IGNORE_CASE
         )
 
         private val DISTANCE_PATTERNS = listOf(

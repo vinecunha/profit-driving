@@ -270,7 +270,7 @@ class ExclusiveCardParser : RideDataParser {
         )
 
         private val VIAGEM_EXCLUSIVO_REGEX = Regex(
-            """(?:(\d+)\s+[Hh]\s+e\s+)?(\d+)\s+(?:[Mm]in(?:uto)?s?)\s*\((\d+[.,]\d+)\s*km\)(?!\s*de\s*dist[âa]ncia)""",
+            """(?:(\d+)\s*[Hh]\s*e\s*)?(\d+)\s*(?:[Mm]in(?:uto)?s?)\s*\((\d+[.,]\d+)\s*km\)(?!\s*de\s*dist[âa]ncia)""",
             RegexOption.IGNORE_CASE
         )
 
