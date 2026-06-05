@@ -78,16 +78,24 @@ object RideDataValidator {
         }
         
         // ============================================================
+        // VARIÁVEIS PARA ARMAZENAR OS VALORES CORRIGIDOS
+        // ============================================================
+        var finalPickupDist = pickupDist
+        var finalPickupTime = pickupTime
+        var finalTripDist = tripDist
+        var finalTripTime = tripTime
+        
+        // ============================================================
         // 3. CASO 1: PICKUP E TRIP SÃO DIFERENTES - DADOS COMPLETOS
         // ============================================================
         if (arePickupAndTripDifferent) {
             Log.d(TAG, "✅ COMPLETE: pickup e trip diferentes")
             quality = DataQuality.COMPLETE
             // Mantém os dados originais
-            cleaned = cleaned.copy(
-                distanceKm = totalDist ?: (pickupDist!! + tripDist!!),
-                timeMin = totalTime ?: (pickupTime!! + tripTime!!)
-            )
+            finalPickupDist = pickupDist
+            finalPickupTime = pickupTime
+            finalTripDist = tripDist
+            finalTripTime = tripTime
         }
         
         // ============================================================
@@ -96,10 +104,10 @@ object RideDataValidator {
         else if (!hasPickupDist && !hasPickupTime && (hasTripDist || hasTripTime)) {
             Log.w(TAG, "⚠️ ONLY_TRIP: dados de embarque não capturados")
             quality = DataQuality.ONLY_TRIP
-            cleaned = cleaned.copy(
-                distanceKm = totalDist ?: tripDist,
-                timeMin = totalTime ?: tripTime
-            )
+            finalPickupDist = null
+            finalPickupTime = null
+            finalTripDist = tripDist
+            finalTripTime = tripTime
             issues.add("Embarque não capturado - usando apenas dados da viagem")
         }
         
@@ -109,13 +117,11 @@ object RideDataValidator {
         else if ((hasPickupDist || hasPickupTime) && !hasTripDist && !hasTripTime) {
             Log.w(TAG, "⚠️ ONLY_PICKUP: dados de viagem não capturados")
             quality = DataQuality.ONLY_PICKUP
-            cleaned = cleaned.copy(
-                distanceKm = totalDist ?: pickupDist,
-                timeMin = totalTime ?: pickupTime,
-                tripDistanceKm = pickupDist,
-                tripTimeMin = pickupTime
-            )
-            issues.add("Viagem não capturada - usando dados de embarque")
+            finalPickupDist = pickupDist
+            finalPickupTime = pickupTime
+            finalTripDist = pickupDist  // Usa pickup como trip (fallback)
+            finalTripTime = pickupTime  // Usa pickup como trip (fallback)
+            issues.add("Viagem não capturada - usando dados de embarque como viagem")
         }
         
         // ============================================================
@@ -131,20 +137,20 @@ object RideDataValidator {
                 !distancesEqual && hasPickupTime && hasTripTime && !timesEqual && addressesDifferent -> {
                     Log.d(TAG, "✅ CASO 1: Corrida normal (distâncias e tempos diferentes, endereços diferentes)")
                     quality = DataQuality.COMPLETE
-                    cleaned = cleaned.copy(
-                        distanceKm = totalDist ?: (pickupDist + tripDist),
-                        timeMin = totalTime ?: (pickupTime!! + tripTime!!)
-                    )
+                    finalPickupDist = pickupDist
+                    finalPickupTime = pickupTime
+                    finalTripDist = tripDist
+                    finalTripTime = tripTime
                 }
                 
                 // CASO 2: Distâncias DIFERENTES, Tempos DIFERENTES, Endereços IGUAIS
                 !distancesEqual && hasPickupTime && hasTripTime && !timesEqual && !addressesDifferent -> {
                     Log.d(TAG, "🔄 CASO 2: Ida e volta (distâncias e tempos diferentes, mesmo local)")
                     quality = DataQuality.COMPLETE
-                    cleaned = cleaned.copy(
-                        distanceKm = totalDist ?: (pickupDist + tripDist),
-                        timeMin = totalTime ?: (pickupTime!! + tripTime!!)
-                    )
+                    finalPickupDist = pickupDist
+                    finalPickupTime = pickupTime
+                    finalTripDist = tripDist
+                    finalTripTime = tripTime
                     issues.add("Pickup e dropoff no mesmo local - possível ida/volta")
                 }
                 
@@ -152,10 +158,10 @@ object RideDataValidator {
                 !distancesEqual && hasPickupTime && hasTripTime && timesEqual && addressesDifferent -> {
                     Log.w(TAG, "⚠️ CASO 3: Distâncias diferentes mas tempos iguais (possível erro de parser)")
                     quality = DataQuality.DUPLICATED
-                    cleaned = cleaned.copy(
-                        distanceKm = totalDist ?: (pickupDist + tripDist),
-                        timeMin = totalTime ?: (pickupTime!! + tripTime!!)
-                    )
+                    finalPickupDist = pickupDist
+                    finalPickupTime = pickupTime
+                    finalTripDist = tripDist
+                    finalTripTime = tripTime
                     issues.add("Distâncias diferentes mas tempos iguais - possível erro no tempo")
                 }
                 
@@ -163,10 +169,10 @@ object RideDataValidator {
                 !distancesEqual && hasPickupTime && hasTripTime && timesEqual && !addressesDifferent -> {
                     Log.w(TAG, "⚠️ CASO 4: Distâncias diferentes mas tempos iguais no mesmo local")
                     quality = DataQuality.DUPLICATED
-                    cleaned = cleaned.copy(
-                        distanceKm = totalDist ?: (pickupDist + tripDist),
-                        timeMin = totalTime ?: (pickupTime!! + tripTime!!)
-                    )
+                    finalPickupDist = pickupDist
+                    finalPickupTime = pickupTime
+                    finalTripDist = tripDist
+                    finalTripTime = tripTime
                     issues.add("Distâncias diferentes mas tempos iguais no mesmo local")
                 }
                 
@@ -174,22 +180,35 @@ object RideDataValidator {
                 distancesEqual && hasPickupTime && hasTripTime && !timesEqual && addressesDifferent -> {
                     Log.w(TAG, "⚠️ CASO 5: Distâncias iguais mas tempos diferentes (possível erro)")
                     quality = DataQuality.DUPLICATED
-                    issues.add("Distâncias iguais (${pickupDist}km) mas tempos diferentes - possível erro de parser")
+                    // Remove pickup duplicado, mantém trip
+                    finalPickupDist = null
+                    finalPickupTime = null
+                    finalTripDist = tripDist
+                    finalTripTime = tripTime
+                    issues.add("Distâncias iguais (${pickupDist}km) mas tempos diferentes - removendo pickup duplicado")
                 }
                 
                 // CASO 6: Distâncias IGUAIS, Tempos DIFERENTES, Endereços IGUAIS
                 distancesEqual && hasPickupTime && hasTripTime && !timesEqual && !addressesDifferent -> {
                     Log.w(TAG, "⚠️ CASO 6: Distâncias iguais, tempos diferentes, mesmo local")
                     quality = DataQuality.DUPLICATED
-                    issues.add("Distâncias iguais, tempos diferentes, mesmo local")
+                    finalPickupDist = null
+                    finalPickupTime = null
+                    finalTripDist = tripDist
+                    finalTripTime = tripTime
+                    issues.add("Distâncias iguais, tempos diferentes, mesmo local - removendo pickup duplicado")
                 }
                 
                 // CASO 7: Distâncias IGUAIS, Tempos IGUAIS, Endereços DIFERENTES
                 distancesEqual && (!hasPickupTime || !hasTripTime || timesEqual) && addressesDifferent -> {
                     Log.w(TAG, "⚠️ CASO 7: Distâncias e tempos iguais, endereços diferentes")
                     quality = DataQuality.DUPLICATED
+                    // Mantém ambos, mas marca como suspeito
+                    finalPickupDist = pickupDist
+                    finalPickupTime = pickupTime
+                    finalTripDist = tripDist
+                    finalTripTime = tripTime
                     issues.add("Pickup e trip com mesmos valores mas endereços diferentes - possível erro")
-                    // Mantém os dados, mas marca como suspeito
                 }
                 
                 // CASO 8: Distâncias IGUAIS, Tempos IGUAIS, Endereços IGUAIS
@@ -197,12 +216,10 @@ object RideDataValidator {
                     Log.w(TAG, "❌ CASO 8: Pickup e trip COMPLETAMENTE IGUAIS (erro de parser)")
                     quality = DataQuality.DUPLICATED
                     // Remover pickup duplicado
-                    cleaned = cleaned.copy(
-                        pickupDistanceKm = null,
-                        pickupTimeMin = null,
-                        distanceKm = tripDist,
-                        timeMin = tripTime
-                    )
+                    finalPickupDist = null
+                    finalPickupTime = null
+                    finalTripDist = tripDist
+                    finalTripTime = tripTime
                     issues.add("Pickup e trip duplicados - removendo dados repetidos")
                 }
                 
@@ -210,49 +227,50 @@ object RideDataValidator {
                 else -> {
                     Log.w(TAG, "⚠️ CASO FALLBACK: Dados insuficientes para comparação")
                     quality = DataQuality.DUPLICATED
-                    // Mantém trip como principal
-                    cleaned = cleaned.copy(
-                        distanceKm = totalDist ?: tripDist,
-                        timeMin = totalTime ?: tripTime
-                    )
+                    finalPickupDist = null
+                    finalPickupTime = null
+                    finalTripDist = tripDist
+                    finalTripTime = tripTime
                     issues.add("Dados incompletos - usando trip como referência")
                 }
             }
         }
         
         // ============================================================
-        // 7. CASO 5: SOMA PICKUP + TRIP = TOTAL (consistente)
+        // 7. CALCULAR DISTÂNCIA E TEMPO TOTAL (SEMPRE A SOMA!)
         // ============================================================
-        if (hasPickupDist && hasTripDist && hasTotalDist) {
-            val sum = pickupDist!! + tripDist!!
-            val diff = Math.abs(sum - totalDist!!)
-            if (diff < 0.5) {
-                Log.d(TAG, "✅ Consistente: pickup + trip = total (${sum}km)")
-            } else {
-                Log.w(TAG, "⚠️ Inconsistente: pickup+trips=${sum}km, total=${totalDist}km")
-                issues.add("Soma de distâncias não confere com total")
+        val effectivePickupDist = finalPickupDist ?: 0.0
+        val effectivePickupTime = finalPickupTime ?: 0
+        val effectiveTripDist = finalTripDist ?: 0.0
+        val effectiveTripTime = finalTripTime ?: 0
+        
+        val totalDistance = effectivePickupDist + effectiveTripDist
+        val totalTimeValue = effectivePickupTime + effectiveTripTime
+        
+        // Verificar consistência com totalDist se disponível
+        if (hasTotalDist && totalDistance > 0) {
+            val diff = Math.abs(totalDistance - totalDist!!)
+            if (diff > 0.5) {
+                Log.w(TAG, "⚠️ Inconsistência: soma(pickup+trip)=${totalDistance}km, total=${totalDist}km")
+                issues.add("Soma de distâncias (${String.format("%.1f", totalDistance)}km) não confere com total (${String.format("%.1f", totalDist)}km)")
             }
         }
         
         // ============================================================
-        // 8. VALIDAÇÃO DE ENDEREÇOS
+        // 8. ATUALIZAR O RIDE COM OS VALORES CORRIGIDOS
         // ============================================================
+        cleaned = cleaned.copy(
+            pickupDistanceKm = if (effectivePickupDist > 0) effectivePickupDist else null,
+            pickupTimeMin = if (effectivePickupTime > 0) effectivePickupTime else null,
+            tripDistanceKm = if (effectiveTripDist > 0) effectiveTripDist else null,
+            tripTimeMin = if (effectiveTripTime > 0) effectiveTripTime else null,
+            distanceKm = if (totalDistance > 0) totalDistance else null,
+            timeMin = if (totalTimeValue > 0) totalTimeValue else null
+        )
         
-        // Endereços são o MESMO mas distâncias são DIFERENTES?
-        // Pode ser uma corrida de ida e volta ao mesmo local
-        if (!areAddressesDifferent && arePickupAndTripDifferent) {
-            Log.d(TAG, "📍 Mesmo endereço mas distâncias diferentes - possível ida/volta")
-            issues.add("Pickup e dropoff no mesmo local - ida e volta na mesma corrida")
-        }
-        
-        // Endereços são DIFERENTES mas distâncias são IGUAIS?
-        // Pode ser erro de parser
-        if (areAddressesDifferent && !arePickupAndTripDifferent && hasPickupDist) {
-            Log.w(TAG, "⚠️ Endereços diferentes mas distâncias iguais - possível erro de parser")
-            issues.add("Endereços diferentes mas distâncias iguais - verificar captura")
-        }
-        
-        // Limpar endereços inválidos
+        // ============================================================
+        // 9. VALIDAÇÃO DE ENDEREÇOS
+        // ============================================================
         val cleanedPickupAddr = if (hasPickupAddr) pickupAddr else null
         val cleanedDropoffAddr = if (hasDropoffAddr) dropoffAddr else null
         
@@ -265,28 +283,9 @@ object RideDataValidator {
         if (!hasDropoffAddr) issues.add("Endereço de destino inválido ou não capturado")
         
         // ============================================================
-        // 9. FALLBACK: Se não temos pickup nem trip, mas temos total
-        // ============================================================
-        if (!hasPickupDist && !hasTripDist && hasTotalDist) {
-            Log.w(TAG, "⚠️ FALLBACK: usando apenas distância total")
-            quality = DataQuality.FALLBACK
-            cleaned = cleaned.copy(
-                tripDistanceKm = totalDist,
-                tripTimeMin = totalTime
-            )
-            issues.add("Usando distância total como fallback")
-        }
-        
-        // ============================================================
         // 10. REJEITAR CASOS SEM DADOS ÚTEIS
         // ============================================================
-        val finalHasDistance = (cleaned.distanceKm != null && cleaned.distanceKm > 0) ||
-                               (cleaned.tripDistanceKm != null && cleaned.tripDistanceKm > 0)
-        
-        val finalHasTime = (cleaned.timeMin != null && cleaned.timeMin > 0) ||
-                           (cleaned.tripTimeMin != null && cleaned.tripTimeMin > 0)
-        
-        if (!finalHasDistance) {
+        if (totalDistance <= 0 && effectiveTripDist <= 0 && effectivePickupDist <= 0) {
             return ValidationResult(false, null, 
                 "Nenhuma distância válida após validação", DataQuality.REJECTED)
         }
@@ -294,11 +293,11 @@ object RideDataValidator {
         // ============================================================
         // 11. CALCULAR VALORES DERIVADOS
         // ============================================================
-        val finalDistance = cleaned.distanceKm ?: cleaned.tripDistanceKm ?: cleaned.pickupDistanceKm
-        val finalTime = cleaned.timeMin ?: cleaned.tripTimeMin ?: cleaned.pickupTimeMin
+        val finalDistance = totalDistance
+        val finalTime = totalTimeValue
         
-        val pricePerKm = if (finalDistance != null && finalDistance > 0) ride.value / finalDistance else null
-        val pricePerHour = if (finalTime != null && finalTime > 0) ride.value / (finalTime / 60.0) else null
+        val pricePerKm = if (finalDistance > 0) ride.value / finalDistance else null
+        val pricePerHour = if (finalTime > 0) ride.value / (finalTime / 60.0) else null
         
         cleaned = cleaned.copy(
             pricePerKm = pricePerKm,
@@ -306,7 +305,7 @@ object RideDataValidator {
         )
         
         val reason = if (issues.isEmpty()) "OK" else issues.joinToString("; ")
-        Log.d(TAG, "Validação final: quality=$quality, $reason")
+        Log.d(TAG, "Validação final: quality=$quality, totalDistance=${String.format("%.1f", totalDistance)}km, totalTime=${totalTimeValue}min, $reason")
         
         return ValidationResult(true, cleaned, reason, quality)
     }

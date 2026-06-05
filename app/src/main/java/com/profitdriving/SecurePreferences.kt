@@ -2,13 +2,17 @@ package com.profitdriving
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.profitdriving.SettingsActivity
 
 object SecurePreferences {
     const val KEY_LAST_KM_PANEL = "driver_km_panel"
     const val KEY_LAST_HOURS_WORKED = "driver_hours_worked"
 
-    fun get(context: Context): SharedPreferences =
+    fun get(context: Context): SharedPreferences = try {
         ProfitDrivingApp.getInstance().prefs
+    } catch (_: Exception) {
+        context.getSharedPreferences(SettingsActivity.PREF_NAME, Context.MODE_PRIVATE)
+    }
 
     fun getFloat(context: Context, key: String, def: Float): Float =
         get(context).getFloat(key, def)

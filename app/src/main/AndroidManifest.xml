@@ -57,15 +57,6 @@
             android:exported="false" />
 
         <service
-            android:name=".NotificationListener"
-            android:exported="false"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
-
-        <service
             android:name=".FloatingCardService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
@@ -77,6 +68,21 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="persistent_bubble_for_ride_status" />
         </service>
+        <!-- SERVIÇO ATIVO - V2 (produção) -->
+        <service
+            android:name=".accessibility.RideAccessibilityServiceV2"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <!-- BACKUP - V1 (descomentar apenas em emergência) -->
+        <!--
         <service
             android:name=".RideAccessibilityService"
             android:exported="true"
@@ -88,6 +94,7 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
+        -->
 
     </application>
 

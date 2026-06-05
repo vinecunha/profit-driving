@@ -1,0 +1,422 @@
+package com.profitdriving.accessibility
+
+import android.accessibilityservice.AccessibilityService
+import android.content.Intent
+import android.os.Build
+import android.os.CombinedVibration
+import android.os.Handler
+import android.os.Looper
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
+import com.profitdriving.BuildConfig
+import com.profitdriving.DatabaseHelper
+import com.profitdriving.DecisionEngine
+import com.profitdriving.FloatingBubbleService
+import com.profitdriving.FloatingCardService
+import com.profitdriving.L
+import com.profitdriving.RideData
+import com.profitdriving.RideRecord
+import com.profitdriving.SettingsActivity
+import com.profitdriving.accessibility.extractor.RawCardData
+import com.profitdriving.accessibility.extractor.UberCardExtractor
+import com.profitdriving.parser.App99CardParser
+import com.profitdriving.parser.ExclusiveCardParser
+import com.profitdriving.parser.RadarCardParser
+import com.profitdriving.parser.RideDataParser
+
+class RideAccessibilityServiceV2 : AccessibilityService() {
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val bgHandler = Handler(Looper.getMainLooper())
+    private var pendingRunnable: Runnable? = null
+    private var lastHash = ""
+    private var lastSaveTime = 0L
+    private var cardVisible = false
+    private var lastInsertedId: Long = -1L
+    private var statusLocked = false
+    private var uberWindowWasVisible = false
+    private var lastSavedValue: Double? = null
+
+    private val parsers: List<RideDataParser> = listOf(
+        RadarCardParser(),
+        ExclusiveCardParser(),
+        App99CardParser()
+    )
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        FloatingBubbleService.start(this)
+        L.d(TAG, "RideAccessibilityServiceV2 conectado — bolha iniciada")
+    }
+
+    override fun onAccessibilityEvent(event: AccessibilityEvent) {
+        val pkg = event.packageName?.toString() ?: ""
+
+        if (BuildConfig.DEBUG) {
+            L.d(TAG, "Evento V2: type=${event.eventType}, pkg=$pkg")
+        }
+
+        if (event.eventType == AccessibilityEvent.TYPE_VIEW_CLICKED) {
+            val texto = event.contentDescription?.toString()
+                ?: event.text.firstOrNull()?.toString()
+                ?: return
+            handleClick(texto)
+            return
+        }
+
+        val isUberEvent = pkg.contains("ubercab") ||
+                pkg.contains("taxis99") ||
+                pkg.contains("app99")
+
+        if (isUberEvent) {
+            pendingRunnable?.let { bgHandler.removeCallbacks(it) }
+
+            pendingRunnable = Runnable {
+                val root = findUberWindow() ?: return@Runnable
+                val detectedPkg = root.packageName?.toString() ?: ""
+                try {
+                    detectRideCard(root, detectedPkg)
+                } finally {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        @Suppress("DEPRECATION")
+                        root.recycle()
+                    }
+                }
+            }
+
+            bgHandler.postDelayed(pendingRunnable!!, 300L)
+            return
+        }
+
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED) {
+            val uberVisibleNow = isUberWindowVisible()
+            if (uberWindowWasVisible && !uberVisibleNow) {
+                onUberWindowDismissed()
+            }
+            uberWindowWasVisible = uberVisibleNow
+
+            pendingRunnable?.let { bgHandler.removeCallbacks(it) }
+
+            pendingRunnable = Runnable {
+                val root = findUberWindow() ?: return@Runnable
+                val detectedPkg = root.packageName?.toString() ?: ""
+                try {
+                    detectRideCard(root, detectedPkg)
+                } finally {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                        @Suppress("DEPRECATION")
+                        root.recycle()
+                    }
+                }
+            }
+
+            bgHandler.postDelayed(pendingRunnable!!, 300L)
+        }
+    }
+
+    override fun onInterrupt() {
+        handler.removeCallbacksAndMessages(null)
+        bgHandler.removeCallbacksAndMessages(null)
+    }
+
+    override fun onDestroy() {
+        FloatingBubbleService.stop(this)
+        handler.removeCallbacksAndMessages(null)
+        bgHandler.removeCallbacksAndMessages(null)
+        super.onDestroy()
+    }
+
+    private fun findUberWindow(): AccessibilityNodeInfo? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return null
+
+        try {
+            val allWindows = windows ?: return null
+
+            if (BuildConfig.DEBUG) {
+                L.d(TAG, "Total de janelas: ${allWindows.size}")
+                allWindows.forEachIndexed { i, w ->
+                    L.d(TAG, "Janela $i: tipo=${w.type}, layer=${w.layer}, pkg=${w.root?.packageName}")
+                }
+            }
+
+            val overlayWindows = allWindows.filter {
+                it.type == 6
+            }
+
+            for (window in overlayWindows) {
+                val root = window.root ?: continue
+                val pkg = root.packageName?.toString() ?: ""
+                if (pkg.contains("ubercab") || pkg.contains("taxis99")) {
+                    L.d(TAG, "Card overlay encontrado! tipo=${window.type}, layer=${window.layer}")
+                    return root
+                }
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    @Suppress("DEPRECATION")
+                    root.recycle()
+                }
+            }
+
+            for (window in allWindows) {
+                val root = window.root ?: continue
+                val pkg = root.packageName?.toString() ?: ""
+                if (pkg.contains("ubercab") || pkg.contains("taxis99")) {
+                    L.d(TAG, "Janela Uber normal encontrada: tipo=${window.type}")
+                    return root
+                }
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    @Suppress("DEPRECATION")
+                    root.recycle()
+                }
+            }
+        } catch (e: Exception) {
+            L.e(TAG, "Erro ao buscar janelas: ${e.message}")
+        }
+
+        return null
+    }
+
+    private fun isUberWindowVisible(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return false
+        return try {
+            windows?.any { window ->
+                val pkg = window.root?.packageName?.toString() ?: ""
+                pkg.contains("ubercab") || pkg.contains("taxis99") || pkg.contains("app99")
+            } ?: false
+        } catch (e: Exception) { false }
+    }
+
+    private fun onUberWindowDismissed() {
+        handler.post {
+            cardVisible = false
+            lastHash = ""
+            lastSaveTime = 0L
+            pendingRunnable?.let { bgHandler.removeCallbacks(it) }
+            L.d(TAG, "Janela Uber saiu — estado resetado")
+        }
+    }
+
+    private fun buildCardHash(texts: List<String>): String {
+        val cardTokens = texts.filter { text ->
+            text.contains("R$") ||
+            text.contains("km", ignoreCase = true) ||
+            text.contains("min", ignoreCase = true) ||
+            text.contains("Aceitar", ignoreCase = true) ||
+            (text.length < 20 && text.any { it.isDigit() })
+        }
+        return cardTokens.sorted().joinToString("|").hashCode().toString()
+    }
+
+    private fun detectRideCard(root: AccessibilityNodeInfo, pkg: String) {
+        L.d(TAG, "=== detectRideCard V2 iniciado para $pkg ===")
+
+        val raw = UberCardExtractor.extract(root, pkg)
+            if (BuildConfig.DEBUG) {
+                L.d(TAG, "Textos coletados (${raw.rawTexts.size}): ${raw.rawTexts.take(10)}")
+            }
+
+        if (raw.acceptNode == null) {
+            L.d(TAG, "Nenhum botão de aceitar encontrado — verificando se é card de corrida")
+            if (raw.valueNode == null) {
+                L.d(TAG, "Card não é de corrida — ignorando")
+                if (cardVisible) {
+                    L.d(TAG, "Card sumiu — resetando estado")
+                    if (!statusLocked && lastInsertedId >= 0) {
+                        DatabaseHelper(this).updateStatus(lastInsertedId, "EXPIRED")
+                        L.d(TAG, "Ride $lastInsertedId marcado como EXPIRADO")
+                    }
+                    cardVisible = false
+                    lastHash = ""
+                    lastSaveTime = 0L
+                    lastInsertedId = -1L
+                    statusLocked = false
+                    pendingRunnable?.let { bgHandler.removeCallbacks(it) }
+                }
+                return
+            }
+        }
+
+        val hash = buildCardHash(raw.rawTexts)
+
+        if (hash == lastHash && cardVisible) {
+            L.d(TAG, "Mesmo card ainda visível — ignorando")
+            return
+        }
+
+        val parser = selectParser(raw)
+        if (parser == null) {
+            L.d(TAG, "Nenhum parser disponível para este card")
+            return
+        }
+        L.d(TAG, "Parser selecionado: ${parser::class.simpleName}")
+
+        val ride = parser.parse(raw)
+        if (ride == null || ride.value == null || ride.value <= 0) {
+            L.d(TAG, "Parser retornou RideData inválido — ignorando")
+            return
+        }
+
+        val now = System.currentTimeMillis()
+        if (isValorSuspeito(ride.value) && (now - lastSaveTime) < 30_000L) {
+            L.d(TAG, "Valor suspeito R$ ${ride.value} ignorado — possível tela de confirmação")
+            return
+        }
+
+        if ((now - lastSaveTime) < 5_000L
+            && ride.value == lastSavedValue
+            && hash == lastHash) {
+            L.d(TAG, "Duplicata: mesmo valor+hash em menos de 5s — ignorando")
+            return
+        }
+
+        cardVisible = true
+        lastHash = hash
+        lastSaveTime = now
+        lastSavedValue = ride.value
+
+        L.d(TAG, "Card detectado V2 em $pkg: valor=${ride.value} km=${ride.distanceKm} " +
+                "tempo=${ride.timeMin} nota=${ride.rating} " +
+                "R$/km=${ride.effectivePricePerKm} R$/h=${ride.effectivePricePerHour}")
+
+        saveAndShow(ride)
+    }
+
+    private fun selectParser(raw: RawCardData): RideDataParser? {
+        for (parser in parsers) {
+            if (parser.canParse(raw)) {
+                return parser
+            }
+        }
+        return null
+    }
+
+    private fun isValorSuspeito(valor: Double): Boolean {
+        return valor == valor.toLong().toDouble() && valor >= 30.0
+    }
+
+    private fun handleClick(texto: String) {
+        val lower = texto.lowercase()
+        val db = DatabaseHelper(this)
+
+        if (lower.contains("aceitar") || lower.contains("accept") || lower.contains("selecionar")) {
+            L.d(TAG, "Clique em Aceitar detectado: $texto")
+            if (lastInsertedId >= 0) {
+                db.updateStatus(lastInsertedId, "ACCEPTED")
+                statusLocked = true
+                L.d(TAG, "Ride $lastInsertedId marcado como ACEITO")
+            }
+        }
+
+        if (lower.contains("recusar") || lower.contains("negar") || lower.contains("x")) {
+            L.d(TAG, "Clique em Recusar detectado: $texto")
+            if (lastInsertedId >= 0) {
+                db.updateStatus(lastInsertedId, "DECLINED")
+                statusLocked = true
+                L.d(TAG, "Ride $lastInsertedId marcado como RECUSADO")
+            }
+        }
+    }
+
+    private fun saveAndShow(ride: RideData) {
+        L.d(TAG, "saveAndShow V2 chamado: value=${ride.value} km=${ride.distanceKm}")
+        if (ride.value == null) {
+            L.w(TAG, "value é null — card não será exibido")
+            return
+        }
+        lastSaveTime = System.currentTimeMillis()
+        statusLocked = false
+        vibrateFeedback()
+        val db = DatabaseHelper(this)
+
+        val pricePerMin = ride.value.let { v ->
+            ride.timeMin?.let { t -> if (t > 0) v / t.toDouble() else null }
+        }
+        val prefs = getSharedPreferences(SettingsActivity.PREF_NAME, 0)
+        val result = DecisionEngine.evaluate(
+            kmValue     = ride.effectivePricePerKm,
+            hourValue   = ride.effectivePricePerHour,
+            minValue    = pricePerMin,
+            ratingValue = ride.rating,
+            prefs       = prefs
+        )
+
+        lastInsertedId = db.insert(RideRecord(
+            value = ride.value, distanceKm = ride.distanceKm,
+            timeMin = ride.timeMin, rating = ride.rating,
+            pricePerKm = ride.effectivePricePerKm,
+            pricePerHour = ride.effectivePricePerHour,
+            appName = ride.appName, timestamp = System.currentTimeMillis(),
+            pickupDistanceKm = ride.pickupDistanceKm,
+            pickupTimeMin = ride.pickupTimeMin,
+            tripDistanceKm = ride.tripDistanceKm,
+            tripTimeMin = ride.tripTimeMin,
+            serviceType = ride.serviceType,
+            hasMultipleStops = ride.hasMultipleStops,
+            scorePercent = result.scorePercent,
+            priorityBonus = ride.priorityBonus,
+            dynamicBonus = ride.dynamicBonus,
+            pickupAddress = ride.pickupAddress,
+            dropoffAddress = ride.dropoffAddress
+        ))
+        L.d(TAG, "Ride inserido com id=$lastInsertedId")
+
+        sendBroadcast(Intent("NEW_RIDE_SAVED"))
+
+        getSharedPreferences(SettingsActivity.PREF_NAME, 0).edit().apply {
+            ride.value?.let { putFloat("last_value", it.toFloat()) }
+            ride.distanceKm?.let { putFloat("last_distance", it.toFloat()) }
+            ride.timeMin?.let { putInt("last_time", it) }
+            ride.rating?.let { putFloat("last_rating", it.toFloat()) }
+            putString("last_app", ride.appName)
+            putLong("last_timestamp", System.currentTimeMillis())
+            ride.serviceType?.let { putString("last_service_type", it) }
+            apply()
+        }
+
+        FloatingCardService.start(this, Intent().apply {
+            ride.value?.let { putExtra("value", it) }
+            ride.distanceKm?.let { putExtra("distanceKm", it) }
+            ride.timeMin?.let { putExtra("timeMin", it) }
+            ride.rating?.let { putExtra("rating", it) }
+            putExtra("appName", ride.appName)
+            ride.serviceType?.let { putExtra("serviceType", it) }
+            ride.priorityBonus?.let { putExtra("priorityBonus", it) }
+            ride.dynamicBonus?.let { putExtra("dynamicBonus", it) }
+            ride.pickupAddress?.let { putExtra("pickupAddress", it) }
+            ride.dropoffAddress?.let { putExtra("dropoffAddress", it) }
+            putExtra("hasMultipleStops", ride.hasMultipleStops)
+        })
+
+        FloatingBubbleService.start(this, Intent().apply {
+            ride.value?.let { putExtra("value", it) }
+            ride.distanceKm?.let { putExtra("distanceKm", it) }
+            ride.timeMin?.let { putExtra("timeMin", it) }
+            ride.rating?.let { putExtra("rating", it) }
+            putExtra("decision", result.decision.name)
+        })
+    }
+
+    private fun vibrateFeedback() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibrator = getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                vibrator.vibrate(CombinedVibration.createParallel(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)))
+            } else {
+                @Suppress("DEPRECATION")
+                val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator.vibrate(100)
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
+    companion object {
+        private const val TAG = "RideAccessibilityV2"
+    }
+}

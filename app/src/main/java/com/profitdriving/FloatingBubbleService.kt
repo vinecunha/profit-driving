@@ -13,7 +13,6 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
-import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -42,22 +41,21 @@ class FloatingBubbleService : Service() {
         createNotificationChannel()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         prefs = SecurePreferences.get(this)
-        showBubble(null)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (bubbleView == null) {
-            showBubble(null)
-        }
-
-        if (intent == null) return START_STICKY
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(this)) {
                 stopSelf()
                 return START_NOT_STICKY
             }
         }
+
+        if (bubbleView == null) {
+            showBubble(null)
+        }
+
+        if (intent == null) return START_STICKY
 
         val decision = intent.getStringExtra("decision")
         if (decision != null) {
@@ -123,10 +121,18 @@ class FloatingBubbleService : Service() {
         val view = inflater.inflate(R.layout.bubble_layout, null)
         applyBubbleColors(view, status)
 
-        @Suppress("DEPRECATION")
-        val displayMetrics = DisplayMetrics()
-        @Suppress("DEPRECATION")
-        windowManager.defaultDisplay.getMetrics(displayMetrics)
+        val displayMetrics = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val windowMetrics = windowManager.maximumWindowMetrics
+            windowMetrics.bounds.let { bounds ->
+                android.util.DisplayMetrics().apply {
+                    widthPixels = bounds.width()
+                    heightPixels = bounds.height()
+                }
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            android.util.DisplayMetrics().also { windowManager.defaultDisplay.getMetrics(it) }
+        }
         val yOffset = (displayMetrics.heightPixels * 0.30).toInt()
 
         val type: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)

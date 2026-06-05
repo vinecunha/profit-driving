@@ -28,6 +28,12 @@ android {
         jvmTarget = "1.8"
     }
 
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+
     signingConfigs {
         debug {
             storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
@@ -36,10 +42,10 @@ android {
             keyPassword = "android"
         }
         release {
-            storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
-            storePassword = "android"
-            keyAlias = "AndroidDebugKey"
-            keyPassword = "android"
+            storeFile = file(System.getenv("KEYSTORE_FILE") ?: "${System.getProperty("user.home")}/.android/debug.keystore")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "android"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "AndroidDebugKey"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "android"
         }
     }
 
@@ -68,5 +74,8 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.material)
     implementation(libs.security.crypto)
+    implementation(libs.localbroadcastmanager)
 
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.13'
 }

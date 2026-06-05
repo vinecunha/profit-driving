@@ -15,6 +15,7 @@ import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.SeekBar
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
@@ -691,6 +692,7 @@ class SettingsActivity : BaseActivity() {
         const val KEY_LAST_RATING = "last_rating"
         const val KEY_LAST_APP = "last_app"
         const val KEY_LAST_TIMESTAMP = "last_timestamp"
+        const val KEY_LAST_SERVICE_TYPE = "last_service_type"
 
         const val KEY_CARD_LAYOUT = "card_layout"
         const val KEY_CARD_POSITION = "card_position"

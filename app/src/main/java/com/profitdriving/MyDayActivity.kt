@@ -841,16 +841,20 @@ class MyDayActivity : BaseActivity() {
 
         builder.setView(view)
             .setTitle("Valor da taxa de deslocamento")
-            .setMessage("O valor original (R$ ${String.format("%.2f", ride.originalValue).replace(".", ",")}) será substituído pela taxa.")
+            .setMessage("O valor original (R$ ${String.format("%.2f", ride.originalValue).replace(".", ",")}) será substituído pela taxa.\n\nA distância considerada será APENAS o trajeto até o passageiro (${String.format("%.1f", record.pickupDistanceKm ?: record.distanceKm ?: 0.0)} km).")
             .setPositiveButton("Aplicar taxa") { _, _ ->
                 val feeValue = parseDecimal(etFeeValue.text.toString()) ?: 0.0
 
                 val idx = allDailyRides.indexOfFirst { it.id == ride.id }
                 if (idx >= 0) {
+                    // Usar apenas pickup distance para corridas canceladas
+                    val cancelDistance = record.pickupDistanceKm ?: record.distanceKm ?: 0.0
+                    val cancelTime = record.pickupTimeMin ?: record.timeMin ?: 0
+
                     val updated = ride.copy(
                         adjustedValue = feeValue,
                         cancelledWithFee = true,
-                        notes = "Cancelado com taxa - valor original: R$ ${String.format("%.2f", ride.originalValue)}",
+                        notes = "Cancelado com taxa - valor original: R$ ${String.format("%.2f", ride.originalValue)}. Distância considerada: ${String.format("%.1f", cancelDistance)} km",
                         updatedAt = System.currentTimeMillis()
                     )
                     allDailyRides[idx] = updated
@@ -858,15 +862,15 @@ class MyDayActivity : BaseActivity() {
 
                     val updatedRecord = record.copy(
                         value = feeValue,
-                        distanceKm = record.pickupDistanceKm ?: record.distanceKm,
-                        timeMin = record.pickupTimeMin ?: record.timeMin,
+                        distanceKm = cancelDistance,
+                        timeMin = cancelTime,
                         tripDistanceKm = null,
                         tripTimeMin = null
                     )
                     allRideRecords[record.id] = updatedRecord
 
                     applyFilters()
-                    Toast.makeText(this, "Taxa de deslocamento aplicada!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Taxa de deslocamento aplicada! Distância considerada: ${String.format("%.1f", cancelDistance)} km", Toast.LENGTH_LONG).show()
                 }
             }
             .setNegativeButton("Cancelar", null)

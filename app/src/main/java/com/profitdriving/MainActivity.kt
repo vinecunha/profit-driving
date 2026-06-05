@@ -24,6 +24,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.material.snackbar.Snackbar
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -142,7 +143,8 @@ class MainActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
 
-        registerReceiver(dataUpdateReceiver, IntentFilter("NEW_RIDE_SAVED"), Context.RECEIVER_NOT_EXPORTED)
+        LocalBroadcastManager.getInstance(this)
+            .registerReceiver(dataUpdateReceiver, IntentFilter("NEW_RIDE_SAVED"))
 
         pageSize = SecurePreferences.get(this)
             .getInt(SettingsActivity.KEY_PAGE_SIZE, 100)
@@ -160,7 +162,8 @@ class MainActivity : BaseActivity() {
 
     override fun onPause() {
         super.onPause()
-        try { unregisterReceiver(dataUpdateReceiver) } catch (_: Exception) {}
+        try { LocalBroadcastManager.getInstance(this)
+            .unregisterReceiver(dataUpdateReceiver) } catch (_: Exception) {}
     }
 
     private fun loadFilteredHistory() {
@@ -268,8 +271,9 @@ class MainActivity : BaseActivity() {
                 contentResolver,
                 Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
             ) ?: return false
-            val cn = ComponentName(this, RideAccessibilityService::class.java)
-            return enabled.contains(cn.flattenToString())
+            val cnV2 = ComponentName(this, com.profitdriving.accessibility.RideAccessibilityServiceV2::class.java)
+            val cnV1 = ComponentName(this, RideAccessibilityService::class.java)
+            return enabled.contains(cnV2.flattenToString()) || enabled.contains(cnV1.flattenToString())
         } catch (_: Exception) {
             return false
         }
@@ -558,7 +562,6 @@ class HistoryAdapter(
         vh.tvServiceType.setBackgroundResource(bgRes)
         vh.tvServiceType.setTextColor(textColor)
 
-        // Usando funções seguras de formatação
         val decisionText = when {
             r.scorePercent != null && r.scorePercent >= 80 -> "\u2705 BOA (${formatPercent(r.scorePercent)}%)"
             r.scorePercent != null && r.scorePercent >= 50 -> "\u26A0\uFE0F M\u00C9DIA (${formatPercent(r.scorePercent)}%)"
@@ -603,24 +606,39 @@ class HistoryAdapter(
         val (_, ratingColor) = getBadgeTextAndColor(ratingState)
         vh.tvRatingText.setTextColor(ratingColor)
 
-        // Embarque: distância · tempo · endereço
-        vh.tvPickupDistance.text = formatDistance(r.pickupDistanceKm ?: r.distanceKm)
-        vh.tvPickupTime.text = formatTime(r.pickupTimeMin ?: r.timeMin)
+        val pickupDist = r.pickupDistanceKm
+        val tripDist = r.tripDistanceKm
+        
+        val pickupTime = r.pickupTimeMin
+        val tripTime = r.tripTimeMin
+        
+        val totalDist = (pickupDist ?: 0.0) + (tripDist ?: r.distanceKm ?: 0.0)
+        val totalTime = (pickupTime ?: 0) + (tripTime ?: r.timeMin ?: 0)
+
+        vh.tvPickupDistance.text = if (pickupDist != null && pickupDist > 0) 
+            formatDistance(pickupDist) else ""
+        vh.tvPickupTime.text = if (pickupTime != null && pickupTime > 0) 
+            formatTime(pickupTime) else ""
         vh.tvPickupAddress.text = maskAddress(r.pickupAddress)
 
-        // Destino: distância · tempo · endereço
-        vh.tvDropoffDistance.text = formatDistance(r.tripDistanceKm ?: r.distanceKm)
-        vh.tvDropoffTime.text = formatTime(r.tripTimeMin ?: r.timeMin)
+        vh.tvDropoffDistance.text = if (tripDist != null && tripDist > 0) 
+            formatDistance(tripDist) else ""
+        vh.tvDropoffTime.text = if (tripTime != null && tripTime > 0) 
+            formatTime(tripTime) else ""
         vh.tvDropoffAddress.text = maskAddress(r.dropoffAddress)
 
         val totalParts = mutableListOf<String>()
-        r.distanceKm?.let { totalParts.add(formatDistance(it)) }
-        r.timeMin?.let { totalParts.add("${it} min") }
+        if (totalDist > 0) {
+            totalParts.add(formatDistance(totalDist))
+        }
+        if (totalTime > 0) {
+            totalParts.add("${totalTime} min")
+        }
         vh.tvTotalInfo.text = totalParts.joinToString(" · ")
+        vh.tvTotalInfo.visibility = if (totalParts.isNotEmpty()) View.VISIBLE else View.GONE
 
         vh.tvScore.visibility = View.GONE
 
-        // Bônus - com safe-call
         val priorityBonus = r.priorityBonus
         val dynamicBonus = r.dynamicBonus
 
@@ -638,7 +656,6 @@ class HistoryAdapter(
             vh.tvDynamicBonus.visibility = View.GONE
         }
 
-        // Lucro
         val profitRange = getProfitRangeForRide(r)
         val profitValue = formatProfitValue(r)
         vh.tvProfitIcon.text = profitRange.icon
@@ -664,7 +681,7 @@ class HistoryAdapter(
 
         if (isExpanded) {
             val rideValue = r.value ?: 0.0
-            val distance = (r.pickupDistanceKm ?: 0.0) + (r.tripDistanceKm ?: r.distanceKm ?: 0.0)
+            val distance = totalDist
             val usedCostPerKm = r.costPerKmAtTime ?: costPerKm
             val totalCost = distance * usedCostPerKm
             val lucro = rideValue - totalCost
@@ -714,11 +731,11 @@ class HistoryAdapter(
                 }
                 vh.cardRoot.setBackgroundResource(borderDrawable)
                 vh.cardRoot.cardElevation = 0f
+                }
             }
-        }
 
-        vh.tvTimestamp.text = dateFormat.format(java.util.Date(r.timestamp))
-    }
+            vh.tvTimestamp.text = dateFormat.format(java.util.Date(r.timestamp))
+        }
 
     private fun maskAddress(fullAddress: String?): String {
         if (fullAddress.isNullOrBlank()) return ""

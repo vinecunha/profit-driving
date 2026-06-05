@@ -34,7 +34,7 @@ class AvailableRideAdapter(
 
     override fun getItemCount() = items.size
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+   override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val record = items[position]
         val cal = java.util.Calendar.getInstance().apply { timeInMillis = record.timestamp }
 
@@ -44,18 +44,19 @@ class AvailableRideAdapter(
         val displayValue = record.value ?: 0.0
         holder.tvValue.text = "R$ %.2f".format(displayValue).replace(".", ",")
 
-        val dist = record.tripDistanceKm ?: record.distanceKm
-        val dur = record.tripTimeMin ?: record.timeMin
+        // Distância TOTAL (pickup + trip)
+        val totalDist = (record.pickupDistanceKm ?: 0.0) + (record.tripDistanceKm ?: record.distanceKm ?: 0.0)
+        val totalTime = (record.pickupTimeMin ?: 0) + (record.tripTimeMin ?: record.timeMin ?: 0)
 
-        if (dist != null) {
-            holder.tvDistance.text = "\uD83D\uDCCD %.1f km".format(dist).replace(".", ",")
+        if (totalDist > 0) {
+            holder.tvDistance.text = "📍 %.1f km".format(totalDist).replace(".", ",")
             holder.tvDistance.visibility = View.VISIBLE
         } else {
             holder.tvDistance.visibility = View.GONE
         }
 
-        if (dur != null) {
-            holder.tvDuration.text = "\u23F1 %d min".format(dur)
+        if (totalTime > 0) {
+            holder.tvDuration.text = "⏱ %d min".format(totalTime)
             holder.tvDuration.visibility = View.VISIBLE
         } else {
             holder.tvDuration.visibility = View.GONE
