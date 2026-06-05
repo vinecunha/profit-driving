@@ -264,10 +264,10 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             return
         }
 
-        if ((now - lastSaveTime) < 5_000L
-            && ride.value == lastSavedValue
-            && hash == lastHash) {
-            L.d(TAG, "Duplicata: mesmo valor+hash em menos de 5s — ignorando")
+        // Guard anti-duplicata: mesmo valor em menos de 5s = mesmo card com hash instável
+        // NÃO checar hash aqui — se hash fosse igual já teria saído acima
+        if ((now - lastSaveTime) < 5_000L && ride.value == lastSavedValue) {
+            L.d(TAG, "⏱️ Duplicata: valor R$${ride.value} salvo há ${now - lastSaveTime}ms — ignorando")
             return
         }
 
