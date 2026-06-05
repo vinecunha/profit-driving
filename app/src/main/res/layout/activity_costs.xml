@@ -30,7 +30,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="\u26FD COMBUST\u00cdVEL / GNV"
+                android:text="\u26FD Abastecimentos"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="#1A2C3E"
@@ -109,21 +109,33 @@
 
             </LinearLayout>
 
-            <!-- Add Refuel Button -->
-            <TextView
-                android:id="@+id/btnAddRefuel"
+            <!-- Action row -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
                 android:gravity="center"
-                android:text="\uD83D\uDCCB NOVO ABASTECIMENTO"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="#2E7D32"
-                android:background="#E8F5E9"
-                android:padding="4dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:id="@+id/btnAddRefuel"
+                    style="@style/PillSelected"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:text="+ Adicionar" />
+
+                <TextView
+                    android:id="@+id/btnViewAllRefuels"
+                    style="@style/PillUnselected"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:text="\uD83D\uDC41\uFE0F Ver todos" />
+
+            </LinearLayout>
 
             <!-- Refuel History -->
             <TextView
@@ -218,21 +230,6 @@
 
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/btnViewAllRefuels"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:gravity="center"
-                android:text="\uD83D\uDCCB Ver todos os abastecimentos"
-                android:textSize="13sp"
-                android:textColor="#5E6F8D"
-                android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="4dp" />
-
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -286,40 +283,14 @@
             android:padding="16dp"
             android:layout_marginBottom="12dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="12dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="\uD83D\uDCCB TODAS AS DESPESAS"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="#1A2C3E" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-
             <TextView
-                android:id="@+id/btnViewExpenses"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ver todas \u2192"
-                android:textSize="12sp"
-                android:textColor="#5E6F8D"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackground"
-                    android:paddingVertical="4dp"
-                    android:paddingHorizontal="8dp" />
-
-            </LinearLayout>
+                android:text="\uD83D\uDCB0 Despesas"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#1A2C3E"
+                android:layout_marginBottom="12dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -385,114 +356,51 @@
 
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/btnAddPerKm"
-                android:layout_width="match_parent"
-                android:layout_height="36dp"
-                android:gravity="center"
-                android:text="\u2795 Adicionar vari\u00e1vel"
-                android:textSize="13sp"
-                android:textColor="#2E7D32"
-                android:background="#E8F5E9"
-                android:padding="2dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_marginBottom="10dp" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#EEF2F6"
-                android:layout_marginBottom="8dp" />
-
-            <!-- Custos Fixos (mensais) -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="\uD83D\uDCC6 Fixos (mensais)"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="#1A2C3E"
-                android:layout_marginBottom="4dp" />
-
+<!-- Action row -->
             <LinearLayout
-                android:id="@+id/fixedList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingVertical="2dp">
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="8dp">
 
                 <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Nenhum custo fixo"
-                    android:textSize="12sp"
-                    android:textColor="#9CA3AF"
-                    android:gravity="center"
-                    android:paddingVertical="6dp" />
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/btnAddFixed"
-                android:layout_width="match_parent"
-                android:layout_height="36dp"
-                android:gravity="center"
-                android:text="\u2795 Adicionar fixo"
-                android:textSize="13sp"
-                android:textColor="#2E7D32"
-                android:background="#E8F5E9"
-                android:padding="2dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_marginBottom="10dp" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#EEF2F6"
-                android:layout_marginBottom="8dp" />
-
-            <!-- Custos por Evento -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="\uD83C\uDFAF Por evento"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="#1A2C3E"
-                android:layout_marginBottom="4dp" />
-
-            <LinearLayout
-                android:id="@+id/eventList"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingVertical="2dp">
+                    android:id="@+id/btnAddPerKm"
+                    style="@style/PillSelected"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="3dp"
+                    android:text="+ Vari\u00e1vel" />
 
                 <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Nenhum custo por evento"
-                    android:textSize="12sp"
-                    android:textColor="#9CA3AF"
-                    android:gravity="center"
-                    android:paddingVertical="6dp" />
+                    android:id="@+id/btnAddFixed"
+                    style="@style/PillSelected"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="3dp"
+                    android:text="+ Fixo" />
+
+                <TextView
+                    android:id="@+id/btnAddEvent"
+                    style="@style/PillSelected"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="3dp"
+                    android:text="+ Evento" />
+
+                <TextView
+                    android:id="@+id/btnViewExpenses"
+                    style="@style/PillUnselected"
+                    android:layout_width="0dp"
+                    android:layout_height="34dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="3dp"
+                    android:text="\uD83D\uDC41\uFE0F Ver todos" />
 
             </LinearLayout>
-
-            <TextView
-                android:id="@+id/btnAddEvent"
-                android:layout_width="match_parent"
-                android:layout_height="36dp"
-                android:gravity="center"
-                android:text="\u2795 Adicionar evento"
-                android:textSize="13sp"
-                android:textColor="#2E7D32"
-                android:background="#E8F5E9"
-                android:padding="2dp"
-                android:clickable="true"
-                android:focusable="true" />
 
         </LinearLayout>
 
@@ -772,7 +680,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="\uD83D\uDCCA ESTAT\u00cdSTICAS MENSAIS"
+                android:text="\uD83D\uDCCA Estat\u00edsticas"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="#1A2C3E"
@@ -788,17 +696,10 @@
 
             <TextView
                 android:id="@+id/btnViewStats"
+                style="@style/PillUnselected"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:gravity="center"
-                android:text="\uD83D\uDCC8 VER ESTAT\u00cdSTICAS \u2192"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="#1A2C3E"
-                android:background="#F8F9FE"
-                android:padding="4dp"
-                android:clickable="true"
-                android:focusable="true" />
+                android:layout_height="34dp"
+                android:text="\uD83D\uDC41\uFE0F Ver mensal" />
 
         </LinearLayout>
 

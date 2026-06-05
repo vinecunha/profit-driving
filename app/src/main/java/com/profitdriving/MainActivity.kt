@@ -7,7 +7,9 @@ import android.content.Intent
 import android.content.IntentFilter
 import com.profitdriving.SecurePreferences
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
+import android.util.TypedValue
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -321,7 +323,7 @@ class MainActivity : BaseActivity() {
         val selected = selectedPeriodFilter?.let { setOf(it) } ?: emptySet()
         val view = filterManager.createFilterSection(
             parent = container,
-            title = "📅 Período",
+            title = "",
             options = options,
             selectedIds = selected,
             singleSelection = true,
@@ -334,9 +336,17 @@ class MainActivity : BaseActivity() {
                 override fun onClearAll() {}
             }
         )
+
+        val marginTopDp = 16
+        val marginTopPx = (marginTopDp * resources.displayMetrics.density).toInt()
+        
+        val params = view.layoutParams as? ViewGroup.MarginLayoutParams
+        params?.topMargin = marginTopPx
+        view.layoutParams = params
+        
         container.addView(view)
     }
-
+ 
     private fun setupTypeFilter() {
         val container = findViewById<ViewGroup>(R.id.typeFilterContainer)
         filterManager.clearContainer(container)
@@ -346,7 +356,7 @@ class MainActivity : BaseActivity() {
         val selected = if (selectedTypeFilter == "all") emptySet() else setOf(selectedTypeFilter)
         val view = filterManager.createFilterSection(
             parent = container,
-            title = "🚗 Tipo",
+            title = "",
             options = options,
             selectedIds = selected,
             singleSelection = true,
@@ -373,7 +383,7 @@ class MainActivity : BaseActivity() {
         val selected = if (selectedScoreFilter == "all") emptySet() else setOf(selectedScoreFilter)
         val view = filterManager.createFilterSection(
             parent = container,
-            title = "🏆 Pontuação",
+            title = "",
             options = options,
             selectedIds = selected,
             singleSelection = true,
@@ -462,6 +472,7 @@ class HistoryAdapter(
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val cardRoot: androidx.cardview.widget.CardView = view.findViewById(R.id.cardRoot)
+        val layoutServiceBadge: View = view.findViewById(R.id.layoutServiceBadge)
         val ivServiceTypeIcon: ImageView = view.findViewById(R.id.tvServiceTypeIcon)
         val tvServiceType: TextView = view.findViewById(R.id.tvServiceType)
         val tvPrice: TextView = view.findViewById(R.id.tvPrice)
@@ -547,33 +558,49 @@ class HistoryAdapter(
         }
         vh.ivServiceTypeIcon.setImageResource(iconRes)
 
-        val (bgRes, textColor, iconColor) = when {
+        val (pillColor, textColor, iconColor) = when {
             serviceType.contains("Black", ignoreCase = true) ->
-                Triple(R.drawable.bg_service_black, Color.WHITE, Color.WHITE)
+                Triple(Color.parseColor("#1A1A1A"), Color.WHITE, Color.WHITE)
             serviceType.contains("Comfort", ignoreCase = true) || serviceType.contains("Confort", ignoreCase = true) ->
-                Triple(R.drawable.bg_service_blue, Color.WHITE, Color.WHITE)
+                Triple(Color.parseColor("#2563EB"), Color.WHITE, Color.WHITE)
             serviceType.contains("Moto", ignoreCase = true) || serviceType.contains("Entrega", ignoreCase = true) ->
-                Triple(R.drawable.bg_service_green, Color.WHITE, Color.WHITE)
+                Triple(Color.parseColor("#10B981"), Color.WHITE, Color.WHITE)
             else ->
-                Triple(R.drawable.bg_service_default, 0xFF1A2C3E.toInt(), 0xFF5E6F8D.toInt())
+                Triple(Color.parseColor("#F1F5F9"), 0xFF1A2C3E.toInt(), 0xFF5E6F8D.toInt())
         }
-        vh.ivServiceTypeIcon.setBackgroundResource(bgRes)
+        val pillRadius = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, 28f, vh.layoutServiceBadge.context.resources.displayMetrics
+        )
+        vh.layoutServiceBadge.background = GradientDrawable().apply {
+            cornerRadius = pillRadius
+            setColor(pillColor)
+        }
         vh.ivServiceTypeIcon.setColorFilter(iconColor)
-        vh.tvServiceType.setBackgroundResource(bgRes)
         vh.tvServiceType.setTextColor(textColor)
 
         val decisionText = when {
-            r.scorePercent != null && r.scorePercent >= 80 -> "\u2705 BOA (${formatPercent(r.scorePercent)}%)"
-            r.scorePercent != null && r.scorePercent >= 50 -> "\u26A0\uFE0F M\u00C9DIA (${formatPercent(r.scorePercent)}%)"
-            else -> "\u274C RUIM (${formatPercent(r.scorePercent)}%)"
+            r.scorePercent != null && r.scorePercent >= 80 -> "✅ BOA (${formatPercent(r.scorePercent)}%)"
+            r.scorePercent != null && r.scorePercent >= 50 -> "⚠️ MÉDIA (${formatPercent(r.scorePercent)}%)"
+            else -> "❌ RUIM (${formatPercent(r.scorePercent)}%)"
         }
-        val decisionColor = when {
-            r.scorePercent != null && r.scorePercent >= 80 -> Color.parseColor("#00A86B")
-            r.scorePercent != null && r.scorePercent >= 50 -> Color.parseColor("#F97316")
-            else -> Color.parseColor("#DC2626")
+        val decisionBg = when {
+            r.scorePercent != null && r.scorePercent >= 80 -> Color.parseColor("#D1FAE5")
+            r.scorePercent != null && r.scorePercent >= 50 -> Color.parseColor("#FEF3C7")
+            else -> Color.parseColor("#FEE2E2")
+        }
+        val decisionTextColor = when {
+            r.scorePercent != null && r.scorePercent >= 80 -> Color.parseColor("#065F46")
+            r.scorePercent != null && r.scorePercent >= 50 -> Color.parseColor("#92400E")
+            else -> Color.parseColor("#991B1B")
         }
         vh.tvDecisionBadge.text = decisionText
-        vh.tvDecisionBadge.setBackgroundColor(decisionColor)
+        vh.tvDecisionBadge.background = GradientDrawable().apply {
+            cornerRadius = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 12f, vh.tvDecisionBadge.context.resources.displayMetrics
+            )
+            setColor(decisionBg)
+        }
+        vh.tvDecisionBadge.setTextColor(decisionTextColor)
         vh.tvDecisionBadge.visibility = if (r.scorePercent != null) View.VISIBLE else View.GONE
 
         vh.tvPrice.text = formatMoney(r.value)
@@ -591,19 +618,51 @@ class HistoryAdapter(
         val minState = evaluateState(pricePerMin, minMinute, idealMinute)
         val ratingState = evaluateState(r.rating, minRating, idealRating)
 
-        val (kmText, kmColor) = getBadgeTextAndColor(kmState)
-        vh.tvKmBadge.text = kmText
-        vh.tvKmBadge.setTextColor(kmColor)
+        fun setBadge(badge: TextView, state: Int) {
+            val radius = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 12f, badge.context.resources.displayMetrics
+            )
+            when (state) {
+                0 -> {
+                    badge.text = "✅ Bom"
+                    badge.background = GradientDrawable().apply {
+                        cornerRadius = radius
+                        setColor(Color.parseColor("#D1FAE5"))
+                    }
+                    badge.setTextColor(Color.parseColor("#065F46"))
+                    badge.visibility = View.VISIBLE
+                }
+                1 -> {
+                    badge.text = "⚠️ Médio"
+                    badge.background = GradientDrawable().apply {
+                        cornerRadius = radius
+                        setColor(Color.parseColor("#FEF3C7"))
+                    }
+                    badge.setTextColor(Color.parseColor("#92400E"))
+                    badge.visibility = View.VISIBLE
+                }
+                2 -> {
+                    badge.text = "❌ Ruim"
+                    badge.background = GradientDrawable().apply {
+                        cornerRadius = radius
+                        setColor(Color.parseColor("#FEE2E2"))
+                    }
+                    badge.setTextColor(Color.parseColor("#991B1B"))
+                    badge.visibility = View.VISIBLE
+                }
+                else -> badge.visibility = View.GONE
+            }
+        }
+        setBadge(vh.tvKmBadge, kmState)
+        setBadge(vh.tvHourBadge, hourState)
+        setBadge(vh.tvMinBadge, minState)
 
-        val (hourText, hourColor) = getBadgeTextAndColor(hourState)
-        vh.tvHourBadge.text = hourText
-        vh.tvHourBadge.setTextColor(hourColor)
-
-        val (minText, minColor) = getBadgeTextAndColor(minState)
-        vh.tvMinBadge.text = minText
-        vh.tvMinBadge.setTextColor(minColor)
-
-        val (_, ratingColor) = getBadgeTextAndColor(ratingState)
+        val ratingColor = when (ratingState) {
+            0 -> Color.parseColor("#065F46")
+            1 -> Color.parseColor("#92400E")
+            2 -> Color.parseColor("#991B1B")
+            else -> Color.parseColor("#475569")
+        }
         vh.tvRatingText.setTextColor(ratingColor)
 
         val pickupDist = r.pickupDistanceKm
@@ -724,12 +783,7 @@ class HistoryAdapter(
             "ACCEPTED" -> vh.cardRoot.setBackgroundResource(R.drawable.card_bg_accepted)
             "DECLINED" -> vh.cardRoot.setBackgroundResource(R.drawable.card_bg_declined)
             else -> {
-                val borderDrawable = when {
-                    r.scorePercent != null && r.scorePercent >= 80 -> R.drawable.card_border_green
-                    r.scorePercent != null && r.scorePercent >= 50 -> R.drawable.card_border_orange
-                    else -> R.drawable.card_border_red
-                }
-                vh.cardRoot.setBackgroundResource(borderDrawable)
+                vh.cardRoot.setBackgroundResource(R.drawable.card_bg_neutral)
                 vh.cardRoot.cardElevation = 0f
                 }
             }
