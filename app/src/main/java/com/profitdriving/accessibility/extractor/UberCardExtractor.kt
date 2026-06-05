@@ -45,15 +45,21 @@ object UberCardExtractor {
 
         val full = texts.joinToString(" ").lowercase(Locale.ROOT)
 
+        // EXCLUSIVO: tem "exclusivo" no texto E botão "aceitar"
+        // RADAR: tem "selecionar" como botão (broadcast para múltiplos motoristas)
         val hasExclusiveText = full.contains("exclusivo")
+        val hasAceitar = full.contains("aceitar") || full.contains("accept")
         val hasSelecionar = full.contains("selecionar")
 
-        if (hasExclusiveText || hasSelecionar) {
+        if (hasExclusiveText && hasAceitar) {
             return CardType.EXCLUSIVE
         }
 
-        val hasAccept = full.contains("aceitar") || full.contains("accept")
-        if (hasAccept && full.contains("r$")) {
+        if (hasSelecionar && full.contains("r$")) {
+            return CardType.RADAR
+        }
+
+        if (hasAceitar && full.contains("r$")) {
             return CardType.RADAR
         }
 
