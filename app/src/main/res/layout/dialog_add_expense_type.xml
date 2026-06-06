@@ -11,7 +11,7 @@
         android:text="\u2795 ADICIONAR DESPESA"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:textColor="#1A1A2E"
+        android:textColor="@color/text_primary"
         android:layout_marginBottom="16dp" />
 
     <TextView
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:text="Qual o tipo de despesa?"
         android:textSize="13sp"
-        android:textColor="#6B7280"
+        android:textColor="@color/text_secondary"
         android:layout_marginBottom="12dp" />
 
     <TextView
@@ -29,7 +29,7 @@
         android:text="\uD83D\uDCB0 POR KM\ncombust\u00EDvel, manuten\u00E7\u00E3o, pneus"
         android:textSize="12sp"
         android:gravity="center"
-        android:textColor="#1A1A2E"
+        android:textColor="@color/text_primary"
         android:background="@drawable/pill_unselected"
         android:clickable="true"
         android:focusable="true"
@@ -44,7 +44,7 @@
         android:text="\uD83D\uDCC5 FIXO\nseguro, IPVA, financiamento"
         android:textSize="12sp"
         android:gravity="center"
-        android:textColor="#1A1A2E"
+        android:textColor="@color/text_primary"
         android:background="@drawable/pill_unselected"
         android:clickable="true"
         android:focusable="true"
@@ -59,7 +59,7 @@
         android:text="\uD83C\uDFAF EVENTO\nestacionamento, ped\u00E1gio"
         android:textSize="12sp"
         android:gravity="center"
-        android:textColor="#1A1A2E"
+        android:textColor="@color/text_primary"
         android:background="@drawable/pill_unselected"
         android:clickable="true"
         android:focusable="true"

@@ -15,13 +15,13 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="8dp">
+        android:layout_marginBottom="2dp">
 
         <TextView
             android:id="@+id/tvApp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#CCFFFFFF"
+            android:textColor="@color/overlay_text_secondary"
             android:textSize="11sp"
             android:textStyle="bold" />
 
@@ -30,17 +30,16 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
+            android:textColor="@color/overlay_text_primary"
+            android:textSize="18sp"
             android:textStyle="bold"
-            android:gravity="end"
-            android:layout_marginStart="8dp" />
+            android:gravity="end"/>
 
         <TextView
             android:id="@+id/tvServiceType"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#FFD700"
+            android:textColor="@color/overlay_warning"
             android:textSize="10sp"
             android:textStyle="bold"
             android:layout_marginStart="8dp"
@@ -53,8 +52,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="2dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="1dp"
         android:gravity="center">
 
         <!-- Coluna R$/km -->
@@ -65,21 +64,21 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:padding="2dp">
+            android:paddingHorizontal="4dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="$/km"
-                android:textColor="#AAFFFFFF"
-                android:textSize="9sp" />
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="10sp" />
 
             <TextView
                 android:id="@+id/tvKm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/white"
-                android:textSize="13sp"
+                android:textColor="@color/overlay_text_primary"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <View
@@ -99,21 +98,21 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:padding="2dp">
+            android:paddingHorizontal="4dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="$/h"
-                android:textColor="#AAFFFFFF"
-                android:textSize="9sp" />
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="10sp" />
 
             <TextView
                 android:id="@+id/tvHour"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/white"
-                android:textSize="13sp"
+                android:textColor="@color/overlay_text_primary"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <View
@@ -133,21 +132,21 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:padding="2dp">
+            android:paddingHorizontal="4dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="$/min"
-                android:textColor="#AAFFFFFF"
-                android:textSize="9sp" />
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="10sp" />
 
             <TextView
                 android:id="@+id/tvMinute"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/white"
-                android:textSize="13sp"
+                android:textColor="@color/overlay_text_primary"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <View
@@ -167,21 +166,21 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:padding="2dp">
+            android:paddingHorizontal="4dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="★"
-                android:textColor="#AAFFFFFF"
-                android:textSize="9sp" />
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="10sp" />
 
             <TextView
                 android:id="@+id/tvRating"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/white"
-                android:textSize="13sp"
+                android:textColor="@color/overlay_text_primary"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <View
@@ -200,8 +199,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="2dp"
-        android:layout_marginBottom="2dp"
+        android:layout_marginTop="1dp"
+        android:layout_marginBottom="1dp"
         android:gravity="center">
 
         <TextView
@@ -209,7 +208,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="#CCFFFFFF"
+            android:textColor="@color/overlay_text_secondary"
             android:textSize="10sp"
             android:gravity="center" />
 
@@ -218,7 +217,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="#CCFFFFFF"
+            android:textColor="@color/overlay_text_secondary"
             android:textSize="10sp"
             android:gravity="center" />
 
@@ -236,7 +235,7 @@
             android:id="@+id/tvBonus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#FFD700"
+            android:textColor="@color/overlay_warning"
             android:textSize="10sp"
             android:textStyle="bold"
             android:visibility="gone" />
@@ -251,7 +250,7 @@
                 android:id="@+id/tvPriorityBonus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#FFD700"
+                android:textColor="@color/overlay_warning"
                 android:textSize="10sp"
                 android:textStyle="bold"
                 android:visibility="gone" />
@@ -260,7 +259,7 @@
                 android:id="@+id/tvDynamicBonus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#FFD700"
+                android:textColor="@color/overlay_warning"
                 android:textSize="10sp"
                 android:textStyle="bold"
                 android:layout_marginStart="8dp"
@@ -274,11 +273,11 @@
     <TextView
         android:id="@+id/tvDecision"
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="22dp"
         android:gravity="center"
-        android:textSize="11sp"
+        android:textSize="10sp"
         android:textStyle="bold"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/overlay_text_primary"
         android:layout_marginTop="4dp"
         android:visibility="gone" />
 
@@ -288,7 +287,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="9sp"
-        android:textColor="#88FFFFFF"
+        android:textColor="@color/overlay_text_secondary"
         android:gravity="center"
         android:layout_marginTop="2dp"
         android:visibility="gone" />
@@ -308,7 +307,7 @@
             android:layout_height="wrap_content"
             android:textSize="10sp"
             android:textStyle="bold"
-            android:textColor="#AAFFFFFF"
+            android:textColor="@color/overlay_text_secondary"
             android:layout_marginEnd="4dp"
             android:visibility="gone" />
 
@@ -318,7 +317,7 @@
             android:layout_height="wrap_content"
             android:textSize="10sp"
             android:textStyle="bold"
-            android:textColor="#4ADE80"
+            android:textColor="@color/overlay_success"
             android:singleLine="true"
             android:ellipsize="end"
             android:visibility="gone" />
@@ -330,8 +329,9 @@
         android:id="@+id/layoutStops"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:gravity="center"
         android:layout_marginStart="8dp"
         android:visibility="gone">
 
@@ -340,7 +340,7 @@
             android:layout_width="12dp"
             android:layout_height="12dp"
             android:src="@drawable/ic_multiple_stops"
-            android:tint="#FF9800" />
+            android:tint="@color/overlay_warning" />
 
         <TextView
             android:id="@+id/tvStops"
@@ -348,7 +348,7 @@
             android:layout_height="wrap_content"
             android:text=" Várias paradas"
             android:textSize="9sp"
-            android:textColor="#FF9800"
+            android:textColor="@color/overlay_warning"
             android:layout_marginStart="4dp" />
 
     </LinearLayout>
@@ -360,9 +360,9 @@
         android:layout_height="wrap_content"
         android:textSize="10sp"
         android:textStyle="bold"
-        android:textColor="#F5A623"
+        android:textColor="@color/overlay_warning"
         android:paddingHorizontal="10dp"
-        android:paddingVertical="4dp"
+        android:paddingVertical="2dp"
         android:layout_marginTop="6dp"
         android:layout_gravity="center"
         android:background="@drawable/badge_known_bg"

@@ -1,195 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- ============================================================ -->
-    <!-- CORES DA MARCA (BRAND)                                       -->
-    <!-- ============================================================ -->
+    <!-- ============================================ -->
+    <!-- PRIMÁRIA (neutro profissional)               -->
+    <!-- ============================================ -->
+    <color name="primary">#1E293B</color>        <!-- Slate 800 - toolbar, headers -->
+    <color name="primary_dark">#0F172A</color>   <!-- Slate 900 - versão escura -->
+    <color name="primary_light">#F1F5F9</color>  <!-- Slate 100 - fundos suaves -->
 
-    <!-- Verde principal - Cor da marca Corrida Certa -->
-    <color name="primary">#00A86B</color>
-    <color name="primary_dark">#008A56</color>
-    <color name="primary_light">#4ADE80</color>
-    <color name="primary_soft">#E8F5E9</color>
+    <!-- ============================================ -->
+    <!-- ACENTO (azul para ações)                    -->
+    <!-- ============================================ -->
+    <color name="accent">#2563EB</color>          <!-- Azul 600 - botões, links -->
+    <color name="accent_dark">#1D4ED8</color>     <!-- Azul 700 -->
+    <color name="accent_light">#DBEAFE</color>    <!-- Azul 100 - fundo de destaque -->
 
-    <!-- Azul para destaque e ações secundárias -->
-    <color name="accent">#3B82F6</color>
-    <color name="accent_dark">#2563EB</color>
-    <color name="accent_light">#60A5FA</color>
-    <color name="accent_soft">#DBEAFE</color>
+    <!-- ============================================ -->
+    <!-- DECISÕES (semântica universal)              -->
+    <!-- ============================================ -->
+    <!-- ACEITAR / BOM / LUCRO -->
+    <color name="success">#059669</color>         <!-- Esmeralda 600 -->
+    <color name="success_bg">#D1FAE5</color>      <!-- Esmeralda 100 -->
+    <color name="success_text">#064E3B</color>    <!-- Esmeralda 900 -->
 
-    <!-- ============================================================ -->
-    <!-- CORES DE FUNDO (BACKGROUND)                                  -->
-    <!-- ============================================================ -->
+    <!-- ANALISAR / MÉDIO / ATENÇÃO -->
+    <color name="warning">#D97706</color>         <!-- Âmbar 600 -->
+    <color name="warning_bg">#FEF3C7</color>      <!-- Âmbar 100 -->
+    <color name="warning_text">#78350F</color>    <!-- Âmbar 900 -->
 
-    <!-- Fundo principal das telas -->
-    <color name="bg_screen">#F8FAFC</color>
+    <!-- RECUSAR / RUIM / PREJUÍZO -->
+    <color name="error">#DC2626</color>           <!-- Vermelho 600 -->
+    <color name="error_bg">#FEE2E2</color>        <!-- Vermelho 100 -->
+    <color name="error_text">#991B1B</color>      <!-- Vermelho 900 -->
 
-    <!-- Fundo de cards e superfícies elevadas -->
-    <color name="bg_card">#FFFFFF</color>
-    <color name="bg_card_secondary">#F1F5F9</color>
+    <!-- ============================================ -->
+    <!-- CARD FLUTUANTE (fundo escuro para contraste)-->
+    <!-- ============================================ -->
+    <color name="overlay_bg">#0F172A</color>      <!-- Slate 900 -->
+    <color name="overlay_surface">#1E293B</color> <!-- Slate 800 -->
+    <color name="overlay_border">#334155</color>  <!-- Slate 700 -->
+    <color name="overlay_text_primary">#F8FAFC</color>  <!-- Slate 50 -->
+    <color name="overlay_text_secondary">#94A3B8</color> <!-- Slate 400 -->
 
-    <!-- Fundo para elementos internos (dentro de cards) -->
-    <color name="bg_inner_card">#F8FAFC</color>
+    <!-- Valores no card flutuante (contrastes claros) -->
+    <color name="overlay_success">#34D399</color> <!-- Esmeralda 400 -->
+    <color name="overlay_warning">#FBBF24</color> <!-- Âmbar 400 -->
+    <color name="overlay_error">#F87171</color>   <!-- Vermelho 400 -->
 
-    <!-- Fundo para serviços/badges -->
-    <color name="bg_service">#F8FAFC</color>
+    <!-- ============================================ -->
+    <!-- SISTEMA (tema claro)                        -->
+    <!-- ============================================ -->
+    <!-- Fundos -->
+    <color name="bg_screen">#F8FAFC</color>       <!-- Slate 50 - fundo principal -->
+    <color name="bg_card">#FFFFFF</color>         <!-- Branco - cards, superfícies -->
+    <color name="bg_surface">#F1F5F9</color>      <!-- Slate 100 - áreas secundárias -->
 
-    <!-- Fundo escuro para sobreposições -->
-    <color name="bg_dark">#1E293B</color>
-    <color name="bg_dark_overlay">#80000000</color>
+    <!-- Bordas e divisores -->
+    <color name="border">#E2E8F0</color>          <!-- Slate 200 -->
+    <color name="border_light">#F1F5F9</color>    <!-- Slate 100 -->
+    <color name="border_focus">#2563EB</color>    <!-- Azul 600 -->
 
-    <!-- ============================================================ -->
-    <!-- CORES DE TEXTO (TEXT)                                        -->
-    <!-- ============================================================ -->
+    <!-- Textos -->
+    <color name="text_primary">#0F172A</color>    <!-- Slate 900 -->
+    <color name="text_secondary">#475569</color>  <!-- Slate 600 -->
+    <color name="text_tertiary">#94A3B8</color>   <!-- Slate 400 -->
+    <color name="text_disabled">#CBD5E1</color>   <!-- Slate 300 -->
+    <color name="text_inverse">#FFFFFF</color>    <!-- Branco -->
 
-    <!-- Hierarquia de textos -->
-    <color name="text_primary">#0F172A</color>      <!-- Títulos e textos principais -->
-    <color name="text_secondary">#475569</color>    <!-- Subtítulos e textos secundários -->
-    <color name="text_tertiary">#94A3B8</color>     <!-- Textos auxiliares e placeholders -->
-    <color name="text_disabled">#CBD5E1</color>     <!-- Textos desabilitados -->
-    <color name="text_inverse">#FFFFFF</color>      <!-- Texto sobre fundos escuros -->
+    <!-- Ícones -->
+    <color name="icon_primary">#475569</color>    <!-- Slate 600 -->
+    <color name="icon_secondary">#94A3B8</color>  <!-- Slate 400 -->
+    <color name="icon_accent">#2563EB</color>     <!-- Azul 600 -->
 
-    <!-- Cores específicas para preços -->
-    <color name="text_price">#0F172A</color>
-    <color name="text_price_positive">#00A86B</color>
-    <color name="text_price_negative">#EF4444</color>
+    <!-- Preços -->
+    <color name="text_price">@color/text_primary</color>
+    <color name="text_price_positive">@color/success</color>
+    <color name="text_price_negative">@color/error</color>
 
-    <!-- Cores para avaliações -->
-    <color name="text_rating_star">#FBBF24</color>
+    <!-- ============================================ -->
+    <!-- TIPOS DE SERVIÇO (opcional, legível)        -->
+    <!-- ============================================ -->
+    <color name="service_uberx">#1E293B</color>   <!-- Slate 800 -->
+    <color name="service_black">#111827</color>   <!-- Slate 900 -->
+    <color name="service_comfort">#2563EB</color> <!-- Azul 600 -->
+    <color name="service_moto">#059669</color>    <!-- Esmeralda 600 -->
+    <color name="service_delivery">#D97706</color> <!-- Âmbar 600 -->
 
-    <!-- Cores para gorjetas e ajustes -->
-    <color name="text_tip">#00A86B</color>
-    <color name="text_adjustment">#F59E0B</color>
+    <!-- ============================================ -->
+    <!-- COMPATIBILIDADE (nomes antigos)             -->
+    <!-- ============================================ -->
+    <color name="colorPrimary">@color/primary</color>
+    <color name="colorPrimaryDark">@color/primary_dark</color>
+    <color name="colorAccent">@color/accent</color>
 
-    <!-- ============================================================ -->
-    <!-- CORES DE ESTADO (STATUS)                                     -->
-    <!-- ============================================================ -->
-
-    <!-- Sucesso - Lucro, corrida boa, aceitação -->
-    <color name="success">#10B981</color>
-    <color name="success_light">#D1FAE5</color>
-    <color name="success_dark">#059669</color>
-    <color name="success_text">#065F46</color>
-
-    <!-- Aviso - Corrida média, atenção -->
-    <color name="warning">#F59E0B</color>
-    <color name="warning_light">#FEF3C7</color>
-    <color name="warning_dark">#D97706</color>
-    <color name="warning_text">#92400E</color>
-
-    <!-- Erro - Prejuízo, corrida ruim, recusa -->
-    <color name="error">#EF4444</color>
-    <color name="error_light">#FEE2E2</color>
-    <color name="error_dark">#DC2626</color>
-    <color name="error_text">#991B1B</color>
-
-    <!-- Informação - Dicas, informações auxiliares -->
-    <color name="info">#3B82F6</color>
-    <color name="info_light">#DBEAFE</color>
-    <color name="info_text">#1E40AF</color>
-
-    <!-- ============================================================ -->
-    <!-- CORES DE BORDA E DIVISORES (BORDERS)                         -->
-    <!-- ============================================================ -->
-
-    <color name="border">#E2E8F0</color>
-    <color name="border_light">#F1F5F9</color>
-    <color name="border_focus">#00A86B</color>
-    <color name="border_error">#EF4444</color>
-
-    <!-- Divisores entre elementos -->
-    <color name="divider">#EEF2F6</color>
-
-    <!-- ============================================================ -->
-    <!-- CORES DE CARDS DE CORRIDA (MANTER COMPATIBILIDADE)           -->
-    <!-- ============================================================ -->
-
-    <!-- Cores específicas para cards de status -->
-    <color name="card_green">#CC2E7D32</color>      <!-- Card de corrida aceita -->
-    <color name="card_red">#CCC62828</color>        <!-- Card de corrida recusada -->
-    <color name="card_text">#FFFFFF</color>         <!-- Texto em cards coloridos -->
-
-    <!-- Bordas dos cards por avaliação -->
-    <color name="card_border_good">#00A86B</color>
-    <color name="card_border_medium">#F59E0B</color>
-    <color name="card_border_bad">#DC2626</color>
-
-    <!-- ============================================================ -->
-    <!-- CORES DE AVALIAÇÃO (RATING)                                  -->
-    <!-- ============================================================ -->
-
-    <!-- Backgrounds para badges de avaliação -->
-    <color name="rating_good_bg">#D1FAE5</color>
-    <color name="rating_good_text">#065F46</color>
-    <color name="rating_medium_bg">#FEF3C7</color>
-    <color name="rating_medium_text">#92400E</color>
-    <color name="rating_bad_bg">#FEE2E2</color>
-    <color name="rating_bad_text">#991B1B</color>
-
-    <!-- Cores das estrelas -->
-    <color name="rating_star_filled">#FBBF24</color>
-    <color name="rating_star_empty">#E2E8F0</color>
-
-    <!-- ============================================================ -->
-    <!-- CORES DE BÔNUS (BONUS)                                       -->
-    <!-- ============================================================ -->
-
-    <color name="bonus_priority">#FBBF24</color>    <!-- Dourado para prioridade -->
-    <color name="bonus_dynamic">#F97316</color>     <!-- Laranja para dinâmica -->
-
-    <!-- ============================================================ -->
-    <!-- CORES DE SERVIÇOS (SERVICE TYPES)                            -->
-    <!-- ============================================================ -->
-
-    <!-- Uber Black / 99Black -->
-    <color name="service_black">#1A1A1A</color>
-    <color name="service_black_text">#FFFFFF</color>
-
-    <!-- Uber Comfort / 99 Comfort -->
-    <color name="service_blue">#2563EB</color>
-    <color name="service_blue_text">#FFFFFF</color>
-
-    <!-- Uber Moto / 99 Moto / Entregas -->
-    <color name="service_green">#10B981</color>
-    <color name="service_green_text">#FFFFFF</color>
-
-    <!-- Serviços padrão (UberX, 99Pop, etc.) -->
-    <color name="service_default">#F1F5F9</color>
-    <color name="service_default_text">#1E293B</color>
-
-    <!-- ============================================================ -->
-    <!-- CORES DE PILLS (FILTROS E BOTÕES)                            -->
-    <!-- ============================================================ -->
-
-    <!-- Pills selecionados -->
-    <color name="pill_active_bg">#00A86B</color>
+    <color name="pill_active_bg">@color/accent</color>
     <color name="pill_active_text">#FFFFFF</color>
-
-    <!-- Pills não selecionados -->
     <color name="pill_inactive_bg">#F1F5F9</color>
-    <color name="pill_inactive_text">#475569</color>
+    <color name="pill_inactive_text">@color/text_secondary</color>
 
-    <!-- Pills de filtro -->
-    <color name="filter_selected_bg">#00A86B</color>
-    <color name="filter_selected_text">#FFFFFF</color>
-    <color name="filter_unselected_bg">#F1F5F9</color>
-    <color name="filter_unselected_text">#64748B</color>
+    <color name="rating_good_bg">@color/success_bg</color>
+    <color name="rating_good_text">@color/success_text</color>
+    <color name="rating_medium_bg">@color/warning_bg</color>
+    <color name="rating_medium_text">@color/warning_text</color>
+    <color name="rating_bad_bg">@color/error_bg</color>
+    <color name="rating_bad_text">@color/error_text</color>
 
-    <!-- ============================================================ -->
-    <!-- CORES DE ÍCONES (ICONS)                                      -->
-    <!-- ============================================================ -->
-
-    <color name="icon_primary">#475569</color>
-    <color name="icon_secondary">#94A3B8</color>
-    <color name="icon_accent">#00A86B</color>
-    <color name="icon_success">#10B981</color>
-    <color name="icon_warning">#F59E0B</color>
-    <color name="icon_error">#EF4444</color>
-
-    <!-- ============================================================ -->
-    <!-- CORES DE OVERLAY E SOMBRAS (SHADOWS)                         -->
-    <!-- ============================================================ -->
-
-    <color name="shadow_light">#1E293B0D</color>    <!-- 5% opacidade -->
-    <color name="shadow_medium">#1E293B1A</color>   <!-- 10% opacidade -->
-    <color name="shadow_dark">#1E293B33</color>     <!-- 20% opacidade -->
+    <color name="card_border_good">@color/success</color>
+    <color name="card_border_medium">@color/warning</color>
+    <color name="card_border_bad">@color/error</color>
 </resources>

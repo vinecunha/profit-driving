@@ -6,7 +6,7 @@
     android:paddingHorizontal="16dp"
     android:paddingTop="16dp"
     android:paddingBottom="12dp"
-    android:background="#FFFFFF">
+    android:background="@color/bg_card">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -21,7 +21,7 @@
             android:gravity="center"
             android:text="\u2190"
             android:textSize="20sp"
-            android:textColor="#1A2C3E"
+            android:textColor="@color/text_primary"
             android:clickable="true"
             android:focusable="true"
             android:visibility="gone" />
@@ -52,7 +52,7 @@
             android:layout_weight="1"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="#1A2C3E"
+            android:textColor="@color/text_primary"
             android:visibility="gone" />
 
         <View
@@ -70,7 +70,7 @@
             android:text="PRO"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/bg_card"
             android:background="@drawable/badge_pro_bg"
             android:clickable="true"
             android:focusable="true"
@@ -85,7 +85,7 @@
             android:gravity="center"
             android:textSize="13sp"
             android:textStyle="bold"
-            android:textColor="#00982B"
+            android:textColor="@color/success"
             android:clickable="true"
             android:focusable="true"
             android:visibility="gone" />
@@ -99,8 +99,8 @@
         android:paddingHorizontal="8dp"
         android:gravity="center"
         android:textSize="10sp"
-        android:textColor="#6B7280"
-        android:background="#F0F2F8"
+        android:textColor="@color/text_secondary"
+        android:background="@color/bg_surface"
         android:layout_marginTop="8dp"
         android:visibility="gone" />
 

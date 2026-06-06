@@ -4,7 +4,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#E5E9F0" />
+        android:background="@color/border" />
 
     <LinearLayout
         android:id="@+id/bottomNav"
@@ -12,7 +12,7 @@
         android:layout_height="56dp"
         android:orientation="horizontal"
         android:gravity="center"
-        android:background="#FFFFFF">
+        android:background="@color/bg_card">
 
         <LinearLayout
             android:id="@+id/btnNavHome"
@@ -38,7 +38,7 @@
                 android:layout_height="wrap_content"
                 android:text="Home"
                 android:textSize="12sp"
-                android:textColor="#5E6F8D"
+                android:textColor="@color/text_secondary"
                 android:layout_marginTop="2dp" />
 
         </LinearLayout>
@@ -67,7 +67,7 @@
                 android:layout_height="wrap_content"
                 android:text="Parâmetros"
                 android:textSize="12sp"
-                android:textColor="#5E6F8D"
+                android:textColor="@color/text_secondary"
                 android:layout_marginTop="2dp" />
 
         </LinearLayout>
@@ -96,7 +96,7 @@
                 android:layout_height="wrap_content"
                 android:text="Meu Dia"
                 android:textSize="12sp"
-                android:textColor="#5E6F8D"
+                android:textColor="@color/text_secondary"
                 android:layout_marginTop="2dp" />
 
         </LinearLayout>
@@ -125,7 +125,7 @@
                 android:layout_height="wrap_content"
                 android:text="Análise"
                 android:textSize="12sp"
-                android:textColor="#5E6F8D"
+                android:textColor="@color/text_secondary"
                 android:layout_marginTop="2dp" />
 
         </LinearLayout>
@@ -154,7 +154,7 @@
                 android:layout_height="wrap_content"
                 android:text="Custos"
                 android:textSize="12sp"
-                android:textColor="#5E6F8D"
+                android:textColor="@color/text_secondary"
                 android:layout_marginTop="2dp" />
 
         </LinearLayout>

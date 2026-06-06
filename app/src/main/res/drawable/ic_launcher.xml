@@ -7,38 +7,38 @@
     <!-- Rounded rect background -->
     <path
         android:pathData="M22,0 L86,0 A22,22 0 0,1 108,22 L108,86 A22,22 0 0,1 86,108 L22,108 A22,22 0 0,1 0,86 L0,22 A22,22 0 0,1 22,0 Z"
-        android:fillColor="#111827" />
+        android:fillColor="@color/text_primary" />
     <!-- Route line -->
     <path
         android:pathData="M36,82 Q36,54 54,48 Q72,42 72,22"
         android:fillColor="@android:color/transparent"
-        android:strokeColor="#22C55E"
+        android:strokeColor="@color/success"
         android:strokeWidth="4"
         android:strokeLineCap="round" />
     <!-- Origin dot outer -->
     <path
         android:pathData="M30,82 A6,6 0 1,0 42,82 A6,6 0 1,0 30,82 Z"
-        android:fillColor="#374151" />
+        android:fillColor="@color/text_primary" />
     <!-- Origin dot inner -->
     <path
         android:pathData="M32.5,82 A3.5,3.5 0 1,0 39.5,82 A3.5,3.5 0 1,0 32.5,82 Z"
-        android:fillColor="#9CA3AF" />
+        android:fillColor="@color/text_tertiary" />
     <!-- Destination halo -->
     <path
         android:pathData="M52,22 A20,20 0 1,0 92,22 A20,20 0 1,0 52,22 Z"
         android:fillColor="@android:color/transparent"
-        android:strokeColor="#22C55E"
+        android:strokeColor="@color/success"
         android:strokeWidth="1.2"
         android:strokeAlpha="0.35" />
     <!-- Destination circle -->
     <path
         android:pathData="M57,22 A15,15 0 1,0 87,22 A15,15 0 1,0 57,22 Z"
-        android:fillColor="#16A34A" />
+        android:fillColor="@color/success" />
     <!-- Checkmark -->
     <path
         android:pathData="M63,22 L70,30 L83,13"
         android:fillColor="@android:color/transparent"
-        android:strokeColor="#FFFFFF"
+        android:strokeColor="@color/text_inverse"
         android:strokeWidth="3"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />

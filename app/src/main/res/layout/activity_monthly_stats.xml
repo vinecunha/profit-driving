@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F7FB">
+    android:background="@color/bg_screen">
 
 <ScrollView
     android:layout_width="match_parent"
@@ -33,7 +33,7 @@
                 android:text="\uD83C\uDFAF Meta sugerida"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="8dp" />
 
             <TextView
@@ -43,7 +43,7 @@
                 android:text="-- km/m\u00eas"
                 android:textSize="24sp"
                 android:textStyle="bold"
-                android:textColor="#00A86B" />
+                android:textColor="@color/success" />
 
             <TextView
                 android:id="@+id/tvGoalDetail"
@@ -51,7 +51,7 @@
                 android:layout_height="wrap_content"
                 android:text="Baseado na m\u00e9dia dos \u00faltimos 3 meses"
                 android:textSize="11sp"
-                android:textColor="#6B7280"
+                android:textColor="@color/text_secondary"
                 android:layout_marginTop="4dp" />
 
         </LinearLayout>
@@ -71,7 +71,7 @@
                 android:text="\uD83D\uDCC8 KM por M\u00eas"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="8dp" />
 
             <LinearLayout
@@ -85,7 +85,7 @@
                     android:layout_height="wrap_content"
                     android:text="Nenhum dado dispon\u00edvel"
                     android:textSize="12sp"
-                    android:textColor="#9CA3AF"
+                    android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:paddingVertical="16dp" />
 
@@ -108,7 +108,7 @@
                 android:text="\uD83D\uDCB0 Custo Combust\u00edvel por M\u00eas"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="8dp" />
 
             <LinearLayout
@@ -122,7 +122,7 @@
                     android:layout_height="wrap_content"
                     android:text="Nenhum dado dispon\u00edvel"
                     android:textSize="12sp"
-                    android:textColor="#9CA3AF"
+                    android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:paddingVertical="16dp" />
 
@@ -145,7 +145,7 @@
                 android:text="\uD83D\uDCCA Tabela de KM por M\u00eas"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="8dp" />
 
             <!-- Table header -->
@@ -155,7 +155,7 @@
                 android:orientation="horizontal"
                 android:paddingVertical="6dp"
                 android:paddingHorizontal="4dp"
-                android:background="#F8F9FE">
+                android:background="@color/bg_surface">
 
                 <TextView
                     android:layout_width="0dp"
@@ -163,7 +163,7 @@
                     android:layout_weight="1"
                     android:text="M\u00eas/Ano"
                     android:textSize="10sp"
-                    android:textColor="#8E9AAF"
+                    android:textColor="@color/text_tertiary"
                     android:textStyle="bold" />
 
                 <TextView
@@ -172,7 +172,7 @@
                     android:layout_weight="1"
                     android:text="KM Rodados"
                     android:textSize="10sp"
-                    android:textColor="#8E9AAF"
+                    android:textColor="@color/text_tertiary"
                     android:textStyle="bold"
                     android:gravity="center" />
 
@@ -182,7 +182,7 @@
                     android:layout_weight="1"
                     android:text="Combust\u00edvel"
                     android:textSize="10sp"
-                    android:textColor="#8E9AAF"
+                    android:textColor="@color/text_tertiary"
                     android:textStyle="bold"
                     android:gravity="center" />
 
@@ -192,7 +192,7 @@
                     android:layout_weight="0.8"
                     android:text="Consumo"
                     android:textSize="10sp"
-                    android:textColor="#8E9AAF"
+                    android:textColor="@color/text_tertiary"
                     android:textStyle="bold"
                     android:gravity="end" />
 
@@ -201,7 +201,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#EEF2F6" />
+                android:background="@color/bg_surface" />
 
             <LinearLayout
                 android:id="@+id/statsTableContainer"
@@ -215,7 +215,7 @@
                     android:layout_height="wrap_content"
                     android:text="Nenhum dado dispon\u00edvel"
                     android:textSize="12sp"
-                    android:textColor="#9CA3AF"
+                    android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:paddingVertical="12dp" />
 

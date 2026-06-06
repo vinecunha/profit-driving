@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:textSize="14sp"
         android:textStyle="bold"
-        android:textColor="#1A2C3E"
+        android:textColor="@color/text_primary"
         android:layout_marginBottom="16dp" />
 
     <TextView
@@ -20,7 +20,7 @@
         android:text="MÍNIMO (cor vermelha)"
         android:textSize="13sp"
         android:textStyle="bold"
-        android:textColor="#F87171"
+        android:textColor="@color/error"
         android:layout_marginBottom="8dp" />
 
     <RadioGroup
@@ -35,7 +35,7 @@
         android:text="IDEAL (cor verde)"
         android:textSize="13sp"
         android:textStyle="bold"
-        android:textColor="#4ADE80"
+        android:textColor="@color/success"
         android:layout_marginBottom="8dp" />
 
     <RadioGroup
@@ -50,7 +50,7 @@
         android:layout_height="wrap_content"
         android:text="⚠️ O valor MÍNIMO deve ser menor que o IDEAL"
         android:textSize="12sp"
-        android:textColor="#F97316"
+        android:textColor="@color/warning"
         android:visibility="gone"
         android:layout_marginBottom="8dp" />
 

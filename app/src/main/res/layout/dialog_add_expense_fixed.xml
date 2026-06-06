@@ -16,7 +16,7 @@
             android:text="\uD83D\uDCC5 DESPESA FIXA"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="#1A1A2E"
+            android:textColor="@color/text_primary"
             android:layout_marginBottom="16dp" />
 
         <TextView
@@ -24,7 +24,7 @@
             android:layout_height="wrap_content"
             android:text="Selecione ou digite o nome:"
             android:textSize="12sp"
-            android:textColor="#6B7280"
+            android:textColor="@color/text_secondary"
             android:layout_marginBottom="8dp" />
 
         <LinearLayout
@@ -41,7 +41,7 @@
                 android:gravity="center_vertical"
                 android:text="\uD83D\uDEE1\uFE0F Seguro"
                 android:textSize="12sp"
-                android:textColor="#1A1A2E"
+                android:textColor="@color/text_primary"
                 android:background="@drawable/pill_unselected"
                 android:paddingHorizontal="12dp"
                 android:clickable="true"
@@ -55,7 +55,7 @@
                 android:gravity="center_vertical"
                 android:text="\uD83D\uDCB0 IPVA"
                 android:textSize="12sp"
-                android:textColor="#1A1A2E"
+                android:textColor="@color/text_primary"
                 android:background="@drawable/pill_unselected"
                 android:paddingHorizontal="12dp"
                 android:clickable="true"
@@ -69,7 +69,7 @@
                 android:gravity="center_vertical"
                 android:text="\uD83C\uDFE6 Financiamento"
                 android:textSize="12sp"
-                android:textColor="#1A1A2E"
+                android:textColor="@color/text_primary"
                 android:background="@drawable/pill_unselected"
                 android:paddingHorizontal="12dp"
                 android:clickable="true"
@@ -83,7 +83,7 @@
                 android:gravity="center_vertical"
                 android:text="\uD83D\uDD27 Manuten\u00E7\u00E3o preventiva"
                 android:textSize="12sp"
-                android:textColor="#1A1A2E"
+                android:textColor="@color/text_primary"
                 android:background="@drawable/pill_unselected"
                 android:paddingHorizontal="12dp"
                 android:clickable="true"
@@ -97,7 +97,7 @@
                 android:gravity="center_vertical"
                 android:text="\u270F\uFE0F Outro..."
                 android:textSize="12sp"
-                android:textColor="#1A1A2E"
+                android:textColor="@color/text_primary"
                 android:background="@drawable/pill_unselected"
                 android:paddingHorizontal="12dp"
                 android:clickable="true"
@@ -112,7 +112,7 @@
             android:inputType="text"
             android:hint="Nome personalizado"
             android:textSize="13sp"
-            android:textColor="#1A1A2E"
+            android:textColor="@color/text_primary"
             android:background="@drawable/pill_unselected"
             android:paddingHorizontal="12dp"
             android:visibility="gone"
@@ -125,7 +125,7 @@
             android:inputType="numberDecimal"
             android:hint="Valor total (R$)"
             android:textSize="14sp"
-            android:textColor="#1A1A2E"
+            android:textColor="@color/text_primary"
             android:background="@drawable/pill_unselected"
             android:paddingHorizontal="12dp"
             android:layout_marginBottom="8dp" />
@@ -135,7 +135,7 @@
             android:layout_height="wrap_content"
             android:text="Periodicidade"
             android:textSize="12sp"
-            android:textColor="#6B7280"
+            android:textColor="@color/text_secondary"
             android:layout_marginBottom="4dp" />
 
         <LinearLayout
@@ -153,7 +153,7 @@
                 android:layout_marginEnd="2dp"
                 android:text="\uD83D\uDCC5 Mensal"
                 android:textSize="11sp"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_inverse"
                 android:gravity="center"
                 android:background="@drawable/pill_selected"
                 android:clickable="true"
@@ -167,7 +167,7 @@
                 android:layout_marginStart="2dp"
                 android:text="\uD83D\uDCC6 Anual (ex: IPVA)"
                 android:textSize="11sp"
-                android:textColor="#6B7280"
+                android:textColor="@color/text_secondary"
                 android:gravity="center"
                 android:background="@drawable/pill_unselected"
                 android:clickable="true"
@@ -180,7 +180,7 @@
             android:layout_height="wrap_content"
             android:text="Pagamento"
             android:textSize="12sp"
-            android:textColor="#6B7280"
+            android:textColor="@color/text_secondary"
             android:layout_marginBottom="4dp" />
 
         <LinearLayout
@@ -198,7 +198,7 @@
                 android:layout_marginEnd="2dp"
                 android:text="\uD83D\uDCB0 \u00C0 vista"
                 android:textSize="10sp"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_inverse"
                 android:gravity="center"
                 android:background="@drawable/pill_selected"
                 android:clickable="true"
@@ -212,7 +212,7 @@
                 android:layout_marginStart="2dp"
                 android:text="\uD83D\uDCC5 Parcelado"
                 android:textSize="10sp"
-                android:textColor="#6B7280"
+                android:textColor="@color/text_secondary"
                 android:gravity="center"
                 android:background="@drawable/pill_unselected"
                 android:clickable="true"
@@ -234,7 +234,7 @@
                 android:layout_height="wrap_content"
                 android:text="Parcelas:"
                 android:textSize="11sp"
-                android:textColor="#6B7280"
+                android:textColor="@color/text_secondary"
                 android:layout_marginEnd="6dp" />
 
             <EditText
@@ -244,7 +244,7 @@
                 android:inputType="number"
                 android:text="12"
                 android:textSize="12sp"
-                android:textColor="#1A1A2E"
+                android:textColor="@color/text_primary"
                 android:gravity="center"
                 android:background="@drawable/pill_unselected"
                 android:layout_marginEnd="12dp" />
@@ -254,7 +254,7 @@
                 android:layout_height="wrap_content"
                 android:text="Paga:"
                 android:textSize="11sp"
-                android:textColor="#6B7280"
+                android:textColor="@color/text_secondary"
                 android:layout_marginEnd="6dp" />
 
             <EditText
@@ -264,7 +264,7 @@
                 android:inputType="number"
                 android:text="0"
                 android:textSize="12sp"
-                android:textColor="#1A1A2E"
+                android:textColor="@color/text_primary"
                 android:gravity="center"
                 android:background="@drawable/pill_unselected" />
 
@@ -275,7 +275,7 @@
             android:layout_height="wrap_content"
             android:text="\uD83D\uDCA1 SUGEST\u00D5ES DE MERCADO:"
             android:textSize="10sp"
-            android:textColor="#9CA3AF"
+            android:textColor="@color/text_tertiary"
             android:textStyle="bold"
             android:layout_marginBottom="4dp" />
 
@@ -284,7 +284,7 @@
             android:layout_height="wrap_content"
             android:text="\u2022 Seguro: R$ 120 - R$ 350/m\u00EAs\n\u2022 IPVA: R$ 70 - R$ 250/m\u00EAs\n\u2022 Manuten\u00E7\u00E3o preventiva: R$ 70 - R$ 120/m\u00EAs"
             android:textSize="10sp"
-            android:textColor="#9CA3AF"
+            android:textColor="@color/text_tertiary"
             android:lineSpacingExtra="2dp"
             android:layout_marginBottom="16dp" />
 
@@ -303,7 +303,7 @@
                 android:gravity="center"
                 android:text="CANCELAR"
                 android:textSize="12sp"
-                android:textColor="#6B7280"
+                android:textColor="@color/text_secondary"
                 android:background="@drawable/pill_unselected"
                 android:clickable="true"
                 android:focusable="true" />
@@ -318,7 +318,7 @@
                 android:text="\u2705 SALVAR"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_inverse"
                 android:background="@drawable/pill_selected"
                 android:clickable="true"
                 android:focusable="true" />

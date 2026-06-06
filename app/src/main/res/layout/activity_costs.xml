@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F7FB">
+    android:background="@color/bg_screen">
 
     <include layout="@layout/toolbar_default" />
 
@@ -33,7 +33,7 @@
                 android:text="\u26FD Abastecimentos"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp" />
 
             <TextView
@@ -41,7 +41,7 @@
                 android:layout_height="wrap_content"
                 android:text="Tipo"
                 android:textSize="12sp"
-                android:textColor="#6B7280"
+                android:textColor="@color/text_secondary"
                 android:layout_marginBottom="4dp" />
 
             <LinearLayout
@@ -59,7 +59,7 @@
             android:layout_marginEnd="2dp"
             android:text="Gasolina"
             android:textSize="12sp"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text_inverse"
                     android:gravity="center"
                     android:background="@drawable/pill_selected"
                     android:clickable="true"
@@ -73,7 +73,7 @@
             android:layout_marginHorizontal="2dp"
             android:text="Etanol"
             android:textSize="12sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:gravity="center"
                     android:background="@drawable/pill_unselected"
                     android:clickable="true"
@@ -87,7 +87,7 @@
             android:layout_marginHorizontal="2dp"
             android:text="Diesel"
             android:textSize="12sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:gravity="center"
                     android:background="@drawable/pill_unselected"
                     android:clickable="true"
@@ -101,7 +101,7 @@
             android:layout_marginStart="2dp"
             android:text="GNV"
             android:textSize="12sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:gravity="center"
                     android:background="@drawable/pill_unselected"
                     android:clickable="true"
@@ -143,7 +143,7 @@
                 android:layout_height="wrap_content"
                 android:text="\uD83D\uDCCA \u00daltimos abastecimentos"
                 android:textSize="13sp"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:textStyle="bold"
                 android:layout_marginBottom="6dp" />
 
@@ -154,7 +154,7 @@
                 android:orientation="horizontal"
                 android:paddingVertical="4dp"
                 android:paddingHorizontal="8dp"
-                android:background="#F8F9FE">
+                android:background="@color/bg_surface">
 
                 <TextView
                     android:layout_width="0dp"
@@ -162,7 +162,7 @@
                     android:layout_weight="1"
                     android:text="Data"
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:textStyle="bold" />
 
                 <TextView
@@ -171,7 +171,7 @@
                     android:layout_weight="1"
                     android:text="Hod\u00f4metro"
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:textStyle="bold"
                     android:gravity="center" />
 
@@ -181,7 +181,7 @@
                     android:layout_weight="0.7"
                     android:text="Litros"
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:textStyle="bold"
                     android:gravity="center" />
 
@@ -191,7 +191,7 @@
                     android:layout_weight="1"
                     android:text="Pre\u00e7o"
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:textStyle="bold"
                     android:gravity="center" />
 
@@ -201,7 +201,7 @@
                     android:layout_weight="1"
                     android:text="km/L"
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:textStyle="bold"
                     android:gravity="end" />
 
@@ -210,7 +210,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#EEF2F6" />
+                android:background="@color/bg_surface" />
 
             <LinearLayout
                 android:id="@+id/refuelList"
@@ -224,7 +224,7 @@
                     android:layout_height="wrap_content"
                     android:text="Nenhum abastecimento registrado"
                     android:textSize="12sp"
-                    android:textColor="#9CA3AF"
+                    android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:paddingVertical="12dp" />
 
@@ -233,7 +233,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="#EEF2F6"
+                android:background="@color/bg_surface"
                 android:layout_marginBottom="8dp" />
 
             <!-- Average stats -->
@@ -242,7 +242,7 @@
                 android:layout_height="wrap_content"
                 android:text="\uD83D\uDCC8 M\u00e9dia atual"
                 android:textSize="13sp"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:textStyle="bold"
                 android:layout_marginBottom="6dp" />
 
@@ -251,7 +251,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="10dp"
-                android:background="#F8F9FE">
+                android:background="@color/bg_surface">
 
         <TextView
             android:id="@+id/tvAvgConsumption"
@@ -259,7 +259,7 @@
             android:layout_height="wrap_content"
             android:text="Consumo m\u00e9dio: -- km/L"
             android:textSize="15sp"
-                    android:textColor="#1A2C3E" />
+                    android:textColor="@color/text_primary" />
 
         <TextView
             android:id="@+id/tvAvgFuelCost"
@@ -267,7 +267,7 @@
             android:layout_height="wrap_content"
             android:text="Custo combust\u00edvel: -- R\$/km"
             android:textSize="15sp"
-                    android:textColor="#1A2C3E"
+                    android:textColor="@color/text_primary"
                     android:layout_marginTop="2dp" />
 
             </LinearLayout>
@@ -289,7 +289,7 @@
                 android:text="\uD83D\uDCB0 Despesas"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp" />
 
             <LinearLayout
@@ -304,7 +304,7 @@
                     android:layout_height="wrap_content"
                     android:text="Km mensal:"
                     android:textSize="12sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginEnd="8dp" />
 
                 <EditText
@@ -313,7 +313,7 @@
                     android:layout_height="36dp"
                     android:inputType="number"
                     android:textSize="14sp"
-                    android:textColor="#1A2C3E"
+                    android:textColor="@color/text_primary"
                     android:background="@drawable/pill_unselected"
                     android:paddingHorizontal="10dp"
                     android:gravity="center" />
@@ -323,7 +323,7 @@
                     android:layout_height="wrap_content"
                     android:text="km"
                     android:textSize="12sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginStart="6dp" />
 
             </LinearLayout>
@@ -335,7 +335,7 @@
                 android:text="\uD83D\uDEE4\uFE0F Vari\u00e1veis (por km)"
                 android:textSize="13sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="4dp" />
 
             <LinearLayout
@@ -350,7 +350,7 @@
                     android:layout_height="wrap_content"
                     android:text="Nenhum custo vari\u00e1vel"
                     android:textSize="12sp"
-                    android:textColor="#9CA3AF"
+                    android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:paddingVertical="6dp" />
 
@@ -419,7 +419,7 @@
                 android:text="\uD83D\uDCB0 RESUMO DE CUSTOS"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp" />
 
             <LinearLayout
@@ -427,7 +427,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="12dp"
-                android:background="#F8F9FE">
+                android:background="@color/bg_surface">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -435,7 +435,7 @@
                     android:text="\uD83D\uDCCB Despesas por km (detalhado)"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    android:textColor="#1A2C3E"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="6dp" />
 
                 <LinearLayout
@@ -447,7 +447,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#E5E7EB"
+                    android:background="@color/border"
                     android:layout_marginVertical="6dp" />
 
         <TextView
@@ -456,7 +456,7 @@
             android:layout_height="wrap_content"
             android:text="Combust\u00edvel/km: --"
             android:textSize="15sp"
-                    android:textColor="#5E6F8D" />
+                    android:textColor="@color/text_secondary" />
 
         <TextView
             android:id="@+id/tvFixedCostKm"
@@ -464,7 +464,7 @@
             android:layout_height="wrap_content"
             android:text="Total fixos/km: --"
             android:textSize="15sp"
-                    android:textColor="#5E6F8D"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginTop="2dp" />
 
         <TextView
@@ -473,13 +473,13 @@
             android:layout_height="wrap_content"
             android:text="Var\u00e1veis/km: --"
             android:textSize="15sp"
-                    android:textColor="#5E6F8D"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginTop="2dp" />
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#E5E7EB"
+                    android:background="@color/border"
                     android:layout_marginVertical="6dp" />
 
         <TextView
@@ -489,7 +489,7 @@
             android:text="CUSTO TOTAL/km: --"
             android:textSize="17sp"
                     android:textStyle="bold"
-                    android:textColor="#1A2C3E" />
+                    android:textColor="@color/text_primary" />
 
             </LinearLayout>
 
@@ -506,7 +506,7 @@
             android:layout_weight="1"
             android:text="Custo/hora: --"
             android:textSize="15sp"
-                    android:textColor="#6B7280" />
+                    android:textColor="@color/text_secondary" />
 
         <TextView
             android:id="@+id/tvCostPerMinute"
@@ -515,7 +515,7 @@
             android:layout_weight="1"
             android:text="Custo/min: --"
             android:textSize="15sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:gravity="end" />
 
             </LinearLayout>
@@ -537,7 +537,7 @@
                 android:text="\uD83C\uDFAF SIMULADOR DE LUCRO"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp" />
 
             <!-- Visual range indicator -->
@@ -546,7 +546,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="12dp"
-                android:background="#F8F9FE"
+                android:background="@color/bg_surface"
                 android:layout_marginBottom="12dp">
 
                 <LinearLayout
@@ -561,7 +561,7 @@
                         android:layout_weight="1"
                         android:text="Ruim"
                         android:textSize="11sp"
-                        android:textColor="#F87171"
+                        android:textColor="@color/error"
                         android:textStyle="bold" />
 
                     <TextView
@@ -570,7 +570,7 @@
                         android:layout_weight="1"
                         android:text="Aceit\u00e1vel"
                         android:textSize="11sp"
-                        android:textColor="#FB923C"
+                        android:textColor="@color/warning"
                         android:textStyle="bold"
                         android:gravity="center" />
 
@@ -580,7 +580,7 @@
                         android:layout_weight="1"
                         android:text="Bom"
                         android:textSize="11sp"
-                        android:textColor="#4ADE80"
+                        android:textColor="@color/success"
                         android:textStyle="bold"
                         android:gravity="end" />
 
@@ -604,7 +604,7 @@
             android:layout_weight="1"
             android:text="R$ --"
             android:textSize="11sp"
-            android:textColor="#F87171" />
+            android:textColor="@color/error" />
 
                 <TextView
                     android:id="@+id/tvRangeAceitavel"
@@ -613,7 +613,7 @@
                     android:layout_weight="1"
                     android:text="R$ --"
                     android:textSize="11sp"
-                    android:textColor="#FB923C"
+                    android:textColor="@color/warning"
                     android:gravity="center" />
 
                 <TextView
@@ -623,7 +623,7 @@
                     android:layout_weight="1"
                     android:text="R$ --"
                     android:textSize="11sp"
-                    android:textColor="#4ADE80"
+                    android:textColor="@color/success"
                     android:gravity="end" />
 
                 </LinearLayout>
@@ -637,7 +637,7 @@
             android:text="Seu custo/km: --"
             android:textSize="15sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="8dp" />
 
         <TextView
@@ -646,7 +646,7 @@
             android:layout_height="wrap_content"
             android:text="Para lucro de 30%: precisa R$ --/km"
             android:textSize="15sp"
-                android:textColor="#5E6F8D"
+                android:textColor="@color/text_secondary"
                 android:layout_marginBottom="4dp" />
 
         <TextView
@@ -655,7 +655,7 @@
             android:layout_height="wrap_content"
             android:text="Para lucro de 50%: precisa R$ --/km"
             android:textSize="15sp"
-                android:textColor="#5E6F8D"
+                android:textColor="@color/text_secondary"
                 android:layout_marginBottom="4dp" />
 
         <TextView
@@ -664,7 +664,7 @@
             android:layout_height="wrap_content"
             android:text="Para lucro de 100%: precisa R$ --/km"
             android:textSize="15sp"
-                android:textColor="#5E6F8D" />
+                android:textColor="@color/text_secondary" />
 
         </LinearLayout>
 
@@ -683,7 +683,7 @@
                 android:text="\uD83D\uDCCA Estat\u00edsticas"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="8dp" />
 
             <TextView
@@ -691,7 +691,7 @@
                 android:layout_height="wrap_content"
                 android:text="Acompanhe seu desempenho por m\u00eas: KM rodados, custo de combust\u00edvel e consumo m\u00e9dio."
                 android:textSize="12sp"
-                android:textColor="#6B7280"
+                android:textColor="@color/text_secondary"
                 android:layout_marginBottom="12dp" />
 
             <TextView

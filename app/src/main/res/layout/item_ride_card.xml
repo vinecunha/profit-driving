@@ -7,7 +7,7 @@
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="28dp"
     app:cardElevation="4dp"
-    app:cardBackgroundColor="#FFFFFF">
+        app:cardBackgroundColor="@color/bg_card">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -48,7 +48,7 @@
                     android:layout_height="wrap_content"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:textColor="#0F172A"
+                    android:textColor="@color/text_primary"
                     android:layout_marginStart="8dp" />
 
             </LinearLayout>
@@ -66,7 +66,7 @@
                 android:gravity="center"
                 android:textSize="11sp"
                 android:textStyle="bold"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_inverse"
                 android:layout_marginEnd="8dp"
                 android:visibility="gone" />
 
@@ -85,14 +85,14 @@
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    android:textColor="#F5A623" />
+                    android:textColor="@color/warning" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="★"
                     android:textSize="13sp"
-                    android:textColor="#F5A623"
+                    android:textColor="@color/warning"
                     android:layout_marginStart="2dp" />
 
             </LinearLayout>
@@ -118,7 +118,7 @@
                     android:layout_height="wrap_content"
                     android:textSize="32sp"
                     android:textStyle="bold"
-                    android:textColor="#1A2C3E" />
+                    android:textColor="@color/text_primary" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -133,7 +133,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="24dp"
                         android:textSize="10sp"
-                        android:textColor="#F57C00"
+                        android:textColor="@color/warning"
                         android:background="@drawable/bg_bonus_pill"
                         android:paddingHorizontal="7dp"
                         android:gravity="center"
@@ -145,7 +145,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="24dp"
                         android:textSize="10sp"
-                        android:textColor="#F57C00"
+                        android:textColor="@color/warning"
                         android:background="@drawable/bg_bonus_pill"
                         android:paddingHorizontal="7dp"
                         android:gravity="center"
@@ -216,7 +216,7 @@
                     android:layout_height="wrap_content"
                     android:text="R$/KM"
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:textStyle="bold" />
 
                 <TextView
@@ -225,7 +225,7 @@
                     android:layout_height="wrap_content"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="#1A2C3E"
+                    android:textColor="@color/text_primary"
                     android:layout_marginTop="4dp" />
 
                 <TextView
@@ -255,7 +255,7 @@
                     android:layout_height="wrap_content"
                     android:text="R$/H"
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:textStyle="bold" />
 
                 <TextView
@@ -264,7 +264,7 @@
                     android:layout_height="wrap_content"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="#1A2C3E"
+                    android:textColor="@color/text_primary"
                     android:layout_marginTop="4dp" />
 
                 <TextView
@@ -294,7 +294,7 @@
                     android:layout_height="wrap_content"
                     android:text="R$/MIN"
                     android:textSize="11sp"
-                    android:textColor="#6B7280"
+                    android:textColor="@color/text_secondary"
                     android:textStyle="bold" />
 
                 <TextView
@@ -303,7 +303,7 @@
                     android:layout_height="wrap_content"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="#1A2C3E"
+                    android:textColor="@color/text_primary"
                     android:layout_marginTop="4dp" />
 
                 <TextView
@@ -349,7 +349,7 @@
                     android:layout_height="wrap_content"
                     android:text="Embarque: "
                     android:textSize="12sp"
-                    android:textColor="#5E6F8D" />
+                    android:textColor="@color/text_secondary" />
 
                 <TextView
                     android:id="@+id/tvPickupDistance"
@@ -357,14 +357,14 @@
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    android:textColor="#1A2C3E" />
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text=" · "
                     android:textSize="12sp"
-                    android:textColor="#5E6F8D" />
+                    android:textColor="@color/text_secondary" />
 
                 <TextView
                     android:id="@+id/tvPickupTime"
@@ -372,14 +372,14 @@
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    android:textColor="#1A2C3E" />
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text=" · "
                     android:textSize="12sp"
-                    android:textColor="#5E6F8D" />
+                    android:textColor="@color/text_secondary" />
 
                 <TextView
                     android:id="@+id/tvPickupAddress"
@@ -387,7 +387,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:textSize="12sp"
-                    android:textColor="#4B5563"
+                    android:textColor="@color/text_secondary"
                     android:maxLines="1"
                     android:ellipsize="end" />
 
@@ -414,7 +414,7 @@
                     android:layout_height="wrap_content"
                     android:text="Destino: "
                     android:textSize="12sp"
-                    android:textColor="#5E6F8D" />
+                    android:textColor="@color/text_secondary" />
 
                 <TextView
                     android:id="@+id/tvDropoffDistance"
@@ -422,14 +422,14 @@
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    android:textColor="#1A2C3E" />
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text=" · "
                     android:textSize="12sp"
-                    android:textColor="#5E6F8D" />
+                    android:textColor="@color/text_secondary" />
 
                 <TextView
                     android:id="@+id/tvDropoffTime"
@@ -437,14 +437,14 @@
                     android:layout_height="wrap_content"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    android:textColor="#1A2C3E" />
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text=" · "
                     android:textSize="12sp"
-                    android:textColor="#5E6F8D" />
+                    android:textColor="@color/text_secondary" />
 
                 <TextView
                     android:id="@+id/tvDropoffAddress"
@@ -452,7 +452,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:textSize="12sp"
-                    android:textColor="#4B5563"
+                    android:textColor="@color/text_secondary"
                     android:maxLines="1"
                     android:ellipsize="end" />
 
@@ -465,7 +465,7 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="12dp"
-            android:background="#EEF2F6" />
+            android:background="@color/bg_surface" />
 
         <!-- Total line -->
         <LinearLayout
@@ -481,7 +481,7 @@
                 android:layout_height="wrap_content"
                 android:text="📊 Total"
                 android:textSize="14sp"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:textStyle="bold"
                 android:layout_marginEnd="8dp" />
 
@@ -496,7 +496,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:layout_marginEnd="8dp" />
 
             <TextView
@@ -523,7 +523,7 @@
                 android:layout_width="14dp"
                 android:layout_height="14dp"
                 android:src="@drawable/ic_multiple_stops"
-                android:tint="#FF9800"
+                android:tint="@color/warning"
                 android:layout_marginEnd="4dp"
                 android:visibility="gone" />
 
@@ -533,7 +533,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="#FF9800"
+                    android:textColor="@color/warning"
                 android:visibility="gone" />
 
         </LinearLayout>
@@ -555,7 +555,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
-                android:textColor="#5E6F8D"
+                android:textColor="@color/text_secondary"
                 android:gravity="center" />
 
         </LinearLayout>
@@ -580,7 +580,7 @@
                 android:layout_height="wrap_content"
                 android:text="+ detalhar corrida"
                 android:textSize="11sp"
-                android:textColor="#5E6F8D"
+                android:textColor="@color/text_secondary"
                 android:clickable="true"
                 android:focusable="true"
                 android:paddingVertical="4dp"
@@ -598,7 +598,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
-                android:textColor="#9CA3AF" />
+                android:textColor="@color/text_tertiary" />
 
         </LinearLayout>
 

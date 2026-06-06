@@ -2,7 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F7FB">
+    android:background="@color/bg_screen">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -36,7 +36,7 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:padding="3dp"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -47,7 +47,7 @@
                     android:gravity="center_vertical"
                     android:text="Filtros"
                     android:textSize="13sp"
-                    android:textColor="#1A2C3E"
+                    android:textColor="@color/text_primary"
                     android:textStyle="bold" />
 
                 <TextView
@@ -56,7 +56,7 @@
                     android:layout_height="wrap_content"
                     android:text="\u25BC"
                     android:textSize="10sp"
-                    android:textColor="#8E9AAF" />
+                    android:textColor="@color/text_tertiary" />
 
             </LinearLayout>
 
@@ -111,7 +111,7 @@
                     android:layout_height="wrap_content"
                     android:text="\u2716 Limpar filtros"
                     android:textSize="11sp"
-                    android:textColor="#F87171"
+                    android:textColor="@color/error"
                     android:padding="8dp"
                     android:layout_marginTop="4dp"
                     android:clickable="true"
@@ -154,7 +154,7 @@
                 android:text="Nenhuma corrida ainda"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#1A1A2E"
+                android:textColor="@color/text_primary"
                 android:gravity="center"
                 android:layout_marginTop="16dp" />
 
@@ -163,7 +163,7 @@
                 android:layout_height="wrap_content"
                 android:text="Abra o Uber Driver ou 99 Driver\ne aguarde uma solicitação de corrida.\nO card aparecerá automaticamente."
                 android:textSize="14sp"
-                android:textColor="#888888"
+                android:textColor="@color/text_tertiary"
                 android:gravity="center"
                 android:lineSpacingExtra="4dp"
                 android:layout_marginTop="8dp" />
@@ -194,9 +194,9 @@
                 android:gravity="center"
                 android:text="Ver mais"
                 android:textSize="13sp"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:textStyle="bold"
-                android:background="#F0F2F8"
+                android:background="@color/bg_surface"
                 android:visibility="gone"
                 android:clickable="true"
                 android:focusable="true" />

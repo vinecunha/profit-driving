@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:text="Km total rodado (hodômetro)"
         android:textSize="12sp"
-        android:textColor="#6B7280"
+        android:textColor="@color/text_secondary"
         android:layout_marginBottom="4dp" />
 
     <EditText
@@ -36,7 +36,7 @@
         android:layout_height="wrap_content"
         android:text="Horas trabalhadas (app motorista)"
         android:textSize="12sp"
-        android:textColor="#6B7280"
+        android:textColor="@color/text_secondary"
         android:layout_marginBottom="4dp" />
 
     <EditText
@@ -54,7 +54,7 @@
         android:layout_height="wrap_content"
         android:text="ℹ️ Informar o km do hodômetro ajuda a calcular km vazio e eficiência"
         android:textSize="10sp"
-        android:textColor="#9CA3AF"
+        android:textColor="@color/text_tertiary"
         android:layout_marginTop="12dp" />
 
 </LinearLayout>

@@ -19,14 +19,14 @@
             android:id="@+id/tvApp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
+            android:textColor="@color/overlay_text_primary"
             android:textSize="11sp" />
 
         <TextView
             android:id="@+id/tvValue"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
+            android:textColor="@color/overlay_text_primary"
             android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginStart="8dp" />
@@ -35,7 +35,7 @@
             android:id="@+id/tvServiceType"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#FFD700"
+            android:textColor="@color/overlay_warning"
             android:textSize="11sp"
             android:textStyle="bold"
             android:layout_marginStart="8dp"
@@ -47,7 +47,7 @@
         android:id="@+id/tvBonus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#FFD700"
+        android:textColor="@color/overlay_warning"
         android:textSize="12sp"
         android:textStyle="bold"
         android:visibility="gone" />
@@ -62,7 +62,7 @@
             android:id="@+id/tvPriorityBonus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#FFD700"
+            android:textColor="@color/overlay_warning"
             android:textSize="12sp"
             android:textStyle="bold"
             android:visibility="gone" />
@@ -71,7 +71,7 @@
             android:id="@+id/tvDynamicBonus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#FFD700"
+            android:textColor="@color/overlay_warning"
             android:textSize="12sp"
             android:textStyle="bold"
             android:layout_marginStart="8dp"
@@ -92,14 +92,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="R$/km"
-            android:textColor="#CCFFFFFF"
+            android:textColor="@color/overlay_text_secondary"
             android:textSize="13sp" />
 
         <TextView
             android:id="@+id/tvKm"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
+            android:textColor="@color/overlay_text_primary"
             android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginStart="8dp" />
@@ -125,14 +125,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="R$/h"
-            android:textColor="#CCFFFFFF"
+            android:textColor="@color/overlay_text_secondary"
             android:textSize="13sp" />
 
         <TextView
             android:id="@+id/tvHour"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
+            android:textColor="@color/overlay_text_primary"
             android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginStart="8dp" />
@@ -158,14 +158,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="R$/min"
-            android:textColor="#CCFFFFFF"
+            android:textColor="@color/overlay_text_secondary"
             android:textSize="13sp" />
 
         <TextView
             android:id="@+id/tvMinute"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
+            android:textColor="@color/overlay_text_primary"
             android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginStart="8dp" />
@@ -191,14 +191,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Nota"
-            android:textColor="#CCFFFFFF"
+            android:textColor="@color/overlay_text_secondary"
             android:textSize="13sp" />
 
         <TextView
             android:id="@+id/tvRating"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
+            android:textColor="@color/overlay_text_primary"
             android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginStart="8dp" />
@@ -222,14 +222,14 @@
             android:id="@+id/tvDistance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
+            android:textColor="@color/overlay_text_primary"
             android:textSize="11sp" />
 
         <TextView
             android:id="@+id/tvTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
+            android:textColor="@color/overlay_text_primary"
             android:textSize="11sp"
             android:layout_marginStart="8dp" />
 
@@ -242,7 +242,7 @@
         android:gravity="center"
         android:textSize="11sp"
         android:textStyle="bold"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/overlay_text_primary"
         android:layout_marginTop="6dp"
         android:visibility="gone" />
 
@@ -251,7 +251,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="10sp"
-        android:textColor="#88FFFFFF"
+        android:textColor="@color/overlay_text_secondary"
         android:gravity="center"
         android:layout_marginTop="4dp" />
 
@@ -267,7 +267,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="10sp"
-            android:textColor="#AAFFFFFF"
+            android:textColor="@color/overlay_text_secondary"
             android:layout_marginEnd="4dp"
             android:visibility="gone" />
 
@@ -277,7 +277,7 @@
             android:layout_height="wrap_content"
             android:textSize="10sp"
             android:textStyle="bold"
-            android:textColor="#4ADE80"
+            android:textColor="@color/overlay_success"
             android:gravity="center"
             android:singleLine="true"
             android:ellipsize="end"
@@ -299,7 +299,7 @@
             android:layout_width="14dp"
             android:layout_height="14dp"
             android:src="@drawable/ic_multiple_stops"
-            android:tint="#FF9800" />
+            android:tint="@color/overlay_warning" />
 
         <TextView
             android:id="@+id/tvStops"
@@ -307,7 +307,7 @@
             android:layout_height="wrap_content"
             android:text=" Várias paradas"
             android:textSize="10sp"
-            android:textColor="#FF9800"
+            android:textColor="@color/overlay_warning"
             android:layout_marginStart="4dp" />
 
     </LinearLayout>
@@ -318,7 +318,7 @@
         android:layout_height="wrap_content"
         android:textSize="9sp"
         android:textStyle="bold"
-        android:textColor="#F5A623"
+        android:textColor="@color/overlay_warning"
         android:paddingHorizontal="8dp"
         android:paddingVertical="3dp"
         android:layout_marginTop="4dp"

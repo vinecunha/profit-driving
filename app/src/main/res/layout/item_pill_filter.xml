@@ -5,7 +5,7 @@
     android:paddingHorizontal="10dp"
     android:gravity="center"
     android:textSize="11sp"
-    android:textColor="#8E9AAF"
+    android:textColor="@color/text_tertiary"
     android:background="@drawable/pill_unselected"
     android:clickable="true"
     android:focusable="true"

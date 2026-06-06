@@ -11,7 +11,7 @@
         android:text="\u21BB Reajustar Valor da Corrida"
         android:textSize="18sp"
         android:textStyle="bold"
-        android:textColor="#1A2C3E"
+        android:textColor="@color/text_primary"
         android:layout_marginBottom="12dp" />
 
     <TextView
@@ -19,7 +19,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="13sp"
-        android:textColor="#5E6F8D"
+        android:textColor="@color/text_secondary"
         android:layout_marginBottom="4dp" />
 
     <TextView
@@ -27,7 +27,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="12sp"
-        android:textColor="#9CA3AF"
+        android:textColor="@color/text_tertiary"
         android:layout_marginBottom="4dp" />
 
     <TextView
@@ -35,7 +35,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="12sp"
-        android:textColor="#9CA3AF"
+        android:textColor="@color/text_tertiary"
         android:layout_marginBottom="16dp" />
 
     <TextView
@@ -43,7 +43,7 @@
         android:layout_height="wrap_content"
         android:text="Novo valor real:"
         android:textSize="13sp"
-        android:textColor="#333333"
+        android:textColor="@color/text_primary"
         android:layout_marginBottom="4dp" />
 
     <EditText
@@ -53,7 +53,7 @@
         android:inputType="numberDecimal"
         android:hint="R$ 20,00"
         android:textSize="16sp"
-        android:textColor="#1A1A2E"
+        android:textColor="@color/text_primary"
         android:background="@drawable/pill_unselected"
         android:paddingHorizontal="12dp"
         android:layout_marginBottom="12dp" />
@@ -63,7 +63,7 @@
         android:layout_height="wrap_content"
         android:text="Motivo (opcional):"
         android:textSize="13sp"
-        android:textColor="#333333"
+        android:textColor="@color/text_primary"
         android:layout_marginBottom="4dp" />
 
     <EditText
@@ -73,7 +73,7 @@
         android:inputType="text"
         android:hint="Ex: Trânsito, desvio..."
         android:textSize="14sp"
-        android:textColor="#1A1A2E"
+        android:textColor="@color/text_primary"
         android:background="@drawable/pill_unselected"
         android:paddingHorizontal="12dp" />
 

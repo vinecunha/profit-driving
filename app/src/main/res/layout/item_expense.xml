@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
-    android:backgroundTint="#FFFFFF">
+    android:backgroundTint="@color/bg_card">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -40,7 +40,7 @@
                     android:layout_height="wrap_content"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:textColor="#1A2C3E" />
+                    android:textColor="@color/text_primary" />
 
                 <TextView
                     android:id="@+id/tvExpenseStatus"
@@ -57,7 +57,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="13sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:layout_marginEnd="4dp" />
 
         </LinearLayout>
@@ -75,7 +75,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="10sp"
-                android:textColor="#6B7280"
+                android:textColor="@color/text_secondary"
                 android:lineSpacingExtra="2dp" />
 
         </LinearLayout>
@@ -97,7 +97,7 @@
                 android:gravity="center"
                 android:text="💰 Pagar Parcialmente"
                 android:textSize="10sp"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:background="@drawable/pill_unselected"
                 android:paddingHorizontal="10dp"
                 android:layout_marginEnd="8dp"
@@ -112,7 +112,7 @@
                 android:gravity="center"
                 android:text="✅ Quitar"
                 android:textSize="10sp"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_inverse"
                 android:background="@drawable/pill_selected"
                 android:paddingHorizontal="10dp"
                 android:layout_marginEnd="8dp"          

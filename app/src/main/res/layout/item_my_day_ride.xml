@@ -23,7 +23,7 @@
             android:gravity="center"
             android:text="\u2610"
             android:textSize="18sp"
-            android:textColor="#5E6F8D"
+            android:textColor="@color/text_secondary"
             android:clickable="true"
             android:focusable="true" />
 
@@ -44,7 +44,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="14sp"
-                    android:textColor="#5E6F8D"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginEnd="6dp" />
 
                 <TextView
@@ -52,7 +52,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="14sp"
-                    android:textColor="#5E6F8D" />
+                    android:textColor="@color/text_secondary" />
 
             </LinearLayout>
 
@@ -62,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#1A1A2E"
+                android:textColor="@color/text_primary"
                 android:layout_marginTop="2dp" />
 
             <TextView
@@ -70,7 +70,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
-                android:textColor="#00A86B"
+                android:textColor="@color/success"
                 android:visibility="gone" />
 
         </LinearLayout>
@@ -87,7 +87,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#00A86B" />
+                android:textColor="@color/success" />
 
             <TextView
                 android:id="@+id/tvExpandHint"
@@ -95,7 +95,7 @@
                 android:layout_height="wrap_content"
                 android:text="\u25BC"
                 android:textSize="10sp"
-                android:textColor="#9CA3AF"
+                android:textColor="@color/text_tertiary"
                 android:layout_marginTop="2dp" />
 
         </LinearLayout>
@@ -110,7 +110,7 @@
         android:visibility="gone"
         android:layout_marginTop="8dp"
         android:paddingTop="8dp"
-        android:background="#F0F2F8">
+        android:background="@color/bg_surface">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -125,14 +125,14 @@
                 android:layout_weight="1"
                 android:text="\uD83D\uDCCD Embarque:"
                 android:textSize="12sp"
-                android:textColor="#6B7280" />
+                    android:textColor="@color/text_secondary" />
 
             <TextView
                 android:id="@+id/tvDetailPickup"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:textStyle="bold" />
 
         </LinearLayout>
@@ -150,14 +150,14 @@
                 android:layout_weight="1"
                 android:text="\uD83C\uDFC1 Viagem:"
                 android:textSize="12sp"
-                android:textColor="#6B7280" />
+                    android:textColor="@color/text_secondary" />
 
             <TextView
                 android:id="@+id/tvDetailTrip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:textStyle="bold" />
 
         </LinearLayout>
@@ -168,7 +168,7 @@
             android:orientation="horizontal"
             android:paddingHorizontal="8dp"
             android:paddingVertical="2dp"
-            android:background="#E8ECF4"
+            android:background="@color/bg_surface"
             android:layout_marginHorizontal="4dp"
             android:layout_marginVertical="2dp">
 
@@ -179,7 +179,7 @@
                 android:text="\uD83D\uDCCD Total:"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E" />
+                android:textColor="@color/text_primary" />
 
             <TextView
                 android:id="@+id/tvDetailTotal"
@@ -187,14 +187,14 @@
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E" />
+                android:textColor="@color/text_primary" />
 
         </LinearLayout>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#E5E9F0"
+            android:background="@color/bg_surface"
             android:layout_marginVertical="4dp" />
 
         <LinearLayout
@@ -210,14 +210,14 @@
                 android:layout_weight="1"
                 android:text="\uD83D\uDCB0 Valor base:"
                 android:textSize="12sp"
-                android:textColor="#6B7280" />
+                    android:textColor="@color/text_secondary" />
 
             <TextView
                 android:id="@+id/tvDetailBaseValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:textStyle="bold" />
 
         </LinearLayout>
@@ -237,14 +237,14 @@
                 android:layout_weight="1"
                 android:text="\uD83C\uDF6F Gorjeta:"
                 android:textSize="12sp"
-                android:textColor="#6B7280" />
+                    android:textColor="@color/text_secondary" />
 
             <TextView
                 android:id="@+id/tvDetailTip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
-                android:textColor="#00A86B"
+                android:textColor="@color/success"
                 android:textStyle="bold" />
 
         </LinearLayout>
@@ -264,14 +264,14 @@
                 android:layout_weight="1"
                 android:text="\uD83D\uDD04 Reajuste:"
                 android:textSize="12sp"
-                android:textColor="#6B7280" />
+                    android:textColor="@color/text_secondary" />
 
             <TextView
                 android:id="@+id/tvDetailAdjust"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
-                android:textColor="#F97316"
+                android:textColor="@color/warning"
                 android:textStyle="bold" />
 
         </LinearLayout>
@@ -289,7 +289,7 @@
                 android:layout_weight="1"
                 android:text="\uD83D\uDCB5 Total corrida:"
                 android:textSize="12sp"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:textStyle="bold" />
 
             <TextView
@@ -298,7 +298,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E" />
+                android:textColor="@color/text_primary" />
 
         </LinearLayout>
 
@@ -315,14 +315,14 @@
                 android:layout_weight="1"
                 android:text="\uD83D\uDCC9 Custo:"
                 android:textSize="12sp"
-                android:textColor="#6B7280" />
+                    android:textColor="@color/text_secondary" />
 
             <TextView
                 android:id="@+id/tvDetailCost"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="12sp"
-                android:textColor="#EF4444"
+                android:textColor="@color/error"
                 android:textStyle="bold" />
 
         </LinearLayout>
@@ -330,7 +330,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#E5E9F0"
+            android:background="@color/bg_surface"
             android:layout_marginVertical="4dp" />
 
         <LinearLayout
@@ -347,7 +347,7 @@
                 android:text="Lucro:"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E" />
+                android:textColor="@color/text_primary" />
 
             <TextView
                 android:id="@+id/tvDetailProfit"
@@ -355,7 +355,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#00A86B" />
+                android:textColor="@color/success" />
 
         </LinearLayout>
 
@@ -364,7 +364,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="11sp"
-            android:textColor="#9CA3AF"
+            android:textColor="@color/text_tertiary"
             android:layout_marginStart="8dp"
             android:layout_marginBottom="4dp" />
 
@@ -377,7 +377,7 @@
         android:gravity="center"
         android:text="\u2699\uFE0F A\u00E7\u00F5es"
         android:textSize="12sp"
-        android:textColor="#5E6F8D"
+        android:textColor="@color/text_secondary"
         android:textStyle="bold"
         android:background="@drawable/pill_unselected"
         android:layout_marginTop="8dp"

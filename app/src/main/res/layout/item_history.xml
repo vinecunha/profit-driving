@@ -45,7 +45,7 @@
         android:id="@+id/tvBonus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#FFD700"
+            android:textColor="@color/warning"
         android:textSize="12sp"
         android:textStyle="bold" />
 
@@ -60,7 +60,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="#CCFFFFFF"
+            android:textColor="@color/text_tertiary"
             android:textSize="11sp" />
 
         <TextView
@@ -68,7 +68,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="#CCFFFFFF"
+            android:textColor="@color/text_tertiary"
             android:textSize="11sp" />
 
         <TextView

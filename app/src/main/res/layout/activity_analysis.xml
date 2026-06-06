@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F5F5">
+    android:background="@color/bg_screen">
 
     <include layout="@layout/toolbar_default" />
 
@@ -83,7 +83,7 @@
                 android:gravity="center"
                 android:text="\u25C0"
                 android:textSize="16sp"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:clickable="true"
                 android:focusable="true" />
 
@@ -95,7 +95,7 @@
                 android:text="Carregando..."
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:gravity="center" />
 
             <TextView
@@ -105,7 +105,7 @@
                 android:gravity="center"
                 android:text="\u25B6"
                 android:textSize="16sp"
-                android:textColor="#1A2C3E"
+                android:textColor="@color/text_primary"
                 android:clickable="true"
                 android:focusable="true" />
 
@@ -118,7 +118,7 @@
             android:layout_height="32dp"
             android:text="Hoje"
             android:textSize="12sp"
-            android:textColor="#00A86B"
+            android:textColor="@color/success"
             android:paddingHorizontal="16dp"
             android:gravity="center"
             android:layout_gravity="center_horizontal"
