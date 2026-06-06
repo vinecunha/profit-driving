@@ -258,6 +258,25 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             return
         }
 
+        // Guard: campos mínimos obrigatórios para exibir o card
+        // Sem distância E sem tempo, não há como calcular R$/km ou R$/h
+        val temDistancia = (ride.distanceKm ?: 0.0) > 0
+            || (ride.tripDistanceKm ?: 0.0) > 0
+            || (ride.pickupDistanceKm ?: 0.0) > 0
+        val temTempo = (ride.timeMin ?: 0) > 0
+            || (ride.tripTimeMin ?: 0) > 0
+            || (ride.pickupTimeMin ?: 0) > 0
+
+        if (!temDistancia && !temTempo) {
+            L.w(TAG, "⛔ Card bloqueado: sem distância e sem tempo — value=${ride.value}")
+            return
+        }
+
+        if (!temDistancia) {
+            L.w(TAG, "⚠️ Card sem distância — value=${ride.value} tempo=${ride.timeMin}min")
+            // permite passar: R$/h e R$/min ainda são calculáveis
+        }
+
         val now = System.currentTimeMillis()
         if (isValorSuspeito(ride.value) && (now - lastSaveTime) < 30_000L) {
             L.d(TAG, "Valor suspeito R$ ${ride.value} ignorado — possível tela de confirmação")
