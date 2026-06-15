@@ -479,6 +479,53 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         writableDatabase.delete(TABLE_FUEL_REFUELS, "$COL_ID = ?", arrayOf(id.toString()))
     }
 
+    fun getLastRefuelByFuelType(fuelType: String, beforeTimestamp: Long = System.currentTimeMillis()): RefuelRecord? {
+        val cursor = readableDatabase.query(
+            TABLE_FUEL_REFUELS,
+            null,
+            "$COL_R_FUEL_TYPE = ? AND $COL_R_TIMESTAMP < ?",
+            arrayOf(fuelType, beforeTimestamp.toString()),
+            null, null,
+            "$COL_R_TIMESTAMP DESC",
+            "1"
+        )
+        cursor.use {
+            if (it.moveToFirst()) {
+                return RefuelRecord(
+                    id = it.getSafeLong(COL_ID) ?: 0L,
+                    timestamp = it.getSafeLong(COL_R_TIMESTAMP) ?: 0L,
+                    odometerKm = it.getSafeDouble(COL_R_ODOMETER) ?: 0.0,
+                    liters = it.getSafeDouble(COL_R_LITERS) ?: 0.0,
+                    pricePerLiter = it.getSafeDouble(COL_R_PRICE) ?: 0.0,
+                    totalValue = it.getSafeDouble(COL_R_TOTAL) ?: 0.0,
+                    isFullTank = it.getSafe(COL_R_FULL_TANK, false),
+                    fuelType = it.getSafeString(COL_R_FUEL_TYPE) ?: "",
+                    notes = it.getSafeString(COL_R_NOTES)
+                )
+            }
+        }
+        return null
+    }
+
+    fun getAverageConsumptionByFuelType(fuelType: String, limit: Int = 5): Double {
+        val refuelsByType = getRefuels().filter { it.fuelType == fuelType && it.isFullTank }
+            .sortedByDescending { it.timestamp }
+
+        if (refuelsByType.size < 2) return 0.0
+
+        val consumptions = mutableListOf<Double>()
+        for (i in 0 until minOf(refuelsByType.size - 1, limit)) {
+            val current = refuelsByType[i]
+            val previous = refuelsByType[i + 1]
+            val kmDiff = current.odometerKm - previous.odometerKm
+            if (kmDiff > 0 && current.liters > 0) {
+                consumptions.add(kmDiff / current.liters)
+            }
+        }
+
+        return if (consumptions.isNotEmpty()) consumptions.average() else 0.0
+    }
+
     // ── Fixed Expenses ──
 
     fun insertExpense(e: FixedExpense): Long = synchronized(dbLock) {

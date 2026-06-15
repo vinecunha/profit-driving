@@ -10,10 +10,11 @@ import androidx.appcompat.app.AlertDialog
 
 class AddRefuelDialog(
     private val context: Context,
+    private val refuel: RefuelRecord? = null,
     private val onSave: (RefuelRecord) -> Unit
 ) {
-    private var selectedFuel = "gasoline"
-    private var isFullTank = true
+    private var selectedFuel = refuel?.fuelType ?: "gasoline"
+    private var isFullTank = refuel?.isFullTank ?: true
 
     fun show() {
         val view = LayoutInflater.from(context).inflate(R.layout.dialog_add_refuel, null)
@@ -49,7 +50,25 @@ class AddRefuelDialog(
         fuelButtons.forEach { (btn, value) ->
             btn.setOnClickListener { selectFuel(value) }
         }
-        selectFuel("gasoline")
+        selectFuel(selectedFuel)
+
+        fun toggleFullTank(yes: Boolean) {
+            isFullTank = yes
+            btnFullYes.isSelected = yes
+            btnFullYes.setBackgroundResource(if (yes) R.drawable.pill_selected else R.drawable.pill_unselected)
+            btnFullYes.setTextColor(if (yes) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+            btnFullNo.isSelected = !yes
+            btnFullNo.setBackgroundResource(if (!yes) R.drawable.pill_selected else R.drawable.pill_unselected)
+            btnFullNo.setTextColor(if (!yes) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+        }
+
+        if (refuel != null) {
+            etOdometer.setText("%.0f".format(refuel.odometerKm).replace(".", ","))
+            etLiters.setText("%.1f".format(refuel.liters).replace(".", ","))
+            etPricePerLiter.setText("%.2f".format(refuel.pricePerLiter).replace(".", ","))
+            etTotalValue.setText("%.2f".format(refuel.totalValue).replace(".", ","))
+            toggleFullTank(refuel.isFullTank)
+        }
 
         fun updateTotal() {
             val liters = etLiters.text.toString().replace(",", ".").toDoubleOrNull() ?: 0.0
@@ -66,19 +85,9 @@ class AddRefuelDialog(
         etLiters.addTextChangedListener(totalWatcher)
         etPricePerLiter.addTextChangedListener(totalWatcher)
 
-        fun toggleFullTank(yes: Boolean) {
-            isFullTank = yes
-            btnFullYes.isSelected = yes
-            btnFullYes.setBackgroundResource(if (yes) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btnFullYes.setTextColor(if (yes) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-            btnFullNo.isSelected = !yes
-            btnFullNo.setBackgroundResource(if (!yes) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btnFullNo.setTextColor(if (!yes) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-        }
-
         btnFullYes.setOnClickListener { toggleFullTank(true) }
         btnFullNo.setOnClickListener { toggleFullTank(false) }
-        toggleFullTank(true)
+        if (refuel == null) toggleFullTank(true)
 
         val dialog = AlertDialog.Builder(context)
             .setView(view)

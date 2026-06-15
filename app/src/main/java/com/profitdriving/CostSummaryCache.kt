@@ -14,22 +14,26 @@ data class CostBreakdownItem(
 
 object CostSummaryCache {
 
-    private var cachedSummary: CostSummary? = null
-    private var lastUpdateTime = 0L
+    private val cachedSummaries = mutableMapOf<String, CostSummary>()
+    private val lastUpdateTimes = mutableMapOf<String, Long>()
     private val CACHE_DURATION = 30 * 60 * 1000L
 
-    suspend fun getCurrentSummary(context: Context): CostSummary {
+    suspend fun getCurrentSummary(context: Context, fuelType: String = "gasoline"): CostSummary {
         return withContext(Dispatchers.IO) {
             val appContext = context.applicationContext
-            if (cachedSummary == null || System.currentTimeMillis() - lastUpdateTime > CACHE_DURATION) {
+            val cacheKey = "summary_$fuelType"
+            val lastUpdate = lastUpdateTimes[cacheKey] ?: 0L
+            if (cachedSummaries[cacheKey] == null || System.currentTimeMillis() - lastUpdate > CACHE_DURATION) {
                 val db = DatabaseHelper(appContext)
                 val refuels = db.getRefuels()
                 val expenses = db.getAllExpenses()
                 val monthlyKm = db.getMonthlyKm()
-                cachedSummary = CostCalculator.calculateCostSummary(refuels, expenses, monthlyKm)
-                lastUpdateTime = System.currentTimeMillis()
+                cachedSummaries[cacheKey] = CostCalculator.calculateCostSummary(
+                    refuels, expenses, monthlyKm, currentFuelType = fuelType
+                )
+                lastUpdateTimes[cacheKey] = System.currentTimeMillis()
             }
-            cachedSummary!!
+            cachedSummaries[cacheKey]!!
         }
     }
 
@@ -39,7 +43,7 @@ object CostSummaryCache {
         if (summary.fuelCostPerKm > 0) {
             val fuelMonthly = summary.fuelCostPerKm * 3000
             items.add(CostBreakdownItem(
-                name = "Combustível",
+                name = "Combust\u00EDvel",
                 costPerKm = summary.fuelCostPerKm,
                 monthlyCost = fuelMonthly,
                 percentage = 0f,
@@ -76,7 +80,7 @@ object CostSummaryCache {
     }
 
     fun invalidate() {
-        cachedSummary = null
-        lastUpdateTime = 0L
+        cachedSummaries.clear()
+        lastUpdateTimes.clear()
     }
 }

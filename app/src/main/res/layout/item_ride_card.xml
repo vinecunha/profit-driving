@@ -1,111 +1,652 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  CorridaCerta — item_ride_card (redesign)
+  =========================================
+  Prompt para o OpenCode:
+
+  Substitua o arquivo `res/layout/item_ride_card.xml` pelo conteúdo abaixo.
+  Não altere nenhum android:id existente — apenas a estrutura visual e os
+  atributos de aparência (tamanhos, margens, backgrounds, cores, gravity).
+  Não toque em nenhum arquivo .kt/.java.
+
+  Novos drawables necessários (criar se não existirem):
+    - bg_ride_card_top_dark   → shape retangular, fillColor="#0F0F0F", cornerRadii apenas nos cantos superiores (topLeftRadius="20dp", topRightRadius="20dp")
+    - bg_decision_accept      → shape retangular, fillColor="#22C55E", cornerRadius="20dp"
+    - bg_decision_decline     → shape retangular, fillColor="#EF4444", cornerRadius="20dp"
+    - bg_metric_cell          → shape retangular, fillColor="@color/bg_surface", cornerRadius="10dp"
+    - bg_bonus_pill_dark      → shape retangular, fillColor="#26200A", strokeColor="#614A10", strokeWidth="1dp", cornerRadius="20dp"
+    - bg_score_pill           → shape retangular, fillColor="@color/bg_surface", cornerRadius="20dp"
+
+  Cores já existentes usadas: @color/bg_card, @color/text_primary, @color/text_secondary,
+  @color/text_tertiary, @color/text_inverse, @color/warning, @color/bg_surface.
+-->
+
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/cardRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
-    app:cardCornerRadius="28dp"
+    app:cardCornerRadius="0dp"
     app:cardElevation="4dp"
-        app:cardBackgroundColor="@color/bg_card">
+    app:cardBackgroundColor="@color/bg_card">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingVertical="12dp"
-        android:paddingHorizontal="4dp">
+        android:orientation="vertical">
 
-        <!-- Header: Service badge + Decision badge + Rating -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <LinearLayout
-                android:id="@+id/layoutServiceBadge"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="6dp"
-                android:paddingEnd="12dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp">
-
-                <ImageView
-                    android:id="@+id/tvServiceTypeIcon"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:scaleType="center"
-                    android:padding="6dp"
-                    android:src="@drawable/ic_car" />
-
-                <TextView
-                    android:id="@+id/tvServiceType"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginStart="8dp" />
-
-            </LinearLayout>
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
-            <TextView
-                android:id="@+id/tvDecisionBadge"
-                android:layout_width="wrap_content"
-                android:layout_height="24dp"
-                android:paddingHorizontal="8dp"
-                android:gravity="center"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_inverse"
-                android:layout_marginEnd="8dp"
-                android:visibility="gone" />
-
-            <LinearLayout
-                android:id="@+id/layoutRating"
-                android:layout_width="wrap_content"
-                android:layout_height="28dp"
-                android:orientation="horizontal"
-                android:gravity="center"
-                android:paddingHorizontal="12dp"
-                android:background="@drawable/bg_rating_rounded">
-
-                <TextView
-                    android:id="@+id/tvRatingText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/warning" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="★"
-                    android:textSize="13sp"
-                    android:textColor="@color/warning"
-                    android:layout_marginStart="2dp" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Preço e bônus -->
+        <!-- ═══════════════════════════════════════════════════════
+             HEADER ESCURO — serviço · decisão · preço · lucro · bônus
+             ═══════════════════════════════════════════════════════ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="8dp">
+            android:background="@drawable/bg_ride_card_top_dark"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp">
 
+            <!-- Linha 1: badge serviço + badge decisão -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="14dp">
+
+                <!-- Badge de serviço -->
+                <LinearLayout
+                    android:id="@+id/layoutServiceBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_service_badge_dark"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="5dp">
+
+                    <ImageView
+                        android:id="@+id/tvServiceTypeIcon"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_car"
+                        android:tint="#FFFFFF" />
+
+                    <TextView
+                        android:id="@+id/tvServiceType"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:letterSpacing="0.02"
+                        android:layout_marginStart="6dp" />
+
+                </LinearLayout>
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <!-- Badge de decisão (ACEITAR / RECUSAR) -->
+                <TextView
+                    android:id="@+id/tvDecisionBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="5dp"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.02"
+                    android:visibility="gone" />
+                <!--
+                  No adapter, defina o background dinamicamente:
+                    view.tvDecisionBadge.setBackgroundResource(
+                        if (aceitar) R.drawable.bg_decision_accept
+                        else R.drawable.bg_decision_decline
+                    )
+                  A cor do texto já é tratada pelo adapter via textColor.
+                -->
+
+            </LinearLayout>
+
+            <!-- Linha 2: preço principal + lucro estimado -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="bottom">
+
+                <!-- Preço -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="bottom">
+
+                    <TextView
+                        android:id="@+id/tvPrice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="32sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:lineSpacingExtra="0dp" />
+
+                </LinearLayout>
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <!-- Lucro estimado -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="end"
+                    android:layout_marginBottom="4dp">
+
+                    <!-- Label "Lucro est." -->
+                    <TextView
+                        android:id="@+id/tvProfitLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="9sp"
+                        android:textColor="#66FFFFFF"
+                        android:letterSpacing="0.08"
+                        android:visibility="gone" />
+
+                    <!-- Valor do lucro -->
+                    <TextView
+                        android:id="@+id/tvProfitValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvProfitIcon"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:visibility="gone" />
+
+            </LinearLayout>
+
+            <!-- Linha 3: bônus de prioridade · bônus dinâmico · rating -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="12dp">
+
+                <TextView
+                    android:id="@+id/tvPriorityBonus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/warning"
+                    android:background="@drawable/bg_bonus_pill_dark"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:gravity="center"
+                    android:visibility="gone"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/tvDynamicBonus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/warning"
+                    android:background="@drawable/bg_bonus_pill_dark"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:gravity="center"
+                    android:visibility="gone" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <!-- Rating -->
+                <LinearLayout
+                    android:id="@+id/layoutRating"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:background="@drawable/bg_score_pill"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp">
+
+                    <TextView
+                        android:id="@+id/tvRatingText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="★"
+                        android:textSize="11sp"
+                        android:textColor="#FBBF24" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+        <!-- fim header escuro -->
+
+        <!-- ═══════════════════════════════════════════════════════
+             CORPO — métricas · rota · total
+             ═══════════════════════════════════════════════════════ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="14dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="14dp">
+
+            <!-- Métricas: R$/km · R$/h · R$/min -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <!-- R$/KM -->
+                <LinearLayout
+                    android:id="@+id/layoutKmMetric"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingVertical="10dp"
+                    android:background="@drawable/bg_metric_cell"
+                    android:layout_marginEnd="5dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="R$/KM"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_secondary"
+                        android:letterSpacing="0.07" />
+
+                    <TextView
+                        android:id="@+id/tvPricePerKm"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginTop="3dp" />
+
+                    <TextView
+                        android:id="@+id/tvKmBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp"
+                        android:layout_marginTop="4dp" />
+
+                </LinearLayout>
+
+                <!-- R$/H -->
+                <LinearLayout
+                    android:id="@+id/layoutHourMetric"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingVertical="10dp"
+                    android:background="@drawable/bg_metric_cell"
+                    android:layout_marginHorizontal="5dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="R$/H"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_secondary"
+                        android:letterSpacing="0.07" />
+
+                    <TextView
+                        android:id="@+id/tvPricePerHour"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginTop="3dp" />
+
+                    <TextView
+                        android:id="@+id/tvHourBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp"
+                        android:layout_marginTop="4dp" />
+
+                </LinearLayout>
+
+                <!-- R$/MIN -->
+                <LinearLayout
+                    android:id="@+id/layoutMinMetric"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingVertical="10dp"
+                    android:background="@drawable/bg_metric_cell"
+                    android:layout_marginStart="5dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="R$/MIN"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_secondary"
+                        android:letterSpacing="0.07" />
+
+                    <TextView
+                        android:id="@+id/tvPricePerMin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginTop="3dp" />
+
+                    <TextView
+                        android:id="@+id/tvMinBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="2dp"
+                        android:layout_marginTop="4dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+            <!-- fim métricas -->
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/bg_surface" />
+
+            <!-- ─── ROTA com linha conectora ─── -->
+            <LinearLayout
+                android:id="@+id/layoutTripInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="visible">
+
+                <!-- EMBARQUE -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="top">
+
+                    <!-- Coluna do indicador visual (ponto verde + linha) -->
+                    <LinearLayout
+                        android:layout_width="20dp"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal"
+                        android:layout_marginTop="3dp"
+                        android:layout_marginEnd="10dp">
+
+                        <ImageView
+                            android:id="@+id/ivPickupIcon"
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:src="@drawable/ic_pickup"
+                            android:contentDescription="Embarque" />
+
+                        <!-- Linha conectora entre os dois pontos -->
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
+                            android:layout_marginTop="3dp"
+                            android:minHeight="20dp"
+                            android:background="@color/bg_surface" />
+
+                    </LinearLayout>
+
+                    <!-- Dados do embarque -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:paddingBottom="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="EMBARQUE"
+                            android:textSize="9sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_secondary"
+                            android:letterSpacing="0.07"
+                            android:layout_marginBottom="1dp" />
+
+                        <TextView
+                            android:id="@+id/tvPickupAddress"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="13sp"
+                            android:textColor="@color/text_primary"
+                            android:maxLines="1"
+                            android:ellipsize="end" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="2dp">
+
+                            <TextView
+                                android:id="@+id/tvPickupDistance"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_secondary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text=" · "
+                                android:textSize="11sp"
+                                android:textColor="@color/text_secondary" />
+
+                            <TextView
+                                android:id="@+id/tvPickupTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_secondary" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+                <!-- fim embarque -->
+
+                <!-- DESTINO -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="top">
+
+                    <!-- Ponto vermelho (sem linha abaixo) -->
+                    <LinearLayout
+                        android:layout_width="20dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal"
+                        android:layout_marginTop="3dp"
+                        android:layout_marginEnd="10dp">
+
+                        <ImageView
+                            android:id="@+id/ivDropoffIcon"
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:src="@drawable/ic_dropoff"
+                            android:contentDescription="Destino" />
+
+                    </LinearLayout>
+
+                    <!-- Dados do destino -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="DESTINO"
+                            android:textSize="9sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_secondary"
+                            android:letterSpacing="0.07"
+                            android:layout_marginBottom="1dp" />
+
+                        <TextView
+                            android:id="@+id/tvDropoffAddress"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textSize="13sp"
+                            android:textColor="@color/text_primary"
+                            android:maxLines="1"
+                            android:ellipsize="end" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="2dp">
+
+                            <TextView
+                                android:id="@+id/tvDropoffDistance"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_secondary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text=" · "
+                                android:textSize="11sp"
+                                android:textColor="@color/text_secondary" />
+
+                            <TextView
+                                android:id="@+id/tvDropoffTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_secondary" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+                <!-- fim destino -->
+
+            </LinearLayout>
+            <!-- fim bloco de rota -->
+
+            <!-- Paradas intermediárias -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="6dp">
+
+                <ImageView
+                    android:id="@+id/ivStops"
+                    android:layout_width="13dp"
+                    android:layout_height="13dp"
+                    android:src="@drawable/ic_multiple_stops"
+                    android:tint="@color/warning"
+                    android:layout_marginEnd="4dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvStops"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/warning"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/bg_surface" />
+
+            <!-- ─── Linha de total (km · tempo · score) ─── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -113,494 +654,100 @@
                 android:gravity="center_vertical">
 
                 <TextView
-                    android:id="@+id/tvPrice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="32sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary" />
+                    android:text="Total"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginEnd="6dp" />
 
-                <LinearLayout
+                <TextView
+                    android:id="@+id/tvTotalInfo"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="horizontal"
-                    android:gravity="end"
-                    android:layout_marginStart="8dp">
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
 
-                    <TextView
-                        android:id="@+id/tvPriorityBonus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="24dp"
-                        android:textSize="10sp"
-                        android:textColor="@color/warning"
-                        android:background="@drawable/bg_bonus_pill"
-                        android:paddingHorizontal="7dp"
-                        android:gravity="center"
-                        android:visibility="gone"
-                        android:layout_marginEnd="3dp" />
-
-                    <TextView
-                        android:id="@+id/tvDynamicBonus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="24dp"
-                        android:textSize="10sp"
-                        android:textColor="@color/warning"
-                        android:background="@drawable/bg_bonus_pill"
-                        android:paddingHorizontal="7dp"
-                        android:gravity="center"
-                        android:visibility="gone" />
-
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/tvScore"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="4dp"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/bg_score_pill" />
 
             </LinearLayout>
 
-            <!-- Linha do Lucro -->
+            <!-- ─── Painel expandível de detalhes de lucro ─── -->
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:id="@+id/expandableProfitDetails"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="4dp">
-
-                <TextView
-                    android:id="@+id/tvProfitIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="11sp"
-                    android:layout_marginEnd="4dp"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/tvProfitLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:layout_marginEnd="4dp"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/tvProfitValue"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:visibility="gone" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Metrics Grid: R$/km + R$/h + R$/min -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal"
-            android:gravity="center">
-
-            <LinearLayout
-                android:id="@+id/layoutKmMetric"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="center"
-                android:paddingVertical="12dp"
-                android:background="@drawable/bg_inner_card_rounded"
-                android:layout_marginEnd="4dp">
+                android:visibility="gone"
+                android:padding="12dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_expandable_rounded"
+                android:gravity="center">
 
                 <TextView
+                    android:id="@+id/tvProfitDetail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="R$/KM"
-                    android:textSize="11sp"
+                    android:textSize="12sp"
                     android:textColor="@color/text_secondary"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvPricePerKm"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginTop="4dp" />
-
-                <TextView
-                    android:id="@+id/tvKmBadge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="11sp"
-                    android:paddingHorizontal="6dp"
-                    android:paddingVertical="2dp"
-                    android:layout_marginTop="4dp" />
+                    android:gravity="center" />
 
             </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/layoutHourMetric"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:paddingVertical="12dp"
-                android:background="@drawable/bg_inner_card_rounded"
-                android:layout_marginHorizontal="4dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="R$/H"
-                    android:textSize="11sp"
-                    android:textColor="@color/text_secondary"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvPricePerHour"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginTop="4dp" />
-
-                <TextView
-                    android:id="@+id/tvHourBadge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="11sp"
-                    android:paddingHorizontal="6dp"
-                    android:paddingVertical="2dp"
-                    android:layout_marginTop="4dp" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/layoutMinMetric"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:paddingVertical="12dp"
-                android:background="@drawable/bg_inner_card_rounded"
-                android:layout_marginStart="4dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="R$/MIN"
-                    android:textSize="11sp"
-                    android:textColor="@color/text_secondary"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvPricePerMin"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginTop="4dp" />
-
-                <TextView
-                    android:id="@+id/tvMinBadge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="11sp"
-                    android:paddingHorizontal="6dp"
-                    android:paddingVertical="2dp"
-                    android:layout_marginTop="4dp" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Trip Details: Embarque + Destino em duas linhas unificadas -->
-        <LinearLayout
-            android:id="@+id/layoutTripInfo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="vertical"
-            android:visibility="visible">
-
-            <!-- Embarque -->
+            <!-- ─── Rodapé: status · detalhar · timestamp ─── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingVertical="4dp">
-
-                <ImageView
-                    android:id="@+id/ivPickupIcon"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:src="@drawable/ic_pickup"
-                    android:contentDescription="Embarque"
-                    android:layout_marginEnd="6dp" />
+                android:layout_marginTop="10dp">
 
                 <TextView
+                    android:id="@+id/tvStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Embarque: "
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textSize="13sp" />
 
                 <TextView
-                    android:id="@+id/tvPickupDistance"
+                    android:id="@+id/btnExpandProfit"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=" · "
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
-
-                <TextView
-                    android:id="@+id/tvPickupTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=" · "
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
-
-                <TextView
-                    android:id="@+id/tvPickupAddress"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textSize="12sp"
+                    android:text="+ detalhar corrida"
+                    android:textSize="11sp"
                     android:textColor="@color/text_secondary"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:paddingVertical="4dp"
+                    android:paddingHorizontal="4dp"
+                    android:layout_marginStart="10dp"
+                    android:background="?attr/selectableItemBackground" />
 
-            </LinearLayout>
-
-            <!-- Destino -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingVertical="4dp">
-
-                <ImageView
-                    android:id="@+id/ivDropoffIcon"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:src="@drawable/ic_dropoff"
-                    android:contentDescription="Destino"
-                    android:layout_marginEnd="6dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Destino: "
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
-
-                <TextView
-                    android:id="@+id/tvDropoffDistance"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=" · "
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
-
-                <TextView
-                    android:id="@+id/tvDropoffTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text=" · "
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary" />
-
-                <TextView
-                    android:id="@+id/tvDropoffAddress"
+                <Space
                     android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/tvTimestamp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
+                    android:textSize="11sp"
+                    android:textColor="@color/text_tertiary" />
 
             </LinearLayout>
 
         </LinearLayout>
-
-        <!-- Divider -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="12dp"
-            android:background="@color/bg_surface" />
-
-        <!-- Total line -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="8dp"
-            android:paddingVertical="4dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📊 Total"
-                android:textSize="14sp"
-                android:textColor="@color/text_primary"
-                android:textStyle="bold"
-                android:layout_marginEnd="8dp" />
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
-            <TextView
-                android:id="@+id/tvTotalInfo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:layout_marginEnd="8dp" />
-
-            <TextView
-                android:id="@+id/tvScore"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="3dp"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-
-        <!-- Stops -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="4dp">
-
-            <ImageView
-                android:id="@+id/ivStops"
-                android:layout_width="14dp"
-                android:layout_height="14dp"
-                android:src="@drawable/ic_multiple_stops"
-                android:tint="@color/warning"
-                android:layout_marginEnd="4dp"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/tvStops"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                    android:textColor="@color/warning"
-                android:visibility="gone" />
-
-        </LinearLayout>
-
-        <!-- Expandable Profit Details -->
-        <LinearLayout
-            android:id="@+id/expandableProfitDetails"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone"
-            android:padding="12dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_expandable_rounded"
-            android:gravity="center">
-
-            <TextView
-                android:id="@+id/tvProfitDetail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary"
-                android:gravity="center" />
-
-        </LinearLayout>
-
-        <!-- Bottom: Status + Timestamp -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:id="@+id/tvStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/btnExpandProfit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="+ detalhar corrida"
-                android:textSize="11sp"
-                android:textColor="@color/text_secondary"
-                android:clickable="true"
-                android:focusable="true"
-                android:paddingVertical="4dp"
-                android:paddingHorizontal="4dp"
-                android:layout_marginStart="12dp"
-                android:background="?attr/selectableItemBackground" />
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
-            <TextView
-                android:id="@+id/tvTimestamp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="12sp"
-                android:textColor="@color/text_tertiary" />
-
-        </LinearLayout>
+        <!-- fim corpo -->
 
     </LinearLayout>
 

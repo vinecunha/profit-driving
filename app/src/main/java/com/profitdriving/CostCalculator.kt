@@ -38,10 +38,11 @@ object CostCalculator {
         refuels: List<RefuelRecord>,
         expenses: List<Expense>,
         monthlyKm: Int,
+        currentFuelType: String = "gasoline",
         averageRevenuePerKm: Double = 0.0
     ): CostSummary {
-        val avgConsumption = calculateAvgConsumption(refuels)
-        val avgPricePerLiter = refuels.filter { it.liters > 0 }
+        val avgConsumption = calculateAvgConsumption(refuels, currentFuelType)
+        val avgPricePerLiter = refuels.filter { it.fuelType == currentFuelType && it.liters > 0 }
             .map { it.pricePerLiter }
             .average().takeIf { it > 0 } ?: 0.0
 
@@ -207,17 +208,22 @@ object CostCalculator {
         return if (last3Months.isEmpty()) 3000.0 else last3Months.average()
     }
 
-    private fun calculateAvgConsumption(refuels: List<RefuelRecord>): Double {
-        val fullTankRefuels = refuels.filter { it.isFullTank && it.liters > 0 }
+    private fun calculateAvgConsumption(refuels: List<RefuelRecord>, fuelType: String? = null): Double {
+        val filteredRefuels = if (fuelType != null) {
+            refuels.filter { it.fuelType == fuelType && it.isFullTank && it.liters > 0 }
+        } else {
+            refuels.filter { it.isFullTank && it.liters > 0 }
+        }
             .sortedByDescending { it.timestamp }
 
-        if (fullTankRefuels.size < 2) {
-            val all = refuels.sortedByDescending { it.timestamp }
-            if (all.size < 2) return 0.0
+        if (filteredRefuels.size < 2) {
+            val all = if (fuelType != null) refuels.filter { it.fuelType == fuelType } else refuels
+            val sorted = all.sortedByDescending { it.timestamp }
+            if (sorted.size < 2) return 0.0
             val consumptions = mutableListOf<Double>()
-            for (i in 0 until all.size - 1) {
-                val current = all[i]
-                val previous = all[i + 1]
+            for (i in 0 until sorted.size - 1) {
+                val current = sorted[i]
+                val previous = sorted[i + 1]
                 val kmDiff = current.odometerKm - previous.odometerKm
                 if (kmDiff > 0) consumptions.add(kmDiff / current.liters)
             }
@@ -225,9 +231,9 @@ object CostCalculator {
         }
 
         val consumptions = mutableListOf<Double>()
-        for (i in 0 until fullTankRefuels.size - 1) {
-            val current = fullTankRefuels[i]
-            val previous = fullTankRefuels[i + 1]
+        for (i in 0 until filteredRefuels.size - 1) {
+            val current = filteredRefuels[i]
+            val previous = filteredRefuels[i + 1]
             val kmDiff = current.odometerKm - previous.odometerKm
             if (kmDiff > 0) consumptions.add(kmDiff / current.liters)
         }

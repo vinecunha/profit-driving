@@ -24,6 +24,7 @@ class CostsActivity : BaseActivity() {
     private lateinit var fixedList: LinearLayout
     private lateinit var eventList: LinearLayout
     private lateinit var normalizedExpenseList: LinearLayout
+    private lateinit var progressOverlay: View
     private var selectedFuel = "gasoline"
     private var refuels = listOf<RefuelRecord>()
     private var allExpenses = listOf<Expense>()
@@ -38,6 +39,10 @@ class CostsActivity : BaseActivity() {
         setupToolbar(title = "Custos", showBack = true)
 
         db = DatabaseHelper(this)
+
+        progressOverlay = layoutInflater.inflate(R.layout.progress_overlay, null)
+        (findViewById<android.view.ViewGroup>(android.R.id.content))?.addView(progressOverlay)
+        progressOverlay.visibility = View.GONE
 
         setupFuelSelector()
         setupRefuelButton()
@@ -90,8 +95,10 @@ class CostsActivity : BaseActivity() {
     private fun setupRefuelButton() {
         findViewById<TextView>(R.id.btnAddRefuel).setOnClickListener {
             AddRefuelDialog(this) { refuel ->
-                db.insertRefuel(refuel)
-                loadData()
+                showSavingFeedback {
+                    db.insertRefuel(refuel)
+                    loadData()
+                }
             }.show()
         }
     }
@@ -99,20 +106,26 @@ class CostsActivity : BaseActivity() {
     private fun setupExpenseButtons() {
         findViewById<TextView>(R.id.btnAddPerKm).setOnClickListener {
             AddExpenseDialog(this, onSave = { expense ->
-                db.insertExpenseItem(expense)
-                loadData()
+                showSavingFeedback {
+                    db.insertExpenseItem(expense)
+                    loadData()
+                }
             }).show()
         }
         findViewById<TextView>(R.id.btnAddFixed).setOnClickListener {
             AddExpenseDialog(this, onSave = { expense ->
-                db.insertExpenseItem(expense)
-                loadData()
+                showSavingFeedback {
+                    db.insertExpenseItem(expense)
+                    loadData()
+                }
             }).show()
         }
         findViewById<TextView>(R.id.btnAddEvent).setOnClickListener {
             AddExpenseDialog(this, onSave = { expense ->
-                db.insertExpenseItem(expense)
-                loadData()
+                showSavingFeedback {
+                    db.insertExpenseItem(expense)
+                    loadData()
+                }
             }).show()
         }
     }
@@ -127,9 +140,11 @@ class CostsActivity : BaseActivity() {
                 val km = s.toString().toIntOrNull()
                 if (km != null && km > 0) {
                     monthlyKm = km
-                    db.saveMonthlyKm(km)
-                    updateSummary()
-                    updateSimulator()
+                    showSavingFeedback {
+                        db.saveMonthlyKm(km)
+                        updateSummary()
+                        updateSimulator()
+                    }
                 }
             }
         })
@@ -355,8 +370,26 @@ class CostsActivity : BaseActivity() {
             .show()
     }
 
+    private fun showSavingFeedback(action: () -> Unit) {
+        progressOverlay.visibility = View.VISIBLE
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            action()
+            progressOverlay.visibility = View.GONE
+        }, 100)
+    }
+
+    private fun getFuelDisplayName(fuelType: String): String {
+        return when (fuelType) {
+            "gasoline" -> "Gasolina"
+            "ethanol" -> "Etanol"
+            "diesel" -> "Diesel"
+            "gnv" -> "GNV"
+            else -> "Combust\u00EDvel"
+        }
+    }
+
     private fun updateSummary() {
-        val summary = CostCalculator.calculateCostSummary(refuels, allExpenses, monthlyKm)
+        val summary = CostCalculator.calculateCostSummary(refuels, allExpenses, monthlyKm, currentFuelType = selectedFuel)
 
         normalizedExpenseList = findViewById(R.id.normalizedExpenseList)
         normalizedExpenseList.removeAllViews()
@@ -405,7 +438,7 @@ class CostsActivity : BaseActivity() {
             "Custo/min: ${currencyFormat.format(summary.costPerMinute)}"
 
         findViewById<TextView>(R.id.tvAvgConsumption).text =
-            "Consumo m\u00E9dio: ${"%.1f".format(summary.avgConsumption).replace(".", ",")} km/L"
+            "Consumo m\u00E9dio (${getFuelDisplayName(selectedFuel)}): ${"%.1f".format(summary.avgConsumption).replace(".", ",")} km/L"
         findViewById<TextView>(R.id.tvAvgFuelCost).text =
             "Custo combust\u00EDvel: ${currencyFormat.format(summary.fuelCostPerKm)}/km"
 
@@ -432,7 +465,7 @@ class CostsActivity : BaseActivity() {
     }
 
     private fun updateSimulator() {
-        val summary = CostCalculator.calculateCostSummary(refuels, allExpenses, monthlyKm)
+        val summary = CostCalculator.calculateCostSummary(refuels, allExpenses, monthlyKm, currentFuelType = selectedFuel)
         val costPerKm = summary.totalCostPerKm
 
         findViewById<TextView>(R.id.tvYourCost).text =

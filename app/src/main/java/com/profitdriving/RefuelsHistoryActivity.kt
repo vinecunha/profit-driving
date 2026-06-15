@@ -74,20 +74,49 @@ class RefuelsHistoryActivity : BaseActivity() {
                 if (consumption > 0) "%.1f".format(consumption).replace(".", ",") else "--"
 
             row.setOnLongClickListener {
-                AlertDialog.Builder(this)
-                    .setTitle("Excluir abastecimento")
-                    .setMessage("Remover abastecimento de ${currencyFormat.format(refuel.totalValue)}?")
-                    .setPositiveButton("Excluir") { _, _ ->
-                        db.deleteRefuel(refuel.id)
-                        loadData()
-                    }
-                    .setNegativeButton("Cancelar", null)
-                    .show()
+                showRefuelOptionsDialog(refuel)
                 true
             }
 
+            val btnEdit = row.findViewById<TextView>(R.id.btnEditRefuel)
+            val btnDelete = row.findViewById<TextView>(R.id.btnDeleteRefuel)
+            btnEdit?.setOnClickListener { showEditRefuelDialog(refuel) }
+            btnDelete?.setOnClickListener { showDeleteConfirmDialog(refuel) }
+
             refuelList.addView(row)
         }
+    }
+
+    private fun showRefuelOptionsDialog(refuel: RefuelRecord) {
+        AlertDialog.Builder(this)
+            .setTitle("Abastecimento")
+            .setItems(arrayOf("\u270F\uFE0F Editar", "\uD83D\uDDD1\uFE0F Excluir")) { _, which ->
+                when (which) {
+                    0 -> showEditRefuelDialog(refuel)
+                    1 -> showDeleteConfirmDialog(refuel)
+                }
+            }
+            .show()
+    }
+
+    private fun showEditRefuelDialog(refuel: RefuelRecord) {
+        AddRefuelDialog(this, refuel = refuel, onSave = { updated ->
+            db.deleteRefuel(refuel.id)
+            db.insertRefuel(updated)
+            loadData()
+        }).show()
+    }
+
+    private fun showDeleteConfirmDialog(refuel: RefuelRecord) {
+        AlertDialog.Builder(this)
+            .setTitle("Excluir abastecimento")
+            .setMessage("Remover abastecimento de ${currencyFormat.format(refuel.totalValue)}?")
+            .setPositiveButton("Excluir") { _, _ ->
+                db.deleteRefuel(refuel.id)
+                loadData()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun calculateRefuelConsumption(refuel: RefuelRecord): Double {
