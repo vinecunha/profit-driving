@@ -63,6 +63,14 @@ class AvailableRideAdapter(
         }
 
         holder.btnAdd.setOnClickListener { onAddToDay(record) }
+
+        // Destino
+        if (!record.dropoffAddress.isNullOrBlank()) {
+            holder.tvDestination.text = "\uD83C\uDFC1 ${record.dropoffAddress}"
+            holder.tvDestination.visibility = View.VISIBLE
+        } else {
+            holder.tvDestination.visibility = View.GONE
+        }
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -71,6 +79,7 @@ class AvailableRideAdapter(
         val tvValue: TextView = itemView.findViewById(R.id.tvAvailValue)
         val tvDistance: TextView = itemView.findViewById(R.id.tvAvailDistance)
         val tvDuration: TextView = itemView.findViewById(R.id.tvAvailDuration)
+        val tvDestination: TextView = itemView.findViewById(R.id.tvAvailDestination)
         val btnAdd: TextView = itemView.findViewById(R.id.btnAddToDay)
     }
 }

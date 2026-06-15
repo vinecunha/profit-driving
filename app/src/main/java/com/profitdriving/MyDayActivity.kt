@@ -586,6 +586,14 @@ class MyDayActivity : BaseActivity() {
                     matchesFilters(record, record.value ?: 0.0)
                 }
 
+                // Deduplica pelo cardHash (mesma corrida = mesmo hash)
+                val seenHashes = mutableSetOf<String>()
+                allRides = allRides.filter { record ->
+                    val hash = record.cardHash
+                    if (hash.isNullOrBlank()) true
+                    else seenHashes.add(hash)
+                }
+
                 val total = allRides.size
                 val fromIndex = availableRidesPage * availableRidesPageSize
                 val toIndex = minOf(fromIndex + availableRidesPageSize, total)
