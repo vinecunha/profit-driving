@@ -69,6 +69,15 @@ class MyDayRideAdapter(
             holder.tvExtras.visibility = View.GONE
         }
 
+        // Destino
+        val dropoff = record?.dropoffAddress
+        if (!dropoff.isNullOrBlank()) {
+            holder.tvDestination.text = "\uD83C\uDFC1 $dropoff"
+            holder.tvDestination.visibility = View.VISIBLE
+        } else {
+            holder.tvDestination.visibility = View.GONE
+        }
+
         holder.tvExpandHint.text = if (isExpanded) "\u25B2" else "\u25BC"
         holder.layoutDetail.visibility = if (isExpanded) View.VISIBLE else View.GONE
         holder.btnActions.visibility = if (ride.isCompleted) View.VISIBLE else View.GONE
@@ -211,6 +220,7 @@ class MyDayRideAdapter(
         val tvService: TextView = itemView.findViewById(R.id.tvRideService)
         val tvOriginalValue: TextView = itemView.findViewById(R.id.tvRideOriginalValue)
         val tvExtras: TextView = itemView.findViewById(R.id.tvRideExtras)
+        val tvDestination: TextView = itemView.findViewById(R.id.tvRideDestination)
         val tvFinalValue: TextView = itemView.findViewById(R.id.tvRideFinalValue)
         val tvExpandHint: TextView = itemView.findViewById(R.id.tvExpandHint)
         val layoutDetail: LinearLayout = itemView.findViewById(R.id.layoutRideDetail)

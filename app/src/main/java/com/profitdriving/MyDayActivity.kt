@@ -586,12 +586,10 @@ class MyDayActivity : BaseActivity() {
                     matchesFilters(record, record.value ?: 0.0)
                 }
 
-                // Deduplica pelo cardHash (mesma corrida = mesmo hash)
-                val seenHashes = mutableSetOf<String>()
-                allRides = allRides.filter { record ->
-                    val hash = record.cardHash
-                    if (hash.isNullOrBlank()) true
-                    else seenHashes.add(hash)
+                // Deduplica pelo cardHash (mesma corrida = mesmo hash), mantém a mais recente
+                allRides = allRides.groupBy { it.cardHash }.values.flatMap { group ->
+                    if (group.first().cardHash.isNullOrBlank()) group
+                    else listOf(group.maxByOrNull { it.timestamp }!!)
                 }
 
                 val total = allRides.size

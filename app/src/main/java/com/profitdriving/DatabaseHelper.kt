@@ -866,7 +866,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     priorityBonus = it.getSafeDouble(COL_PRIORITY_BONUS),
                     dynamicBonus = it.getSafeDouble(COL_DYNAMIC_BONUS),
                     costPerKmAtTime = it.getSafeDouble(COL_COST_PER_KM_AT_TIME),
-                    cardHash = it.getSafeString(COL_CARD_HASH)
+                    cardHash = it.getSafeString(COL_CARD_HASH),
+                    pickupAddress = it.getSafeString(COL_PICKUP_ADDRESS),
+                    dropoffAddress = it.getSafeString(COL_DROPOFF_ADDRESS)
                 ))
             }
         }

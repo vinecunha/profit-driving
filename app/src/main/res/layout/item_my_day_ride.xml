@@ -73,6 +73,16 @@
                 android:textColor="@color/success"
                 android:visibility="gone" />
 
+            <TextView
+                android:id="@+id/tvRideDestination"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@color/text_tertiary"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:layout_marginTop="1dp" />
+
         </LinearLayout>
 
         <LinearLayout
