@@ -280,8 +280,8 @@ class FloatingCardService : Service() {
 
                 withContext(Dispatchers.Main) {
                     if (visitCount > 0) {
-                        val tagText = if (visitCount == 1) "\uD83D\uDCCD Destino conhecido · 1x" else "\uD83D\uDCCD Destino conhecido · ${visitCount}x"
-                        tvKnownDestination.text = tagText
+                        val visitText = if (visitCount == 1) "1x" else "${visitCount}x"
+                        tvKnownDestination.text = "\uD83D\uDCCD Destino conhecido · $visitText"
                         tvKnownDestination.visibility = View.VISIBLE
                     }
                 }
