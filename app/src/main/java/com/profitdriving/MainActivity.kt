@@ -205,6 +205,10 @@ class MainActivity : BaseActivity() {
                 else -> allRecords
             }
 
+            allRecords = allRecords
+                .filter { CardHashGenerator.isValidRide(it) }
+                .let { CardHashGenerator.deduplicateRides(it) }
+
             val totalCount = allRecords.size
             val fromIndex = currentPage * pageSize
             val toIndex = minOf(fromIndex + pageSize, totalCount)

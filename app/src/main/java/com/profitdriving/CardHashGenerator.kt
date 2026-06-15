@@ -107,4 +107,29 @@ object CardHashGenerator {
 
         return masked
     }
+
+    fun isValidRide(record: RideRecord): Boolean {
+        val hasDistance = (record.distanceKm != null && record.distanceKm > 0) ||
+            ((record.pickupDistanceKm ?: 0.0) + (record.tripDistanceKm ?: 0.0)) > 0
+        val hasTime = (record.timeMin != null && record.timeMin > 0) ||
+            ((record.pickupTimeMin ?: 0) + (record.tripTimeMin ?: 0)) > 0
+        val hasAddress = !record.pickupAddress.isNullOrBlank() || !record.dropoffAddress.isNullOrBlank()
+        val hasValue = record.value != null && record.value > 0
+        val hasMetrics = record.pricePerKm != null || record.pricePerHour != null
+        val hasRating = record.rating != null && record.rating > 0
+        return hasDistance || hasTime || hasAddress || hasValue || hasMetrics || hasRating
+    }
+
+    fun deduplicateRides(rides: List<RideRecord>): List<RideRecord> {
+        return rides.groupBy { record ->
+            if (!record.cardHash.isNullOrBlank()) record.cardHash
+            else {
+                val v = (record.value ?: 0.0)
+                val ts = record.timestamp / 60_000
+                val dist = ((record.pickupDistanceKm ?: 0.0) + (record.tripDistanceKm ?: record.distanceKm ?: 0.0))
+                val dur = ((record.pickupTimeMin ?: 0) + (record.tripTimeMin ?: record.timeMin ?: 0))
+                "v=${"%.2f".format(v)}|ts=$ts|d=${"%.1f".format(dist)}|t=$dur"
+            }
+        }.values.map { group -> group.maxByOrNull { it.timestamp }!! }
+    }
 }

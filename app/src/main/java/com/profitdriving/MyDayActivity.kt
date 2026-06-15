@@ -584,19 +584,7 @@ class MyDayActivity : BaseActivity() {
 
                 allRides = allRides.filter { record ->
                     matchesFilters(record, record.value ?: 0.0)
-                }
-
-                // Deduplica: usa cardHash se disponível, senão compõe chave por valor/horário/distância/tempo
-                allRides = allRides.groupBy { record ->
-                    if (!record.cardHash.isNullOrBlank()) record.cardHash
-                    else {
-                        val v = (record.value ?: 0.0)
-                        val ts = record.timestamp / 60_000  // minuto inteiro
-                        val dist = ((record.pickupDistanceKm ?: 0.0) + (record.tripDistanceKm ?: record.distanceKm ?: 0.0))
-                        val dur = ((record.pickupTimeMin ?: 0) + (record.tripTimeMin ?: record.timeMin ?: 0))
-                        "v=${"%.2f".format(v)}|ts=$ts|d=${"%.1f".format(dist)}|t=$dur"
-                    }
-                }.values.map { group -> group.maxByOrNull { it.timestamp }!! }
+                }.let { CardHashGenerator.deduplicateRides(it) }
 
                 val total = allRides.size
                 val fromIndex = availableRidesPage * availableRidesPageSize
