@@ -20,6 +20,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         db.execSQL(CREATE_MONTHLY_STATS)
         db.execSQL(CREATE_EXPENSES)
         db.execSQL(CREATE_DAILY_RIDES)
+        db.execSQL(CREATE_RAW_LOGS_TABLE)
+        db.execSQL(CREATE_RAW_LOGS_INDEXES)
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_dropoff_address ON $TABLE_NAME(dropoff_address)")
     }
 
@@ -111,6 +113,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             db.execSQL("ALTER TABLE $TABLE_DAILY_RIDES ADD COLUMN $COL_DR_CANCELLED_WITH_FEE INTEGER DEFAULT 0")
             db.execSQL("ALTER TABLE $TABLE_DAILY_RIDES ADD COLUMN $COL_DR_FEE_VALUE REAL")
         }
+        if (oldVersion < 19) {
+            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_CARD_HASH TEXT")
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_card_hash ON $TABLE_NAME($COL_CARD_HASH)")
+        }
+        if (oldVersion < 20) {
+            db.execSQL(CREATE_RAW_LOGS_TABLE)
+            db.execSQL(CREATE_RAW_LOGS_INDEXES)
+        }
     }
 
     fun updateStatus(id: Long, status: String) = synchronized(dbLock) {
@@ -164,10 +174,178 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 if (currentCostPerKm != null) {
                     put(COL_COST_PER_KM_AT_TIME, currentCostPerKm)
                 }
+                if (record.cardHash != null) {
+                    put(COL_CARD_HASH, record.cardHash)
+                }
             }
             db.insert(TABLE_NAME, null, cv)
         } finally {
             db.close()
+        }
+    }
+
+    fun existsByCardHash(hash: String, hoursAgo: Int = 24): Boolean {
+        if (hash.isBlank()) return false
+        val cutoffTime = System.currentTimeMillis() - (hoursAgo * 60 * 60 * 1000L)
+        val cursor = readableDatabase.rawQuery(
+            "SELECT COUNT(*) FROM $TABLE_NAME WHERE $COL_CARD_HASH = ? AND $COL_TIMESTAMP > ?",
+            arrayOf(hash, cutoffTime.toString())
+        )
+        cursor.use {
+            if (it.moveToFirst() && it.getInt(0) > 0) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun getRideIdByCardHash(cardHash: String): Long? {
+        val cursor = readableDatabase.query(
+            TABLE_NAME,
+            arrayOf(COL_ID),
+            "$COL_CARD_HASH = ?",
+            arrayOf(cardHash),
+            null, null, null
+        )
+        cursor.use {
+            if (it.moveToFirst()) {
+                return it.getLong(0)
+            }
+        }
+        return null
+    }
+
+    fun updateRideValueByHash(cardHash: String, newValue: Double, newTimestamp: Long) = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_VALUE, newValue)
+                put(COL_TIMESTAMP, newTimestamp)
+                put(COL_PRICE_PER_KM, null as Double?)
+                put(COL_PRICE_PER_HOUR, null as Double?)
+            }
+            db.update(TABLE_NAME, cv, "$COL_CARD_HASH = ?", arrayOf(cardHash))
+        } finally {
+            db.close()
+        }
+    }
+
+    fun getRideById(id: Long): RideRecord? {
+        val cursor = readableDatabase.query(
+            TABLE_NAME, null,
+            "$COL_ID = ?",
+            arrayOf(id.toString()),
+            null, null, null
+        )
+        cursor.use {
+            if (it.moveToFirst()) {
+                return RideRecord(
+                    id = it.getSafeLong(COL_ID) ?: 0L,
+                    value = it.getSafeDouble(COL_VALUE),
+                    distanceKm = it.getSafeDouble(COL_DISTANCE_KM),
+                    timeMin = it.getSafeInt(COL_TIME_MIN),
+                    rating = it.getSafeDouble(COL_RATING),
+                    pricePerKm = it.getSafeDouble(COL_PRICE_PER_KM),
+                    pricePerHour = it.getSafeDouble(COL_PRICE_PER_HOUR),
+                    appName = it.getSafeString(COL_APP_NAME) ?: "",
+                    timestamp = it.getSafeLong(COL_TIMESTAMP) ?: 0L,
+                    pickupDistanceKm = it.getSafeDouble(COL_PICKUP_DISTANCE),
+                    pickupTimeMin = it.getSafeInt(COL_PICKUP_TIME),
+                    tripDistanceKm = it.getSafeDouble(COL_TRIP_DISTANCE),
+                    tripTimeMin = it.getSafeInt(COL_TRIP_TIME),
+                    serviceType = it.getSafeString(COL_SERVICE_TYPE),
+                    bonusAmount = it.getSafeDouble(COL_BONUS_AMOUNT),
+                    status = it.getSafeString(COL_STATUS) ?: "EXPIRED",
+                    hasMultipleStops = it.getSafe(COL_HAS_MULTIPLE_STOPS, false),
+                    scorePercent = it.getSafeDouble(COL_SCORE_PERCENT),
+                    priorityBonus = it.getSafeDouble(COL_PRIORITY_BONUS),
+                    dynamicBonus = it.getSafeDouble(COL_DYNAMIC_BONUS),
+                    pickupAddress = it.getSafeString(COL_PICKUP_ADDRESS),
+                    dropoffAddress = it.getSafeString(COL_DROPOFF_ADDRESS),
+                    costPerKmAtTime = it.getSafeDouble(COL_COST_PER_KM_AT_TIME),
+                    cardHash = it.getSafeString(COL_CARD_HASH)
+                )
+            }
+        }
+        return null
+    }
+
+    fun insertRawLog(
+        cardHash: String?,
+        pkg: String,
+        cardType: String?,
+        rawTexts: List<String>,
+        rideData: RideData? = null
+    ): Long = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_RAW_CARD_HASH, cardHash)
+                put(COL_RAW_TIMESTAMP, System.currentTimeMillis())
+                put(COL_RAW_PACKAGE, pkg)
+                put(COL_RAW_CARD_TYPE, cardType)
+                put(COL_RAW_TEXTS, rawTexts.joinToString("\n---\n"))
+                rideData?.let {
+                    put(COL_RAW_RIDE_DATA, buildRawDataString(it))
+                }
+                put(COL_RAW_STATUS, "pending")
+            }
+            db.insert(TABLE_RAW_LOGS, null, cv)
+        } finally {
+            db.close()
+        }
+    }
+
+    fun updateRawLogStatus(
+        logId: Long,
+        rideId: Long? = null,
+        status: String,
+        error: String? = null
+    ) = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                rideId?.let { put(COL_RAW_RIDE_ID, it) }
+                put(COL_RAW_STATUS, status)
+                error?.let { put(COL_RAW_ERROR, it) }
+            }
+            db.update(TABLE_RAW_LOGS, cv, "$COL_RAW_ID = ?", arrayOf(logId.toString()))
+        } finally {
+            db.close()
+        }
+    }
+
+    fun getFailedRawLogs(limit: Int = 100): List<Pair<Long, String>> = synchronized(dbLock) {
+        val result = mutableListOf<Pair<Long, String>>()
+        val cursor = readableDatabase.query(
+            TABLE_RAW_LOGS,
+            arrayOf(COL_RAW_ID, COL_RAW_TEXTS),
+            "$COL_RAW_STATUS IN ('failed', 'pending')",
+            null, null, null,
+            "$COL_RAW_TIMESTAMP ASC",
+            limit.toString()
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                val id = it.getLong(0)
+                val texts = it.getString(1)
+                result.add(Pair(id, texts))
+            }
+        }
+        return result
+    }
+
+    private fun buildRawDataString(ride: RideData): String {
+        return buildString {
+            appendLine("Value: ${ride.value}")
+            appendLine("Distance: ${ride.distanceKm}")
+            appendLine("Time: ${ride.timeMin}")
+            appendLine("Rating: ${ride.rating}")
+            appendLine("ServiceType: ${ride.serviceType}")
+            appendLine("PickupAddress: ${ride.pickupAddress}")
+            appendLine("DropoffAddress: ${ride.dropoffAddress}")
+            appendLine("PriorityBonus: ${ride.priorityBonus}")
+            appendLine("DynamicBonus: ${ride.dynamicBonus}")
         }
     }
 
@@ -222,7 +400,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     dynamicBonus = it.getSafeDouble(COL_DYNAMIC_BONUS),
                     pickupAddress = it.getSafeString(COL_PICKUP_ADDRESS),
                     dropoffAddress = it.getSafeString(COL_DROPOFF_ADDRESS),
-                    costPerKmAtTime = it.getSafeDouble(COL_COST_PER_KM_AT_TIME)
+                    costPerKmAtTime = it.getSafeDouble(COL_COST_PER_KM_AT_TIME),
+                    cardHash = it.getSafeString(COL_CARD_HASH)
                 ))
             }
         }
@@ -639,7 +818,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     scorePercent = it.getSafeDouble(COL_SCORE_PERCENT),
                     priorityBonus = it.getSafeDouble(COL_PRIORITY_BONUS),
                     dynamicBonus = it.getSafeDouble(COL_DYNAMIC_BONUS),
-                    costPerKmAtTime = it.getSafeDouble(COL_COST_PER_KM_AT_TIME)
+                    costPerKmAtTime = it.getSafeDouble(COL_COST_PER_KM_AT_TIME),
+                    cardHash = it.getSafeString(COL_CARD_HASH)
                 ))
             }
         }
@@ -830,7 +1010,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     companion object {
         private val dbLock = Any()
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 18
+        private const val DATABASE_VERSION = 20
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"
@@ -864,6 +1044,20 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_PICKUP_ADDRESS = "pickup_address"
         private const val COL_DROPOFF_ADDRESS = "dropoff_address"
         private const val COL_COST_PER_KM_AT_TIME = "cost_per_km_at_time"
+        private const val COL_CARD_HASH = "card_hash"
+
+        // Raw card logs columns
+        private const val TABLE_RAW_LOGS = "raw_card_logs"
+        private const val COL_RAW_ID = "id"
+        private const val COL_RAW_RIDE_ID = "ride_id"
+        private const val COL_RAW_CARD_HASH = "card_hash"
+        private const val COL_RAW_TIMESTAMP = "timestamp"
+        private const val COL_RAW_PACKAGE = "package_name"
+        private const val COL_RAW_CARD_TYPE = "card_type"
+        private const val COL_RAW_TEXTS = "raw_texts_json"
+        private const val COL_RAW_RIDE_DATA = "ride_data_json"
+        private const val COL_RAW_STATUS = "status"
+        private const val COL_RAW_ERROR = "error"
 
         // Fuel refuels columns
         private const val COL_R_TIMESTAMP = "timestamp"
@@ -1052,6 +1246,27 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_COST_PER_KM_AT_TIME REAL
             )
         """.trimIndent()
+
+        private val CREATE_RAW_LOGS_TABLE = """
+            CREATE TABLE IF NOT EXISTS $TABLE_RAW_LOGS (
+                $COL_RAW_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_RAW_RIDE_ID INTEGER,
+                $COL_RAW_CARD_HASH TEXT,
+                $COL_RAW_TIMESTAMP INTEGER NOT NULL,
+                $COL_RAW_PACKAGE TEXT NOT NULL,
+                $COL_RAW_CARD_TYPE TEXT,
+                $COL_RAW_TEXTS TEXT NOT NULL,
+                $COL_RAW_RIDE_DATA TEXT,
+                $COL_RAW_STATUS TEXT DEFAULT 'pending',
+                $COL_RAW_ERROR TEXT
+            )
+        """.trimIndent()
+
+        private val CREATE_RAW_LOGS_INDEXES = """
+            CREATE INDEX IF NOT EXISTS idx_raw_logs_ts ON $TABLE_RAW_LOGS($COL_RAW_TIMESTAMP);
+            CREATE INDEX IF NOT EXISTS idx_raw_logs_hash ON $TABLE_RAW_LOGS($COL_RAW_CARD_HASH);
+            CREATE INDEX IF NOT EXISTS idx_raw_logs_status ON $TABLE_RAW_LOGS($COL_RAW_STATUS);
+        """.trimIndent()
     }
 }
 
@@ -1078,7 +1293,8 @@ data class RideRecord(
     val scorePercent: Double? = null,
     val pickupAddress: String? = null,
     val dropoffAddress: String? = null,
-    val costPerKmAtTime: Double? = null
+    val costPerKmAtTime: Double? = null,
+    val cardHash: String? = null
 )
 
 data class RefuelRecord(

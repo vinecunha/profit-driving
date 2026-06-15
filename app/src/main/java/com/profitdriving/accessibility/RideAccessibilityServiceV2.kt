@@ -12,6 +12,7 @@ import android.os.VibratorManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import com.profitdriving.BuildConfig
+import com.profitdriving.CardHashGenerator
 import com.profitdriving.DatabaseHelper
 import com.profitdriving.DecisionEngine
 import com.profitdriving.FloatingBubbleService
@@ -39,6 +40,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     private var statusLocked = false
     private var uberWindowWasVisible = false
     private var lastSavedValue: Double? = null
+    private var currentRawLogId: Long = -1L
 
     private val parsers: List<RideDataParser> = listOf(
         RadarCardParser(),
@@ -217,14 +219,25 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                 L.d(TAG, "Textos coletados (${raw.rawTexts.size}): ${raw.rawTexts.take(10)}")
             }
 
+        val db = DatabaseHelper(this)
+        val hash = buildCardHash(raw.rawTexts)
+        currentRawLogId = db.insertRawLog(
+            cardHash = hash,
+            pkg = pkg,
+            cardType = raw.cardType.name,
+            rawTexts = raw.rawTexts
+        )
+        L.d(TAG, "📝 Raw log salvo: id=$currentRawLogId")
+
         if (raw.acceptNode == null) {
             L.d(TAG, "Nenhum botão de aceitar encontrado — verificando se é card de corrida")
             if (raw.valueNode == null) {
                 L.d(TAG, "Card não é de corrida — ignorando")
+                db.updateRawLogStatus(currentRawLogId, status = "failed", error = "no accept node or value node")
                 if (cardVisible) {
                     L.d(TAG, "Card sumiu — resetando estado")
                     if (!statusLocked && lastInsertedId >= 0) {
-                        DatabaseHelper(this).updateStatus(lastInsertedId, "EXPIRED")
+                        db.updateStatus(lastInsertedId, "EXPIRED")
                         L.d(TAG, "Ride $lastInsertedId marcado como EXPIRADO")
                     }
                     cardVisible = false
@@ -238,16 +251,16 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             }
         }
 
-        val hash = buildCardHash(raw.rawTexts)
-
         if (hash == lastHash && cardVisible) {
             L.d(TAG, "Mesmo card ainda visível — ignorando")
+            db.updateRawLogStatus(currentRawLogId, status = "duplicate", error = "same card still visible")
             return
         }
 
         val parser = selectParser(raw)
         if (parser == null) {
             L.d(TAG, "Nenhum parser disponível para este card")
+            db.updateRawLogStatus(currentRawLogId, status = "failed", error = "no parser available")
             return
         }
         L.d(TAG, "Parser selecionado: ${parser::class.simpleName}")
@@ -255,11 +268,17 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         val ride = parser.parse(raw)
         if (ride == null || ride.value == null || ride.value <= 0) {
             L.d(TAG, "Parser retornou RideData inválido — ignorando")
+            db.updateRawLogStatus(currentRawLogId, status = "failed", error = "invalid ride data")
             return
         }
 
-        // Guard: campos mínimos obrigatórios para exibir o card
-        // Sem distância E sem tempo, não há como calcular R$/km ou R$/h
+        val cardHash = CardHashGenerator.generateStableHash(
+            serviceType = ride.serviceType,
+            pickupAddress = ride.pickupAddress,
+            dropoffAddress = ride.dropoffAddress,
+            rating = ride.rating
+        )
+
         val temDistancia = (ride.distanceKm ?: 0.0) > 0
             || (ride.tripDistanceKm ?: 0.0) > 0
             || (ride.pickupDistanceKm ?: 0.0) > 0
@@ -269,26 +288,29 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
 
         if (!temDistancia && !temTempo) {
             L.w(TAG, "⛔ Card bloqueado: sem distância e sem tempo — value=${ride.value}")
+            db.updateRawLogStatus(currentRawLogId, status = "failed", error = "no distance or time")
             return
         }
 
         if (!temDistancia) {
             L.w(TAG, "⚠️ Card sem distância — value=${ride.value} tempo=${ride.timeMin}min")
-            // permite passar: R$/h e R$/min ainda são calculáveis
         }
 
         val now = System.currentTimeMillis()
         if (isValorSuspeito(ride.value) && (now - lastSaveTime) < 30_000L) {
             L.d(TAG, "Valor suspeito R$ ${ride.value} ignorado — possível tela de confirmação")
+            db.updateRawLogStatus(currentRawLogId, status = "failed", error = "suspicious value")
             return
         }
 
-        // Guard anti-duplicata: mesmo valor em menos de 5s = mesmo card com hash instável
-        // NÃO checar hash aqui — se hash fosse igual já teria saído acima
         if ((now - lastSaveTime) < 5_000L && ride.value == lastSavedValue) {
-            L.d(TAG, "⏱️ Duplicata: valor R$${ride.value} salvo há ${now - lastSaveTime}ms — ignorando")
+            L.d(TAG, "⏱️ Duplicata rápida: valor R$${ride.value} salvo há ${now - lastSaveTime}ms — ignorando")
+            db.updateRawLogStatus(currentRawLogId, status = "duplicate", error = "same value within 5s")
             return
         }
+
+        saveOrUpdateRide(ride, cardHash, db)
+        db.updateRawLogStatus(currentRawLogId, rideId = lastInsertedId.takeIf { it >= 0 }, status = "success")
 
         cardVisible = true
         lastHash = hash
@@ -298,8 +320,101 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         L.d(TAG, "Card detectado V2 em $pkg: valor=${ride.value} km=${ride.distanceKm} " +
                 "tempo=${ride.timeMin} nota=${ride.rating} " +
                 "R$/km=${ride.effectivePricePerKm} R$/h=${ride.effectivePricePerHour}")
+    }
 
-        saveAndShow(ride)
+    private fun saveOrUpdateRide(ride: RideData, cardHash: String, db: DatabaseHelper) {
+        L.d(TAG, "saveOrUpdateRide: value=${ride.value} km=${ride.distanceKm} hash=$cardHash")
+        if (ride.value == null) {
+            L.w(TAG, "value é null — card não será exibido")
+            return
+        }
+
+        val existingRideId = if (cardHash.isNotEmpty()) db.getRideIdByCardHash(cardHash) else null
+
+        if (existingRideId != null) {
+            val existingRide = db.getRideById(existingRideId)
+            if (existingRide?.value != ride.value) {
+                L.d(TAG, "🔄 Valor atualizado para corrida existente: hash=$cardHash, " +
+                        "valor antigo=${existingRide?.value}, novo=${ride.value}")
+                db.updateRideValueByHash(cardHash, ride.value ?: 0.0, System.currentTimeMillis())
+                lastInsertedId = existingRideId
+                L.d(TAG, "Ride $lastInsertedId atualizado com novo valor R$ ${ride.value}")
+            } else {
+                L.d(TAG, "⏭️ Card já existe com mesmo valor — ignorando")
+                return
+            }
+        } else {
+            val pricePerMin = ride.value.let { v ->
+                ride.timeMin?.let { t -> if (t > 0) v / t.toDouble() else null }
+            }
+            val prefs = getSharedPreferences(SettingsActivity.PREF_NAME, 0)
+            val result = DecisionEngine.evaluate(
+                kmValue     = ride.effectivePricePerKm,
+                hourValue   = ride.effectivePricePerHour,
+                minValue    = pricePerMin,
+                ratingValue = ride.rating,
+                prefs       = prefs
+            )
+
+            lastInsertedId = db.insert(RideRecord(
+                value = ride.value, distanceKm = ride.distanceKm,
+                timeMin = ride.timeMin, rating = ride.rating,
+                pricePerKm = ride.effectivePricePerKm,
+                pricePerHour = ride.effectivePricePerHour,
+                appName = ride.appName, timestamp = System.currentTimeMillis(),
+                pickupDistanceKm = ride.pickupDistanceKm,
+                pickupTimeMin = ride.pickupTimeMin,
+                tripDistanceKm = ride.tripDistanceKm,
+                tripTimeMin = ride.tripTimeMin,
+                serviceType = ride.serviceType,
+                hasMultipleStops = ride.hasMultipleStops,
+                scorePercent = result.scorePercent,
+                priorityBonus = ride.priorityBonus,
+                dynamicBonus = ride.dynamicBonus,
+                pickupAddress = ride.pickupAddress,
+                dropoffAddress = ride.dropoffAddress,
+                cardHash = cardHash.ifEmpty { null }
+            ))
+            L.d(TAG, "Ride inserido com id=$lastInsertedId")
+        }
+
+        lastSaveTime = System.currentTimeMillis()
+        statusLocked = false
+        vibrateFeedback()
+
+        sendBroadcast(Intent("NEW_RIDE_SAVED"))
+
+        getSharedPreferences(SettingsActivity.PREF_NAME, 0).edit().apply {
+            ride.value?.let { putFloat("last_value", it.toFloat()) }
+            ride.distanceKm?.let { putFloat("last_distance", it.toFloat()) }
+            ride.timeMin?.let { putInt("last_time", it) }
+            ride.rating?.let { putFloat("last_rating", it.toFloat()) }
+            putString("last_app", ride.appName)
+            putLong("last_timestamp", System.currentTimeMillis())
+            ride.serviceType?.let { putString("last_service_type", it) }
+            apply()
+        }
+
+        FloatingCardService.start(this, Intent().apply {
+            ride.value?.let { putExtra("value", it) }
+            ride.distanceKm?.let { putExtra("distanceKm", it) }
+            ride.timeMin?.let { putExtra("timeMin", it) }
+            ride.rating?.let { putExtra("rating", it) }
+            putExtra("appName", ride.appName)
+            ride.serviceType?.let { putExtra("serviceType", it) }
+            ride.priorityBonus?.let { putExtra("priorityBonus", it) }
+            ride.dynamicBonus?.let { putExtra("dynamicBonus", it) }
+            ride.pickupAddress?.let { putExtra("pickupAddress", it) }
+            ride.dropoffAddress?.let { putExtra("dropoffAddress", it) }
+            putExtra("hasMultipleStops", ride.hasMultipleStops)
+        })
+
+        FloatingBubbleService.start(this, Intent().apply {
+            ride.value?.let { putExtra("value", it) }
+            ride.distanceKm?.let { putExtra("distanceKm", it) }
+            ride.timeMin?.let { putExtra("timeMin", it) }
+            ride.rating?.let { putExtra("rating", it) }
+        })
     }
 
     private fun selectParser(raw: RawCardData): RideDataParser? {
@@ -336,85 +451,6 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                 L.d(TAG, "Ride $lastInsertedId marcado como RECUSADO")
             }
         }
-    }
-
-    private fun saveAndShow(ride: RideData) {
-        L.d(TAG, "saveAndShow V2 chamado: value=${ride.value} km=${ride.distanceKm}")
-        if (ride.value == null) {
-            L.w(TAG, "value é null — card não será exibido")
-            return
-        }
-        lastSaveTime = System.currentTimeMillis()
-        statusLocked = false
-        vibrateFeedback()
-        val db = DatabaseHelper(this)
-
-        val pricePerMin = ride.value.let { v ->
-            ride.timeMin?.let { t -> if (t > 0) v / t.toDouble() else null }
-        }
-        val prefs = getSharedPreferences(SettingsActivity.PREF_NAME, 0)
-        val result = DecisionEngine.evaluate(
-            kmValue     = ride.effectivePricePerKm,
-            hourValue   = ride.effectivePricePerHour,
-            minValue    = pricePerMin,
-            ratingValue = ride.rating,
-            prefs       = prefs
-        )
-
-        lastInsertedId = db.insert(RideRecord(
-            value = ride.value, distanceKm = ride.distanceKm,
-            timeMin = ride.timeMin, rating = ride.rating,
-            pricePerKm = ride.effectivePricePerKm,
-            pricePerHour = ride.effectivePricePerHour,
-            appName = ride.appName, timestamp = System.currentTimeMillis(),
-            pickupDistanceKm = ride.pickupDistanceKm,
-            pickupTimeMin = ride.pickupTimeMin,
-            tripDistanceKm = ride.tripDistanceKm,
-            tripTimeMin = ride.tripTimeMin,
-            serviceType = ride.serviceType,
-            hasMultipleStops = ride.hasMultipleStops,
-            scorePercent = result.scorePercent,
-            priorityBonus = ride.priorityBonus,
-            dynamicBonus = ride.dynamicBonus,
-            pickupAddress = ride.pickupAddress,
-            dropoffAddress = ride.dropoffAddress
-        ))
-        L.d(TAG, "Ride inserido com id=$lastInsertedId")
-
-        sendBroadcast(Intent("NEW_RIDE_SAVED"))
-
-        getSharedPreferences(SettingsActivity.PREF_NAME, 0).edit().apply {
-            ride.value?.let { putFloat("last_value", it.toFloat()) }
-            ride.distanceKm?.let { putFloat("last_distance", it.toFloat()) }
-            ride.timeMin?.let { putInt("last_time", it) }
-            ride.rating?.let { putFloat("last_rating", it.toFloat()) }
-            putString("last_app", ride.appName)
-            putLong("last_timestamp", System.currentTimeMillis())
-            ride.serviceType?.let { putString("last_service_type", it) }
-            apply()
-        }
-
-        FloatingCardService.start(this, Intent().apply {
-            ride.value?.let { putExtra("value", it) }
-            ride.distanceKm?.let { putExtra("distanceKm", it) }
-            ride.timeMin?.let { putExtra("timeMin", it) }
-            ride.rating?.let { putExtra("rating", it) }
-            putExtra("appName", ride.appName)
-            ride.serviceType?.let { putExtra("serviceType", it) }
-            ride.priorityBonus?.let { putExtra("priorityBonus", it) }
-            ride.dynamicBonus?.let { putExtra("dynamicBonus", it) }
-            ride.pickupAddress?.let { putExtra("pickupAddress", it) }
-            ride.dropoffAddress?.let { putExtra("dropoffAddress", it) }
-            putExtra("hasMultipleStops", ride.hasMultipleStops)
-        })
-
-        FloatingBubbleService.start(this, Intent().apply {
-            ride.value?.let { putExtra("value", it) }
-            ride.distanceKm?.let { putExtra("distanceKm", it) }
-            ride.timeMin?.let { putExtra("timeMin", it) }
-            ride.rating?.let { putExtra("rating", it) }
-            putExtra("decision", result.decision.name)
-        })
     }
 
     private fun vibrateFeedback() {
