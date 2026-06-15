@@ -70,9 +70,9 @@ class MyDayRideAdapter(
         }
 
         // Destino
-        val dropoff = record?.dropoffAddress
-        if (!dropoff.isNullOrBlank()) {
-            holder.tvDestination.text = "\uD83C\uDFC1 $dropoff"
+        val maskedDropoff = CardHashGenerator.maskAddress(record?.dropoffAddress)
+        if (maskedDropoff.isNotEmpty()) {
+            holder.tvDestination.text = "\uD83C\uDFC1 $maskedDropoff"
             holder.tvDestination.visibility = View.VISIBLE
         } else {
             holder.tvDestination.visibility = View.GONE

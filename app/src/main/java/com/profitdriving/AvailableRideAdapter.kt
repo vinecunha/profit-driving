@@ -65,8 +65,9 @@ class AvailableRideAdapter(
         holder.btnAdd.setOnClickListener { onAddToDay(record) }
 
         // Destino
-        if (!record.dropoffAddress.isNullOrBlank()) {
-            holder.tvDestination.text = "\uD83C\uDFC1 ${record.dropoffAddress}"
+        val maskedDropoff = CardHashGenerator.maskAddress(record.dropoffAddress)
+        if (maskedDropoff.isNotEmpty()) {
+            holder.tvDestination.text = "\uD83C\uDFC1 $maskedDropoff"
             holder.tvDestination.visibility = View.VISIBLE
         } else {
             holder.tvDestination.visibility = View.GONE

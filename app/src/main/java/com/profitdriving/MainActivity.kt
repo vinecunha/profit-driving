@@ -678,13 +678,13 @@ class HistoryAdapter(
             formatDistance(pickupDist) else ""
         vh.tvPickupTime.text = if (pickupTime != null && pickupTime > 0) 
             formatTime(pickupTime) else ""
-        vh.tvPickupAddress.text = maskAddress(r.pickupAddress)
+        vh.tvPickupAddress.text = CardHashGenerator.maskAddress(r.pickupAddress)
 
         vh.tvDropoffDistance.text = if (tripDist != null && tripDist > 0) 
             formatDistance(tripDist) else ""
         vh.tvDropoffTime.text = if (tripTime != null && tripTime > 0) 
             formatTime(tripTime) else ""
-        vh.tvDropoffAddress.text = maskAddress(r.dropoffAddress)
+        vh.tvDropoffAddress.text = CardHashGenerator.maskAddress(r.dropoffAddress)
 
         val totalParts = mutableListOf<String>()
         if (totalDist > 0) {
@@ -790,42 +790,6 @@ class HistoryAdapter(
 
             vh.tvTimestamp.text = dateFormat.format(java.util.Date(r.timestamp))
         }
-
-    private fun maskAddress(fullAddress: String?): String {
-        if (fullAddress.isNullOrBlank()) return ""
-
-        var masked = fullAddress
-
-        // 1. Remover número da casa e a vírgula anterior
-        masked = masked.replace(Regex(""",?\s*\d+(?:-\d+)?\s*[,]?"""), " ")
-        masked = masked.replace(Regex("""\s+nº\s*\d+""", RegexOption.IGNORE_CASE), " ")
-
-        // 2. Normalizar hífens
-        masked = masked.replace(Regex("""\s*-\s*"""), " - ")
-
-        // 3. Mascarar CEP (manter apenas 3 últimos dígitos)
-        masked = masked.replace(Regex("""(\d{5})[-]?(\d{3})""")) { match ->
-            val suffix = match.groupValues[2]
-            "XXXXX-$suffix"
-        }
-
-        // 4. Limpar múltiplos espaços e vírgulas
-        masked = masked
-            .replace(Regex("\\s+"), " ")
-            .replace(Regex(",\\s*,"), ",")
-            .replace(Regex("\\s*,\\s*"), ", ")
-            .trim()
-
-        // 5. Remover vírgula no início ou final
-        masked = masked.replace(Regex("^,|,$"), "")
-
-        // 6. Limitar tamanho
-        if (masked.length > 100) {
-            masked = masked.take(100) + "..."
-        }
-
-        return masked
-    }
 
     private fun getProfitRangeForRide(ride: RideRecord): ProfitRange {
         val rideValue = ride.value ?: 0.0

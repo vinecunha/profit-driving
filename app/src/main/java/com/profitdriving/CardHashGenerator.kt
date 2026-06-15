@@ -71,4 +71,40 @@ object CardHashGenerator {
         val hashBytes = digest.digest(input.toByteArray())
         return hashBytes.joinToString("") { "%02x".format(it) }
     }
+
+    fun maskAddress(fullAddress: String?): String {
+        if (fullAddress.isNullOrBlank()) return ""
+
+        var masked = fullAddress
+
+        // 1. Remover número da casa e a vírgula anterior
+        masked = masked.replace(Regex(""",?\s*\d+(?:-\d+)?\s*[,]?"""), " ")
+        masked = masked.replace(Regex("""\s+nº\s*\d+""", RegexOption.IGNORE_CASE), " ")
+
+        // 2. Normalizar hífens
+        masked = masked.replace(Regex("""\s*-\s*"""), " - ")
+
+        // 3. Mascarar CEP (manter apenas 3 últimos dígitos)
+        masked = masked.replace(Regex("""(\d{5})[-]?(\d{3})""")) { match ->
+            val suffix = match.groupValues[2]
+            "XXXXX-$suffix"
+        }
+
+        // 4. Limpar múltiplos espaços e vírgulas
+        masked = masked
+            .replace(Regex("\\s+"), " ")
+            .replace(Regex(",\\s*,"), ",")
+            .replace(Regex("\\s*,\\s*"), ", ")
+            .trim()
+
+        // 5. Remover vírgula no início ou final
+        masked = masked.replace(Regex("^,|,$"), "")
+
+        // 6. Limitar tamanho
+        if (masked.length > 100) {
+            masked = masked.take(100) + "..."
+        }
+
+        return masked
+    }
 }
