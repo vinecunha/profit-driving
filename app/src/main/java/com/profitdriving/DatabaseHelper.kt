@@ -315,6 +315,21 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
+    fun getRawRideDataByCardHash(cardHash: String): String? = synchronized(dbLock) {
+        val cursor = readableDatabase.query(
+            TABLE_RAW_LOGS,
+            arrayOf(COL_RAW_RIDE_DATA),
+            "$COL_RAW_CARD_HASH = ? AND $COL_RAW_RIDE_DATA IS NOT NULL",
+            arrayOf(cardHash),
+            null, null,
+            "$COL_RAW_TIMESTAMP DESC",
+            "1"
+        )
+        cursor.use {
+            if (it.moveToFirst()) it.getString(0) else null
+        }
+    }
+
     fun getFailedRawLogs(limit: Int = 100): List<Pair<Long, String>> = synchronized(dbLock) {
         val result = mutableListOf<Pair<Long, String>>()
         val cursor = readableDatabase.query(

@@ -206,6 +206,7 @@ class MainActivity : BaseActivity() {
             }
 
             allRecords = allRecords
+                .map { CardHashGenerator.recoverRideFromRawLogs(it, db) }
                 .filter { CardHashGenerator.isValidRide(it) }
                 .let { CardHashGenerator.deduplicateRides(it) }
 

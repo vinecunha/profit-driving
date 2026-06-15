@@ -584,7 +584,9 @@ class MyDayActivity : BaseActivity() {
 
                 allRides = allRides.filter { record ->
                     matchesFilters(record, record.value ?: 0.0)
-                }.let { CardHashGenerator.deduplicateRides(it) }
+                }.map { CardHashGenerator.recoverRideFromRawLogs(it, db) }
+                    .filter { CardHashGenerator.isValidRide(it) }
+                    .let { CardHashGenerator.deduplicateRides(it) }
 
                 val total = allRides.size
                 val fromIndex = availableRidesPage * availableRidesPageSize

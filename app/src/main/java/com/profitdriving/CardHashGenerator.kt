@@ -113,11 +113,55 @@ object CardHashGenerator {
             ((record.pickupDistanceKm ?: 0.0) + (record.tripDistanceKm ?: 0.0)) > 0
         val hasTime = (record.timeMin != null && record.timeMin > 0) ||
             ((record.pickupTimeMin ?: 0) + (record.tripTimeMin ?: 0)) > 0
+        if (hasDistance != hasTime) return false
         val hasAddress = !record.pickupAddress.isNullOrBlank() || !record.dropoffAddress.isNullOrBlank()
+        if (!hasAddress) return false
         val hasValue = record.value != null && record.value > 0
         val hasMetrics = record.pricePerKm != null || record.pricePerHour != null
         val hasRating = record.rating != null && record.rating > 0
-        return hasDistance || hasTime || hasAddress || hasValue || hasMetrics || hasRating
+        return hasValue || hasMetrics || hasRating
+    }
+
+    fun recoverRideFromRawLogs(record: RideRecord, db: DatabaseHelper): RideRecord {
+        val hash = record.cardHash ?: return record
+        val rawData = db.getRawRideDataByCardHash(hash) ?: return record
+        val lines = rawData.lines()
+        fun parseLine(prefix: String): String? {
+            return lines.firstOrNull { it.startsWith(prefix, ignoreCase = true) }
+                ?.removePrefix(prefix)?.trim()?.takeIf { it.isNotBlank() && it != "null" }
+        }
+
+        val rawDist = parseLine("Distance:")?.toDoubleOrNull()
+        val rawTime = parseLine("Time:")?.toIntOrNull()
+        val rawPickup = parseLine("PickupAddress:")
+        val rawDropoff = parseLine("DropoffAddress:")
+        val rawValue = parseLine("Value:")?.toDoubleOrNull()
+        val rawRating = parseLine("Rating:")?.toDoubleOrNull()
+
+        val distOk = (record.distanceKm != null && record.distanceKm > 0) ||
+            ((record.pickupDistanceKm ?: 0.0) + (record.tripDistanceKm ?: 0.0)) > 0
+        val timeOk = (record.timeMin != null && record.timeMin > 0) ||
+            ((record.pickupTimeMin ?: 0) + (record.tripTimeMin ?: 0)) > 0
+        val addressOk = !record.pickupAddress.isNullOrBlank() || !record.dropoffAddress.isNullOrBlank()
+
+        val recoveredDist = if (!distOk && rawDist != null) rawDist else null
+        val recoveredTime = if (!timeOk && rawTime != null) rawTime else null
+        val recoveredPickup = if (!addressOk && rawPickup != null) rawPickup else null
+        val recoveredDropoff = if (!addressOk && rawDropoff != null) rawDropoff else null
+        val recoveredValue = if ((record.value == null || record.value <= 0) && rawValue != null) rawValue else null
+        val recoveredRating = if ((record.rating == null || record.rating <= 0) && rawRating != null) rawRating else null
+
+        if (recoveredDist == null && recoveredTime == null && recoveredPickup == null &&
+            recoveredDropoff == null && recoveredValue == null && recoveredRating == null) return record
+
+        return record.copy(
+            distanceKm = recoveredDist ?: record.distanceKm,
+            timeMin = recoveredTime ?: record.timeMin,
+            pickupAddress = recoveredPickup ?: record.pickupAddress,
+            dropoffAddress = recoveredDropoff ?: record.dropoffAddress,
+            value = recoveredValue ?: record.value,
+            rating = recoveredRating ?: record.rating
+        )
     }
 
     fun deduplicateRides(rides: List<RideRecord>): List<RideRecord> {
