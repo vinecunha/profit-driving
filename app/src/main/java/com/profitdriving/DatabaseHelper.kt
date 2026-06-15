@@ -445,6 +445,19 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
+    fun deleteByTimestamp(sinceMs: Long?) = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            if (sinceMs != null) {
+                db.delete(TABLE_NAME, "$COL_TIMESTAMP >= ?", arrayOf(sinceMs.toString()))
+            } else {
+                db.delete(TABLE_NAME, null, null)
+            }
+        } finally {
+            db.close()
+        }
+    }
+
     // ── Fuel Refuels ──
 
     fun insertRefuel(r: RefuelRecord): Long = synchronized(dbLock) {

@@ -67,19 +67,31 @@ class MainActivity : BaseActivity() {
         setupBottomNav(Screen.HOME)
         setupToolbar(
             showLogo = true,
-            actionText = "\uD83D\uDDD1\uFE0F",
+            actionText = "LIMPAR",
             actionListener = {
-                val count = db.getAll().size
-                val deletedRecords = db.getAll()
+                val sinceMs = if (filterDays >= 0) {
+                    val cal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -filterDays) }
+                    cal.apply {
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }.timeInMillis
+                } else null
+
+                val recordsToDelete = if (sinceMs != null) db.getFiltered(sinceMs) else db.getAll()
+                val count = recordsToDelete.size
+
                 AlertDialog.Builder(this)
-                    .setTitle("Limpar histórico")
-                    .setMessage("$count corridas serão apagadas permanentemente.\nEsta ação não pode ser desfeita.")
-                    .setPositiveButton("Apagar tudo") { _, _ ->
-                        db.deleteAll()
+                    .setTitle(if (filterDays > 0) "Limpar período" else "Limpar histórico")
+                    .setMessage("$count corrida(s) serão apagadas permanentemente.\nEsta ação não pode ser desfeita.")
+                    .setPositiveButton("Apagar") { _, _ ->
+                        db.deleteByTimestamp(sinceMs)
                         loadFilteredHistory()
-                        Snackbar.make(findViewById(android.R.id.content), "Histórico apagado", Snackbar.LENGTH_LONG)
+                        Snackbar.make(findViewById(android.R.id.content),
+                            "$count corrida(s) apagada(s)", Snackbar.LENGTH_LONG)
                             .setAction("Desfazer") {
-                                for (r in deletedRecords) {
+                                for (r in recordsToDelete) {
                                     db.insert(r)
                                 }
                                 loadFilteredHistory()
