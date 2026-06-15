@@ -50,25 +50,25 @@
     <!-- SISTEMA (tema claro)                        -->
     <!-- ============================================ -->
     <!-- Fundos -->
-    <color name="bg_screen">#121212</color>       <!-- Dark - fundo principal (alinhado ao header) -->
-    <color name="bg_card">#1E1E1E</color>         <!-- Dark elevado - cards, superfícies -->
-    <color name="bg_surface">#2A2A2A</color>      <!-- Dark médio - áreas secundárias -->
+    <color name="bg_screen">#F8FAFC</color>       <!-- Slate 50 - fundo principal -->
+    <color name="bg_card">#FFFFFF</color>         <!-- Branco - cards, superfícies -->
+    <color name="bg_surface">#F1F5F9</color>      <!-- Slate 100 - áreas secundárias -->
 
     <!-- Bordas e divisores -->
-    <color name="border">#333333</color>          <!-- Dark borda -->
-    <color name="border_light">#2A2A2A</color>    <!-- Dark borda leve -->
+    <color name="border">#E2E8F0</color>          <!-- Slate 200 -->
+    <color name="border_light">#F1F5F9</color>    <!-- Slate 100 -->
     <color name="border_focus">#2563EB</color>    <!-- Azul 600 -->
 
     <!-- Textos -->
-    <color name="text_primary">#F1F5F9</color>    <!-- Slate 100 - claro -->
-    <color name="text_secondary">#94A3B8</color>  <!-- Slate 400 -->
-    <color name="text_tertiary">#64748B</color>   <!-- Slate 500 -->
-    <color name="text_disabled">#475569</color>   <!-- Slate 600 -->
-    <color name="text_inverse">#0F172A</color>    <!-- Slate 900 - escuro -->
+    <color name="text_primary">#0F172A</color>    <!-- Slate 900 -->
+    <color name="text_secondary">#475569</color>  <!-- Slate 600 -->
+    <color name="text_tertiary">#94A3B8</color>   <!-- Slate 400 -->
+    <color name="text_disabled">#CBD5E1</color>   <!-- Slate 300 -->
+    <color name="text_inverse">#FFFFFF</color>    <!-- Branco -->
 
     <!-- Ícones -->
-    <color name="icon_primary">#94A3B8</color>    <!-- Slate 400 -->
-    <color name="icon_secondary">#64748B</color>  <!-- Slate 500 -->
+    <color name="icon_primary">#475569</color>    <!-- Slate 600 -->
+    <color name="icon_secondary">#94A3B8</color>  <!-- Slate 400 -->
     <color name="icon_accent">#2563EB</color>     <!-- Azul 600 -->
 
     <!-- Preços -->
@@ -94,7 +94,7 @@
 
     <color name="pill_active_bg">@color/accent</color>
     <color name="pill_active_text">#FFFFFF</color>
-    <color name="pill_inactive_bg">#2A2A2A</color>
+    <color name="pill_inactive_bg">#F1F5F9</color>
     <color name="pill_inactive_text">@color/text_secondary</color>
 
     <color name="rating_good_bg">@color/success_bg</color>

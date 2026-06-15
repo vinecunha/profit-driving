@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg_screen">
+    android:background="#F5F7FB">
 
     <include layout="@layout/toolbar_default" />
 
@@ -307,7 +307,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="@color/border"
+                    android:background="#EEF2F6"
                     android:layout_marginVertical="8dp" />
 
                 <LinearLayout
@@ -353,7 +353,7 @@
                     <View
                         android:layout_width="4dp"
                         android:layout_height="4dp"
-                        android:background="@color/text_tertiary"
+                        android:background="#D1D5DB"
                         android:layout_marginHorizontal="6dp"
                         android:layout_gravity="center" />
 
@@ -363,12 +363,12 @@
                         android:layout_height="wrap_content"
                         android:text="R$/km: 0,00"
                         android:textSize="11sp"
-                        android:textColor="@color/text_secondary" />
+                        android:textColor="#6B7280" />
 
                     <View
                         android:layout_width="4dp"
                         android:layout_height="4dp"
-                        android:background="@color/text_tertiary"
+                        android:background="#D1D5DB"
                         android:layout_marginHorizontal="6dp"
                         android:layout_gravity="center" />
 
@@ -485,7 +485,7 @@
                     android:gravity="center"
                     android:text="\u2795"
                     android:textSize="18sp"
-                    android:background="@color/success_bg"
+                    android:background="#E8F5E9"
                     android:padding="6dp" />
 
                 <LinearLayout
@@ -501,14 +501,14 @@
                         android:text="Adicionar corrida manual"
                         android:textSize="13sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="#1A2C3E" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Corrida n\u00E3o foi detectada?"
                         android:textSize="10sp"
-                        android:textColor="@color/text_tertiary" />
+                        android:textColor="#6B7280" />
 
                 </LinearLayout>
 
@@ -589,7 +589,7 @@
                             android:layout_height="wrap_content"
                             android:text="\u25BC"
                             android:textSize="10sp"
-android:textColor="@color/text_tertiary" />
+                            android:textColor="#9CA3AF" />
 
                     </LinearLayout>
 
@@ -608,7 +608,7 @@ android:textColor="@color/text_tertiary" />
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
-                            android:background="@color/bg_surface"
+                            android:background="#F0F2F8"
                             android:padding="8dp"
                             android:layout_marginBottom="12dp">
 
@@ -731,8 +731,8 @@ android:textColor="@color/text_tertiary" />
                     android:gravity="center"
                     android:text="Ver mais"
                     android:textSize="12sp"
-                    android:textColor="@color/text_primary"
-                    android:background="@color/bg_surface"
+                    android:textColor="#1A2C3E"
+                    android:background="#F0F2F8"
                     android:layout_marginTop="8dp"
                     android:visibility="gone"
                     android:clickable="true"
