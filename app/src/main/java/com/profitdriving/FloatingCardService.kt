@@ -249,15 +249,16 @@ class FloatingCardService : Service() {
         minuteRow.visibility = if (prefs.getBoolean(SettingsActivity.KEY_SHOW_MINUTE, true)) View.VISIBLE else View.GONE
         ratingRow.visibility = if (prefs.getBoolean(SettingsActivity.KEY_SHOW_RATING, true)) View.VISIBLE else View.GONE
 
-        tvDecision.text = DecisionEngine.decisionText(result.decision)
+        val decisionText = "${DecisionEngine.decisionText(result.decision)} ${"%.0f".format(result.scorePercent)}%"
+        tvDecision.text = decisionText
         val decisionBg = GradientDrawable()
-        decisionBg.setColor(DecisionEngine.decisionColor(result.decision))
+        decisionBg.setColor(DecisionEngine.overlayDecisionColor(result.decision))
         decisionBg.cornerRadius = 6f * resources.displayMetrics.density
         tvDecision.background = decisionBg
         tvDecision.visibility = View.VISIBLE
         tvDecision.isClickable = false
 
-        tvScore.text = "${"%.0f".format(result.scorePercent)}% (${result.totalPoints.toInt()}/${result.maxPoints.toInt()} pts)"
+        tvScore.text = "${result.totalPoints.toInt()}/${result.maxPoints.toInt()} pts"
 
         val tvProfit = view.findViewById<TextView>(R.id.tvProfit)
         val tvProfitLabel = view.findViewById<TextView>(R.id.tvProfitLabel)

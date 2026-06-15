@@ -111,9 +111,15 @@ object DecisionEngine {
     }
 
     fun decisionColor(decision: Decision): Int = when (decision) {
-        Decision.ACEITAR  -> 0xFF00A86B.toInt()
-        Decision.ANALISAR -> 0xFFF97316.toInt()
-        Decision.RECUSAR  -> 0xFFDC2626.toInt()
+        Decision.ACEITAR  -> 0xFF059669.toInt()  // success (Esmeralda 600)
+        Decision.ANALISAR -> 0xFFD97706.toInt()  // warning (Âmbar 600)
+        Decision.RECUSAR  -> 0xFFDC2626.toInt()  // error (Vermelho 600)
+    }
+
+    fun overlayDecisionColor(decision: Decision): Int = when (decision) {
+        Decision.ACEITAR  -> 0xFF34D399.toInt()  // overlay_success (Esmeralda 400)
+        Decision.ANALISAR -> 0xFFFBBF24.toInt()  // overlay_warning (Âmbar 400)
+        Decision.RECUSAR  -> 0xFFF87171.toInt()  // overlay_error (Vermelho 400)
     }
 
     fun decisionText(decision: Decision): String = when (decision) {
