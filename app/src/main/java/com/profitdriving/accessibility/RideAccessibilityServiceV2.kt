@@ -28,6 +28,7 @@ import com.profitdriving.parser.App99CardParser
 import com.profitdriving.parser.DiscoveryCardParser
 import com.profitdriving.parser.ExclusiveCardParser
 import com.profitdriving.parser.RadarCardParser
+import com.profitdriving.parser.ReservationDetailParser
 import com.profitdriving.parser.RideDataParser
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
@@ -47,6 +48,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     private var currentRawLogId: Long = -1L
 
     private val parsers: List<RideDataParser> = listOf(
+        ReservationDetailParser(),
         RadarCardParser(),
         ExclusiveCardParser(),
         App99CardParser(),
