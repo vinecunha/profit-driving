@@ -119,6 +119,20 @@ class FloatingCardService : Service() {
     private fun showCard(ride: RideData, isDemo: Boolean) {
         val rideHash = "${ride.value}_${ride.distanceKm}_${ride.timeMin}_${ride.rating}"
 
+        // Debounce — mover para FORA do try para não travar isProcessingCard
+        val now = System.currentTimeMillis()
+        if (rideHash == lastRideHash && (now - lastRideTime) < 10000L) {
+            L.d(TAG, "Mesmo card detectado em menos de 10s — ignorando (já exibindo)")
+            return
+        }
+        if (overlayView != null && rideHash == lastRideHash) {
+            L.d(TAG, "Card já está visível, apenas resetando timer")
+            handler.postDelayed(dismissRunnable, prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 30) * 1000L)
+            return
+        }
+        lastRideHash = rideHash
+        lastRideTime = now
+
         // Evitar processamento paralelo do mesmo card
         if (isProcessingCard && currentCardRideHash == rideHash) {
             L.d(TAG, "Card já está sendo processado, ignorando")
@@ -134,23 +148,6 @@ class FloatingCardService : Service() {
 
             // Cancelar qualquer dismiss pendente antes de processar novo card
             handler.removeCallbacks(dismissRunnable)
-
-            val now = System.currentTimeMillis()
-
-            // Aumentar debounce para 10s e verificar se o card já está visível
-            if (rideHash == lastRideHash && (now - lastRideTime) < 10000L) {
-                L.d(TAG, "Mesmo card detectado em menos de 10s — ignorando (já exibindo)")
-                return
-            }
-
-            if (overlayView != null && rideHash == lastRideHash) {
-                L.d(TAG, "Card já está visível, apenas resetando timer")
-                handler.postDelayed(dismissRunnable, prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 30) * 1000L)
-                return
-            }
-
-            lastRideHash = rideHash
-            lastRideTime = now
 
         if (!::windowManager.isInitialized) {
             windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -357,6 +354,7 @@ class FloatingCardService : Service() {
             WindowManager.LayoutParams.WRAP_CONTENT,
             type,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {

@@ -14,8 +14,8 @@ data class CostBreakdownItem(
 
 object CostSummaryCache {
 
-    private val cachedSummaries = mutableMapOf<String, CostSummary>()
-    private val lastUpdateTimes = mutableMapOf<String, Long>()
+    private val cachedSummaries = java.util.concurrent.ConcurrentHashMap<String, CostSummary>()
+    private val lastUpdateTimes = java.util.concurrent.ConcurrentHashMap<String, Long>()
     private val CACHE_DURATION = 30 * 60 * 1000L
 
     suspend fun getCurrentSummary(context: Context, fuelType: String = "gasoline"): CostSummary {

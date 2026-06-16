@@ -51,11 +51,14 @@ class FloatingBubbleService : Service() {
             }
         }
 
+        if (intent == null) {
+            if (bubbleView == null) showBubble(null)
+            return START_STICKY
+        }
+
         if (bubbleView == null) {
             showBubble(null)
         }
-
-        if (intent == null) return START_STICKY
 
         val decision = intent.getStringExtra("decision")
         if (decision != null) {

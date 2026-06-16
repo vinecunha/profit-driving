@@ -101,7 +101,6 @@ object UberCardExtractor {
             }
             CardType.EXCLUSIVE, CardType.UNKNOWN -> {
                 texts.firstOrNull { VIAGEM_PATTERN.containsMatchIn(it) }
-                    ?: texts.firstOrNull { VIAGEM_EXCLUSIVO_PATTERN.containsMatchIn(it) }
             }
             CardType.APP_99 -> {
                 texts.firstOrNull { VIAGEM_PATTERN.containsMatchIn(it) }
@@ -187,9 +186,6 @@ object UberCardExtractor {
     private val VIAGEM_PATTERN = Regex(
         """[Vv]iagem\s+de\s+(?:(\d+)\s*[Hh](?:ora(?:s)?)?\s*e\s*)?(\d+)\s*[Mm]in(?:uto)?s?\s*\((\d+[.,]\d+)\s*km\)""",
         RegexOption.IGNORE_CASE
-    )
-    private val VIAGEM_EXCLUSIVO_PATTERN = Regex(
-        """(\d+)\s*(?:[Mm]in(?:uto)?s?)\s*\((\d+[.,]\d+)\s*km\)(?!\s*de\s*dist[âa]ncia)"""
     )
     private val RATING_STAR_REGEX = Regex("""(\d[.,]\d{1,2})\s*[★⭐*]""")
     private val RATING_COUNT_REGEX = Regex("""(\d[.,]\d{1,2})\s*\(\d+\)""")

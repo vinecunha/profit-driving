@@ -109,17 +109,15 @@ object CardHashGenerator {
     }
 
     fun isValidRide(record: RideRecord): Boolean {
+        val hasValue = record.value != null && record.value > 0
+        if (!hasValue) return false
         val hasDistance = (record.distanceKm != null && record.distanceKm > 0) ||
             ((record.pickupDistanceKm ?: 0.0) + (record.tripDistanceKm ?: 0.0)) > 0
         val hasTime = (record.timeMin != null && record.timeMin > 0) ||
             ((record.pickupTimeMin ?: 0) + (record.tripTimeMin ?: 0)) > 0
-        if (hasDistance != hasTime) return false
-        val hasAddress = !record.pickupAddress.isNullOrBlank() || !record.dropoffAddress.isNullOrBlank()
-        if (!hasAddress) return false
-        val hasValue = record.value != null && record.value > 0
         val hasMetrics = record.pricePerKm != null || record.pricePerHour != null
-        val hasRating = record.rating != null && record.rating > 0
-        return hasValue || hasMetrics || hasRating
+        val hasAddress = !record.pickupAddress.isNullOrBlank() || !record.dropoffAddress.isNullOrBlank()
+        return hasDistance || hasTime || hasMetrics || hasAddress
     }
 
     fun recoverRideFromRawLogs(record: RideRecord, db: DatabaseHelper): RideRecord {

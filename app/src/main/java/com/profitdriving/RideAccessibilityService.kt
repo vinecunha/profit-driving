@@ -5,12 +5,14 @@ import android.content.Intent
 import android.os.Build
 import android.os.CombinedVibration
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.view.accessibility.AccessibilityWindowInfo
 import com.profitdriving.accessibility.extractor.UberCardExtractor
 import com.profitdriving.parser.App99CardParser
@@ -30,7 +32,8 @@ import java.util.Locale
 class RideAccessibilityService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
-    private val bgHandler = Handler(Looper.getMainLooper())
+    private val bgThread = HandlerThread("RideDetectionThread").also { it.start() }
+    private val bgHandler = Handler(bgThread.looper)
     private var pendingRunnable: Runnable? = null
     private var lastHash = ""
     private var lastSaveTime = 0L
@@ -115,6 +118,7 @@ class RideAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         FloatingBubbleService.stop(this)
+        bgThread.quitSafely()
         handler.removeCallbacksAndMessages(null)
         bgHandler.removeCallbacksAndMessages(null)
         super.onDestroy()
@@ -524,7 +528,7 @@ class RideAccessibilityService : AccessibilityService() {
             }
         }
 
-        if (lower.contains("recusar") || lower.contains("negar") || lower.contains("x")) {
+        if (lower.trim() == "recusar" || lower.trim() == "negar" || lower.trim() == "x") {
             L.d(TAG, "Clique em Recusar detectado: $texto")
             if (lastInsertedId >= 0) {
                 db.updateStatus(lastInsertedId, "DECLINED")
@@ -611,7 +615,7 @@ class RideAccessibilityService : AccessibilityService() {
         ))
         L.d(TAG, "Ride inserido com id=$lastInsertedId")
 
-        sendBroadcast(Intent("NEW_RIDE_SAVED"))
+        LocalBroadcastManager.getInstance(this).sendBroadcast(Intent("NEW_RIDE_SAVED"))
 
         getSharedPreferences(SettingsActivity.PREF_NAME, 0).edit().apply {
             ride.value?.let { putFloat("last_value", it.toFloat()) }
@@ -667,9 +671,8 @@ class RideAccessibilityService : AccessibilityService() {
 
     private fun extractServiceType(text: String): String? {
         val lower = text.lowercase(Locale.ROOT)
-        for (entry in SERVICE_TYPE_LIST) {
-            val regex = Regex("\\b${Regex.escape(entry.first)}\\b")
-            if (regex.containsMatchIn(lower)) return entry.second
+        for ((regex, label) in SERVICE_TYPE_PATTERNS) {
+            if (regex.containsMatchIn(lower)) return label
         }
         return null
     }
@@ -771,7 +774,7 @@ class RideAccessibilityService : AccessibilityService() {
         private val RATING_BULLET_REGEX = Regex("""(\d[.,]\d{1,2})\s*[·•]""")
         private val RATING_DECIMAL_REGEX = Regex("""(\d[.,]\d{1,2})""")
 
-        private val SERVICE_TYPE_LIST = listOf(
+        private val SERVICE_TYPE_PATTERNS: List<Pair<Regex, String>> = listOf(
             "uberx" to "UberX",
             "uber flash" to "Flash",
             "uber juntos" to "Juntos",
@@ -801,7 +804,9 @@ class RideAccessibilityService : AccessibilityService() {
             "pop" to "Pop",
             "top" to "Top",
             "entrega" to "Entrega"
-        )
+        ).map { (keyword, label) ->
+            Regex("\\b${Regex.escape(keyword)}\\b", RegexOption.IGNORE_CASE) to label
+        }
 
         private val PRIORITY_BONUS_REGEX = Regex(
             """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do\s+para\s+prioridade""",

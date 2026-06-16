@@ -178,13 +178,15 @@ class ExclusiveCardParser : RideDataParser {
     }
 
     private fun extractTripTime(text: String): Int? {
-        val match = VIAGEM_EXCLUSIVO_REGEX.find(text) ?: return null
-        val hoursStr = match.groupValues[1]
-        val minutesStr = match.groupValues[2]
-        val hours = if (hoursStr.isNullOrEmpty()) 0 else hoursStr.toIntOrNull() ?: 0
-        val minutes = if (minutesStr.isNullOrEmpty()) return null else minutesStr.toIntOrNull() ?: return null
-        val total = hours * 60 + minutes
-        return if (total > 0) total else null
+        val times = VIAGEM_EXCLUSIVO_REGEX.findAll(text).mapNotNull { match ->
+            val hoursStr = match.groupValues[1]
+            val minutesStr = match.groupValues[2]
+            val hours = if (hoursStr.isNullOrEmpty()) 0 else hoursStr.toIntOrNull() ?: return@mapNotNull null
+            val minutes = minutesStr.toIntOrNull() ?: return@mapNotNull null
+            val total = hours * 60 + minutes
+            if (total > 0) total else null
+        }.toList()
+        return times.maxOrNull()
     }
 
     private fun extractRating(text: String): Double? {
@@ -202,9 +204,8 @@ class ExclusiveCardParser : RideDataParser {
 
     private fun extractServiceType(text: String): String? {
         val lower = text.lowercase(Locale.ROOT)
-        for (entry in SERVICE_TYPE_LIST) {
-            val regex = Regex("\\b${Regex.escape(entry.first)}\\b")
-            if (regex.containsMatchIn(lower)) return entry.second
+        for ((regex, label) in SERVICE_TYPE_PATTERNS) {
+            if (regex.containsMatchIn(lower)) return label
         }
         return null
     }
@@ -270,7 +271,7 @@ class ExclusiveCardParser : RideDataParser {
         )
 
         private val VIAGEM_EXCLUSIVO_REGEX = Regex(
-            """(?:(\d+)\s*[Hh]\s*e\s*)?(\d+)\s*(?:[Mm]in(?:uto)?s?)\s*\((\d+[.,]\d+)\s*km\)(?!\s*de\s*dist[âa]ncia)""",
+            """[Vv]iagem\s+de\s+(?:(\d+)\s*[Hh](?:ora(?:s)?)?\s*e\s*)?(\d+)\s*[Mm]in(?:uto)?s?\s*\((\d+[.,]\d+)\s*km\)""",
             RegexOption.IGNORE_CASE
         )
 
@@ -293,7 +294,7 @@ class ExclusiveCardParser : RideDataParser {
         private val RATING_BULLET_REGEX = Regex("""(\d[.,]\d{1,2})\s*[·•]""")
         private val RATING_DECIMAL_REGEX = Regex("""(\d[.,]\d{1,2})""")
 
-        private val SERVICE_TYPE_LIST = listOf(
+        private val SERVICE_TYPE_PATTERNS: List<Pair<Regex, String>> = listOf(
             "uberx" to "UberX",
             "uber flash" to "Flash",
             "uber juntos" to "Juntos",
@@ -317,7 +318,9 @@ class ExclusiveCardParser : RideDataParser {
             "pop" to "Pop",
             "top" to "Top",
             "entrega" to "Entrega"
-        )
+        ).map { (keyword, label) ->
+            Regex("\\b${Regex.escape(keyword)}\\b", RegexOption.IGNORE_CASE) to label
+        }
 
         private val PRIORITY_BONUS_REGEX = Regex(
             """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do\s+para\s+prioridade""",

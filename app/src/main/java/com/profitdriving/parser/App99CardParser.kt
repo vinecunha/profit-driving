@@ -125,9 +125,8 @@ class App99CardParser : RideDataParser {
 
     private fun extractServiceType(text: String): String? {
         val lower = text.lowercase(Locale.ROOT)
-        for (entry in SERVICE_TYPE_LIST) {
-            val regex = Regex("\\b${Regex.escape(entry.first)}\\b")
-            if (regex.containsMatchIn(lower)) return entry.second
+        for ((regex, label) in SERVICE_TYPE_PATTERNS) {
+            if (regex.containsMatchIn(lower)) return label
         }
         return null
     }
@@ -206,7 +205,7 @@ class App99CardParser : RideDataParser {
         private val RATING_BULLET_REGEX = Regex("""(\d[.,]\d{1,2})\s*[·•]""")
         private val RATING_DECIMAL_REGEX = Regex("""(\d[.,]\d{1,2})""")
 
-        private val SERVICE_TYPE_LIST = listOf(
+        private val SERVICE_TYPE_PATTERNS: List<Pair<Regex, String>> = listOf(
             "99pop" to "99Pop",
             "99top" to "99Top",
             "99black" to "99Black",
@@ -216,7 +215,9 @@ class App99CardParser : RideDataParser {
             "pop" to "Pop",
             "top" to "Top",
             "entrega" to "Entrega"
-        )
+        ).map { (keyword, label) ->
+            Regex("\\b${Regex.escape(keyword)}\\b", RegexOption.IGNORE_CASE) to label
+        }
 
         private val PRIORITY_BONUS_REGEX = Regex(
             """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do\s+para\s+prioridade""",

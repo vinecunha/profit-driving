@@ -198,9 +198,8 @@ class RadarCardParser : RideDataParser {
 
     private fun extractServiceType(text: String): String? {
         val lower = text.lowercase(Locale.ROOT)
-        for (entry in SERVICE_TYPE_LIST) {
-            val regex = Regex("\\b${Regex.escape(entry.first)}\\b")
-            if (regex.containsMatchIn(lower)) return entry.second
+        for ((regex, label) in SERVICE_TYPE_PATTERNS) {
+            if (regex.containsMatchIn(lower)) return label
         }
         return null
     }
@@ -289,7 +288,7 @@ class RadarCardParser : RideDataParser {
         private val RATING_BULLET_REGEX = Regex("""(\d[.,]\d{1,2})\s*[·•]""")
         private val RATING_DECIMAL_REGEX = Regex("""(\d[.,]\d{1,2})""")
 
-        private val SERVICE_TYPE_LIST = listOf(
+        private val SERVICE_TYPE_PATTERNS: List<Pair<Regex, String>> = listOf(
             "uberx" to "UberX",
             "uber flash" to "Flash",
             "uber juntos" to "Juntos",
@@ -313,7 +312,9 @@ class RadarCardParser : RideDataParser {
             "pop" to "Pop",
             "top" to "Top",
             "entrega" to "Entrega"
-        )
+        ).map { (keyword, label) ->
+            Regex("\\b${Regex.escape(keyword)}\\b", RegexOption.IGNORE_CASE) to label
+        }
 
         private val PRIORITY_BONUS_REGEX = Regex(
             """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do\s+para\s+prioridade""",

@@ -2,6 +2,8 @@ package com.profitdriving
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.profitdriving.SettingsActivity
 
 object SecurePreferences {
@@ -11,7 +13,20 @@ object SecurePreferences {
     fun get(context: Context): SharedPreferences = try {
         ProfitDrivingApp.getInstance().prefs
     } catch (_: Exception) {
-        context.getSharedPreferences(SettingsActivity.PREF_NAME, Context.MODE_PRIVATE)
+        try {
+            val masterKey = MasterKey.Builder(context.applicationContext)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+            EncryptedSharedPreferences.create(
+                context.applicationContext,
+                SettingsActivity.PREF_NAME,
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } catch (_: Exception) {
+            context.getSharedPreferences(SettingsActivity.PREF_NAME, Context.MODE_PRIVATE)
+        }
     }
 
     fun getFloat(context: Context, key: String, def: Float): Float =

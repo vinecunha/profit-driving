@@ -16,6 +16,7 @@ class ProfitDrivingApp : Application() {
         AppColors.init(this)
         databaseHelper = DatabaseHelper(this)
         prefs = createEncryptedPrefs()
+        databaseHelper.pruneOldRawLogs()
     }
 
     private fun createEncryptedPrefs(): SharedPreferences {

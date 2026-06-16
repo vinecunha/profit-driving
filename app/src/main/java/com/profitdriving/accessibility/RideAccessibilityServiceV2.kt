@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.CombinedVibration
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -27,11 +28,13 @@ import com.profitdriving.parser.App99CardParser
 import com.profitdriving.parser.ExclusiveCardParser
 import com.profitdriving.parser.RadarCardParser
 import com.profitdriving.parser.RideDataParser
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 class RideAccessibilityServiceV2 : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
-    private val bgHandler = Handler(Looper.getMainLooper())
+    private val bgThread = HandlerThread("RideDetectionThread").also { it.start() }
+    private val bgHandler = Handler(bgThread.looper)
     private var pendingRunnable: Runnable? = null
     private var lastHash = ""
     private var lastSaveTime = 0L
@@ -126,6 +129,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
 
     override fun onDestroy() {
         FloatingBubbleService.stop(this)
+        bgThread.quitSafely()
         handler.removeCallbacksAndMessages(null)
         bgHandler.removeCallbacksAndMessages(null)
         super.onDestroy()
@@ -279,21 +283,10 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             rating = ride.rating
         )
 
-        val temDistancia = (ride.distanceKm ?: 0.0) > 0
-            || (ride.tripDistanceKm ?: 0.0) > 0
-            || (ride.pickupDistanceKm ?: 0.0) > 0
-        val temTempo = (ride.timeMin ?: 0) > 0
-            || (ride.tripTimeMin ?: 0) > 0
-            || (ride.pickupTimeMin ?: 0) > 0
-
-        if (!temDistancia && !temTempo) {
-            L.w(TAG, "⛔ Card bloqueado: sem distância e sem tempo — value=${ride.value}")
-            db.updateRawLogStatus(currentRawLogId, status = "failed", error = "no distance or time")
+        if (!isValidRide(ride)) {
+            L.w(TAG, "⛔ Card inválido ignorado: value=${ride.value} km=${ride.distanceKm} time=${ride.timeMin}min")
+            db.updateRawLogStatus(currentRawLogId, status = "failed", error = "invalid ride (no value or no distance/time)")
             return
-        }
-
-        if (!temDistancia) {
-            L.w(TAG, "⚠️ Card sem distância — value=${ride.value} tempo=${ride.timeMin}min")
         }
 
         val now = System.currentTimeMillis()
@@ -382,7 +375,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         statusLocked = false
         vibrateFeedback()
 
-        sendBroadcast(Intent("NEW_RIDE_SAVED"))
+        LocalBroadcastManager.getInstance(this).sendBroadcast(Intent("NEW_RIDE_SAVED"))
 
         getSharedPreferences(SettingsActivity.PREF_NAME, 0).edit().apply {
             ride.value?.let { putFloat("last_value", it.toFloat()) }
@@ -443,7 +436,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             }
         }
 
-        if (lower.contains("recusar") || lower.contains("negar") || lower.contains("x")) {
+        if (lower.trim() == "recusar" || lower.trim() == "negar" || lower.trim() == "x") {
             L.d(TAG, "Clique em Recusar detectado: $texto")
             if (lastInsertedId >= 0) {
                 db.updateStatus(lastInsertedId, "DECLINED")
@@ -451,6 +444,17 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                 L.d(TAG, "Ride $lastInsertedId marcado como RECUSADO")
             }
         }
+    }
+
+    private fun isValidRide(ride: RideData): Boolean {
+        if (ride.value == null || ride.value <= 0) return false
+        val hasDistance = (ride.distanceKm ?: 0.0) > 0
+            || (ride.tripDistanceKm ?: 0.0) > 0
+            || (ride.pickupDistanceKm ?: 0.0) > 0
+        val hasTime = (ride.timeMin ?: 0) > 0
+            || (ride.tripTimeMin ?: 0) > 0
+            || (ride.pickupTimeMin ?: 0) > 0
+        return hasDistance || hasTime
     }
 
     private fun vibrateFeedback() {

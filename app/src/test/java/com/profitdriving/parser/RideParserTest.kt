@@ -17,7 +17,7 @@ class RideParserTest {
         trip: String = "Viagem de 15 minutos (6.6 km)",
         rating: String = "4,89 (42)",
         service: String = "UberX",
-        accept: String = "Aceitar",
+        accept: String = "Selecionar",
         bonus: List<String> = emptyList()
     ) = RawCardData(
         cardType = CardType.RADAR,
@@ -38,7 +38,7 @@ class RideParserTest {
         tripAlt: String? = "4 minutos (1.1 km)",
         rating: String = "4,80 (156)",
         service: String = "UberX",
-        accept: String = "Selecionar",
+        accept: String = "Aceitar",
         bonus: List<String> = listOf("+R$ 2,00 incluído")
     ) = RawCardData(
         cardType = CardType.EXCLUSIVE,

@@ -16,6 +16,10 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.view.LayoutInflater
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -92,7 +96,9 @@ class MainActivity : BaseActivity() {
                             "$count corrida(s) apagada(s)", Snackbar.LENGTH_LONG)
                             .setAction("Desfazer") {
                                 for (r in recordsToDelete) {
-                                    db.insert(r)
+                                    if (db.getRideById(r.id) == null) {
+                                        db.insert(r)
+                                    }
                                 }
                                 loadFilteredHistory()
                             }
@@ -193,78 +199,83 @@ class MainActivity : BaseActivity() {
             emptyState.visibility = View.GONE
             btnLoadMore.visibility = View.GONE
         }
-        Thread {
-            val sinceMs = if (filterDays >= 0) {
-                val cal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -filterDays) }
-                cal.apply {
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }.timeInMillis
-            } else null
+        lifecycleScope.launch {
+            val (records, totalCount) = withContext(Dispatchers.IO) {
+                val sinceMs = if (filterDays >= 0) {
+                    val cal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -filterDays) }
+                    cal.apply {
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }.timeInMillis
+                } else null
 
-            var allRecords = if (sinceMs != null) db.getFiltered(sinceMs) else db.getAll()
+                var allRecords = if (sinceMs != null) db.getFiltered(sinceMs) else db.getAll()
 
-            if (selectedTypeFilter != "all") {
-                allRecords = allRecords.filter { it.serviceType == selectedTypeFilter }
+                if (selectedTypeFilter != "all") {
+                    allRecords = allRecords.filter { it.serviceType == selectedTypeFilter }
+                }
+
+                allRecords = when (selectedScoreFilter) {
+                    "good" -> allRecords.filter { it.scorePercent != null && it.scorePercent >= 80.0 }
+                    "medium" -> allRecords.filter { it.scorePercent != null && it.scorePercent >= 50.0 && it.scorePercent < 80.0 }
+                    "bad" -> allRecords.filter { it.scorePercent != null && it.scorePercent < 50.0 }
+                    else -> allRecords
+                }
+
+                allRecords = allRecords
+                    .map { CardHashGenerator.recoverRideFromRawLogs(it, db) }
+                    .filter { CardHashGenerator.isValidRide(it) }
+                    .filter { it.value != null && it.value > 0 && (it.distanceKm != null && it.distanceKm > 0 || it.timeMin != null && it.timeMin > 0) }
+                    .let { CardHashGenerator.deduplicateRides(it) }
+
+                val totalCount = allRecords.size
+                val fromIndex = currentPage * pageSize
+                val toIndex = minOf(fromIndex + pageSize, totalCount)
+                val records = if (fromIndex < totalCount) allRecords.subList(fromIndex, toIndex) else emptyList<com.profitdriving.RideRecord>()
+                Pair(records, totalCount)
             }
 
-            allRecords = when (selectedScoreFilter) {
-                "good" -> allRecords.filter { it.scorePercent != null && it.scorePercent >= 80.0 }
-                "medium" -> allRecords.filter { it.scorePercent != null && it.scorePercent >= 50.0 && it.scorePercent < 80.0 }
-                "bad" -> allRecords.filter { it.scorePercent != null && it.scorePercent < 50.0 }
-                else -> allRecords
-            }
-
-            allRecords = allRecords
-                .map { CardHashGenerator.recoverRideFromRawLogs(it, db) }
-                .filter { CardHashGenerator.isValidRide(it) }
-                .let { CardHashGenerator.deduplicateRides(it) }
-
-            val totalCount = allRecords.size
-            val fromIndex = currentPage * pageSize
-            val toIndex = minOf(fromIndex + pageSize, totalCount)
-            val records = if (fromIndex < totalCount) allRecords.subList(fromIndex, toIndex) else emptyList()
-            handler.post {
-                if (reset) progressBar.visibility = View.GONE
-                if (records.isEmpty() && reset) {
-                    recyclerView.visibility = View.GONE
-                    emptyState.visibility = View.VISIBLE
-                    btnLoadMore.visibility = View.GONE
-                } else {
-                    recyclerView.visibility = View.VISIBLE
-                    emptyState.visibility = View.GONE
-                    val prefs = SecurePreferences.get(this)
-                    if (reset || adapter == null) {
-                        val costSummary = CostCalculator.calculateCostSummary(
+            if (reset) progressBar.visibility = View.GONE
+            if (records.isEmpty() && reset) {
+                recyclerView.visibility = View.GONE
+                emptyState.visibility = View.VISIBLE
+                btnLoadMore.visibility = View.GONE
+            } else {
+                recyclerView.visibility = View.VISIBLE
+                emptyState.visibility = View.GONE
+                val prefs = SecurePreferences.get(this@MainActivity)
+                if (reset || adapter == null) {
+                    val costSummary = withContext(Dispatchers.IO) {
+                        CostCalculator.calculateCostSummary(
                             db.getRefuels(), db.getAllExpenses(), db.getMonthlyKm()
                         )
-                        adapter = HistoryAdapter(
-                            records,
-                            minKm = prefs.getFloat(SettingsActivity.KEY_MIN_KM, 0f),
-                            idealKm = prefs.getFloat(SettingsActivity.KEY_IDEAL_KM, 0f),
-                            minHour = prefs.getFloat(SettingsActivity.KEY_MIN_HOUR, 0f),
-                            idealHour = prefs.getFloat(SettingsActivity.KEY_IDEAL_HOUR, 0f),
-                            minMinute = prefs.getFloat(SettingsActivity.KEY_MIN_MINUTE, 0f),
-                            idealMinute = prefs.getFloat(SettingsActivity.KEY_IDEAL_MINUTE, 0f),
-                            minRating = prefs.getFloat(SettingsActivity.KEY_MIN_RATING, 0f),
-                            idealRating = prefs.getFloat(SettingsActivity.KEY_IDEAL_RATING, 0f),
-                            costPerKm = costSummary.totalCostPerKm
-                        )
-                        recyclerView.layoutManager = LinearLayoutManager(this)
-                        recyclerView.adapter = adapter
-                    } else {
-                        adapter!!.appendData(records)
                     }
-                    val loadedSoFar = (currentPage + 1) * pageSize
-                    hasMore = loadedSoFar < totalCount
-                    btnLoadMore.visibility = if (hasMore) View.VISIBLE else View.GONE
-                    btnLoadMore.text = if (hasMore)
-                        "Ver mais (${totalCount - loadedSoFar} restantes)" else ""
+                    adapter = HistoryAdapter(
+                        records,
+                        minKm = prefs.getFloat(SettingsActivity.KEY_MIN_KM, 0f),
+                        idealKm = prefs.getFloat(SettingsActivity.KEY_IDEAL_KM, 0f),
+                        minHour = prefs.getFloat(SettingsActivity.KEY_MIN_HOUR, 0f),
+                        idealHour = prefs.getFloat(SettingsActivity.KEY_IDEAL_HOUR, 0f),
+                        minMinute = prefs.getFloat(SettingsActivity.KEY_MIN_MINUTE, 0f),
+                        idealMinute = prefs.getFloat(SettingsActivity.KEY_IDEAL_MINUTE, 0f),
+                        minRating = prefs.getFloat(SettingsActivity.KEY_MIN_RATING, 0f),
+                        idealRating = prefs.getFloat(SettingsActivity.KEY_IDEAL_RATING, 0f),
+                        costPerKm = costSummary.totalCostPerKm
+                    )
+                    recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
+                    recyclerView.adapter = adapter
+                } else {
+                    adapter!!.appendData(records)
                 }
+                val loadedSoFar = (currentPage + 1) * pageSize
+                hasMore = loadedSoFar < totalCount
+                btnLoadMore.visibility = if (hasMore) View.VISIBLE else View.GONE
+                btnLoadMore.text = if (hasMore)
+                    "Ver mais (${totalCount - loadedSoFar} restantes)" else ""
             }
-        }.start()
+        }
     }
 
     private fun loadNextPage() {

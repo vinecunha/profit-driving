@@ -21,7 +21,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         db.execSQL(CREATE_EXPENSES)
         db.execSQL(CREATE_DAILY_RIDES)
         db.execSQL(CREATE_RAW_LOGS_TABLE)
-        db.execSQL(CREATE_RAW_LOGS_INDEXES)
+        db.execSQL(CREATE_RAW_LOGS_INDEX_TS)
+        db.execSQL(CREATE_RAW_LOGS_INDEX_HASH)
+        db.execSQL(CREATE_RAW_LOGS_INDEX_STATUS)
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_dropoff_address ON $TABLE_NAME(dropoff_address)")
     }
 
@@ -119,7 +121,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
         if (oldVersion < 20) {
             db.execSQL(CREATE_RAW_LOGS_TABLE)
-            db.execSQL(CREATE_RAW_LOGS_INDEXES)
+            db.execSQL(CREATE_RAW_LOGS_INDEX_TS)
+            db.execSQL(CREATE_RAW_LOGS_INDEX_HASH)
+            db.execSQL(CREATE_RAW_LOGS_INDEX_STATUS)
             try { db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN unit_type TEXT DEFAULT 'L'") } catch (_: Exception) { }
             try { db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN charger_type TEXT") } catch (_: Exception) { }
             try { db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN percentage_start INTEGER") } catch (_: Exception) { }
@@ -367,10 +371,20 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             appendLine("Time: ${ride.timeMin}")
             appendLine("Rating: ${ride.rating}")
             appendLine("ServiceType: ${ride.serviceType}")
-            appendLine("PickupAddress: ${ride.pickupAddress}")
-            appendLine("DropoffAddress: ${ride.dropoffAddress}")
+            appendLine("PickupAddress: ${CardHashGenerator.maskAddress(ride.pickupAddress)}")
+            appendLine("DropoffAddress: ${CardHashGenerator.maskAddress(ride.dropoffAddress)}")
             appendLine("PriorityBonus: ${ride.priorityBonus}")
             appendLine("DynamicBonus: ${ride.dynamicBonus}")
+        }
+    }
+
+    fun pruneOldRawLogs(daysToKeep: Int = 7) = synchronized(dbLock) {
+        val cutoff = System.currentTimeMillis() - (daysToKeep * 24 * 60 * 60 * 1000L)
+        val db = writableDatabase
+        try {
+            db.delete(TABLE_RAW_LOGS, "$COL_RAW_TIMESTAMP < ?", arrayOf(cutoff.toString()))
+        } finally {
+            db.close()
         }
     }
 
@@ -393,7 +407,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     fun getFiltered(sinceMs: Long?, limit: Int?, offset: Int = 0): List<RideRecord> {
         val list = mutableListOf<RideRecord>()
-        val selection = if (sinceMs != null) "$COL_TIMESTAMP >= ?" else null
+        val conditions = mutableListOf("$COL_VALUE > 0 AND ($COL_DISTANCE_KM > 0 OR $COL_TIME_MIN > 0)")
+        if (sinceMs != null) conditions.add("$COL_TIMESTAMP >= ?")
+        val selection = conditions.joinToString(" AND ")
         val selectionArgs = if (sinceMs != null) arrayOf(sinceMs.toString()) else null
         val limitClause = if (limit != null) "$limit OFFSET $offset" else null
         val cursor = readableDatabase.query(
@@ -435,15 +451,18 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     fun getCount(sinceMs: Long?): Int {
         val db = readableDatabase
-        val selection = if (sinceMs != null) "$COL_TIMESTAMP >= ?" else null
-        val selectionArgs = if (sinceMs != null) arrayOf(sinceMs.toString()) else null
-        val sql = "SELECT COUNT(*) FROM $TABLE_NAME" +
-                (if (selection != null) " WHERE $selection" else "")
-        val cursor = db.rawQuery(sql, selectionArgs)
-        cursor.use {
-            if (it.moveToFirst()) return it.getInt(0)
+        try {
+            val selection = if (sinceMs != null) "$COL_TIMESTAMP >= ?" else null
+            val selectionArgs = if (sinceMs != null) arrayOf(sinceMs.toString()) else null
+            val sql = "SELECT COUNT(*) FROM $TABLE_NAME" +
+                    (if (selection != null) " WHERE $selection" else "")
+            val cursor = db.rawQuery(sql, selectionArgs)
+            cursor.use {
+                return if (it.moveToFirst()) it.getInt(0) else 0
+            }
+        } finally {
+            db.close()
         }
-        return 0
     }
 
     fun deleteAll() = synchronized(dbLock) {
@@ -521,8 +540,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return list
     }
 
-    fun deleteRefuel(id: Long) {
-        writableDatabase.delete(TABLE_FUEL_REFUELS, "$COL_ID = ?", arrayOf(id.toString()))
+    fun deleteRefuel(id: Long) = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            db.delete(TABLE_FUEL_REFUELS, "$COL_ID = ?", arrayOf(id.toString()))
+        } finally {
+            db.close()
+        }
     }
 
     fun getLastRefuelByFuelType(fuelType: String, beforeTimestamp: Long = System.currentTimeMillis()): RefuelRecord? {
@@ -680,7 +704,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     fun deleteVariableCost(id: Long) = synchronized(dbLock) {
-        writableDatabase.delete(TABLE_VARIABLE_COSTS, "$COL_ID = ?", arrayOf(id.toString()))
+        val db = writableDatabase
+        try {
+            db.delete(TABLE_VARIABLE_COSTS, "$COL_ID = ?", arrayOf(id.toString()))
+        } finally {
+            db.close()
+        }
     }
 
     // ── Unified Expenses ──
@@ -806,7 +835,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     // ── Monthly Stats ──
 
-    fun saveMonthlyStat(year: Int, month: Int, totalKm: Double, totalFuelCost: Double, avgConsumption: Double?) {
+    fun saveMonthlyStat(year: Int, month: Int, totalKm: Double, totalFuelCost: Double, avgConsumption: Double?) = synchronized(dbLock) {
         val db = writableDatabase
         try {
             val cv = ContentValues().apply {
@@ -855,7 +884,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return 3000
     }
 
-    fun saveMonthlyKm(km: Int) {
+    fun saveMonthlyKm(km: Int) = synchronized(dbLock) {
         val db = writableDatabase
         try {
             val cv = ContentValues().apply {
@@ -1369,11 +1398,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             )
         """.trimIndent()
 
-        private val CREATE_RAW_LOGS_INDEXES = """
-            CREATE INDEX IF NOT EXISTS idx_raw_logs_ts ON $TABLE_RAW_LOGS($COL_RAW_TIMESTAMP);
-            CREATE INDEX IF NOT EXISTS idx_raw_logs_hash ON $TABLE_RAW_LOGS($COL_RAW_CARD_HASH);
-            CREATE INDEX IF NOT EXISTS idx_raw_logs_status ON $TABLE_RAW_LOGS($COL_RAW_STATUS);
-        """.trimIndent()
+        private val CREATE_RAW_LOGS_INDEX_TS =
+            "CREATE INDEX IF NOT EXISTS idx_raw_logs_ts ON $TABLE_RAW_LOGS($COL_RAW_TIMESTAMP)"
+        private val CREATE_RAW_LOGS_INDEX_HASH =
+            "CREATE INDEX IF NOT EXISTS idx_raw_logs_hash ON $TABLE_RAW_LOGS($COL_RAW_CARD_HASH)"
+        private val CREATE_RAW_LOGS_INDEX_STATUS =
+            "CREATE INDEX IF NOT EXISTS idx_raw_logs_status ON $TABLE_RAW_LOGS($COL_RAW_STATUS)"
     }
 }
 
