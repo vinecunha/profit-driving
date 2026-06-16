@@ -52,7 +52,7 @@ class MyDayRideAdapter(
 
         holder.chkCompleted.text = if (ride.isCompleted) "\u2611" else "\u2610"
         holder.chkCompleted.setTextColor(
-            if (ride.isCompleted) 0xFF00A86B.toInt() else 0xFF5E6F8D.toInt()
+            if (ride.isCompleted) 0xFF00A86B.toInt() else 0xFF475569.toInt()
         )
 
         if (ride.tipAmount > 0 || ride.adjustmentDifference != 0.0) {
@@ -149,7 +149,7 @@ class MyDayRideAdapter(
         val profit = ride.finalValue - rideCost
         holder.tvDetailProfit.text = "R$ %.2f".format(profit).replace(".", ",")
         holder.tvDetailProfit.setTextColor(
-            if (profit >= 0) 0xFF00A86B.toInt() else 0xFFEF4444.toInt()
+            if (profit >= 0) 0xFF00A86B.toInt() else 0xFFDC2626.toInt()
         )
 
         if (ride.finalValue > 0) {

@@ -46,7 +46,7 @@ class RefuelsHistoryActivity : BaseActivity() {
             val empty = TextView(this).apply {
                 text = "Nenhum abastecimento registrado"
                 textSize = 12f
-                setTextColor(0xFF9CA3AF.toInt())
+                setTextColor(0xFF94A3B8.toInt())
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, 24, 0, 8)
             }

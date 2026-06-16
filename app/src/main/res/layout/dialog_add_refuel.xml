@@ -177,7 +177,7 @@
                 android:paddingHorizontal="14dp"
                 android:text="❌ NÃO"
                 android:textSize="12sp"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/text_primary"
                 android:gravity="center"
                 android:background="@drawable/pill_unselected"
                 android:clickable="true"

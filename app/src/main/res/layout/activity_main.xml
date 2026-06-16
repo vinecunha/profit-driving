@@ -58,7 +58,7 @@
                         android:text="CorridaCerta"
                         android:textSize="15sp"
                         android:textStyle="bold"
-                        android:textColor="#FFFFFF" />
+                        android:textColor="@color/text_inverse" />
 
                     <TextView
                         android:id="@+id/tvAccessibilityBadge"
@@ -66,7 +66,8 @@
                         android:layout_height="wrap_content"
                         android:text="Hist\u00F3rico de corridas"
                         android:textSize="10sp"
-                        android:textColor="#66FFFFFF" />
+                        android:textColor="@color/text_inverse"
+            android:alpha="0.4" />
 
                 </LinearLayout>
 
@@ -79,9 +80,9 @@
                 android:layout_height="32dp"
                 android:paddingHorizontal="12dp"
                 android:gravity="center"
-                android:text="\uD83D\uDDD1\uFE0F"
+                android:text="🗑️"
                 android:textSize="14sp"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/text_inverse"
                 android:background="@drawable/bg_btn_action"
                 android:clickable="true"
                 android:focusable="true" />

@@ -17,10 +17,9 @@
 
         <TextView
             android:id="@+id/tvApp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/overlay_text_primary"
-            android:textSize="11sp" />
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/tvValue"
@@ -218,20 +217,53 @@
         android:orientation="horizontal"
         android:layout_marginTop="2dp">
 
-        <TextView
-            android:id="@+id/tvDistance"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/overlay_text_primary"
-            android:textSize="11sp" />
+            android:orientation="horizontal"
+            android:gravity="start"
+            android:layout_marginEnd="16dp">
 
-        <TextView
-            android:id="@+id/tvTime"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🛣️"
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/tvDistance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="10sp"
+                android:layout_marginStart="3dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/overlay_text_primary"
-            android:textSize="11sp"
-            android:layout_marginStart="8dp" />
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginEnd="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⏱"
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/tvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="10sp"
+                android:layout_marginStart="3dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -240,7 +272,7 @@
         android:layout_width="match_parent"
         android:layout_height="28dp"
         android:gravity="center"
-        android:textSize="11sp"
+        android:textSize="9sp"
         android:textStyle="bold"
         android:textColor="@color/overlay_text_primary"
         android:layout_marginTop="6dp"
@@ -250,10 +282,10 @@
         android:id="@+id/tvScore"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="10sp"
+        android:textSize="6sp"
         android:textColor="@color/overlay_text_secondary"
         android:gravity="center"
-        android:layout_marginTop="4dp" />
+        android:layout_marginTop="6dp" />
 
     <LinearLayout
         android:layout_width="match_parent"

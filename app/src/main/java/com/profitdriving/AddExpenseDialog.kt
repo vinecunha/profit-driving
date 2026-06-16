@@ -158,8 +158,8 @@ class AddExpenseDialog(
             btnYearly.isSelected = per == Periodicity.YEARLY
             btnMonthly.setBackgroundResource(if (per == Periodicity.MONTHLY) R.drawable.pill_selected else R.drawable.pill_unselected)
             btnYearly.setBackgroundResource(if (per == Periodicity.YEARLY) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btnMonthly.setTextColor(if (per == Periodicity.MONTHLY) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-            btnYearly.setTextColor(if (per == Periodicity.YEARLY) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+            btnMonthly.setTextColor(if (per == Periodicity.MONTHLY) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
+            btnYearly.setTextColor(if (per == Periodicity.YEARLY) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
         }
 
         fun selectPaymentType(installment: Boolean) {
@@ -168,8 +168,8 @@ class AddExpenseDialog(
             btnParcelado.isSelected = installment
             btnAvista.setBackgroundResource(if (!installment) R.drawable.pill_selected else R.drawable.pill_unselected)
             btnParcelado.setBackgroundResource(if (installment) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btnAvista.setTextColor(if (!installment) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-            btnParcelado.setTextColor(if (installment) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+            btnAvista.setTextColor(if (!installment) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
+            btnParcelado.setTextColor(if (installment) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
             installGroup.visibility = if (installment) View.VISIBLE else View.GONE
         }
 

@@ -47,7 +47,7 @@ object CostSummaryCache {
                 costPerKm = summary.fuelCostPerKm,
                 monthlyCost = fuelMonthly,
                 percentage = 0f,
-                color = 0xFF3B82F6.toInt()
+                color = 0xFF2563EB.toInt()
             ))
         }
 
@@ -56,7 +56,7 @@ object CostSummaryCache {
             0xFF8B5CF6.toInt(),
             0xFFEC4899.toInt(),
             0xFF14B8A6.toInt(),
-            0xFFF59E0B.toInt(),
+            0xFFF97316.toInt(),
             0xFF6366F1.toInt(),
             0xFF84CC16.toInt(),
             0xFF06B6D4.toInt()

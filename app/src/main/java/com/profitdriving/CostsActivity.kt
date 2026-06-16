@@ -25,7 +25,6 @@ class CostsActivity : BaseActivity() {
     private lateinit var eventList: LinearLayout
     private lateinit var normalizedExpenseList: LinearLayout
     private lateinit var progressOverlay: View
-    private var selectedFuel = "gasoline"
     private var refuels = listOf<RefuelRecord>()
     private var allExpenses = listOf<Expense>()
     private var monthlyKm = 3000
@@ -44,7 +43,6 @@ class CostsActivity : BaseActivity() {
         (findViewById<android.view.ViewGroup>(android.R.id.content))?.addView(progressOverlay)
         progressOverlay.visibility = View.GONE
 
-        setupFuelSelector()
         setupRefuelButton()
         setupExpenseButtons()
         setupMonthlyKm()
@@ -65,31 +63,6 @@ class CostsActivity : BaseActivity() {
         try { loadData() } catch (e: Exception) {
             android.util.Log.e("CostsActivity", "Error loading data", e)
         }
-    }
-
-    private fun setupFuelSelector() {
-        val fuelButtons = mapOf(
-            R.id.btnFuelGasoline to "gasoline",
-            R.id.btnFuelEthanol to "ethanol",
-            R.id.btnFuelDiesel to "diesel",
-            R.id.btnFuelGNV to "gnv"
-        )
-
-        fun selectFuel(type: String) {
-            selectedFuel = type
-            for ((id, value) in fuelButtons) {
-                val btn = findViewById<TextView>(id)
-                val selected = value == type
-                btn.isSelected = selected
-                btn.setBackgroundResource(if (selected) R.drawable.pill_selected else R.drawable.pill_unselected)
-                btn.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-            }
-        }
-
-        for ((id, value) in fuelButtons) {
-            findViewById<TextView>(id).setOnClickListener { selectFuel(value) }
-        }
-        selectFuel("gasoline")
     }
 
     private fun setupRefuelButton() {
@@ -170,7 +143,7 @@ class CostsActivity : BaseActivity() {
             val empty = TextView(this).apply {
                 text = "Nenhum abastecimento registrado"
                 textSize = 12f
-                setTextColor(0xFF9CA3AF.toInt())
+                setTextColor(0xFF94A3B8.toInt())
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, 24, 0, 8)
             }
@@ -265,7 +238,7 @@ class CostsActivity : BaseActivity() {
             val empty = TextView(this).apply {
                 text = emptyMessage
                 textSize = 11f
-                setTextColor(0xFF9CA3AF.toInt())
+                setTextColor(0xFF94A3B8.toInt())
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, 6, 0, 6)
             }
@@ -287,9 +260,9 @@ class CostsActivity : BaseActivity() {
                 else -> "\u23F1 Pendente"
             }
             val statusColor = when (expense.paymentStatus) {
-                "PAID" -> 0xFF16A34A.toInt()
-                "PARTIAL" -> 0xFFF59E0B.toInt()
-                else -> 0xFF6B7280.toInt()
+                "PAID" -> 0xFF00A86B.toInt()
+                "PARTIAL" -> 0xFFF97316.toInt()
+                else -> 0xFF94A3B8.toInt()
             }
             row.findViewById<TextView>(R.id.tvExpenseStatus).text = statusText
             row.findViewById<TextView>(R.id.tvExpenseStatus).setTextColor(statusColor)
@@ -378,18 +351,8 @@ class CostsActivity : BaseActivity() {
         }, 100)
     }
 
-    private fun getFuelDisplayName(fuelType: String): String {
-        return when (fuelType) {
-            "gasoline" -> "Gasolina"
-            "ethanol" -> "Etanol"
-            "diesel" -> "Diesel"
-            "gnv" -> "GNV"
-            else -> "Combust\u00EDvel"
-        }
-    }
-
     private fun updateSummary() {
-        val summary = CostCalculator.calculateCostSummary(refuels, allExpenses, monthlyKm, currentFuelType = selectedFuel)
+        val summary = CostCalculator.calculateCostSummary(refuels, allExpenses, monthlyKm, currentFuelType = "gasoline")
 
         normalizedExpenseList = findViewById(R.id.normalizedExpenseList)
         normalizedExpenseList.removeAllViews()
@@ -398,7 +361,7 @@ class CostsActivity : BaseActivity() {
             val empty = TextView(this).apply {
                 text = "Nenhuma despesa cadastrada"
                 textSize = 11f
-                setTextColor(0xFF9CA3AF.toInt())
+                setTextColor(0xFF94A3B8.toInt())
             }
             normalizedExpenseList.addView(empty)
         } else {
@@ -438,7 +401,7 @@ class CostsActivity : BaseActivity() {
             "Custo/min: ${currencyFormat.format(summary.costPerMinute)}"
 
         findViewById<TextView>(R.id.tvAvgConsumption).text =
-            "Consumo m\u00E9dio (${getFuelDisplayName(selectedFuel)}): ${"%.1f".format(summary.avgConsumption).replace(".", ",")} km/L"
+            "Consumo m\u00E9dio: ${"%.1f".format(summary.avgConsumption).replace(".", ",")} km/L"
         findViewById<TextView>(R.id.tvAvgFuelCost).text =
             "Custo combust\u00EDvel: ${currencyFormat.format(summary.fuelCostPerKm)}/km"
 
@@ -449,7 +412,7 @@ class CostsActivity : BaseActivity() {
         return TextView(this).apply {
             this.text = text
             textSize = 11f
-            setTextColor(0xFF1A2C3E.toInt())
+            setTextColor(0xFF0F172A.toInt())
             setTypeface(null, android.graphics.Typeface.BOLD)
             setPadding(0, 4, 0, 2)
         }
@@ -459,13 +422,13 @@ class CostsActivity : BaseActivity() {
         return TextView(this).apply {
             text = "${ne.name}: ${currencyFormat.format(ne.costPerKm)}/km"
             textSize = 11f
-            setTextColor(0xFF5E6F8D.toInt())
+            setTextColor(0xFF475569.toInt())
             setPadding(0, 0, 0, 2)
         }
     }
 
     private fun updateSimulator() {
-        val summary = CostCalculator.calculateCostSummary(refuels, allExpenses, monthlyKm, currentFuelType = selectedFuel)
+        val summary = CostCalculator.calculateCostSummary(refuels, allExpenses, monthlyKm, currentFuelType = "gasoline")
         val costPerKm = summary.totalCostPerKm
 
         findViewById<TextView>(R.id.tvYourCost).text =

@@ -206,20 +206,20 @@ class FloatingBubbleService : Service() {
         val dotColor: String
         when (status) {
             "good" -> {
-                ringColor = "#4CAF50"
-                dotColor = "#4CAF50"
+                ringColor = "#00A86B"
+                dotColor = "#00A86B"
             }
             "medium" -> {
-                ringColor = "#FF9800"
-                dotColor = "#FF9800"
+                ringColor = "#F97316"
+                dotColor = "#F97316"
             }
             "bad" -> {
-                ringColor = "#F44336"
-                dotColor = "#F44336"
+                ringColor = "#DC2626"
+                dotColor = "#DC2626"
             }
             else -> {
-                ringColor = "#9E9E9E"
-                dotColor = "#9E9E9E"
+                ringColor = "#94A3B8"
+                dotColor = "#94A3B8"
             }
         }
 

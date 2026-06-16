@@ -225,7 +225,7 @@ class SettingsActivity : BaseActivity() {
 
         seekThresholdAceitar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-                tvThresholdAceitarLabel.text = "ACEITAR se pontua\u00e7\u00e3o \u2265 ${progress + 50}%"
+                tvThresholdAceitarLabel.text = "BOA se pontua\u00e7\u00e3o \u2265 ${progress + 50}%"
                 if (fromUser && (progress + 20) >= (seekThresholdAceitar.progress + 50)) {
                     seekThresholdAnalisar.progress = (seekThresholdAceitar.progress + 20).coerceAtMost(29) - 20
                 }
@@ -236,10 +236,10 @@ class SettingsActivity : BaseActivity() {
         })
         seekThresholdAnalisar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-                tvThresholdAnalisarLabel.text = "ANALISAR se pontua\u00e7\u00e3o \u2265 ${progress + 20}%"
+                tvThresholdAnalisarLabel.text = "MÉDIA se pontua\u00e7\u00e3o \u2265 ${progress + 20}%"
                 if (fromUser && (progress + 20) >= (seekThresholdAceitar.progress + 50)) {
                     Toast.makeText(this@SettingsActivity,
-                        "O threshold de ANALISAR deve ser menor que o threshold de ACEITAR",
+                        "O threshold de MÉDIA deve ser menor que o threshold de BOA",
                         Toast.LENGTH_SHORT).show()
                 }
                 debouncedUpdatePreview()
@@ -413,8 +413,8 @@ class SettingsActivity : BaseActivity() {
         btnLinha.setBackgroundResource(
             if (!isColumn) R.drawable.pill_selected else R.drawable.pill_unselected
         )
-        btnColuna.setTextColor(if (isColumn) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-        btnLinha.setTextColor(if (!isColumn) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+        btnColuna.setTextColor(if (isColumn) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
+        btnLinha.setTextColor(if (!isColumn) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
     }
 
     private fun togglePosition(position: String) {
@@ -427,9 +427,9 @@ class SettingsActivity : BaseActivity() {
         btnEsquerda.setBackgroundResource(if (isLeft) R.drawable.pill_selected else R.drawable.pill_unselected)
         btnCentro.setBackgroundResource(if (isCenter) R.drawable.pill_selected else R.drawable.pill_unselected)
         btnDireita.setBackgroundResource(if (isRight) R.drawable.pill_selected else R.drawable.pill_unselected)
-        btnEsquerda.setTextColor(if (isLeft) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-        btnCentro.setTextColor(if (isCenter) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-        btnDireita.setTextColor(if (isRight) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+        btnEsquerda.setTextColor(if (isLeft) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
+        btnCentro.setTextColor(if (isCenter) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
+        btnDireita.setTextColor(if (isRight) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
     }
 
     private fun selectPageSize(size: Int) {
@@ -442,7 +442,7 @@ class SettingsActivity : BaseActivity() {
             val selected = value == size
             btn.isSelected = selected
             btn.setBackgroundResource(if (selected) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btn.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+            btn.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
         }
     }
 
@@ -451,7 +451,7 @@ class SettingsActivity : BaseActivity() {
         btn.setBackgroundResource(
             if (btn.isSelected) R.drawable.pill_selected else R.drawable.pill_unselected
         )
-        btn.setTextColor(if (btn.isSelected) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+        btn.setTextColor(if (btn.isSelected) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
     }
 
     private fun loadValues() {
@@ -485,7 +485,7 @@ class SettingsActivity : BaseActivity() {
         fun applyMetric(btn: TextView, visible: Boolean) {
             btn.isSelected = visible
             btn.setBackgroundResource(if (visible) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btn.setTextColor(if (visible) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+            btn.setTextColor(if (visible) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
         }
         applyMetric(btnShowKm, showKm)
         applyMetric(btnShowHour, showHour)
@@ -504,10 +504,10 @@ class SettingsActivity : BaseActivity() {
 
         val ta = prefs.getInt(KEY_THRESHOLD_ACEITAR, 80)
         seekThresholdAceitar.progress = ta - 50
-        tvThresholdAceitarLabel.text = "ACEITAR se pontua\u00e7\u00e3o \u2265 ${ta}%"
+        tvThresholdAceitarLabel.text = "BOA se pontua\u00e7\u00e3o \u2265 ${ta}%"
         val an = prefs.getInt(KEY_THRESHOLD_ANALISAR, 50)
         seekThresholdAnalisar.progress = an - 20
-        tvThresholdAnalisarLabel.text = "ANALISAR se pontua\u00e7\u00e3o \u2265 ${an}%"
+        tvThresholdAnalisarLabel.text = "MÉDIA se pontua\u00e7\u00e3o \u2265 ${an}%"
 
         val pageSize = prefs.getInt(KEY_PAGE_SIZE, 100)
         selectPageSize(pageSize)
@@ -522,7 +522,7 @@ class SettingsActivity : BaseActivity() {
         val thresholdAnalisar = seekThresholdAnalisar.progress + 20
         if (thresholdAnalisar >= thresholdAceitar) {
             Toast.makeText(this,
-                "O threshold de ANALISAR deve ser menor que o threshold de ACEITAR",
+                "O threshold de MÉDIA deve ser menor que o threshold de BOA",
                 Toast.LENGTH_LONG).show()
             return
         }

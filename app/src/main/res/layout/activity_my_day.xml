@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F7FB">
+    android:background="@color/bg_screen">
 
     <include layout="@layout/toolbar_default" />
 
@@ -48,7 +48,8 @@
                         android:text="\uD83D\uDCC5 Dia"
                         android:textSize="13sp"
                         android:textStyle="bold"
-                        android:background="@drawable/pill_selected"
+                        android:background="@color/primary"
+                        android:textColor="@color/text_inverse"
                         android:layout_marginEnd="4dp"
                         android:clickable="true"
                         android:focusable="true" />
@@ -96,7 +97,7 @@
                         android:gravity="center"
                         android:text="\u25C0"
                         android:textSize="16sp"
-                        android:textColor="#1A2C3E"
+                        android:textColor="@color/text_primary"
                         android:clickable="true"
                         android:focusable="true" />
 
@@ -108,7 +109,7 @@
                         android:text="Carregando..."
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#1A2C3E"
+                        android:textColor="@color/text_primary"
                         android:gravity="center" />
 
                     <TextView
@@ -118,7 +119,7 @@
                         android:gravity="center"
                         android:text="\u25B6"
                         android:textSize="16sp"
-                        android:textColor="#1A2C3E"
+                        android:textColor="@color/text_primary"
                         android:clickable="true"
                         android:focusable="true" />
 
@@ -131,7 +132,7 @@
                     android:layout_height="32dp"
                     android:text="Hoje"
                     android:textSize="12sp"
-                    android:textColor="#00A86B"
+                    android:textColor="@color/success"
                     android:paddingHorizontal="16dp"
                     android:gravity="center"
                     android:layout_gravity="center_horizontal"
@@ -167,17 +168,16 @@
                         android:text="\uD83D\uDCCA RESUMO"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="#1A2C3E" />
+                        android:textColor="@color/text_primary" />
 
                     <TextView
                         android:id="@+id/tvPeriodBadge"
                         android:layout_width="wrap_content"
-                        android:layout_height="24dp"
+                        android:layout_height="wrap_content"
                         android:text="hoje"
                         android:textSize="10sp"
-                        android:textColor="#00A86B"
-                        android:background="@drawable/badge_efficiency"
-                        android:paddingHorizontal="8dp"
+                        android:textColor="@color/accent"
+                        android:layout_marginStart="8dp"
                         android:gravity="center" />
 
                 </LinearLayout>
@@ -204,14 +204,14 @@
                             android:text="0"
                             android:textSize="20sp"
                             android:textStyle="bold"
-                            android:textColor="#1A2C3E" />
+                            android:textColor="@color/text_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Corridas"
                             android:textSize="10sp"
-                            android:textColor="#6B7280" />
+                            android:textColor="@color/text_tertiary" />
 
                     </LinearLayout>
 
@@ -230,14 +230,14 @@
                             android:text="0"
                             android:textSize="20sp"
                             android:textStyle="bold"
-                            android:textColor="#1A2C3E" />
+                            android:textColor="@color/text_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Km"
                             android:textSize="10sp"
-                            android:textColor="#6B7280" />
+                            android:textColor="@color/text_tertiary" />
 
                     </LinearLayout>
 
@@ -264,14 +264,14 @@
                             android:text="0h"
                             android:textSize="20sp"
                             android:textStyle="bold"
-                            android:textColor="#1A2C3E" />
+                            android:textColor="@color/text_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Horas"
                             android:textSize="10sp"
-                            android:textColor="#6B7280" />
+                            android:textColor="@color/text_tertiary" />
 
                     </LinearLayout>
 
@@ -290,14 +290,14 @@
                             android:text="R$0"
                             android:textSize="20sp"
                             android:textStyle="bold"
-                            android:textColor="#00A86B" />
+                            android:textColor="@color/success" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Faturamento"
                             android:textSize="10sp"
-                            android:textColor="#6B7280" />
+                            android:textColor="@color/text_tertiary" />
 
                     </LinearLayout>
 
@@ -307,7 +307,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#EEF2F6"
+                    android:background="@color/bg_surface"
                     android:layout_marginVertical="8dp" />
 
                 <LinearLayout
@@ -322,7 +322,7 @@
                         android:layout_weight="1"
                         android:text="\uD83D\uDCB0 Lucro l\u00EDquido"
                         android:textSize="14sp"
-                        android:textColor="#1A2C3E"
+                        android:textColor="@color/text_primary"
                         android:textStyle="bold" />
 
                     <TextView
@@ -332,7 +332,7 @@
                         android:text="R$ 0,00"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="#00A86B" />
+                        android:textColor="@color/success" />
 
                 </LinearLayout>
 
@@ -348,12 +348,12 @@
                         android:layout_height="wrap_content"
                         android:text="0% de margem"
                         android:textSize="11sp"
-                        android:textColor="#9CA3AF" />
+                        android:textColor="@color/text_tertiary" />
 
                     <View
                         android:layout_width="4dp"
                         android:layout_height="4dp"
-                        android:background="#D1D5DB"
+                        android:background="@color/border"
                         android:layout_marginHorizontal="6dp"
                         android:layout_gravity="center" />
 
@@ -363,12 +363,12 @@
                         android:layout_height="wrap_content"
                         android:text="R$/km: 0,00"
                         android:textSize="11sp"
-                        android:textColor="#6B7280" />
+                        android:textColor="@color/text_tertiary" />
 
                     <View
                         android:layout_width="4dp"
                         android:layout_height="4dp"
-                        android:background="#D1D5DB"
+                        android:background="@color/border"
                         android:layout_marginHorizontal="6dp"
                         android:layout_gravity="center" />
 
@@ -378,7 +378,7 @@
                         android:layout_height="wrap_content"
                         android:text="R$/h: 0,00"
                         android:textSize="11sp"
-                        android:textColor="#6B7280" />
+                        android:textColor="@color/text_tertiary" />
 
                 </LinearLayout>
 
@@ -389,7 +389,7 @@
                     android:layout_height="wrap_content"
                     android:text="\u25BC Ver detalhes dos custos"
                     android:textSize="11sp"
-                    android:textColor="#00A86B"
+                    android:textColor="@color/success"
                     android:paddingTop="12dp"
                     android:clickable="true"
                     android:focusable="true" />
@@ -427,7 +427,7 @@
                         android:text="\u2705 CORRIDAS REALIZADAS"
                         android:textSize="13sp"
                         android:textStyle="bold"
-                        android:textColor="#1A2C3E" />
+                        android:textColor="@color/text_primary" />
 
                     <TextView
                         android:id="@+id/tvCompletedCount"
@@ -435,8 +435,8 @@
                         android:layout_height="20dp"
                         android:text="0"
                         android:textSize="11sp"
-                        android:textColor="#FFFFFF"
-                        android:background="#00A86B"
+                        android:textColor="@color/text_inverse"
+                        android:background="@color/success"
                         android:paddingHorizontal="8dp"
                         android:gravity="center" />
 
@@ -448,7 +448,7 @@
                     android:layout_height="wrap_content"
                     android:text="Nenhuma corrida adicionada."
                     android:textSize="12sp"
-                    android:textColor="#9CA3AF"
+                    android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:padding="32dp"
                     android:background="@drawable/card_bg"
@@ -485,7 +485,7 @@
                     android:gravity="center"
                     android:text="\u2795"
                     android:textSize="18sp"
-                    android:background="#E8F5E9"
+                    android:background="@color/accent_light"
                     android:padding="6dp" />
 
                 <LinearLayout
@@ -501,14 +501,14 @@
                         android:text="Adicionar corrida manual"
                         android:textSize="13sp"
                         android:textStyle="bold"
-                        android:textColor="#1A2C3E" />
+                        android:textColor="@color/text_primary" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Corrida n\u00E3o foi detectada?"
                         android:textSize="10sp"
-                        android:textColor="#6B7280" />
+                        android:textColor="@color/text_tertiary" />
 
                 </LinearLayout>
 
@@ -518,8 +518,8 @@
                     android:gravity="center"
                     android:text="Adicionar"
                     android:textSize="11sp"
-                    android:textColor="#FFFFFF"
-                    android:background="#00A86B"
+                    android:textColor="@color/text_inverse"
+                    android:background="@color/accent"
                     android:paddingHorizontal="12dp" />
 
             </LinearLayout>
@@ -546,14 +546,14 @@
                         android:text="\uD83D\uDCCB CORRIDAS DISPON\u00CDVEIS"
                         android:textSize="13sp"
                         android:textStyle="bold"
-                        android:textColor="#1A2C3E" />
+                        android:textColor="@color/text_primary" />
 
                     <TextView
                         android:id="@+id/tvHistoryInfo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="10sp"
-                        android:textColor="#9CA3AF" />
+                        android:textColor="@color/text_tertiary" />
 
                 </LinearLayout>
 
@@ -581,7 +581,7 @@
                             android:text="\uD83D\uDD0D FILTROS"
                             android:textSize="11sp"
                             android:textStyle="bold"
-                            android:textColor="#5E6F8D" />
+                            android:textColor="@color/text_secondary" />
 
                         <TextView
                             android:id="@+id/tvFilterToggleIcon"
@@ -589,7 +589,7 @@
                             android:layout_height="wrap_content"
                             android:text="\u25BC"
                             android:textSize="10sp"
-                            android:textColor="#9CA3AF" />
+                            android:textColor="@color/text_tertiary" />
 
                     </LinearLayout>
 
@@ -608,7 +608,7 @@
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical"
-                            android:background="#F0F2F8"
+                            android:background="@color/bg_surface"
                             android:padding="8dp"
                             android:layout_marginBottom="12dp">
 
@@ -636,7 +636,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="\u2716"
                                 android:textSize="11sp"
-                                android:textColor="#9CA3AF"
+                                android:textColor="@color/text_tertiary"
                                 android:padding="4dp"
                                 android:visibility="gone" />
 
@@ -648,7 +648,7 @@
                             android:layout_height="wrap_content"
                             android:text="\u23F0 Horário"
                             android:textSize="11sp"
-                            android:textColor="#6B7280"
+                            android:textColor="@color/text_tertiary"
                             android:layout_marginBottom="6dp" />
 
                         <LinearLayout
@@ -664,7 +664,7 @@
                             android:layout_height="wrap_content"
                             android:text="\uD83D\uDCB0 Valor"
                             android:textSize="11sp"
-                            android:textColor="#6B7280"
+                            android:textColor="@color/text_tertiary"
                             android:layout_marginBottom="6dp" />
 
                         <LinearLayout
@@ -680,7 +680,7 @@
                             android:layout_height="wrap_content"
                             android:text="\uD83D\uDE97 Categoria"
                             android:textSize="11sp"
-                            android:textColor="#6B7280"
+                            android:textColor="@color/text_tertiary"
                             android:layout_marginBottom="6dp" />
 
                         <com.profitdriving.WrapContentFlowLayout
@@ -696,7 +696,7 @@
                             android:layout_height="wrap_content"
                             android:text="Limpar filtros"
                             android:textSize="11sp"
-                            android:textColor="#F87171"
+                            android:textColor="@color/metric_bad"
                             android:padding="4dp"
                             android:clickable="true"
                             android:focusable="true" />
@@ -711,7 +711,7 @@
                     android:layout_height="wrap_content"
                     android:text="Todas as corridas j\u00E1 foram adicionadas."
                     android:textSize="12sp"
-                    android:textColor="#9CA3AF"
+                    android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:padding="32dp"
                     android:background="@drawable/card_bg"
@@ -731,8 +731,8 @@
                     android:gravity="center"
                     android:text="Ver mais"
                     android:textSize="12sp"
-                    android:textColor="#1A2C3E"
-                    android:background="#F0F2F8"
+                    android:textColor="@color/text_primary"
+                    android:background="@color/bg_surface"
                     android:layout_marginTop="8dp"
                     android:visibility="gone"
                     android:clickable="true"

@@ -43,7 +43,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="6dp">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -75,6 +75,14 @@
                             android:focusable="true" />
 
                     </LinearLayout>
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Defina os valores para seu cálculo de seu semáforo"
+                            android:textSize="12sp"
+                            android:textColor="@color/text_tertiary"
+                            android:layout_marginBottom="16dp" />
 
                     <!-- R$/km -->
                     <TextView
@@ -611,6 +619,14 @@
                         android:textColor="@color/text_primary"
                         android:layout_marginBottom="12dp" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cálculo realizado com a quantidade de estrelas selecionadas acima. Ex.: 5/15 pts = RUIM 33% "
+                        android:textSize="12sp"
+                        android:textColor="@color/text_tertiary"
+                        android:layout_marginBottom="16dp" />
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -626,7 +642,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="&#x2705; Aceitar acima de"
+                                android:text="&#x2705;"
                                 android:textSize="13sp"
                                 android:textColor="@color/success"
                                 android:layout_marginEnd="8dp" />
@@ -666,7 +682,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="&#x26A0;&#xFE0F; Analisar acima de"
+                                android:text="&#x26A0;&#xFE0F;"
                                 android:textSize="13sp"
                                 android:textColor="@color/warning"
                                 android:layout_marginEnd="8dp" />
@@ -694,7 +710,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Abaixo disso &#x2192; &#x274C; Recusar"
+                        android:text="Abaixo disso &#x2192; &#x274C; RUIM"
                         android:textSize="11sp"
                         android:textColor="@color/error"
                         android:layout_marginTop="4dp" />
@@ -744,6 +760,14 @@
                             android:textColor="@color/text_primary" />
 
                     </LinearLayout>
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Defina como seu card será exibido na tela do seu aparelho"
+                            android:textSize="12sp"
+                            android:textColor="@color/text_tertiary"
+                            android:layout_marginBottom="16dp" />
 
                     <TextView
                         android:layout_width="wrap_content"

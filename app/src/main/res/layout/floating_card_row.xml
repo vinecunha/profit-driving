@@ -5,58 +5,131 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="10dp"
-    android:minWidth="220dp"
+    android:minWidth="280dp"
     android:clickable="true"
     android:focusable="true">
 
-    <!-- Linha 1: App + Valor + Tipo -->
+    <!-- ============================================ -->
+    <!-- LINHA 1: 2 COLUNAS                           -->
+    <!-- Coluna 1: Valor (cima) + Serviço (baixo)    -->
+    <!-- Coluna 2: Lucro (cima) + Bônus (baixo)      -->
+    <!-- ============================================ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="2dp">
+        android:layout_marginBottom="4dp">
 
-        <TextView
-            android:id="@+id/tvApp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/overlay_text_secondary"
-            android:textSize="11sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/tvValue"
+        <!-- COLUNA 1: Valor + Serviço -->
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/overlay_text_primary"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:gravity="end"/>
+            android:orientation="vertical"
+            android:gravity="center">
 
-        <TextView
-            android:id="@+id/tvServiceType"
-            android:layout_width="wrap_content"
+            <TextView
+                android:id="@+id/tvValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/overlay_text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvServiceType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/overlay_warning"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:layout_marginTop="2dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <!-- COLUNA 2: Lucro + Bônus -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="@color/overlay_warning"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:layout_marginStart="8dp"
-            android:visibility="gone" />
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- Lucro (em cima) -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tvProfitLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📈"
+                    android:textColor="@color/overlay_success"
+                    android:textSize="11sp"
+                    android:ellipsize="start"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvProfit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/overlay_success"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="2dp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+            <!-- Bônus (embaixo) - Prioridade e Dinâmica lado a lado -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="2dp">
+
+                <TextView
+                    android:id="@+id/tvPriorityBonus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/overlay_warning"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="4dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvDynamicBonus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/overlay_warning"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Linha 2: 4 colunas (R$/km, R$/h, R$/min, Nota) -->
+    <!-- ============================================ -->
+    <!-- LINHA 2: Métricas (título em cima, valor embaixo) -->
+    <!-- ============================================ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="2dp"
-        android:layout_marginBottom="1dp"
-        android:gravity="center">
+        android:gravity="center"
+        android:layout_marginBottom="4dp">
 
-        <!-- Coluna R$/km -->
+        <!-- R$/km -->
         <LinearLayout
             android:id="@+id/kmRow"
             android:layout_width="0dp"
@@ -64,14 +137,14 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:paddingHorizontal="4dp">
+            android:layout_marginEnd="4dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="$/km"
+                android:text="R$/km"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="10sp" />
+                android:textSize="9sp" />
 
             <TextView
                 android:id="@+id/tvKm"
@@ -79,18 +152,12 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/overlay_text_primary"
                 android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <View
-                android:id="@+id/dotKm"
-                android:layout_width="5dp"
-                android:layout_height="5dp"
-                android:layout_marginTop="2dp"
-                android:visibility="gone" />
+                android:textStyle="bold"
+                android:layout_marginTop="2dp" />
 
         </LinearLayout>
 
-        <!-- Coluna R$/h -->
+        <!-- R$/h -->
         <LinearLayout
             android:id="@+id/hourRow"
             android:layout_width="0dp"
@@ -98,14 +165,14 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:paddingHorizontal="4dp">
+            android:layout_marginHorizontal="4dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="$/h"
+                android:text="R$/h"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="10sp" />
+                android:textSize="9sp" />
 
             <TextView
                 android:id="@+id/tvHour"
@@ -113,18 +180,12 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/overlay_text_primary"
                 android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <View
-                android:id="@+id/dotHour"
-                android:layout_width="5dp"
-                android:layout_height="5dp"
-                android:layout_marginTop="2dp"
-                android:visibility="gone" />
+                android:textStyle="bold"
+                android:layout_marginTop="2dp" />
 
         </LinearLayout>
 
-        <!-- Coluna R$/min -->
+        <!-- R$/min -->
         <LinearLayout
             android:id="@+id/minuteRow"
             android:layout_width="0dp"
@@ -132,14 +193,14 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:paddingHorizontal="4dp">
+            android:layout_marginHorizontal="4dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="$/min"
+                android:text="R$/min"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="10sp" />
+                android:textSize="9sp" />
 
             <TextView
                 android:id="@+id/tvMinute"
@@ -147,18 +208,12 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/overlay_text_primary"
                 android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <View
-                android:id="@+id/dotMinute"
-                android:layout_width="5dp"
-                android:layout_height="5dp"
-                android:layout_marginTop="2dp"
-                android:visibility="gone" />
+                android:textStyle="bold"
+                android:layout_marginTop="2dp" />
 
         </LinearLayout>
 
-        <!-- Coluna Nota -->
+        <!-- Nota -->
         <LinearLayout
             android:id="@+id/ratingRow"
             android:layout_width="0dp"
@@ -166,14 +221,14 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:paddingHorizontal="4dp">
+            android:layout_marginStart="4dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="★"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="10sp" />
+                android:textSize="9sp" />
 
             <TextView
                 android:id="@+id/tvRating"
@@ -181,189 +236,165 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/overlay_text_primary"
                 android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <View
-                android:id="@+id/dotRating"
-                android:layout_width="5dp"
-                android:layout_height="5dp"
-                android:layout_marginTop="2dp"
-                android:visibility="gone" />
+                android:textStyle="bold"
+                android:layout_marginTop="2dp" />
 
         </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Linha 3: Distância e Tempo -->
+    <!-- ============================================ -->
+    <!-- LINHA 3: Distância + Tempo + Destino + Paradas -->
+    <!-- ============================================ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="1dp"
-        android:layout_marginBottom="1dp"
-        android:gravity="center">
-
-        <TextView
-            android:id="@+id/tvDistance"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="@color/overlay_text_secondary"
-            android:textSize="10sp"
-            android:gravity="center" />
-
-        <TextView
-            android:id="@+id/tvTime"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textColor="@color/overlay_text_secondary"
-            android:textSize="10sp"
-            android:gravity="center" />
-
-    </LinearLayout>
-
-    <!-- Linha 4: Bônus (se houver) -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp">
-
-        <TextView
-            android:id="@+id/tvBonus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/overlay_warning"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
+        android:gravity="center_vertical">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="2dp">
+            android:gravity="start"
+            android:layout_marginEnd="10dp">
 
             <TextView
-                android:id="@+id/tvPriorityBonus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/overlay_warning"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
+                android:text="🛣️"
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="10sp" />
 
             <TextView
-                android:id="@+id/tvDynamicBonus"
+                android:id="@+id/tvDistance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/overlay_warning"
+                android:textColor="@color/overlay_text_secondary"
                 android:textSize="10sp"
-                android:textStyle="bold"
-                android:layout_marginStart="8dp"
-                android:visibility="gone" />
+                android:layout_marginStart="2dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginEnd="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⏱"
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/tvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="10sp"
+                android:layout_marginStart="3dp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvKnownDestination"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="9sp"
+            android:textColor="@color/overlay_warning"
+            android:gravity="start"
+            android:maxLines="1"
+            android:ellipsize="start"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/layoutStops"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/ivStops"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:src="@drawable/ic_multiple_stops"
+                android:tint="@color/overlay_warning" />
+
+            <TextView
+                android:id="@+id/tvStops"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" Paradas"
+                android:textSize="8sp"
+                android:textColor="@color/overlay_warning"
+                android:layout_marginStart="3dp" />
 
         </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Linha 5: Decisão (BOA/REVISAR/RUIM) -->
+    <!-- ============================================ -->
+    <!-- tvApp oculto (compatibilidade)               -->
+    <!-- ============================================ -->
+    <TextView
+        android:id="@+id/tvApp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+    <!-- ============================================ -->
+    <!-- DECISÃO (oculta mas presente para o código)  -->
+    <!-- ============================================ -->
     <TextView
         android:id="@+id/tvDecision"
-        android:layout_width="match_parent"
-        android:layout_height="22dp"
-        android:gravity="center"
-        android:textSize="10sp"
-        android:textStyle="bold"
-        android:textColor="@color/overlay_text_primary"
-        android:layout_marginTop="4dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:visibility="gone" />
 
-    <!-- Linha 6: Pontuação (opcional) -->
+    <!-- ============================================ -->
+    <!-- Views ocultas (compatibilidade)              -->
+    <!-- ============================================ -->
     <TextView
         android:id="@+id/tvScore"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="9sp"
-        android:textColor="@color/overlay_text_secondary"
-        android:gravity="center"
-        android:layout_marginTop="2dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:visibility="gone" />
 
-    <!-- Linha 7: Lucro -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="2dp">
-
-        <TextView
-            android:id="@+id/tvProfitLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:textColor="@color/overlay_text_secondary"
-            android:layout_marginEnd="4dp"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/tvProfit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:textColor="@color/overlay_success"
-            android:singleLine="true"
-            android:ellipsize="end"
-            android:visibility="gone" />
-
-    </LinearLayout>
-
-    <!-- Linha 8: Stops -->
-    <LinearLayout
-        android:id="@+id/layoutStops"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginStart="8dp"
-        android:visibility="gone">
-
-        <ImageView
-            android:id="@+id/ivStops"
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:src="@drawable/ic_multiple_stops"
-            android:tint="@color/overlay_warning" />
-
-        <TextView
-            android:id="@+id/tvStops"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=" Várias paradas"
-            android:textSize="9sp"
-            android:textColor="@color/overlay_warning"
-            android:layout_marginStart="4dp" />
-
-    </LinearLayout>
-
-    <!-- Linha 9: Destino conhecido -->
     <TextView
-        android:id="@+id/tvKnownDestination"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="\uD83D\uDCCD Destino conhecido · 0x"
-        android:textSize="10sp"
-        android:textStyle="bold"
-        android:textColor="@color/overlay_warning"
-        android:layout_marginTop="2dp"
-        android:layout_gravity="center"
+        android:id="@+id/tvBonus"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+    <View
+        android:id="@+id/dotKm"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+    <View
+        android:id="@+id/dotHour"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+    <View
+        android:id="@+id/dotMinute"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+    <View
+        android:id="@+id/dotRating"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:visibility="gone" />
 
 </LinearLayout>

@@ -96,7 +96,7 @@ class MainActivity : BaseActivity() {
                                 }
                                 loadFilteredHistory()
                             }
-                            .setActionTextColor(Color.parseColor("#FFD700"))
+                            .setActionTextColor(Color.parseColor("#FBBF24"))
                             .show()
                     }
                     .setNegativeButton("Cancelar", null)
@@ -544,7 +544,7 @@ class HistoryAdapter(
             0 -> Pair("✅ Bom", 0xFF4ADE80.toInt())
             1 -> Pair("⚠️ Médio", 0xFFFB923C.toInt())
             2 -> Pair("❌ Ruim", 0xFFF87171.toInt())
-            else -> Pair("—", 0xFF8E9AAF.toInt())
+            else -> Pair("—", 0xFF94A3B8.toInt())
         }
     }
 
@@ -577,13 +577,13 @@ class HistoryAdapter(
 
         val (pillColor, textColor, iconColor) = when {
             serviceType.contains("Black", ignoreCase = true) ->
-                Triple(Color.parseColor("#1A1A1A"), Color.WHITE, Color.WHITE)
+                Triple(Color.parseColor("#1E293B"), Color.WHITE, Color.WHITE)
             serviceType.contains("Comfort", ignoreCase = true) || serviceType.contains("Confort", ignoreCase = true) ->
                 Triple(Color.parseColor("#2563EB"), Color.WHITE, Color.WHITE)
             serviceType.contains("Moto", ignoreCase = true) || serviceType.contains("Entrega", ignoreCase = true) ->
-                Triple(Color.parseColor("#10B981"), Color.WHITE, Color.WHITE)
+                Triple(Color.parseColor("#00A86B"), Color.WHITE, Color.WHITE)
             else ->
-                Triple(Color.parseColor("#F1F5F9"), 0xFF1A2C3E.toInt(), 0xFF5E6F8D.toInt())
+                Triple(Color.parseColor("#F1F5F9"), 0xFF0F172A.toInt(), 0xFF475569.toInt())
         }
         val pillRadius = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP, 28f, vh.layoutServiceBadge.context.resources.displayMetrics

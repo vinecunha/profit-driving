@@ -85,7 +85,7 @@ abstract class BaseActivity : AppCompatActivity() {
 
         fun resetAll() {
             listOf(labelHome, labelParams, labelMyDay, labelCosts, labelAnalysis).forEach {
-                it?.setTextColor(0xFF5E6F8D.toInt())
+                it?.setTextColor(0xFF475569.toInt())
             }
             listOf(iconHome, iconParams, iconMyDay, iconCosts, iconAnalysis).forEach {
                 it?.alpha = 0.5f

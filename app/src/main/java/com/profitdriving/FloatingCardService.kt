@@ -163,7 +163,7 @@ class FloatingCardService : Service() {
 
         val cardRoot     = view.findViewById<View>(R.id.cardRoot)
         val bg = GradientDrawable()
-        bg.setColor(Color.parseColor("#FF1A1A2E"))
+        bg.setColor(Color.parseColor("#0F172A"))
         bg.cornerRadius = 14f * resources.displayMetrics.density
         cardRoot.background = bg
 
@@ -249,7 +249,8 @@ class FloatingCardService : Service() {
         minuteRow.visibility = if (prefs.getBoolean(SettingsActivity.KEY_SHOW_MINUTE, true)) View.VISIBLE else View.GONE
         ratingRow.visibility = if (prefs.getBoolean(SettingsActivity.KEY_SHOW_RATING, true)) View.VISIBLE else View.GONE
 
-        val decisionText = "${DecisionEngine.decisionText(result.decision)} ${"%.0f".format(result.scorePercent)}%"
+        val pts = "${result.totalPoints.toInt()}/${result.maxPoints.toInt()} pts"
+        val decisionText = "${DecisionEngine.decisionText(result.decision)} ${"%.0f".format(result.scorePercent)}% ($pts)"
         tvDecision.text = decisionText
         val decisionBg = GradientDrawable()
         decisionBg.setColor(DecisionEngine.overlayDecisionColor(result.decision))
@@ -258,7 +259,7 @@ class FloatingCardService : Service() {
         tvDecision.visibility = View.VISIBLE
         tvDecision.isClickable = false
 
-        tvScore.text = "${result.totalPoints.toInt()}/${result.maxPoints.toInt()} pts"
+        tvScore.visibility = View.GONE
 
         val tvProfit = view.findViewById<TextView>(R.id.tvProfit)
         val tvProfitLabel = view.findViewById<TextView>(R.id.tvProfitLabel)
@@ -359,8 +360,20 @@ class FloatingCardService : Service() {
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = Gravity.START or Gravity.TOP
-            x = xOffset
+            when (cardPosition) {
+                "right" -> {
+                    gravity = Gravity.END or Gravity.TOP
+                    x = 16
+                }
+                "center" -> {
+                    gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP  // MUDE AQUI
+                    x = 0
+                }
+                else -> {
+                    gravity = Gravity.START or Gravity.TOP
+                    x = 16
+                }
+            }
             y = yOffset
         }
 
@@ -440,7 +453,7 @@ class FloatingCardService : Service() {
             DecisionEngine.Decision.RECUSAR -> "#DC2626"
         }
         val gd = GradientDrawable()
-        gd.setColor(Color.parseColor("#FF1A1A2E"))
+        gd.setColor(Color.parseColor("#0F172A"))
         gd.cornerRadius = 14f * resources.displayMetrics.density
         gd.setStroke(3.dpToPx(), Color.parseColor(borderColor))
         view.background = gd

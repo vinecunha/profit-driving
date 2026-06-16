@@ -363,9 +363,9 @@ class MyDayActivity : BaseActivity() {
         btnModeWeek.setBackgroundResource(if (currentMode == ViewMode.WEEK) R.drawable.pill_selected else R.drawable.pill_unselected)
         btnModeMonth.setBackgroundResource(if (currentMode == ViewMode.MONTH) R.drawable.pill_selected else R.drawable.pill_unselected)
 
-        btnModeDay.setTextColor(if (currentMode == ViewMode.DAY) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-        btnModeWeek.setTextColor(if (currentMode == ViewMode.WEEK) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
-        btnModeMonth.setTextColor(if (currentMode == ViewMode.MONTH) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+        btnModeDay.setTextColor(if (currentMode == ViewMode.DAY) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
+        btnModeWeek.setTextColor(if (currentMode == ViewMode.WEEK) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
+        btnModeMonth.setTextColor(if (currentMode == ViewMode.MONTH) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
     }
 
     private fun navigatePeriod(direction: Int) {
@@ -737,12 +737,12 @@ class MyDayActivity : BaseActivity() {
 
         tvNetProfit.text = "R$ %.2f".format(netProfit).replace(".", ",")
         tvNetProfit.setTextColor(
-            if (netProfit >= 0) 0xFF00A86B.toInt() else 0xFFEF4444.toInt()
+            if (netProfit >= 0) 0xFF00A86B.toInt() else 0xFFDC2626.toInt()
         )
 
         tvProfitPercent.text = "%.1f%% de margem".format(profitPercent).replace(".", ",")
         tvProfitPercent.setTextColor(
-            if (profitPercent >= 0) 0xFF9CA3AF.toInt() else 0xFFEF4444.toInt()
+            if (profitPercent >= 0) 0xFF94A3B8.toInt() else 0xFFDC2626.toInt()
         )
 
         tvRevenuePerKm.text = "R\$/km: %.2f".format(revenuePerKm).replace(".", ",")

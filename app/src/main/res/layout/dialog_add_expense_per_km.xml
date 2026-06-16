@@ -163,7 +163,7 @@
                 android:gravity="center"
                 android:text="CANCELAR"
                 android:textSize="12sp"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/text_primary"
                 android:background="@drawable/pill_unselected"
                 android:clickable="true"
                 android:focusable="true" />

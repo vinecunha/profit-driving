@@ -43,7 +43,7 @@ class AddRefuelDialog(
                 val selected = value == type
                 btn.isSelected = selected
                 btn.setBackgroundResource(if (selected) R.drawable.pill_selected else R.drawable.pill_unselected)
-                btn.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+                btn.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
             }
         }
 
@@ -56,10 +56,10 @@ class AddRefuelDialog(
             isFullTank = yes
             btnFullYes.isSelected = yes
             btnFullYes.setBackgroundResource(if (yes) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btnFullYes.setTextColor(if (yes) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+            btnFullYes.setTextColor(if (yes) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
             btnFullNo.isSelected = !yes
             btnFullNo.setBackgroundResource(if (!yes) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btnFullNo.setTextColor(if (!yes) 0xFFFFFFFF.toInt() else 0xFF6B7280.toInt())
+            btnFullNo.setTextColor(if (!yes) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
         }
 
         if (refuel != null) {
