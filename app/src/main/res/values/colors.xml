@@ -112,7 +112,7 @@
 
     <color name="pill_active_bg">@color/accent</color>
     <color name="pill_active_text">#FFFFFF</color>
-    <color name="pill_inactive_bg">#F1F5F9</color>
+    <color name="pill_inactive_bg">#E2E8F0</color>
     <color name="pill_inactive_text">@color/text_secondary</color>
 
     <color name="rating_good_bg">@color/success_border</color>
