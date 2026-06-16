@@ -25,6 +25,7 @@ import com.profitdriving.SettingsActivity
 import com.profitdriving.accessibility.extractor.RawCardData
 import com.profitdriving.accessibility.extractor.UberCardExtractor
 import com.profitdriving.parser.App99CardParser
+import com.profitdriving.parser.DiscoveryCardParser
 import com.profitdriving.parser.ExclusiveCardParser
 import com.profitdriving.parser.RadarCardParser
 import com.profitdriving.parser.RideDataParser
@@ -48,7 +49,8 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     private val parsers: List<RideDataParser> = listOf(
         RadarCardParser(),
         ExclusiveCardParser(),
-        App99CardParser()
+        App99CardParser(),
+        DiscoveryCardParser()
     )
 
     override fun onServiceConnected() {
