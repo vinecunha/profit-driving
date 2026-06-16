@@ -263,9 +263,9 @@ object CostCalculator {
     }
 
     fun calculateEnergyStats(refuels: List<RefuelRecord>, energyType: EnergyType): EnergyStats {
-        val typeRefuels = refuels.filter { it.fuelType == energyType.name }
+        val typeRefuels = refuels.filter { it.fuelType.equals(energyType.name, ignoreCase = true) }
 
-        if (typeRefuels.size < 2) return EnergyStats.zero(energyType)
+        if (typeRefuels.isEmpty()) return EnergyStats.zero(energyType)
 
         val sorted = typeRefuels.sortedByDescending { it.timestamp }
         val consumptions = mutableListOf<Double>()
