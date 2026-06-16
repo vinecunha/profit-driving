@@ -843,7 +843,7 @@ class HistoryAdapter(
         return if (profit >= 0) {
             "$profitFormatted ($percentFormatted%)"
         } else {
-            "-${profitFormatted.replace("R$", "").trim()} ($percentFormatted%)"
+            "-${formatMoney(-profit).replace("R$", "").trim()} ($percentFormatted%)"
         }
     }
 

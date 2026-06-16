@@ -260,7 +260,10 @@ class ExclusiveCardParser : RideDataParser {
     companion object {
         private const val TAG = "ExclusiveCardParser"
 
-        private val VALUE_REGEX = Regex("""R\$\s*(\d+(?:[.,]\d+)?)""")
+        private val VALUE_REGEX = Regex(
+            """(?:^|\s)R\$\s*(\d+(?:[.,]\d+)?)(?=\s|$)""",
+            RegexOption.IGNORE_CASE
+        )
         private val KM_PER_REAL_REGEX = Regex("""R\$(\d+[.,]\d+)\s*/\s*km""", RegexOption.IGNORE_CASE)
         private val KM_REAL_REGEX = Regex("""R\$(\d+[.,]\d+)\s*por km""", RegexOption.IGNORE_CASE)
         private val HOUR_REAL_REGEX = Regex("""R\$(\d+[.,]\d+)\s*/\s*h""", RegexOption.IGNORE_CASE)

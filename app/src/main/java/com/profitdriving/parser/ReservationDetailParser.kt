@@ -125,7 +125,8 @@ class ReservationDetailParser : RideDataParser {
         )
 
         private val VALUE_PATTERN = Regex(
-            """R\$\s*(\d+[.,]\d+)"""
+            """(?:^|\s)R\$\s*(\d+[.,]\d+)(?=\s|$)""",
+            RegexOption.IGNORE_CASE
         )
 
         private val RATING_PATTERN = Regex(
