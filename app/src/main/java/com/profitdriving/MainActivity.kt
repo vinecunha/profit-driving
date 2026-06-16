@@ -67,7 +67,7 @@ class MainActivity : BaseActivity() {
         setupBottomNav(Screen.HOME)
         setupToolbar(
             showLogo = true,
-            actionText = "LIMPAR",
+            actionText = "LIMPAR HISTÓRICO",
             actionListener = {
                 val sinceMs = if (filterDays >= 0) {
                     val cal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -filterDays) }
@@ -96,7 +96,7 @@ class MainActivity : BaseActivity() {
                                 }
                                 loadFilteredHistory()
                             }
-                            .setActionTextColor(Color.parseColor("#FBBF24"))
+                            .setActionTextColor(AppColors.overlayWarning)
                             .show()
                     }
                     .setNegativeButton("Cancelar", null)
@@ -541,10 +541,10 @@ class HistoryAdapter(
 
     private fun getBadgeTextAndColor(state: Int): Pair<String, Int> {
         return when (state) {
-            0 -> Pair("✅ Bom", 0xFF4ADE80.toInt())
-            1 -> Pair("⚠️ Médio", 0xFFFB923C.toInt())
-            2 -> Pair("❌ Ruim", 0xFFF87171.toInt())
-            else -> Pair("—", 0xFF94A3B8.toInt())
+            0 -> Pair("✅ Bom", AppColors.metricGood)
+            1 -> Pair("⚠️ Médio", AppColors.metricMedium)
+            2 -> Pair("❌ Ruim", AppColors.metricBad)
+            else -> Pair("—", AppColors.textSecondary)
         }
     }
 
@@ -577,13 +577,13 @@ class HistoryAdapter(
 
         val (pillColor, textColor, iconColor) = when {
             serviceType.contains("Black", ignoreCase = true) ->
-                Triple(Color.parseColor("#1E293B"), Color.WHITE, Color.WHITE)
+                Triple(AppColors.serviceUberx, Color.WHITE, Color.WHITE)
             serviceType.contains("Comfort", ignoreCase = true) || serviceType.contains("Confort", ignoreCase = true) ->
-                Triple(Color.parseColor("#2563EB"), Color.WHITE, Color.WHITE)
+                Triple(AppColors.accent, Color.WHITE, Color.WHITE)
             serviceType.contains("Moto", ignoreCase = true) || serviceType.contains("Entrega", ignoreCase = true) ->
-                Triple(Color.parseColor("#00A86B"), Color.WHITE, Color.WHITE)
+                Triple(AppColors.success, Color.WHITE, Color.WHITE)
             else ->
-                Triple(Color.parseColor("#F1F5F9"), 0xFF0F172A.toInt(), 0xFF475569.toInt())
+                Triple(AppColors.bgSurface, AppColors.textPrimary, AppColors.textSecondary)
         }
         val pillRadius = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP, 28f, vh.layoutServiceBadge.context.resources.displayMetrics
@@ -601,14 +601,14 @@ class HistoryAdapter(
             else -> "❌ RUIM (${formatPercent(r.scorePercent)}%)"
         }
         val decisionBg = when {
-            r.scorePercent != null && r.scorePercent >= 80 -> Color.parseColor("#D1FAE5")
-            r.scorePercent != null && r.scorePercent >= 50 -> Color.parseColor("#FEF3C7")
-            else -> Color.parseColor("#FEE2E2")
+            r.scorePercent != null && r.scorePercent >= 80 -> AppColors.successBg
+            r.scorePercent != null && r.scorePercent >= 50 -> AppColors.warningBg
+            else -> AppColors.errorBg
         }
         val decisionTextColor = when {
-            r.scorePercent != null && r.scorePercent >= 80 -> Color.parseColor("#065F46")
-            r.scorePercent != null && r.scorePercent >= 50 -> Color.parseColor("#92400E")
-            else -> Color.parseColor("#991B1B")
+            r.scorePercent != null && r.scorePercent >= 80 -> AppColors.successText
+            r.scorePercent != null && r.scorePercent >= 50 -> AppColors.warningText
+            else -> AppColors.errorText
         }
         vh.tvDecisionBadge.text = decisionText
         vh.tvDecisionBadge.background = GradientDrawable().apply {
@@ -644,27 +644,27 @@ class HistoryAdapter(
                     badge.text = "✅ Bom"
                     badge.background = GradientDrawable().apply {
                         cornerRadius = radius
-                        setColor(Color.parseColor("#D1FAE5"))
+                        setColor(AppColors.successBg)
                     }
-                    badge.setTextColor(Color.parseColor("#065F46"))
+                    badge.setTextColor(AppColors.successText)
                     badge.visibility = View.VISIBLE
                 }
                 1 -> {
                     badge.text = "⚠️ Médio"
                     badge.background = GradientDrawable().apply {
                         cornerRadius = radius
-                        setColor(Color.parseColor("#FEF3C7"))
+                        setColor(AppColors.warningBg)
                     }
-                    badge.setTextColor(Color.parseColor("#92400E"))
+                    badge.setTextColor(AppColors.warningText)
                     badge.visibility = View.VISIBLE
                 }
                 2 -> {
                     badge.text = "❌ Ruim"
                     badge.background = GradientDrawable().apply {
                         cornerRadius = radius
-                        setColor(Color.parseColor("#FEE2E2"))
+                        setColor(AppColors.errorBg)
                     }
-                    badge.setTextColor(Color.parseColor("#991B1B"))
+                    badge.setTextColor(AppColors.errorText)
                     badge.visibility = View.VISIBLE
                 }
                 else -> badge.visibility = View.GONE
@@ -675,10 +675,10 @@ class HistoryAdapter(
         setBadge(vh.tvMinBadge, minState)
 
         val ratingColor = when (ratingState) {
-            0 -> Color.parseColor("#065F46")
-            1 -> Color.parseColor("#92400E")
-            2 -> Color.parseColor("#991B1B")
-            else -> Color.parseColor("#475569")
+            0 -> AppColors.successText
+            1 -> AppColors.warningText
+            2 -> AppColors.errorText
+            else -> AppColors.textSecondary
         }
         vh.tvRatingText.setTextColor(ratingColor)
 

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.CorridaCerta" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <item name="colorPrimary">#FF4CAF50</item>
-        <item name="colorPrimaryDark">#FF2E7D32</item>
-        <item name="colorAccent">#FF81C784</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
     </style>
 </resources>

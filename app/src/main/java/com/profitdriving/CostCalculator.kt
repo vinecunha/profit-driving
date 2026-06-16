@@ -42,8 +42,8 @@ object CostCalculator {
         averageRevenuePerKm: Double = 0.0
     ): CostSummary {
         val avgConsumption = calculateAvgConsumption(refuels, currentFuelType)
-        val avgPricePerLiter = refuels.filter { it.fuelType == currentFuelType && it.liters > 0 }
-            .map { it.pricePerLiter }
+        val avgPricePerLiter = refuels.filter { it.fuelType == currentFuelType && it.amount > 0 }
+            .map { it.pricePerUnit }
             .average().takeIf { it > 0 } ?: 0.0
 
         val fuelCostPerKm = if (avgConsumption > 0) avgPricePerLiter / avgConsumption else 0.0
@@ -188,8 +188,8 @@ object CostCalculator {
                 val current = sorted[i + 1]
                 val previous = sorted[i]
                 val kmDiff = current.odometerKm - previous.odometerKm
-                if (kmDiff > 0 && current.liters > 0) {
-                    consumptions.add(kmDiff / current.liters)
+                if (kmDiff > 0 && current.amount > 0) {
+                    consumptions.add(kmDiff / current.amount)
                 }
             }
             if (consumptions.isNotEmpty()) {
@@ -210,9 +210,9 @@ object CostCalculator {
 
     private fun calculateAvgConsumption(refuels: List<RefuelRecord>, fuelType: String? = null): Double {
         val filteredRefuels = if (fuelType != null) {
-            refuels.filter { it.fuelType == fuelType && it.isFullTank && it.liters > 0 }
+            refuels.filter { it.fuelType == fuelType && it.isFullTank && it.amount > 0 }
         } else {
-            refuels.filter { it.isFullTank && it.liters > 0 }
+            refuels.filter { it.isFullTank && it.amount > 0 }
         }
             .sortedByDescending { it.timestamp }
 
@@ -225,7 +225,7 @@ object CostCalculator {
                 val current = sorted[i]
                 val previous = sorted[i + 1]
                 val kmDiff = current.odometerKm - previous.odometerKm
-                if (kmDiff > 0) consumptions.add(kmDiff / current.liters)
+                if (kmDiff > 0) consumptions.add(kmDiff / current.amount)
             }
             return consumptions.average().takeIf { it > 0 } ?: 0.0
         }
@@ -235,7 +235,7 @@ object CostCalculator {
             val current = filteredRefuels[i]
             val previous = filteredRefuels[i + 1]
             val kmDiff = current.odometerKm - previous.odometerKm
-            if (kmDiff > 0) consumptions.add(kmDiff / current.liters)
+            if (kmDiff > 0) consumptions.add(kmDiff / current.amount)
         }
         return consumptions.average().takeIf { it > 0 } ?: 0.0
     }
@@ -260,5 +260,62 @@ object CostCalculator {
         val aceitavel = costPerKm * 1.3
         val bom = costPerKm * 1.5
         return Triple(ruim, aceitavel, bom)
+    }
+
+    fun calculateEnergyStats(refuels: List<RefuelRecord>, energyType: EnergyType): EnergyStats {
+        val typeRefuels = refuels.filter { it.fuelType == energyType.name }
+
+        if (typeRefuels.size < 2) return EnergyStats.zero(energyType)
+
+        val sorted = typeRefuels.sortedByDescending { it.timestamp }
+        val consumptions = mutableListOf<Double>()
+
+        for (i in 0 until sorted.size - 1) {
+            val current = sorted[i]
+            val previous = sorted[i + 1]
+            val kmDiff = current.odometerKm - previous.odometerKm
+            if (kmDiff > 0 && current.amount > 0) {
+                consumptions.add(kmDiff / current.amount)
+            }
+        }
+
+        val avgConsumption = if (consumptions.isNotEmpty()) consumptions.average() else 0.0
+        val avgPrice = typeRefuels.map { it.pricePerUnit }.average()
+        val costPerKm = if (avgConsumption > 0) avgPrice / avgConsumption else 0.0
+
+        return EnergyStats(
+            energyType = energyType,
+            avgConsumption = avgConsumption,
+            avgPrice = avgPrice,
+            costPerKm = costPerKm,
+            totalAmount = typeRefuels.sumOf { it.amount },
+            totalCost = typeRefuels.sumOf { it.totalValue },
+            lastDate = typeRefuels.maxOfOrNull { it.timestamp } ?: 0L,
+            count = typeRefuels.size
+        )
+    }
+}
+
+data class EnergyStats(
+    val energyType: EnergyType,
+    val avgConsumption: Double,
+    val avgPrice: Double,
+    val costPerKm: Double,
+    val totalAmount: Double,
+    val totalCost: Double,
+    val lastDate: Long,
+    val count: Int
+) {
+    companion object {
+        fun zero(type: EnergyType) = EnergyStats(
+            energyType = type,
+            avgConsumption = 0.0,
+            avgPrice = 0.0,
+            costPerKm = 0.0,
+            totalAmount = 0.0,
+            totalCost = 0.0,
+            lastDate = 0L,
+            count = 0
+        )
     }
 }

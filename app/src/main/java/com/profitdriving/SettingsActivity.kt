@@ -413,8 +413,8 @@ class SettingsActivity : BaseActivity() {
         btnLinha.setBackgroundResource(
             if (!isColumn) R.drawable.pill_selected else R.drawable.pill_unselected
         )
-        btnColuna.setTextColor(if (isColumn) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
-        btnLinha.setTextColor(if (!isColumn) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
+        btnColuna.setTextColor(if (isColumn) AppColors.textInverse else AppColors.textSecondary)
+        btnLinha.setTextColor(if (!isColumn) AppColors.textInverse else AppColors.textSecondary)
     }
 
     private fun togglePosition(position: String) {
@@ -427,9 +427,9 @@ class SettingsActivity : BaseActivity() {
         btnEsquerda.setBackgroundResource(if (isLeft) R.drawable.pill_selected else R.drawable.pill_unselected)
         btnCentro.setBackgroundResource(if (isCenter) R.drawable.pill_selected else R.drawable.pill_unselected)
         btnDireita.setBackgroundResource(if (isRight) R.drawable.pill_selected else R.drawable.pill_unselected)
-        btnEsquerda.setTextColor(if (isLeft) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
-        btnCentro.setTextColor(if (isCenter) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
-        btnDireita.setTextColor(if (isRight) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
+        btnEsquerda.setTextColor(if (isLeft) AppColors.textInverse else AppColors.textSecondary)
+        btnCentro.setTextColor(if (isCenter) AppColors.textInverse else AppColors.textSecondary)
+        btnDireita.setTextColor(if (isRight) AppColors.textInverse else AppColors.textSecondary)
     }
 
     private fun selectPageSize(size: Int) {
@@ -442,7 +442,7 @@ class SettingsActivity : BaseActivity() {
             val selected = value == size
             btn.isSelected = selected
             btn.setBackgroundResource(if (selected) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btn.setTextColor(if (selected) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
+            btn.setTextColor(if (selected) AppColors.textInverse else AppColors.textSecondary)
         }
     }
 
@@ -451,7 +451,7 @@ class SettingsActivity : BaseActivity() {
         btn.setBackgroundResource(
             if (btn.isSelected) R.drawable.pill_selected else R.drawable.pill_unselected
         )
-        btn.setTextColor(if (btn.isSelected) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
+        btn.setTextColor(if (btn.isSelected) AppColors.textInverse else AppColors.textSecondary)
     }
 
     private fun loadValues() {
@@ -485,7 +485,7 @@ class SettingsActivity : BaseActivity() {
         fun applyMetric(btn: TextView, visible: Boolean) {
             btn.isSelected = visible
             btn.setBackgroundResource(if (visible) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btn.setTextColor(if (visible) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
+            btn.setTextColor(if (visible) AppColors.textInverse else AppColors.textSecondary)
         }
         applyMetric(btnShowKm, showKm)
         applyMetric(btnShowHour, showHour)

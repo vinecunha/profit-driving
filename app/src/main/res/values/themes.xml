@@ -29,6 +29,9 @@
         <item name="buttonStyle">@style/Widget.CorridaCerta.Button</item>
         <item name="borderlessButtonStyle">@style/Widget.CorridaCerta.Button.Borderless</item>
 
+        <!-- Dialog -->
+        <item name="alertDialogTheme">@style/ThemeOverlay.CorridaCerta.Dialog</item>
+
         <!-- Animações de transição -->
         <item name="android:windowAnimationStyle">@style/Animation.CorridaCerta.Window</item>
 
@@ -59,11 +62,11 @@
 
     <!-- Toolbar -->
     <style name="Widget.CorridaCerta.Toolbar" parent="Widget.AppCompat.Toolbar">
-        <item name="android:background">@color/bg_card</item>
+        <item name="android:background">@color/primary</item>
         <item name="android:elevation">2dp</item>
         <item name="android:paddingStart">16dp</item>
         <item name="android:paddingEnd">16dp</item>
-        <item name="titleTextColor">@color/text_primary</item>
+        <item name="titleTextColor">@color/text_inverse</item>
     </style>
 
     <!-- Botão Padrão -->
@@ -156,5 +159,27 @@
         <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
         <item name="android:activityCloseEnterAnimation">@anim/slide_in_left</item>
         <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- DIALOG THEME                                                  -->
+    <!-- ============================================================ -->
+
+    <style name="ThemeOverlay.CorridaCerta.Dialog" parent="ThemeOverlay.AppCompat.Dialog.Alert">
+        <item name="colorAccent">@color/accent</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.CorridaCerta.DialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.CorridaCerta.DialogButton</item>
+    </style>
+
+    <style name="Widget.CorridaCerta.DialogButton" parent="Widget.AppCompat.Button.Borderless">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/accent</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
     </style>
 </resources>

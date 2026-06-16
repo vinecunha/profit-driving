@@ -132,6 +132,11 @@
                     android:textStyle="bold"
                     android:gravity="end" />
 
+                <View
+                    android:layout_width="64dp"
+                    android:layout_height="0dp"
+                    android:visibility="invisible" />
+
             </LinearLayout>
 
             <View
@@ -163,41 +168,23 @@
                 android:background="@color/bg_surface"
                 android:layout_marginBottom="8dp" />
 
-            <!-- Average stats -->
+            <!-- Stats by fuel type -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="\uD83D\uDCC8 M\u00e9dia atual"
+                android:text="\uD83D\uDCCA M\u00e9dias por tipo de energia"
                 android:textSize="13sp"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold"
-                android:layout_marginBottom="6dp" />
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="8dp" />
 
             <LinearLayout
+                android:id="@+id/energyStatsContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="10dp"
-                android:background="@color/bg_surface">
-
-        <TextView
-            android:id="@+id/tvAvgConsumption"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Consumo m\u00e9dio: -- km/L"
-            android:textSize="15sp"
-                    android:textColor="@color/text_primary" />
-
-        <TextView
-            android:id="@+id/tvAvgFuelCost"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Custo combust\u00edvel: -- R\$/km"
-            android:textSize="15sp"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginTop="2dp" />
-
-            </LinearLayout>
+                android:padding="4dp" />
 
         </LinearLayout>
 

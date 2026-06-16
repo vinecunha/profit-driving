@@ -132,7 +132,7 @@ class MonthlyStatsActivity : BaseActivity() {
         val labelView = TextView(this)
         labelView.text = label
         labelView.textSize = 11f
-        labelView.setTextColor(0xFF475569.toInt())
+        labelView.setTextColor(AppColors.textSecondary)
         labelView.layoutParams = LinearLayout.LayoutParams(220, LinearLayout.LayoutParams.WRAP_CONTENT)
 
         val progress = android.widget.ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal)
@@ -142,14 +142,14 @@ class MonthlyStatsActivity : BaseActivity() {
             android.graphics.Color.parseColor(color)
         )
         progress.progressBackgroundTintList = android.content.res.ColorStateList.valueOf(
-            0xFFE2E8F0.toInt()
+            AppColors.border
         )
         progress.layoutParams = LinearLayout.LayoutParams(0, 12, 1f)
 
         val valueView = TextView(this)
         valueView.text = "$unit ${format.format(value)}".trimStart()
         valueView.textSize = 11f
-        valueView.setTextColor(0xFF475569.toInt())
+        valueView.setTextColor(AppColors.textSecondary)
         valueView.gravity = android.view.Gravity.END
         valueView.layoutParams = LinearLayout.LayoutParams(260, LinearLayout.LayoutParams.WRAP_CONTENT)
 
@@ -168,7 +168,7 @@ class MonthlyStatsActivity : BaseActivity() {
         val tv = TextView(this)
         tv.text = text
         tv.textSize = 11f
-        tv.setTextColor(0xFF475569.toInt())
+        tv.setTextColor(AppColors.textSecondary)
         tv.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, weight)
         when (gravity) {
             1 -> tv.gravity = android.view.Gravity.CENTER

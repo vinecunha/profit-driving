@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- ============================================ -->
-    <!-- CORES PRIMÁRIAS (Toolbar, headers)           -->
+    <!-- CORES PRIMÁRIAS (Azul como marca)           -->
     <!-- ============================================ -->
-    <color name="primary">#1E293B</color>        <!-- Slate 800 -->
-    <color name="primary_dark">#0F172A</color>   <!-- Slate 900 -->
-    <color name="primary_light">#F1F5F9</color>  <!-- Slate 100 -->
+    <color name="primary">#1E40AF</color>        <!-- Azul escuro - Toolbar, headers -->
+    <color name="primary_dark">#1E3A8A</color>   <!-- Azul mais escuro -->
+    <color name="primary_light">#DBEAFE</color>  <!-- Azul claro - fundos -->
 
     <!-- ============================================ -->
     <!-- CORES DE AÇÃO (Botões, links)               -->
     <!-- ============================================ -->
-    <color name="accent">#2563EB</color>          <!-- Azul 600 -->
+    <color name="accent">#2563EB</color>          <!-- Azul médio - botões -->
     <color name="accent_dark">#1D4ED8</color>     <!-- Azul 700 -->
-    <color name="accent_light">#DBEAFE</color>    <!-- Azul 100 -->
+    <color name="accent_light">#EFF6FF</color>    <!-- Azul 50 -->
 
     <!-- ============================================ -->
     <!-- DECISÃO ACEITAR / BOA / LUCRO               -->
@@ -41,9 +41,10 @@
     <!-- ============================================ -->
     <!-- VALORES DE MÉTRICAS (R$/km, R$/h, R$/min)  -->
     <!-- ============================================ -->
-    <color name="metric_good">#4ADE80</color>     <!-- Verde claro -->
-    <color name="metric_medium">#FB923C</color>   <!-- Laranja claro -->
-    <color name="metric_bad">#F87171</color>      <!-- Vermelho claro -->
+    <color name="metric_good">#00A86B</color>     <!-- Verde claro -->
+    <color name="metric_medium">#F97316</color>   <!-- Laranja claro -->
+    <color name="metric_bad">#DC2626</color>      <!-- Vermelho claro -->
+    <color name="metric_absent">#AAAAAA</color>   <!-- Cinza ausente -->
 
     <!-- ============================================ -->
     <!-- CARD FLUTUANTE (fundo escuro)               -->
@@ -53,9 +54,19 @@
     <color name="overlay_border">#334155</color>  <!-- Slate 700 -->
     <color name="overlay_text_primary">#F8FAFC</color>
     <color name="overlay_text_secondary">#94A3B8</color>
-    <color name="overlay_success">#4ADE80</color>
+    <color name="overlay_success">#00A86B</color>
     <color name="overlay_warning">#F97316</color>
-    <color name="overlay_error">#F87171</color>
+    <color name="overlay_error">#DC2626</color>
+
+    <!-- ============================================ -->
+    <!-- CORES DE TIPO DE ENERGIA                    -->
+    <!-- ============================================ -->
+    <color name="energy_gasoline">#1E40AF</color>
+    <color name="energy_ethanol">#059669</color>
+    <color name="energy_diesel">#D97706</color>
+    <color name="energy_gnv">#F97316</color>
+    <color name="energy_electric">#3B82F6</color>
+    <color name="energy_hybrid">#8B5CF6</color>
 
     <!-- ============================================ -->
     <!-- FUNDOS E SUPERFÍCIES                        -->
@@ -70,6 +81,12 @@
     <color name="border">#E2E8F0</color>          <!-- Slate 200 -->
     <color name="border_light">#F1F5F9</color>    <!-- Slate 100 -->
     <color name="border_focus">#2563EB</color>    <!-- Azul 600 -->
+
+    <!-- ============================================ -->
+    <!-- OVERLAYS (fundos translúcidos)               -->
+    <!-- ============================================ -->
+    <color name="overlay_btn_action">#14FFFFFF</color>
+    <color name="overlay_service_badge">#1AFFFFFF</color>
 
     <!-- ============================================ -->
     <!-- TEXTOS                                      -->

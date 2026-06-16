@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 
 enum class Screen {
     HOME, PARAMS, MY_DAY, COSTS, ANALYSIS
@@ -21,7 +22,7 @@ abstract class BaseActivity : AppCompatActivity() {
         backListener: (() -> Unit)? = null,
         accessibilityBadgeText: String? = null
     ) {
-        val btnBack = findViewById<TextView>(R.id.btnBack) ?: return
+        val btnBack = findViewById<TextView>(R.id.btnBack)
         val tvTitle = findViewById<TextView>(R.id.tvTitle)
         val layoutLogo = findViewById<View>(R.id.layoutLogo)
         val btnAction = findViewById<TextView>(R.id.btnAction)
@@ -29,11 +30,11 @@ abstract class BaseActivity : AppCompatActivity() {
 
         if (showLogo) {
             layoutLogo?.visibility = View.VISIBLE
-            btnBack.visibility = View.GONE
+            btnBack?.visibility = View.GONE
         } else {
             layoutLogo?.visibility = View.GONE
-            btnBack.visibility = if (showBack) View.VISIBLE else View.GONE
-            btnBack.setOnClickListener {
+            btnBack?.visibility = if (showBack) View.VISIBLE else View.GONE
+            btnBack?.setOnClickListener {
                 (backListener ?: {
                     startActivity(Intent(this, MainActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -85,7 +86,7 @@ abstract class BaseActivity : AppCompatActivity() {
 
         fun resetAll() {
             listOf(labelHome, labelParams, labelMyDay, labelCosts, labelAnalysis).forEach {
-                it?.setTextColor(0xFF475569.toInt())
+                it?.setTextColor(AppColors.textSecondary)
             }
             listOf(iconHome, iconParams, iconMyDay, iconCosts, iconAnalysis).forEach {
                 it?.alpha = 0.5f
@@ -100,28 +101,28 @@ abstract class BaseActivity : AppCompatActivity() {
         when (currentScreen) {
             Screen.HOME -> {
                 iconHome?.alpha = 1.0f
-                iconHome?.setTextColor(0xFF00A86B.toInt())
-                labelHome?.setTextColor(0xFF00A86B.toInt())
+                iconHome?.setTextColor(ContextCompat.getColor(this, R.color.accent))
+                labelHome?.setTextColor(ContextCompat.getColor(this, R.color.accent))
             }
             Screen.PARAMS -> {
                 iconParams?.alpha = 1.0f
-                iconParams?.setTextColor(0xFF00A86B.toInt())
-                labelParams?.setTextColor(0xFF00A86B.toInt())
+                iconParams?.setTextColor(ContextCompat.getColor(this, R.color.accent))
+                labelParams?.setTextColor(ContextCompat.getColor(this, R.color.accent))
             }
             Screen.MY_DAY -> {
                 iconMyDay?.alpha = 1.0f
-                iconMyDay?.setTextColor(0xFF00A86B.toInt())
-                labelMyDay?.setTextColor(0xFF00A86B.toInt())
+                iconMyDay?.setTextColor(ContextCompat.getColor(this, R.color.accent))
+                labelMyDay?.setTextColor(ContextCompat.getColor(this, R.color.accent))
             }
             Screen.COSTS -> {
                 iconCosts?.alpha = 1.0f
-                iconCosts?.setTextColor(0xFF00A86B.toInt())
-                labelCosts?.setTextColor(0xFF00A86B.toInt())
+                iconCosts?.setTextColor(ContextCompat.getColor(this, R.color.accent))
+                labelCosts?.setTextColor(ContextCompat.getColor(this, R.color.accent))
             }
             Screen.ANALYSIS -> {
                 iconAnalysis?.alpha = 1.0f
-                iconAnalysis?.setTextColor(0xFF00A86B.toInt())
-                labelAnalysis?.setTextColor(0xFF00A86B.toInt())
+                iconAnalysis?.setTextColor(ContextCompat.getColor(this, R.color.accent))
+                labelAnalysis?.setTextColor(ContextCompat.getColor(this, R.color.accent))
             }
         }
 

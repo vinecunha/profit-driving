@@ -46,7 +46,7 @@ class RefuelsHistoryActivity : BaseActivity() {
             val empty = TextView(this).apply {
                 text = "Nenhum abastecimento registrado"
                 textSize = 12f
-                setTextColor(0xFF94A3B8.toInt())
+                setTextColor(AppColors.textSecondary)
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, 24, 0, 8)
             }
@@ -64,7 +64,7 @@ class RefuelsHistoryActivity : BaseActivity() {
                 "%.0f".format(refuel.odometerKm)
 
             row.findViewById<TextView>(R.id.tvRefuelLiters).text =
-                "%.1f".format(refuel.liters).replace(".", ",")
+                "%.1f".format(refuel.amount).replace(".", ",")
 
             row.findViewById<TextView>(R.id.tvRefuelPrice).text =
                 currencyFormat.format(refuel.totalValue)
@@ -125,6 +125,6 @@ class RefuelsHistoryActivity : BaseActivity() {
         if (idx <= 0) return 0.0
         val previous = sorted[idx - 1]
         val kmDiff = refuel.odometerKm - previous.odometerKm
-        return if (kmDiff > 0 && refuel.liters > 0) kmDiff / refuel.liters else 0.0
+        return if (kmDiff > 0 && refuel.amount > 0) kmDiff / refuel.amount else 0.0
     }
 }

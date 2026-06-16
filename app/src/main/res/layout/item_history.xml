@@ -17,7 +17,7 @@
             android:id="@+id/tvApp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
+            android:textColor="@color/text_inverse"
             android:textSize="13sp"
             android:textStyle="bold" />
 
@@ -26,7 +26,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@android:color/white"
+            android:textColor="@color/text_inverse"
             android:textSize="12sp"
             android:gravity="end" />
 
@@ -36,7 +36,7 @@
         android:id="@+id/tvValue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/white"
+        android:textColor="@color/text_inverse"
         android:textSize="18sp"
         android:textStyle="bold"
         android:layout_marginTop="4dp" />
@@ -76,7 +76,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@android:color/white"
+            android:textColor="@color/text_inverse"
             android:textSize="11sp"
             android:textStyle="bold" />
 
@@ -93,7 +93,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@android:color/white"
+            android:textColor="@color/text_inverse"
             android:textSize="13sp" />
 
         <TextView
@@ -101,7 +101,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@android:color/white"
+            android:textColor="@color/text_inverse"
             android:textSize="13sp" />
 
         <TextView
@@ -109,7 +109,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@android:color/white"
+            android:textColor="@color/text_inverse"
             android:textSize="13sp" />
 
     </LinearLayout>

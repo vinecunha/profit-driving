@@ -40,10 +40,10 @@ class AnalysisActivity : BaseActivity() {
     private val weekFormatter = SimpleDateFormat("dd/MM", Locale("pt", "BR"))
     private val monthFormatter = SimpleDateFormat("MMMM, yyyy", Locale("pt", "BR"))
 
-    private val GREEN = Color.parseColor("#00A86B")
-    private val ORANGE = Color.parseColor("#F97316")
-    private val RED = Color.parseColor("#DC2626")
-    private val BLUE = Color.parseColor("#2563EB")
+    private val GREEN = AppColors.success
+    private val ORANGE = AppColors.warning
+    private val RED = AppColors.error
+    private val BLUE = AppColors.accent
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -139,9 +139,9 @@ class AnalysisActivity : BaseActivity() {
         btnModeWeek.setBackgroundResource(if (currentMode == ViewMode.WEEK) R.drawable.pill_selected else R.drawable.pill_unselected)
         btnModeMonth.setBackgroundResource(if (currentMode == ViewMode.MONTH) R.drawable.pill_selected else R.drawable.pill_unselected)
 
-        btnModeDay.setTextColor(if (currentMode == ViewMode.DAY) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
-        btnModeWeek.setTextColor(if (currentMode == ViewMode.WEEK) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
-        btnModeMonth.setTextColor(if (currentMode == ViewMode.MONTH) 0xFFFFFFFF.toInt() else 0xFF94A3B8.toInt())
+        btnModeDay.setTextColor(if (currentMode == ViewMode.DAY) AppColors.textInverse else AppColors.textSecondary)
+        btnModeWeek.setTextColor(if (currentMode == ViewMode.WEEK) AppColors.textInverse else AppColors.textSecondary)
+        btnModeMonth.setTextColor(if (currentMode == ViewMode.MONTH) AppColors.textInverse else AppColors.textSecondary)
     }
 
     private fun updatePeriodTitle() {
@@ -317,7 +317,7 @@ class AnalysisActivity : BaseActivity() {
 
     private fun addText(
         card: LinearLayout, text: String, size: Float = 13f,
-        color: Int = Color.parseColor("#0F172A"), bold: Boolean = false
+        color: Int = AppColors.textPrimary, bold: Boolean = false
     ) {
         card.addView(TextView(this).apply {
             contentDescription = text
@@ -346,13 +346,13 @@ class AnalysisActivity : BaseActivity() {
             layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.25f)
             text = label
             textSize = 11f
-            setTextColor(Color.parseColor("#475569"))
+            setTextColor(AppColors.textSecondary)
         })
 
         val barOuter = LinearLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(0, 14, 0.55f)
             val g = GradientDrawable().apply {
-                setColor(Color.parseColor("#E2E8F0"))
+                setColor(AppColors.border)
                 cornerRadius = 7 * resources.displayMetrics.density
             }
             background = g
@@ -377,7 +377,7 @@ class AnalysisActivity : BaseActivity() {
             layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.2f)
             text = valueText
             textSize = 11f
-            setTextColor(Color.parseColor("#0F172A"))
+            setTextColor(AppColors.textPrimary)
             gravity = Gravity.END
         })
 
@@ -400,7 +400,7 @@ class AnalysisActivity : BaseActivity() {
             layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.25f)
             text = label
             textSize = 11f
-            setTextColor(Color.parseColor("#475569"))
+            setTextColor(AppColors.textSecondary)
         })
 
         row.addView(TextView(this).apply {
@@ -415,7 +415,7 @@ class AnalysisActivity : BaseActivity() {
             layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.2f)
             text = valueText
             textSize = 11f
-            setTextColor(Color.parseColor("#0F172A"))
+            setTextColor(AppColors.textPrimary)
             gravity = Gravity.END
         })
 
@@ -426,7 +426,7 @@ class AnalysisActivity : BaseActivity() {
         card.addView(View(this).apply {
             layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 1)
                 .apply { setMargins(0, 6, 0, 6) }
-            setBackgroundColor(Color.parseColor("#E2E8F0"))
+            setBackgroundColor(AppColors.border)
         })
     }
 
@@ -441,7 +441,7 @@ class AnalysisActivity : BaseActivity() {
                 .apply { bottomMargin = 12 }
             orientation = VERTICAL
             val bg = GradientDrawable().apply {
-                setColor(Color.parseColor("#F8FAFC"))
+                setColor(AppColors.bgScreen)
                 cornerRadius = 12 * resources.displayMetrics.density
             }
             background = bg
@@ -451,7 +451,7 @@ class AnalysisActivity : BaseActivity() {
         val arrowIcon = TextView(this).apply {
             text = if (initiallyExpanded) "\u25BC" else "\u25B6"
             textSize = 10f
-            setTextColor(Color.parseColor("#94A3B8"))
+            setTextColor(AppColors.textTertiary)
             layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
                 .apply { rightMargin = 8 }
         }
@@ -467,7 +467,7 @@ class AnalysisActivity : BaseActivity() {
             addView(TextView(this@AnalysisActivity).apply {
                 text = "$icon $title"
                 textSize = 16f
-                setTextColor(Color.parseColor("#0F172A"))
+                setTextColor(AppColors.textPrimary)
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
             })
@@ -497,17 +497,17 @@ class AnalysisActivity : BaseActivity() {
     private fun buildVisaoGeral(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         val card = createCard("\uD83D\uDCCA Vis\u00E3o Geral")
 
-        addText(card, "\uD83D\uDCCB Corridas ofertadas: ${r.offeredCount}", 13f, Color.parseColor("#0F172A"))
+        addText(card, "\uD83D\uDCCB Corridas ofertadas: ${r.offeredCount}", 13f, AppColors.textPrimary)
         addText(card, "\u2705 Corridas aceitas: ${r.acceptedCount} (${"%.1f".format(r.acceptanceRate)}%)", 13f, GREEN)
-        addText(card, "\uD83D\uDCB0 Faturamento bruto: R\$ ${AnalysisHelperV2.formatBr(r.totalEarnings)}", 13f, Color.parseColor("#0F172A"))
-        addText(card, "\uD83D\uDEE3\uFE0F Km total: ${AnalysisHelperV2.formatBr1(r.totalKm)} km", 13f, Color.parseColor("#0F172A"))
-        addText(card, "\u23F1\uFE0F Tempo total: ${AnalysisHelperV2.hoursMinutes(r.totalMinutes)}", 13f, Color.parseColor("#0F172A"))
+        addText(card, "\uD83D\uDCB0 Faturamento bruto: R\$ ${AnalysisHelperV2.formatBr(r.totalEarnings)}", 13f, AppColors.textPrimary)
+        addText(card, "\uD83D\uDEE3\uFE0F Km total: ${AnalysisHelperV2.formatBr1(r.totalKm)} km", 13f, AppColors.textPrimary)
+        addText(card, "\u23F1\uFE0F Tempo total: ${AnalysisHelperV2.hoursMinutes(r.totalMinutes)}", 13f, AppColors.textPrimary)
 
         addDivider(card)
-        addText(card, "\uD83D\uDCCA M\u00E9dias", 13f, Color.parseColor("#0F172A"), true)
-        addText(card, "R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.avgPricePerKm)}", 12f, Color.parseColor("#475569"))
-        addText(card, "R\$/h m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.avgPricePerHour)}", 12f, Color.parseColor("#475569"))
-        addText(card, "Nota m\u00E9dia: ${"%.2f".format(r.avgRating)}", 12f, Color.parseColor("#475569"))
+        addText(card, "\uD83D\uDCCA M\u00E9dias", 13f, AppColors.textPrimary, true)
+        addText(card, "R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.avgPricePerKm)}", 12f, AppColors.textSecondary)
+        addText(card, "R\$/h m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.avgPricePerHour)}", 12f, AppColors.textSecondary)
+        addText(card, "Nota m\u00E9dia: ${"%.2f".format(r.avgRating)}", 12f, AppColors.textSecondary)
 
         container.addView(card)
     }
@@ -517,55 +517,55 @@ class AnalysisActivity : BaseActivity() {
         val card = createCard("\uD83D\uDCB0 Impacto dos B\u00F4nus")
         val MIN_DATA = 3
 
-        addText(card, "Comparativo de corridas com e sem b\u00F4nus", 12f, Color.parseColor("#475569"))
+        addText(card, "Comparativo de corridas com e sem b\u00F4nus", 12f, AppColors.textSecondary)
 
         addDivider(card)
 
         val p = r.priorityImpact
-        addText(card, "\u2B06 Prioridade", 13f, Color.parseColor("#0F172A"), true)
+        addText(card, "\u2B06 Prioridade", 13f, AppColors.textPrimary, true)
         if (p.count >= MIN_DATA) {
             val diffP = maxOf(p.avgPricePerKm - p.avgPricePerKmWithout, 0.0)
             val diffPctP = if (p.avgPricePerKmWithout > 0) (diffP / p.avgPricePerKmWithout * 100) else 0.0
             val goodDiffP = maxOf(p.goodRatePercent - r.goodPercent, 0.0)
             addText(card, buildString {
                 append("Presente em ${"%.0f".format(p.percentage)}% das corridas")
-            }, 12f, Color.parseColor("#475569"))
+            }, 12f, AppColors.textSecondary)
             addText(card, buildString {
                 append("R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(p.avgPricePerKm)}")
                 append("  (sem: R\$ ${AnalysisHelperV2.formatBr(p.avgPricePerKmWithout)})")
-            }, 12f, Color.parseColor("#475569"))
+            }, 12f, AppColors.textSecondary)
             addText(card, buildString {
                 append("\u2B06 ${"%.0f".format(diffPctP)}% melhor R\$/km  |  ${"%.0f".format(goodDiffP)}% mais corridas \"boas\"")
             }, 12f, GREEN, true)
         } else {
-            addText(card, "Dados insuficientes (m\u00EDn. $MIN_DATA corridas com prioridade)", 12f, Color.parseColor("#94A3B8"))
+            addText(card, "Dados insuficientes (m\u00EDn. $MIN_DATA corridas com prioridade)", 12f, AppColors.textTertiary)
         }
 
         addDivider(card)
 
         val d = r.dynamicImpact
-        addText(card, "\u26A1 Din\u00E2mica", 13f, Color.parseColor("#0F172A"), true)
+        addText(card, "\u26A1 Din\u00E2mica", 13f, AppColors.textPrimary, true)
         if (d.count >= MIN_DATA) {
             val diffD = maxOf(d.avgPricePerKm - d.avgPricePerKmWithout, 0.0)
             val diffPctD = if (d.avgPricePerKmWithout > 0) (diffD / d.avgPricePerKmWithout * 100) else 0.0
             val goodDiffD = maxOf(d.goodRatePercent - r.goodPercent, 0.0)
             addText(card, buildString {
                 append("Presente em ${"%.0f".format(d.percentage)}% das corridas")
-            }, 12f, Color.parseColor("#475569"))
+            }, 12f, AppColors.textSecondary)
             addText(card, buildString {
                 append("R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(d.avgPricePerKm)}")
                 append("  (sem: R\$ ${AnalysisHelperV2.formatBr(d.avgPricePerKmWithout)})")
-            }, 12f, Color.parseColor("#475569"))
+            }, 12f, AppColors.textSecondary)
             addText(card, buildString {
                 append("\u2B06 ${"%.0f".format(diffPctD)}% melhor R\$/km  |  ${"%.0f".format(goodDiffD)}% mais corridas \"boas\"")
             }, 12f, GREEN, true)
         } else {
-            addText(card, "Dados insuficientes (m\u00EDn. $MIN_DATA corridas com din\u00E2mica)", 12f, Color.parseColor("#94A3B8"))
+            addText(card, "Dados insuficientes (m\u00EDn. $MIN_DATA corridas com din\u00E2mica)", 12f, AppColors.textTertiary)
         }
 
         addDivider(card)
         addText(card, "\uD83D\uDCA1 O que significa? B\u00F4nus de prioridade s\u00E3o oferecidos pela Uber para incentivar aceita\u00E7\u00E3o em \u00E1reas de alta demanda. O indicador mostra o impacto real no ganho por km \u2014 quanto maior a diferen\u00E7a, mais vale a pena priorizar essas corridas.",
-            11f, Color.parseColor("#94A3B8"))
+            11f, AppColors.textTertiary)
 
         container.addView(card)
     }
@@ -603,7 +603,7 @@ class AnalysisActivity : BaseActivity() {
             }
             card.addView(hContainer)
         } else {
-            addText(card, "Nenhuma corrida aceita no per\u00EDodo", 12f, Color.parseColor("#94A3B8"))
+            addText(card, "Nenhuma corrida aceita no per\u00EDodo", 12f, AppColors.textTertiary)
         }
 
         container.addView(card)
@@ -641,7 +641,7 @@ class AnalysisActivity : BaseActivity() {
             }
             card.addView(dContainer)
         } else {
-            addText(card, "Nenhuma corrida com din\u00E2mica no per\u00EDodo", 12f, Color.parseColor("#94A3B8"))
+            addText(card, "Nenhuma corrida com din\u00E2mica no per\u00EDodo", 12f, AppColors.textTertiary)
         }
 
         container.addView(card)
@@ -668,13 +668,13 @@ class AnalysisActivity : BaseActivity() {
                 layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
                 text = c.city
                 textSize = 13f
-                setTextColor(Color.parseColor("#0F172A"))
+                setTextColor(AppColors.textPrimary)
                 setTypeface(null, android.graphics.Typeface.BOLD)
             })
             header.addView(TextView(this).apply {
                 text = "${c.rideCount} corridas"
                 textSize = 11f
-                setTextColor(Color.parseColor("#94A3B8"))
+                setTextColor(AppColors.textTertiary)
             })
             row.addView(header)
 
@@ -682,13 +682,13 @@ class AnalysisActivity : BaseActivity() {
                 append("R\$/km: R\$ ${AnalysisHelperV2.formatBr(c.avgPricePerKm)}")
                 append("  |  Din\u00E2mica: ${"%.0f".format(c.dynamicPercentage)}%")
                 append("  |  Melhor hor\u00E1rio: ${c.bestHour}h")
-            }, 11f, Color.parseColor("#475569"))
+            }, 11f, AppColors.textSecondary)
 
             if (c != r.topCities.take(6).last()) {
                 row.addView(View(this).apply {
                     layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 1)
                         .apply { setMargins(0, 4, 0, 4) }
-                    setBackgroundColor(Color.parseColor("#F1F5F9"))
+                    setBackgroundColor(AppColors.bgSurface)
                 })
             }
 
@@ -709,7 +709,7 @@ class AnalysisActivity : BaseActivity() {
             }
             text = "\uD83D\uDCCA R\$/km = m\u00E9dia nas corridas aceitas | \uD83D\uDD25 % = corridas com din\u00E2mica no total ofertado"
             textSize = 10f
-            setTextColor(Color.parseColor("#94A3B8"))
+            setTextColor(AppColors.textTertiary)
         })
 
         for (n in r.topNeighborhoods.take(6)) {
@@ -724,7 +724,7 @@ class AnalysisActivity : BaseActivity() {
                 layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
                 text = n.neighborhood
                 textSize = 12f
-                setTextColor(Color.parseColor("#0F172A"))
+                setTextColor(AppColors.textPrimary)
                 setTypeface(null, android.graphics.Typeface.BOLD)
             })
 
@@ -732,7 +732,7 @@ class AnalysisActivity : BaseActivity() {
                 layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
                 text = "R\$ ${AnalysisHelperV2.formatBr(n.avgPricePerKm)} | ${"%.0f".format(n.dynamicPercentage)}%"
                 textSize = 11f
-                setTextColor(Color.parseColor("#475569"))
+                setTextColor(AppColors.textSecondary)
             })
 
             card.addView(row)
@@ -760,16 +760,16 @@ class AnalysisActivity : BaseActivity() {
             hourContainer.addView(TextView(this).apply {
                 text = "\uD83D\uDCC5 $label"
                 textSize = 14f
-                setTextColor(Color.parseColor("#0F172A"))
+                setTextColor(AppColors.textPrimary)
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
             })
 
             addDetailRow(hourContainer, "\uD83D\uDCB0", "Ganho m\u00E9dio",
-                "R\$ ${AnalysisHelperV2.formatBr(hour.avgEarningsPerHour)}/hora", Color.parseColor("#0F172A"))
-            addDetailRow(hourContainer, "\uD83D\uDE97", "Corridas", "${hour.rideCount}", Color.parseColor("#0F172A"))
+                "R\$ ${AnalysisHelperV2.formatBr(hour.avgEarningsPerHour)}/hora", AppColors.textPrimary)
+            addDetailRow(hourContainer, "\uD83D\uDE97", "Corridas", "${hour.rideCount}", AppColors.textPrimary)
 
-            val dinamicaColor = if (hour.dynamicPercent >= 30) Color.parseColor("#00A86B") else Color.parseColor("#F97316")
+            val dinamicaColor = if (hour.dynamicPercent >= 30) AppColors.success else AppColors.warning
             addDetailRow(hourContainer, "\u26A1", "Din\u00E2mica",
                 "${String.format("%.0f", hour.dynamicPercent)}%", dinamicaColor)
 
@@ -778,7 +778,7 @@ class AnalysisActivity : BaseActivity() {
                 layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 8)
                     .apply { topMargin = 8 }
                 val bg = GradientDrawable()
-                bg.setColor(Color.parseColor("#E2E8F0"))
+                bg.setColor(AppColors.border)
                 bg.cornerRadius = (4 * resources.displayMetrics.density)
                 background = bg
             }
@@ -790,7 +790,7 @@ class AnalysisActivity : BaseActivity() {
                     val fillView = View(this).apply {
                         layoutParams = LinearLayout.LayoutParams(fillWidth, MATCH_PARENT)
                         val fillBg = GradientDrawable()
-                        fillBg.setColor(Color.parseColor("#00A86B"))
+                        fillBg.setColor(AppColors.success)
                         fillBg.cornerRadius = (4 * resources.displayMetrics.density)
                         background = fillBg
                     }
@@ -802,7 +802,7 @@ class AnalysisActivity : BaseActivity() {
                 hourContainer.addView(View(this).apply {
                     layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 1)
                         .apply { setMargins(0, 8, 0, 0) }
-                    setBackgroundColor(Color.parseColor("#F1F5F9"))
+                    setBackgroundColor(AppColors.bgSurface)
                 })
             }
 
@@ -902,7 +902,7 @@ class AnalysisActivity : BaseActivity() {
             dayContainer.addView(TextView(this).apply {
                 text = "${index + 1}. ${getDayName(day.dayOfWeek)}"
                 textSize = 14f
-                setTextColor(Color.parseColor("#0F172A"))
+                setTextColor(AppColors.textPrimary)
                 setTypeface(null, android.graphics.Typeface.BOLD)
                 layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
             })
@@ -918,7 +918,7 @@ class AnalysisActivity : BaseActivity() {
                 layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 8)
                     .apply { topMargin = 8 }
                 val bg = GradientDrawable()
-                bg.setColor(Color.parseColor("#E2E8F0"))
+                bg.setColor(AppColors.border)
                 bg.cornerRadius = (4 * resources.displayMetrics.density)
                 background = bg
             }
@@ -930,7 +930,7 @@ class AnalysisActivity : BaseActivity() {
                     val fillView = View(this).apply {
                         layoutParams = LinearLayout.LayoutParams(fillWidth, MATCH_PARENT)
                         val fillBg = GradientDrawable()
-                        fillBg.setColor(Color.parseColor("#00A86B"))
+                        fillBg.setColor(AppColors.success)
                         fillBg.cornerRadius = (4 * resources.displayMetrics.density)
                         background = fillBg
                     }
@@ -942,7 +942,7 @@ class AnalysisActivity : BaseActivity() {
                 dayContainer.addView(View(this).apply {
                     layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 1)
                         .apply { setMargins(0, 8, 0, 0) }
-                    setBackgroundColor(Color.parseColor("#F1F5F9"))
+                    setBackgroundColor(AppColors.bgSurface)
                 })
             }
 
@@ -981,7 +981,7 @@ class AnalysisActivity : BaseActivity() {
             layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
             text = label
             textSize = 13f
-            setTextColor(Color.parseColor("#475569"))
+            setTextColor(AppColors.textSecondary)
         })
         row.addView(TextView(this).apply {
             text = value
@@ -996,7 +996,7 @@ class AnalysisActivity : BaseActivity() {
     private fun buildScoreDistribution(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
         val card = createCard("🎯 DISTRIBUIÇÃO DAS OFERTAS")
 
-        addText(card, "Total de ofertas: ${r.offeredCount}", 13f, Color.parseColor("#0F172A"))
+        addText(card, "Total de ofertas: ${r.offeredCount}", 13f, AppColors.textPrimary)
 
         addDivider(card)
 
@@ -1006,25 +1006,25 @@ class AnalysisActivity : BaseActivity() {
         }
 
         addBar(scoreContainer, "✅ Boa (≥80%)", "${"%.0f".format(r.goodPercent)}%",
-            (r.goodPercent / 100).toFloat(), Color.parseColor("#00A86B"))
+            (r.goodPercent / 100).toFloat(), AppColors.success)
         addBar(scoreContainer, "⚠️ Média (50-79%)", "${"%.0f".format(r.mediumPercent)}%",
-            (r.mediumPercent / 100).toFloat(), Color.parseColor("#F97316"))
+            (r.mediumPercent / 100).toFloat(), AppColors.warning)
         addBar(scoreContainer, "❌ Ruim (<50%)", "${"%.0f".format(r.badPercent)}%",
-            (r.badPercent / 100).toFloat(), Color.parseColor("#DC2626"))
+            (r.badPercent / 100).toFloat(), AppColors.error)
 
         card.addView(scoreContainer)
 
         addDivider(card)
 
         addText(card, "📊 Taxa de aceitação: ${"%.1f".format(r.acceptanceRate)}%", 13f,
-            if (r.acceptanceRate >= 70) Color.parseColor("#00A86B") else Color.parseColor("#F97316"), true)
+            if (r.acceptanceRate >= 70) AppColors.success else AppColors.warning, true)
 
         addText(card, buildString {
             append("→ Você aceitou ${r.acceptedCount} de ${r.offeredCount} corridas")
             if (r.offeredCount - r.acceptedCount > 0) {
                 append("\n→ ${r.offeredCount - r.acceptedCount} corridas foram recusadas ou expiraram")
             }
-        }, 11f, Color.parseColor("#475569"))
+        }, 11f, AppColors.textSecondary)
 
         container.addView(card)
     }
@@ -1069,13 +1069,13 @@ class AnalysisActivity : BaseActivity() {
             layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.4f)
             text = label
             textSize = 12f
-            setTextColor(Color.parseColor("#475569"))
+            setTextColor(AppColors.textSecondary)
         })
         headerRow.addView(TextView(this).apply {
             layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.6f)
             text = "Atual: $current  |  Anterior: $previous"
             textSize = 11f
-            setTextColor(Color.parseColor("#94A3B8"))
+            setTextColor(AppColors.textTertiary)
         })
         row.addView(headerRow)
 
@@ -1126,10 +1126,10 @@ class AnalysisActivity : BaseActivity() {
 
         for (insight in insights.take(5)) {
             addText(card, insight, 12f,
-                if (insight.startsWith("✅") || insight.startsWith("✨")) Color.parseColor("#00A86B")
-                else if (insight.startsWith("⚠️") || insight.startsWith("📉")) Color.parseColor("#F97316")
-                else if (insight.startsWith("🔴")) Color.parseColor("#DC2626")
-                else Color.parseColor("#0F172A"))
+                if (insight.startsWith("✅") || insight.startsWith("✨")) AppColors.success
+                else if (insight.startsWith("⚠️") || insight.startsWith("📉")) AppColors.warning
+                else if (insight.startsWith("🔴")) AppColors.error
+                else AppColors.textPrimary)
 
             if (insight != insights.last()) {
                 addDivider(card)
@@ -1165,13 +1165,13 @@ class AnalysisActivity : BaseActivity() {
             contentDescription = null
             text = "$label: "
             textSize = 12f
-            setTextColor(Color.parseColor("#94A3B8"))
+            setTextColor(AppColors.textTertiary)
         })
 
         val textColor = when (color) {
             is Int -> color
-            is Boolean -> if (color) Color.parseColor("#0F172A") else Color.parseColor("#94A3B8")
-            else -> Color.parseColor("#0F172A")
+            is Boolean -> if (color) AppColors.textPrimary else AppColors.textTertiary
+            else -> AppColors.textPrimary
         }
 
         row.addView(TextView(this).apply {

@@ -120,6 +120,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         if (oldVersion < 20) {
             db.execSQL(CREATE_RAW_LOGS_TABLE)
             db.execSQL(CREATE_RAW_LOGS_INDEXES)
+            try { db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN unit_type TEXT DEFAULT 'L'") } catch (_: Exception) { }
+            try { db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN charger_type TEXT") } catch (_: Exception) { }
+            try { db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN percentage_start INTEGER") } catch (_: Exception) { }
+            try { db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN percentage_end INTEGER") } catch (_: Exception) { }
         }
     }
 
@@ -466,11 +470,15 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             val cv = ContentValues().apply {
                 put(COL_R_TIMESTAMP, r.timestamp)
                 put(COL_R_ODOMETER, r.odometerKm)
-                put(COL_R_LITERS, r.liters)
-                put(COL_R_PRICE, r.pricePerLiter)
+                put(COL_R_AMOUNT, r.amount)
+                put(COL_R_UNIT_TYPE, r.unitType)
+                put(COL_R_PRICE_UNIT, r.pricePerUnit)
                 put(COL_R_TOTAL, r.totalValue)
                 put(COL_R_FULL_TANK, if (r.isFullTank) 1 else 0)
                 put(COL_R_FUEL_TYPE, r.fuelType)
+                put(COL_R_CHARGER_TYPE, r.chargerType)
+                put(COL_R_PERCENTAGE_START, r.percentageStart)
+                put(COL_R_PERCENTAGE_END, r.percentageEnd)
                 put(COL_R_NOTES, r.notes)
             }
             db.insert(TABLE_FUEL_REFUELS, null, cv)
@@ -491,11 +499,15 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     id = it.getSafeLong(COL_ID) ?: 0L,
                     timestamp = it.getSafeLong(COL_R_TIMESTAMP) ?: 0L,
                     odometerKm = it.getSafeDouble(COL_R_ODOMETER) ?: 0.0,
-                    liters = it.getSafeDouble(COL_R_LITERS) ?: 0.0,
-                    pricePerLiter = it.getSafeDouble(COL_R_PRICE) ?: 0.0,
+                    amount = it.getSafeDouble(COL_R_AMOUNT) ?: 0.0,
+                    unitType = it.getSafeString(COL_R_UNIT_TYPE) ?: "L",
+                    pricePerUnit = it.getSafeDouble(COL_R_PRICE_UNIT) ?: 0.0,
                     totalValue = it.getSafeDouble(COL_R_TOTAL) ?: 0.0,
                     isFullTank = it.getSafe(COL_R_FULL_TANK, false),
-                    fuelType = it.getSafeString(COL_R_FUEL_TYPE) ?: "",
+                    fuelType = it.getSafeString(COL_R_FUEL_TYPE) ?: "gasoline",
+                    chargerType = it.getSafeString(COL_R_CHARGER_TYPE),
+                    percentageStart = it.getSafeInt(COL_R_PERCENTAGE_START),
+                    percentageEnd = it.getSafeInt(COL_R_PERCENTAGE_END),
                     notes = it.getSafeString(COL_R_NOTES)
                 ))
             }
@@ -523,11 +535,15 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     id = it.getSafeLong(COL_ID) ?: 0L,
                     timestamp = it.getSafeLong(COL_R_TIMESTAMP) ?: 0L,
                     odometerKm = it.getSafeDouble(COL_R_ODOMETER) ?: 0.0,
-                    liters = it.getSafeDouble(COL_R_LITERS) ?: 0.0,
-                    pricePerLiter = it.getSafeDouble(COL_R_PRICE) ?: 0.0,
+                    amount = it.getSafeDouble(COL_R_AMOUNT) ?: 0.0,
+                    unitType = it.getSafeString(COL_R_UNIT_TYPE) ?: "L",
+                    pricePerUnit = it.getSafeDouble(COL_R_PRICE_UNIT) ?: 0.0,
                     totalValue = it.getSafeDouble(COL_R_TOTAL) ?: 0.0,
                     isFullTank = it.getSafe(COL_R_FULL_TANK, false),
                     fuelType = it.getSafeString(COL_R_FUEL_TYPE) ?: "",
+                    chargerType = it.getSafeString(COL_R_CHARGER_TYPE),
+                    percentageStart = it.getSafeInt(COL_R_PERCENTAGE_START),
+                    percentageEnd = it.getSafeInt(COL_R_PERCENTAGE_END),
                     notes = it.getSafeString(COL_R_NOTES)
                 )
             }
@@ -546,8 +562,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             val current = refuelsByType[i]
             val previous = refuelsByType[i + 1]
             val kmDiff = current.odometerKm - previous.odometerKm
-            if (kmDiff > 0 && current.liters > 0) {
-                consumptions.add(kmDiff / current.liters)
+            if (kmDiff > 0 && current.amount > 0) {
+                consumptions.add(kmDiff / current.amount)
             }
         }
 
@@ -1139,8 +1155,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         // Fuel refuels columns
         private const val COL_R_TIMESTAMP = "timestamp"
         private const val COL_R_ODOMETER = "odometer_km"
-        private const val COL_R_LITERS = "liters"
-        private const val COL_R_PRICE = "price_per_liter"
+        private const val COL_R_AMOUNT = "amount"
+        private const val COL_R_PRICE_UNIT = "price_per_unit"
+        private const val COL_R_UNIT_TYPE = "unit_type"
+        private const val COL_R_CHARGER_TYPE = "charger_type"
+        private const val COL_R_PERCENTAGE_START = "percentage_start"
+        private const val COL_R_PERCENTAGE_END = "percentage_end"
         private const val COL_R_TOTAL = "total_value"
         private const val COL_R_FULL_TANK = "is_full_tank"
         private const val COL_R_FUEL_TYPE = "fuel_type"
@@ -1200,8 +1220,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $COL_R_TIMESTAMP INTEGER NOT NULL,
                 $COL_R_ODOMETER REAL NOT NULL,
-                $COL_R_LITERS REAL NOT NULL,
-                $COL_R_PRICE REAL NOT NULL,
+                $COL_R_AMOUNT REAL NOT NULL,
+                $COL_R_PRICE_UNIT REAL NOT NULL,
+                $COL_R_UNIT_TYPE TEXT DEFAULT 'L',
+                $COL_R_CHARGER_TYPE TEXT,
+                $COL_R_PERCENTAGE_START INTEGER,
+                $COL_R_PERCENTAGE_END INTEGER,
                 $COL_R_TOTAL REAL NOT NULL,
                 $COL_R_FULL_TANK INTEGER DEFAULT 0,
                 $COL_R_FUEL_TYPE TEXT DEFAULT 'gasoline',
@@ -1378,13 +1402,20 @@ data class RefuelRecord(
     val id: Long = 0,
     val timestamp: Long,
     val odometerKm: Double,
-    val liters: Double,
-    val pricePerLiter: Double,
+    val amount: Double,
+    val unitType: String = "L",
+    val pricePerUnit: Double,
     val totalValue: Double,
     val isFullTank: Boolean,
     val fuelType: String,
+    val chargerType: String? = null,
+    val percentageStart: Int? = null,
+    val percentageEnd: Int? = null,
     val notes: String? = null
-)
+) {
+    val energyType: EnergyType
+        get() = EnergyType.fromString(fuelType)
+}
 
 data class FixedExpense(
     val id: Long = 0,

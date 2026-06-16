@@ -104,22 +104,22 @@ object DecisionEngine {
     }
 
     fun stateColor(state: ParamState): Int = when (state) {
-        ParamState.OK       -> 0xFF4ADE80.toInt()
-        ParamState.ANALISAR -> 0xFFFB923C.toInt()
-        ParamState.NOK      -> 0xFFF87171.toInt()
-        ParamState.AUSENTE  -> 0xFFAAAAAA.toInt()
+        ParamState.OK       -> AppColors.metricGood
+        ParamState.ANALISAR -> AppColors.metricMedium
+        ParamState.NOK      -> AppColors.metricBad
+        ParamState.AUSENTE  -> AppColors.metricAbsent
     }
 
     fun decisionColor(decision: Decision): Int = when (decision) {
-        Decision.ACEITAR  -> 0xFF00A86B.toInt()  // success
-        Decision.ANALISAR -> 0xFFF97316.toInt()  // warning
-        Decision.RECUSAR  -> 0xFFDC2626.toInt()  // error
+        Decision.ACEITAR  -> AppColors.success  // success
+        Decision.ANALISAR -> AppColors.warning  // warning
+        Decision.RECUSAR  -> AppColors.error  // error
     }
 
     fun overlayDecisionColor(decision: Decision): Int = when (decision) {
-        Decision.ACEITAR  -> 0xFF4ADE80.toInt()  // overlay_success
-        Decision.ANALISAR -> 0xFFFBBF24.toInt()  // overlay_warning
-        Decision.RECUSAR  -> 0xFFF87171.toInt()  // overlay_error
+        Decision.ACEITAR  -> AppColors.metricGood  // overlay_success
+        Decision.ANALISAR -> AppColors.overlayWarning  // overlay_warning
+        Decision.RECUSAR  -> AppColors.metricBad  // overlay_error
     }
 
     fun decisionText(decision: Decision): String = when (decision) {

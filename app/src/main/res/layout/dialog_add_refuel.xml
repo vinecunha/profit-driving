@@ -18,11 +18,11 @@
             android:textColor="@color/text_primary"
             android:layout_marginBottom="16dp" />
 
-        <!-- Fuel Type -->
+        <!-- Fuel Type - Row 1: Liquid fuels -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tipo de combustível"
+            android:text="Tipo de energia"
             android:textSize="12sp"
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="4dp" />
@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="6dp">
 
             <TextView
                 android:id="@+id/btnFuelGasoline"
@@ -40,13 +40,14 @@
                 android:layout_height="32dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="2dp"
-                android:text="Gasolina"
-                android:textSize="11sp"
+                android:text="⛽ Gasolina"
+                android:textSize="10sp"
                 android:textColor="@color/text_inverse"
                 android:gravity="center"
                 android:background="@drawable/pill_selected"
                 android:clickable="true"
-                android:focusable="true" />
+                android:focusable="true"
+                android:lines="1" />
 
             <TextView
                 android:id="@+id/btnFuelEthanol"
@@ -54,13 +55,14 @@
                 android:layout_height="32dp"
                 android:layout_weight="1"
                 android:layout_marginHorizontal="2dp"
-                android:text="Etanol"
-                android:textSize="11sp"
+                android:text="🌽 Etanol"
+                android:textSize="10sp"
                 android:textColor="@color/text_secondary"
                 android:gravity="center"
                 android:background="@drawable/pill_unselected"
                 android:clickable="true"
-                android:focusable="true" />
+                android:focusable="true"
+                android:lines="1" />
 
             <TextView
                 android:id="@+id/btnFuelDiesel"
@@ -68,13 +70,14 @@
                 android:layout_height="32dp"
                 android:layout_weight="1"
                 android:layout_marginHorizontal="2dp"
-                android:text="Diesel"
-                android:textSize="11sp"
+                android:text="🛢️ Diesel"
+                android:textSize="10sp"
                 android:textColor="@color/text_secondary"
                 android:gravity="center"
                 android:background="@drawable/pill_unselected"
                 android:clickable="true"
-                android:focusable="true" />
+                android:focusable="true"
+                android:lines="1" />
 
             <TextView
                 android:id="@+id/btnFuelGNV"
@@ -82,13 +85,69 @@
                 android:layout_height="32dp"
                 android:layout_weight="1"
                 android:layout_marginStart="2dp"
-                android:text="GNV"
-                android:textSize="11sp"
+                android:text="🔥 GNV"
+                android:textSize="10sp"
                 android:textColor="@color/text_secondary"
                 android:gravity="center"
                 android:background="@drawable/pill_unselected"
                 android:clickable="true"
-                android:focusable="true" />
+                android:focusable="true"
+                android:lines="1" />
+
+        </LinearLayout>
+
+        <!-- Fuel Type - Row 2: Electric and hybrid -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/btnFuelElectricAC"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="2dp"
+                android:text="🔌 Elétrico AC"
+                android:textSize="10sp"
+                android:textColor="@color/text_secondary"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true"
+                android:lines="1" />
+
+            <TextView
+                android:id="@+id/btnFuelElectricDC"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginHorizontal="2dp"
+                android:text="⚡ Elétrico DC"
+                android:textSize="10sp"
+                android:textColor="@color/text_secondary"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true"
+                android:lines="1" />
+
+            <TextView
+                android:id="@+id/btnFuelHybrid"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginStart="2dp"
+                android:text="🔋 Híbrido"
+                android:textSize="10sp"
+                android:textColor="@color/text_secondary"
+                android:gravity="center"
+                android:background="@drawable/pill_unselected"
+                android:clickable="true"
+                android:focusable="true"
+                android:lines="1" />
 
         </LinearLayout>
 
@@ -97,7 +156,7 @@
             android:layout_width="match_parent"
             android:layout_height="44dp"
             android:inputType="numberDecimal"
-            android:hint="Hod\u00f4metro (km)"
+            android:hint="Hodômetro (km)"
             android:textSize="14sp"
             android:textColor="@color/text_primary"
             android:background="@drawable/pill_unselected"
@@ -105,11 +164,11 @@
             android:layout_marginBottom="8dp" />
 
         <EditText
-            android:id="@+id/etLiters"
+            android:id="@+id/etAmount"
             android:layout_width="match_parent"
             android:layout_height="44dp"
             android:inputType="numberDecimal"
-            android:hint="Litros / m\u00b3"
+            android:hint="Quantidade (L)"
             android:textSize="14sp"
             android:textColor="@color/text_primary"
             android:background="@drawable/pill_unselected"
@@ -117,11 +176,11 @@
             android:layout_marginBottom="8dp" />
 
         <EditText
-            android:id="@+id/etPricePerLiter"
+            android:id="@+id/etPricePerUnit"
             android:layout_width="match_parent"
             android:layout_height="44dp"
             android:inputType="numberDecimal"
-            android:hint="Pre\u00e7o por litro/m\u00b3 (R$)"
+            android:hint="Preço por unidade (R$)"
             android:textSize="14sp"
             android:textColor="@color/text_primary"
             android:background="@drawable/pill_unselected"
@@ -140,6 +199,121 @@
             android:paddingHorizontal="12dp"
             android:layout_marginBottom="12dp" />
 
+        <!-- Electric-specific: Charger type -->
+        <LinearLayout
+            android:id="@+id/chargerGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tipo de carregador"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="4dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/btnChargerAC"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="2dp"
+                    android:text="🔌 AC"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:gravity="center"
+                    android:background="@drawable/pill_unselected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnChargerDC"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="2dp"
+                    android:text="⚡ DC rápido"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:gravity="center"
+                    android:background="@drawable/pill_unselected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnChargerHome"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="2dp"
+                    android:text="🏠 Casa"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    android:gravity="center"
+                    android:background="@drawable/pill_unselected"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Electric-specific: Battery percentage -->
+        <LinearLayout
+            android:id="@+id/percentageGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp">
+
+            <EditText
+                android:id="@+id/etPercentageStart"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:inputType="number"
+                android:hint="% inicial"
+                android:textSize="14sp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="→"
+                android:textSize="16sp"
+                android:textColor="@color/text_tertiary"
+                android:layout_marginHorizontal="4dp" />
+
+            <EditText
+                android:id="@+id/etPercentageEnd"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:inputType="number"
+                android:hint="% final"
+                android:textSize="14sp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/pill_unselected"
+                android:paddingHorizontal="12dp" />
+
+        </LinearLayout>
+
         <!-- Full tank toggle -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -151,7 +325,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tanque cheio?"
+                android:text="Completo?"
                 android:textSize="14sp"
                 android:textColor="@color/text_primary"
                 android:layout_marginEnd="12dp" />

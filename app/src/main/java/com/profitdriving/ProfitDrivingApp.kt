@@ -13,6 +13,7 @@ class ProfitDrivingApp : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        AppColors.init(this)
         databaseHelper = DatabaseHelper(this)
         prefs = createEncryptedPrefs()
     }

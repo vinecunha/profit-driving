@@ -163,7 +163,7 @@ class FloatingCardService : Service() {
 
         val cardRoot     = view.findViewById<View>(R.id.cardRoot)
         val bg = GradientDrawable()
-        bg.setColor(Color.parseColor("#0F172A"))
+        bg.setColor(AppColors.textPrimary)
         bg.cornerRadius = 14f * resources.displayMetrics.density
         cardRoot.background = bg
 
@@ -453,7 +453,7 @@ class FloatingCardService : Service() {
             DecisionEngine.Decision.RECUSAR -> "#DC2626"
         }
         val gd = GradientDrawable()
-        gd.setColor(Color.parseColor("#0F172A"))
+        gd.setColor(AppColors.textPrimary)
         gd.cornerRadius = 14f * resources.displayMetrics.density
         gd.setStroke(3.dpToPx(), Color.parseColor(borderColor))
         view.background = gd

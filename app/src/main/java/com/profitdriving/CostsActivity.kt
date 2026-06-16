@@ -131,6 +131,7 @@ class CostsActivity : BaseActivity() {
         etMonthlyKm.setText(monthlyKm.toString())
         renderRefuelList()
         renderExpenseLists()
+        updateEnergyStats()
         updateSummary()
         updateSimulator()
     }
@@ -143,7 +144,7 @@ class CostsActivity : BaseActivity() {
             val empty = TextView(this).apply {
                 text = "Nenhum abastecimento registrado"
                 textSize = 12f
-                setTextColor(0xFF94A3B8.toInt())
+                setTextColor(AppColors.textSecondary)
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, 24, 0, 8)
             }
@@ -161,7 +162,7 @@ class CostsActivity : BaseActivity() {
                 "%.0f".format(refuel.odometerKm)
 
             row.findViewById<TextView>(R.id.tvRefuelLiters).text =
-                "%.1f".format(refuel.liters).replace(".", ",")
+                "%.1f".format(refuel.amount).replace(".", ",")
 
             row.findViewById<TextView>(R.id.tvRefuelPrice).text =
                 currencyFormat.format(refuel.totalValue)
@@ -180,7 +181,64 @@ class CostsActivity : BaseActivity() {
         if (idx < 0 || idx >= allRefuels.size - 1) return 0.0
         val next = allRefuels[idx + 1]
         val kmDiff = refuel.odometerKm - next.odometerKm
-        return if (kmDiff > 0 && refuel.liters > 0) kmDiff / refuel.liters else 0.0
+        return if (kmDiff > 0 && refuel.amount > 0) kmDiff / refuel.amount else 0.0
+    }
+
+    private fun updateEnergyStats() {
+        val container = findViewById<LinearLayout>(R.id.energyStatsContainer)
+        container.removeAllViews()
+
+        val energyTypes = EnergyType.entries
+
+        for (type in energyTypes) {
+            val stats = CostCalculator.calculateEnergyStats(refuels, type)
+            if (stats.count == 0) continue
+
+            val card = layoutInflater.inflate(R.layout.item_energy_stat, container, false)
+
+            val tvIcon = card.findViewById<TextView>(R.id.tvEnergyIcon)
+            val tvName = card.findViewById<TextView>(R.id.tvEnergyName)
+            val tvConsumption = card.findViewById<TextView>(R.id.tvEnergyConsumption)
+            val tvCost = card.findViewById<TextView>(R.id.tvEnergyCost)
+            val tvTotal = card.findViewById<TextView>(R.id.tvEnergyTotal)
+            val tvLastDate = card.findViewById<TextView>(R.id.tvEnergyLastDate)
+
+            tvIcon.text = type.icon
+            tvName.text = type.display
+
+            val consumptionUnit = if (type.unit == "kWh") "km/kWh" else "km/L"
+            tvConsumption.text = if (stats.avgConsumption > 0) {
+                "Consumo: ${"%.1f".format(stats.avgConsumption).replace(".", ",")} $consumptionUnit"
+            } else {
+                "Consumo: -- $consumptionUnit"
+            }
+
+            tvCost.text = if (stats.costPerKm > 0) {
+                "Custo: R$ ${"%.2f".format(stats.costPerKm).replace(".", ",")}/km"
+            } else {
+                "Custo: -- R\$/km"
+            }
+
+            val totalFormat = if (type.unit == "kWh") "%.0f %s" else "%.1f %s"
+            tvTotal.text = "Total: ${String.format(totalFormat, stats.totalAmount, type.unit).replace(".", ",")} \u00B7 R$ ${"%.2f".format(stats.totalCost).replace(".", ",")}"
+
+            val lastDate = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+                .format(Date(stats.lastDate))
+            tvLastDate.text = "\u00daltimo: $lastDate (${stats.count} registro(s))"
+
+            container.addView(card)
+        }
+
+        if (container.childCount == 0) {
+            val empty = TextView(this).apply {
+                text = "Nenhum dado de abastecimento"
+                textSize = 12f
+                setTextColor(AppColors.textTertiary)
+                gravity = android.view.Gravity.CENTER
+                setPadding(0, 16, 0, 16)
+            }
+            container.addView(empty)
+        }
     }
 
     private fun renderExpenseLists() {
@@ -238,7 +296,7 @@ class CostsActivity : BaseActivity() {
             val empty = TextView(this).apply {
                 text = emptyMessage
                 textSize = 11f
-                setTextColor(0xFF94A3B8.toInt())
+                setTextColor(AppColors.textSecondary)
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, 6, 0, 6)
             }
@@ -260,9 +318,9 @@ class CostsActivity : BaseActivity() {
                 else -> "\u23F1 Pendente"
             }
             val statusColor = when (expense.paymentStatus) {
-                "PAID" -> 0xFF00A86B.toInt()
-                "PARTIAL" -> 0xFFF97316.toInt()
-                else -> 0xFF94A3B8.toInt()
+                "PAID" -> AppColors.success
+                "PARTIAL" -> AppColors.warning
+                else -> AppColors.textSecondary
             }
             row.findViewById<TextView>(R.id.tvExpenseStatus).text = statusText
             row.findViewById<TextView>(R.id.tvExpenseStatus).setTextColor(statusColor)
@@ -361,7 +419,7 @@ class CostsActivity : BaseActivity() {
             val empty = TextView(this).apply {
                 text = "Nenhuma despesa cadastrada"
                 textSize = 11f
-                setTextColor(0xFF94A3B8.toInt())
+                setTextColor(AppColors.textSecondary)
             }
             normalizedExpenseList.addView(empty)
         } else {
@@ -400,11 +458,6 @@ class CostsActivity : BaseActivity() {
         findViewById<TextView>(R.id.tvCostPerMinute).text =
             "Custo/min: ${currencyFormat.format(summary.costPerMinute)}"
 
-        findViewById<TextView>(R.id.tvAvgConsumption).text =
-            "Consumo m\u00E9dio: ${"%.1f".format(summary.avgConsumption).replace(".", ",")} km/L"
-        findViewById<TextView>(R.id.tvAvgFuelCost).text =
-            "Custo combust\u00EDvel: ${currencyFormat.format(summary.fuelCostPerKm)}/km"
-
         updateSimulator()
     }
 
@@ -412,7 +465,7 @@ class CostsActivity : BaseActivity() {
         return TextView(this).apply {
             this.text = text
             textSize = 11f
-            setTextColor(0xFF0F172A.toInt())
+            setTextColor(AppColors.textPrimary)
             setTypeface(null, android.graphics.Typeface.BOLD)
             setPadding(0, 4, 0, 2)
         }
@@ -422,7 +475,7 @@ class CostsActivity : BaseActivity() {
         return TextView(this).apply {
             text = "${ne.name}: ${currencyFormat.format(ne.costPerKm)}/km"
             textSize = 11f
-            setTextColor(0xFF475569.toInt())
+            setTextColor(AppColors.textSecondary)
             setPadding(0, 0, 0, 2)
         }
     }
