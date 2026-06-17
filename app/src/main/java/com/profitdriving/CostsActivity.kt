@@ -404,7 +404,12 @@ class CostsActivity : BaseActivity() {
     private fun showSavingFeedback(action: () -> Unit) {
         progressOverlay.visibility = View.VISIBLE
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            action()
+            try {
+                action()
+            } catch (e: Exception) {
+                android.util.Log.e("CostsActivity", "Error saving", e)
+                android.widget.Toast.makeText(this, "Erro: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            }
             progressOverlay.visibility = View.GONE
         }, 100)
     }

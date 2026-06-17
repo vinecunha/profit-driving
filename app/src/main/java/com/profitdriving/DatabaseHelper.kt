@@ -505,15 +505,18 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             put(COL_R_PERCENTAGE_END, r.percentageEnd)
             put(COL_R_NOTES, r.notes)
         }
-        db.insert(TABLE_FUEL_REFUELS, null, cv)
+        val id = db.insertWithOnConflict(TABLE_FUEL_REFUELS, null, cv, SQLiteDatabase.CONFLICT_NONE)
+        if (id == -1L) android.util.Log.e("DB", "insertRefuel FAILED for odometer=${r.odometerKm}")
+        id
     }
 
     fun getRefuels(): List<RefuelRecord> {
         val list = mutableListOf<RefuelRecord>()
-        val cursor = readableDatabase.query(
-            TABLE_FUEL_REFUELS, null, null, null, null, null,
-            "$COL_R_TIMESTAMP DESC"
-        )
+        val cursor = readableDatabase.rawQuery("SELECT * FROM $TABLE_FUEL_REFUELS ORDER BY $COL_R_TIMESTAMP DESC", null)
+        if (cursor == null) {
+            android.util.Log.e("DB", "getRefuels cursor is null")
+            return list
+        }
         cursor.use {
             while (it.moveToNext()) {
                 list.add(RefuelRecord(
