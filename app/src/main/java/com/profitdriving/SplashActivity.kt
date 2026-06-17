@@ -43,7 +43,15 @@ class SplashActivity : AppCompatActivity() {
                         Toast.LENGTH_LONG
                     ).show()
                 }
-                startActivity(Intent(this@SplashActivity, MainActivity::class.java))
+
+                val target = if (OnboardingActivity.isCompleted(this@SplashActivity)) {
+                    L.d("SplashActivity", "Onboarding já concluído — indo para MainActivity")
+                    Intent(this@SplashActivity, MainActivity::class.java)
+                } else {
+                    L.d("SplashActivity", "Onboarding pendente — indo para OnboardingActivity")
+                    Intent(this@SplashActivity, OnboardingActivity::class.java)
+                }
+                startActivity(target)
                 finish()
             }
         }

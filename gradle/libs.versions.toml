@@ -10,6 +10,7 @@ cardview = "1.0.0"
 material = "1.11.0"
 security-crypto = "1.1.0-alpha06"
 localbroadcastmanager = "1.1.0"
+viewpager2 = "1.0.0"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -21,6 +22,7 @@ cardview = { group = "androidx.cardview", name = "cardview", version.ref = "card
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "security-crypto" }
 localbroadcastmanager = { group = "androidx.localbroadcastmanager", name = "localbroadcastmanager", version.ref = "localbroadcastmanager" }
+viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewpager2" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

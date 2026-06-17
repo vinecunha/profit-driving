@@ -19,6 +19,11 @@
         android:usesCleartextTraffic="false">
 
         <activity
+            android:name=".OnboardingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CorridaCerta.Onboarding" />
+
+        <activity
             android:name=".SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.CorridaCerta.Splash">

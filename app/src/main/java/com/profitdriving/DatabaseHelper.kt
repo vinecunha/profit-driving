@@ -491,25 +491,21 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     fun insertRefuel(r: RefuelRecord): Long = synchronized(dbLock) {
         val db = writableDatabase
-        try {
-            val cv = ContentValues().apply {
-                put(COL_R_TIMESTAMP, r.timestamp)
-                put(COL_R_ODOMETER, r.odometerKm)
-                put(COL_R_AMOUNT, r.amount)
-                put(COL_R_UNIT_TYPE, r.unitType)
-                put(COL_R_PRICE_UNIT, r.pricePerUnit)
-                put(COL_R_TOTAL, r.totalValue)
-                put(COL_R_FULL_TANK, if (r.isFullTank) 1 else 0)
-                put(COL_R_FUEL_TYPE, r.fuelType)
-                put(COL_R_CHARGER_TYPE, r.chargerType)
-                put(COL_R_PERCENTAGE_START, r.percentageStart)
-                put(COL_R_PERCENTAGE_END, r.percentageEnd)
-                put(COL_R_NOTES, r.notes)
-            }
-            db.insert(TABLE_FUEL_REFUELS, null, cv)
-        } finally {
-            db.close()
+        val cv = ContentValues().apply {
+            put(COL_R_TIMESTAMP, r.timestamp)
+            put(COL_R_ODOMETER, r.odometerKm)
+            put(COL_R_AMOUNT, r.amount)
+            put(COL_R_UNIT_TYPE, r.unitType)
+            put(COL_R_PRICE_UNIT, r.pricePerUnit)
+            put(COL_R_TOTAL, r.totalValue)
+            put(COL_R_FULL_TANK, if (r.isFullTank) 1 else 0)
+            put(COL_R_FUEL_TYPE, r.fuelType)
+            put(COL_R_CHARGER_TYPE, r.chargerType)
+            put(COL_R_PERCENTAGE_START, r.percentageStart)
+            put(COL_R_PERCENTAGE_END, r.percentageEnd)
+            put(COL_R_NOTES, r.notes)
         }
+        db.insert(TABLE_FUEL_REFUELS, null, cv)
     }
 
     fun getRefuels(): List<RefuelRecord> {
@@ -541,12 +537,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     fun deleteRefuel(id: Long) = synchronized(dbLock) {
-        val db = writableDatabase
-        try {
-            db.delete(TABLE_FUEL_REFUELS, "$COL_ID = ?", arrayOf(id.toString()))
-        } finally {
-            db.close()
-        }
+        writableDatabase.delete(TABLE_FUEL_REFUELS, "$COL_ID = ?", arrayOf(id.toString()))
     }
 
     fun getLastRefuelByFuelType(fuelType: String, beforeTimestamp: Long = System.currentTimeMillis()): RefuelRecord? {
