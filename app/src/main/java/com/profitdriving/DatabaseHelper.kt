@@ -135,6 +135,21 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             try { db.execSQL("UPDATE $TABLE_FUEL_REFUELS SET $COL_R_AMOUNT = liters WHERE $COL_R_AMOUNT IS NULL") } catch (_: Exception) { }
             try { db.execSQL("UPDATE $TABLE_FUEL_REFUELS SET $COL_R_PRICE_UNIT = price_per_liter WHERE $COL_R_PRICE_UNIT IS NULL") } catch (_: Exception) { }
         }
+        if (oldVersion < 22) {
+            for (col in listOf(
+                "$COL_R_NOTES TEXT",
+                "$COL_R_UNIT_TYPE TEXT DEFAULT 'L'",
+                "$COL_R_CHARGER_TYPE TEXT",
+                "$COL_R_PERCENTAGE_START INTEGER",
+                "$COL_R_PERCENTAGE_END INTEGER"
+            )) {
+                try {
+                    db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN $col")
+                } catch (e: Exception) {
+                    android.util.Log.w("DB", "Ignored ALTER TABLE ADD COLUMN $col: ${e.message}")
+                }
+            }
+        }
     }
 
     fun updateStatus(id: Long, status: String) = synchronized(dbLock) {
@@ -512,11 +527,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     fun getRefuels(): List<RefuelRecord> {
         val list = mutableListOf<RefuelRecord>()
-        val cursor = readableDatabase.rawQuery("SELECT * FROM $TABLE_FUEL_REFUELS ORDER BY $COL_R_TIMESTAMP DESC", null)
-        if (cursor == null) {
-            android.util.Log.e("DB", "getRefuels cursor is null")
-            return list
-        }
+        val cursor = readableDatabase.query(
+            TABLE_FUEL_REFUELS, null, null, null, null, null,
+            "$COL_R_TIMESTAMP DESC"
+        )
         cursor.use {
             while (it.moveToNext()) {
                 list.add(RefuelRecord(
@@ -1132,7 +1146,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     companion object {
         private val dbLock = Any()
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 21
+        private const val DATABASE_VERSION = 22
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"
