@@ -35,6 +35,13 @@ import com.google.android.material.snackbar.Snackbar
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import android.widget.Switch
+import android.view.MenuItem
+import com.google.android.material.navigation.NavigationView
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.core.view.GravityCompat
+import com.profitdriving.ui.subscription.SubscriptionActivity
+import com.profitdriving.ui.about.AboutActivity
 
 class MainActivity : BaseActivity() {
 
@@ -64,6 +71,13 @@ class MainActivity : BaseActivity() {
 
     private lateinit var filterManager: FilterManager
     private var filtersExpanded = false
+
+    // Navigation Drawer
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navigationView: NavigationView
+    private lateinit var statusSwitch: Switch
+    private lateinit var tvStatusText: TextView
+    private lateinit var ivStatusIcon: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -109,6 +123,10 @@ class MainActivity : BaseActivity() {
                     .show()
             }
         )
+
+        // Configurar Navigation Drawer
+        setupNavigationDrawer()
+
         filterDays = savedInstanceState?.getInt("filterDays", 0) ?: 0
 
         db = DatabaseHelper(this)
@@ -293,6 +311,14 @@ class MainActivity : BaseActivity() {
         else
             "⚠️ Acessibilidade • Sobreposição ✗"
         btnRadar.visibility = if (allOk) View.GONE else View.VISIBLE
+        // Atualizar status card
+        if (::ivStatusIcon.isInitialized) {
+            ivStatusIcon.setImageResource(
+                if (allOk) R.drawable.ic_check_circle else R.drawable.ic_error
+            )
+            tvStatusText.text = if (allOk) "Serviço Ativo" else "Serviço Inativo"
+            statusSwitch.isChecked = allOk
+        }
     }
 
     private fun isAccessibilityServiceEnabled(): Boolean {
@@ -424,6 +450,88 @@ class MainActivity : BaseActivity() {
             }
         )
         container.addView(view)
+    }
+
+    // ============================================================
+    // MENU LATERAL - APENAS ITENS QUE NÃO ESTÃO NO BOTTOM NAV
+    // ============================================================
+
+    private fun setupNavigationDrawer() {
+        drawerLayout = findViewById(R.id.drawerLayout)
+        navigationView = findViewById(R.id.navigationView)
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu)
+
+        // Adicionar hamburger visível no header (tema NoActionBar)
+        val btnAction = findViewById<View>(R.id.btnAction)
+        val headerRow = btnAction.parent as? LinearLayout
+        if (headerRow != null) {
+            val hamburger = ImageView(this).apply {
+                setImageResource(R.drawable.ic_menu)
+                setPadding(12, 0, 8, 0)
+                scaleType = ImageView.ScaleType.CENTER_INSIDE
+                layoutParams = LinearLayout.LayoutParams(
+                    48, LinearLayout.LayoutParams.MATCH_PARENT
+                )
+                setOnClickListener { drawerLayout.openDrawer(GravityCompat.START) }
+            }
+            headerRow.addView(hamburger, 0)
+        }
+
+        navigationView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.nav_subscription -> {
+                    startActivity(Intent(this, SubscriptionActivity::class.java))
+                    drawerLayout.closeDrawers()
+                }
+                R.id.nav_about -> {
+                    startActivity(Intent(this, AboutActivity::class.java))
+                    drawerLayout.closeDrawers()
+                }
+                R.id.nav_help -> {
+                    showHelpDialog()
+                    drawerLayout.closeDrawers()
+                }
+                R.id.nav_privacy -> {
+                    openPrivacyPolicy()
+                    drawerLayout.closeDrawers()
+                }
+            }
+            true
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                drawerLayout.openDrawer(GravityCompat.START)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun showHelpDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("💡 Ajuda")
+            .setMessage(
+                "📖 Como usar o Profit Driving:\n\n" +
+                "1. Ative a acessibilidade nas configurações\n" +
+                "2. Abra o Uber normalmente\n" +
+                "3. O app captura automaticamente as corridas\n" +
+                "4. Acompanhe suas estatísticas\n\n" +
+                "🔒 Seus dados são 100% privados\n" +
+                "📱 Dados ficam apenas no seu dispositivo"
+            )
+            .setPositiveButton("Entendi", null)
+            .show()
+    }
+
+    private fun openPrivacyPolicy() {
+        val url = "https://seu-site.com/privacidade"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        startActivity(intent)
     }
 
     override fun onDestroy() {

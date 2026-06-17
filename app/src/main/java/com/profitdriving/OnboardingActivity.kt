@@ -1,6 +1,5 @@
 package com.profitdriving
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -9,9 +8,11 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.viewpager2.widget.ViewPager2
+import com.profitdriving.ui.permissions.PermissionsActivity
 
 class OnboardingActivity : AppCompatActivity() {
 
+    private lateinit var preferenceManager: PreferenceManager
     private lateinit var viewPager: ViewPager2
     private lateinit var buttonNext: Button
     private lateinit var dotsContainer: LinearLayout
@@ -43,6 +44,7 @@ class OnboardingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_onboarding)
 
+        preferenceManager = PreferenceManager(this)
         viewPager = findViewById(R.id.viewPager)
         buttonNext = findViewById(R.id.buttonNext)
         dotsContainer = findViewById(R.id.dotsContainer)
@@ -56,21 +58,24 @@ class OnboardingActivity : AppCompatActivity() {
         buttonNext.setOnClickListener {
             val current = viewPager.currentItem
             if (current == onboardingItems.size - 1) {
-                L.d(TAG, "Onboarding concluído — navegando para MainActivity")
-                markOnboardingComplete()
-                startActivity(Intent(this, MainActivity::class.java))
-                finish()
+                finishOnboarding()
             } else {
                 viewPager.currentItem = current + 1
             }
         }
     }
 
-    private fun markOnboardingComplete() {
-        getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean(PREF_ONBOARDING_DONE, true)
-            .apply()
+    private fun finishOnboarding() {
+        L.d(TAG, "=== FINALIZANDO ONBOARDING ===")
+
+        preferenceManager.setOnboardingCompleted(true)
+        L.d(TAG, "onboarding_completed = true")
+
+        L.d(TAG, "Abrindo PermissionsActivity...")
+        startActivity(Intent(this, PermissionsActivity::class.java))
+
+        L.d(TAG, "Finalizando OnboardingActivity")
+        finish()
     }
 
     private fun setupViewPager() {
@@ -119,12 +124,5 @@ class OnboardingActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "OnboardingActivity"
-        private const val PREF_NAME = "onboarding_prefs"
-        private const val PREF_ONBOARDING_DONE = "onboarding_complete"
-
-        fun isCompleted(context: Context): Boolean {
-            return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-                .getBoolean(PREF_ONBOARDING_DONE, false)
-        }
     }
 }

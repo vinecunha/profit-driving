@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- APENAS ITENS QUE NÃO ESTÃO NO BOTTOM NAV -->
+    <item
+        android:id="@+id/nav_subscription"
+        android:icon="@drawable/ic_subscription"
+        android:title="Assinatura" />
+
+    <item
+        android:id="@+id/nav_about"
+        android:icon="@drawable/ic_about"
+        android:title="Sobre" />
+
+    <item
+        android:id="@+id/nav_help"
+        android:icon="@drawable/ic_help"
+        android:title="Ajuda" />
+
+    <item
+        android:id="@+id/nav_privacy"
+        android:icon="@drawable/ic_privacy"
+        android:title="Política de Privacidade" />
+
+</menu>

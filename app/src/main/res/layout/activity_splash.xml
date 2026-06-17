@@ -1,25 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_card">
+    android:background="@color/splash_background">
 
-    <ImageView
-        android:id="@+id/splashIcon"
-        android:layout_width="160dp"
-        android:layout_height="160dp"
-        android:src="@drawable/nyxion_logo_512x512"
-        android:contentDescription=""
-        android:scaleType="fitCenter"
-        android:adjustViewBounds="true"
-        android:layout_centerInParent="true" />
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:gravity="center">
 
-    <ProgressBar
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="48dp"
-        android:visibility="gone" />
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/ic_launcher_foreground"
+            android:contentDescription="@string/app_name" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textSize="28sp"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Profit Driving"
+            android:textSize="16sp"
+            android:textColor="@color/white_70"
+            android:layout_marginTop="4dp" />
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:indeterminateTint="@color/white" />
+
+    </LinearLayout>
 
 </RelativeLayout>

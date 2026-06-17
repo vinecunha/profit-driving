@@ -151,7 +151,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             }
         }
         if (oldVersion < 23) {
-            rebuildFuelRefuelsTable(db)
+            try {
+                rebuildFuelRefuelsTable(db)
+            } catch (e: Exception) {
+                android.util.Log.e("DB", "v23 migration failed: ${e.message}")
+            }
         }
     }
 
@@ -169,6 +173,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         val hasOldCols = "liters" in existingCols || "price_per_liter" in existingCols
         if (!hasOldCols) return
 
+        val colNames = mutableListOf(
+            COL_ID, COL_R_TIMESTAMP, COL_R_ODOMETER, COL_R_TOTAL,
+            COL_R_FULL_TANK, COL_R_FUEL_TYPE, COL_R_UNIT_TYPE,
+            COL_R_CHARGER_TYPE, COL_R_PERCENTAGE_START,
+            COL_R_PERCENTAGE_END, COL_R_NOTES
+        )
         val selects = mutableListOf(
             COL_ID, COL_R_TIMESTAMP, COL_R_ODOMETER, COL_R_TOTAL,
             COL_R_FULL_TANK, COL_R_FUEL_TYPE, COL_R_UNIT_TYPE,
@@ -176,15 +186,16 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             COL_R_PERCENTAGE_END, COL_R_NOTES
         )
         selects.add(
-            if ("liters" in existingCols) "COALESCE($COL_R_AMOUNT, liters) AS $COL_R_AMOUNT"
+            if ("liters" in existingCols) "COALESCE($COL_R_AMOUNT, liters)"
             else COL_R_AMOUNT
         )
         selects.add(
-            if ("price_per_liter" in existingCols) "COALESCE($COL_R_PRICE_UNIT, price_per_liter) AS $COL_R_PRICE_UNIT"
+            if ("price_per_liter" in existingCols) "COALESCE($COL_R_PRICE_UNIT, price_per_liter)"
             else COL_R_PRICE_UNIT
         )
+        colNames.add(COL_R_AMOUNT)
+        colNames.add(COL_R_PRICE_UNIT)
 
-        val allCols = selects.joinToString(", ")
         db.execSQL("""
             CREATE TABLE ${TABLE_FUEL_REFUELS}_new (
                 $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -202,7 +213,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_R_NOTES TEXT
             )
         """)
-        db.execSQL("INSERT INTO ${TABLE_FUEL_REFUELS}_new ($allCols) SELECT $allCols FROM $TABLE_FUEL_REFUELS")
+        db.execSQL("INSERT INTO ${TABLE_FUEL_REFUELS}_new (${colNames.joinToString(", ")}) SELECT ${selects.joinToString(", ")} FROM $TABLE_FUEL_REFUELS")
         db.execSQL("DROP TABLE $TABLE_FUEL_REFUELS")
         db.execSQL("ALTER TABLE ${TABLE_FUEL_REFUELS}_new RENAME TO $TABLE_FUEL_REFUELS")
     }

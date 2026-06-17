@@ -60,6 +60,17 @@
         <activity
             android:name=".MyDayActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.permissions.PermissionsActivity"
+            android:exported="true"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.subscription.SubscriptionActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.about.AboutActivity"
+            android:exported="false" />
 
         <service
             android:name=".FloatingCardService"

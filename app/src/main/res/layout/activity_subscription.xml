@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <!-- Toolbar -->
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@android:color/transparent"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:title=""
+            app:titleTextColor="@color/text_primary" />
+
+        <!-- Título -->
+        <TextView
+            android:id="@+id/textTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Escolha seu Plano"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:id="@+id/textSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Acesse todas as funcionalidades"
+            android:textSize="16sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="8dp" />
+
+        <!-- Status Container (visível quando assinatura ativa) -->
+        <LinearLayout
+            android:id="@+id/statusContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginTop="24dp"
+            android:padding="16dp"
+            android:background="@drawable/border_success">
+
+            <TextView
+                android:id="@+id/textStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Plano: Mensal"
+                android:textSize="16sp"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Válido até: 31/12/2026"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary" />
+
+            <Button
+                android:id="@+id/buttonManage"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="GERENCIAR ASSINATURA"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="@color/primary" />
+
+        </LinearLayout>
+
+        <!-- Plano Mensal -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardMonthly"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:background="@drawable/selector_plan_card">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Mensal"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="R$ 9,90"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="/mes"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/border"
+                    android:layout_marginVertical="12dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="7 dias gratis"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Cancele quando quiser"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Plano Anual -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardYearly"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:background="@drawable/selector_plan_card">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Anual"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="R$ 69,90"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/primary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="/ano"
+                        android:textSize="14sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/border"
+                    android:layout_marginVertical="12dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="7 dias gratis"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Economize 30%"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Recomendado"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_inverse"
+                    android:background="@drawable/badge_recommended"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Botao Assinar -->
+        <Button
+            android:id="@+id/buttonSubscribe"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="ASSINAR AGORA"
+            android:textAllCaps="true"
+            android:textSize="16sp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="@color/primary" />
+
+        <!-- Botao Restaurar -->
+        <TextView
+            android:id="@+id/buttonRestore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Restaurar Compra"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground" />
+
+        <!-- MODO DEBUG (visivel apenas em DEBUG) -->
+        <LinearLayout
+            android:id="@+id/debugContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="24dp"
+            android:padding="16dp"
+            android:background="@drawable/border_debug"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MODO DESENVOLVIMENTO"
+                android:textColor="@color/warning"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/textDebugStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Status: Inativa"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/buttonFreeTrial"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Iniciar Teste Gratis (30 dias)"
+                android:layout_marginBottom="4dp" />
+
+            <Button
+                android:id="@+id/buttonSkipSubscription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Pular Assinatura (DEBUG)"
+                android:backgroundTint="@color/warning"
+                android:layout_marginBottom="4dp" />
+
+            <Button
+                android:id="@+id/buttonResetSubscription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Resetar Assinatura"
+                android:backgroundTint="@color/error"
+                android:layout_marginBottom="4dp" />
+
+            <Button
+                android:id="@+id/buttonCheckStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ver Status"
+                android:backgroundTint="@color/primary" />
+
+        </LinearLayout>
+
+        <!-- Rodape -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pagamento seguro via Google Play"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="16dp" />
+
+    </LinearLayout>
+</ScrollView>

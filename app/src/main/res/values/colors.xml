@@ -143,5 +143,11 @@
     <color name="card_border_medium">@color/warning_border</color>
     <color name="card_border_bad">@color/error_border</color>
 
+    <!-- ============================================ -->
+    <!-- SPLASH SCREEN                                -->
+    <!-- ============================================ -->
+    <color name="splash_background">#1A237E</color>
+    <color name="white">#FFFFFF</color>
+    <color name="white_70">#B3FFFFFF</color>
 
 </resources>

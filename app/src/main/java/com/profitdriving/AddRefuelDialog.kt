@@ -62,7 +62,7 @@ class AddRefuelDialog(
         fun updateFieldsForFuelType(type: String) {
             val isElectric = type in listOf("ELECTRIC_AC", "ELECTRIC_DC", "HYBRID_CHARGE")
             val energyType = EnergyType.fromString(type)
-            val hint = "Quantidade (${energyType.unit})"
+            val hint = "Quantidade (${energyType.unit}) - calculado automaticamente"
             etAmount.hint = hint
             chargerGroup.visibility = if (isElectric) View.VISIBLE else View.GONE
             percentageGroup.visibility = if (isElectric) View.VISIBLE else View.GONE
@@ -110,28 +110,28 @@ class AddRefuelDialog(
 
         if (refuel != null) {
             etOdometer.setText("%.0f".format(refuel.odometerKm).replace(".", ","))
-            etAmount.setText("%.1f".format(refuel.amount).replace(".", ","))
             etPricePerUnit.setText("%.2f".format(refuel.pricePerUnit).replace(".", ","))
             etTotalValue.setText("%.2f".format(refuel.totalValue).replace(".", ","))
+            etAmount.setText("%.2f".format(refuel.amount).replace(".", ","))
             refuel.percentageStart?.let { etPercentageStart.setText(it.toString()) }
             refuel.percentageEnd?.let { etPercentageEnd.setText(it.toString()) }
             toggleFullTank(refuel.isFullTank)
         }
 
-        fun updateTotal() {
-            val amount = etAmount.text.toString().replace(",", ".").toDoubleOrNull() ?: 0.0
+        fun updateAmount() {
+            val total = etTotalValue.text.toString().replace(",", ".").toDoubleOrNull() ?: 0.0
             val price = etPricePerUnit.text.toString().replace(",", ".").toDoubleOrNull() ?: 0.0
-            val total = amount * price
-            etTotalValue.setText(if (total > 0) "%.2f".format(total).replace(".", ",") else "")
+            val amount = if (price > 0) total / price else 0.0
+            etAmount.setText(if (amount > 0) "%.2f".format(amount).replace(".", ",") else "")
         }
 
-        val totalWatcher = object : TextWatcher {
+        val amountWatcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) { updateTotal() }
+            override fun afterTextChanged(s: Editable?) { updateAmount() }
         }
-        etAmount.addTextChangedListener(totalWatcher)
-        etPricePerUnit.addTextChangedListener(totalWatcher)
+        etTotalValue.addTextChangedListener(amountWatcher)
+        etPricePerUnit.addTextChangedListener(amountWatcher)
 
         btnFullYes.setOnClickListener { toggleFullTank(true) }
         btnFullNo.setOnClickListener { toggleFullTank(false) }
@@ -143,7 +143,7 @@ class AddRefuelDialog(
 
         btnConfirm.setOnClickListener {
             val odometer = etOdometer.text.toString().replace(",", ".").toDoubleOrNull()
-            val amount = etAmount.text.toString().replace(",", ".").toDoubleOrNull()
+            val total = etTotalValue.text.toString().replace(",", ".").toDoubleOrNull()
             val price = etPricePerUnit.text.toString().replace(",", ".").toDoubleOrNull()
             val pctStart = etPercentageStart.text.toString().toIntOrNull()
             val pctEnd = etPercentageEnd.text.toString().toIntOrNull()
@@ -152,8 +152,8 @@ class AddRefuelDialog(
                 etOdometer.error = "Informe o hodômetro"
                 return@setOnClickListener
             }
-            if (amount == null || amount <= 0) {
-                etAmount.error = "Informe a quantidade"
+            if (total == null || total <= 0) {
+                etTotalValue.error = "Informe o valor total"
                 return@setOnClickListener
             }
             if (price == null || price <= 0) {
@@ -162,6 +162,7 @@ class AddRefuelDialog(
             }
 
             val energyType = EnergyType.fromString(selectedFuel)
+            val amount = total / price
 
             onSave(RefuelRecord(
                 timestamp = System.currentTimeMillis(),
@@ -169,7 +170,7 @@ class AddRefuelDialog(
                 amount = amount,
                 unitType = energyType.unit,
                 pricePerUnit = price,
-                totalValue = amount * price,
+                totalValue = total,
                 isFullTank = isFullTank,
                 fuelType = selectedFuel,
                 chargerType = if (energyType.isElectric) selectedCharger else null,
