@@ -150,6 +150,61 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 }
             }
         }
+        if (oldVersion < 23) {
+            rebuildFuelRefuelsTable(db)
+        }
+    }
+
+    private fun rebuildFuelRefuelsTable(db: SQLiteDatabase) {
+        val cursor = db.rawQuery("PRAGMA table_info($TABLE_FUEL_REFUELS)", null)
+        val existingCols = mutableSetOf<String>()
+        cursor.use {
+            val nameIdx = it.getColumnIndex("name")
+            if (nameIdx >= 0) {
+                while (it.moveToNext()) {
+                    existingCols.add(it.getString(nameIdx))
+                }
+            }
+        }
+        val hasOldCols = "liters" in existingCols || "price_per_liter" in existingCols
+        if (!hasOldCols) return
+
+        val selects = mutableListOf(
+            COL_ID, COL_R_TIMESTAMP, COL_R_ODOMETER, COL_R_TOTAL,
+            COL_R_FULL_TANK, COL_R_FUEL_TYPE, COL_R_UNIT_TYPE,
+            COL_R_CHARGER_TYPE, COL_R_PERCENTAGE_START,
+            COL_R_PERCENTAGE_END, COL_R_NOTES
+        )
+        selects.add(
+            if ("liters" in existingCols) "COALESCE($COL_R_AMOUNT, liters) AS $COL_R_AMOUNT"
+            else COL_R_AMOUNT
+        )
+        selects.add(
+            if ("price_per_liter" in existingCols) "COALESCE($COL_R_PRICE_UNIT, price_per_liter) AS $COL_R_PRICE_UNIT"
+            else COL_R_PRICE_UNIT
+        )
+
+        val allCols = selects.joinToString(", ")
+        db.execSQL("""
+            CREATE TABLE ${TABLE_FUEL_REFUELS}_new (
+                $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_R_TIMESTAMP INTEGER NOT NULL,
+                $COL_R_ODOMETER REAL NOT NULL,
+                $COL_R_AMOUNT REAL NOT NULL,
+                $COL_R_PRICE_UNIT REAL NOT NULL,
+                $COL_R_UNIT_TYPE TEXT DEFAULT 'L',
+                $COL_R_CHARGER_TYPE TEXT,
+                $COL_R_PERCENTAGE_START INTEGER,
+                $COL_R_PERCENTAGE_END INTEGER,
+                $COL_R_TOTAL REAL NOT NULL,
+                $COL_R_FULL_TANK INTEGER DEFAULT 0,
+                $COL_R_FUEL_TYPE TEXT DEFAULT 'gasoline',
+                $COL_R_NOTES TEXT
+            )
+        """)
+        db.execSQL("INSERT INTO ${TABLE_FUEL_REFUELS}_new ($allCols) SELECT $allCols FROM $TABLE_FUEL_REFUELS")
+        db.execSQL("DROP TABLE $TABLE_FUEL_REFUELS")
+        db.execSQL("ALTER TABLE ${TABLE_FUEL_REFUELS}_new RENAME TO $TABLE_FUEL_REFUELS")
     }
 
     fun updateStatus(id: Long, status: String) = synchronized(dbLock) {
@@ -520,9 +575,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             put(COL_R_PERCENTAGE_END, r.percentageEnd)
             put(COL_R_NOTES, r.notes)
         }
-        val id = db.insertWithOnConflict(TABLE_FUEL_REFUELS, null, cv, SQLiteDatabase.CONFLICT_NONE)
-        if (id == -1L) android.util.Log.e("DB", "insertRefuel FAILED for odometer=${r.odometerKm}")
-        id
+        db.insert(TABLE_FUEL_REFUELS, null, cv)
     }
 
     fun getRefuels(): List<RefuelRecord> {
@@ -1146,7 +1199,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     companion object {
         private val dbLock = Any()
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 22
+        private const val DATABASE_VERSION = 23
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"
