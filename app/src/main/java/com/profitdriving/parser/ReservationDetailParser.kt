@@ -120,7 +120,7 @@ class ReservationDetailParser : RideDataParser {
         private const val TAG = "ReservationDetailParser"
 
         private val TRIP_PATTERN = Regex(
-            """viagem\s+de\s+(\d+)\s*min\s*\((\d+[.,]\d+)\s*km\)""",
+            """(?:viagem\s+de\s+)?(\d+)\s*min(?:uto)?s?\s*\((\d+[.,]\d+)\s*km\)""",
             RegexOption.IGNORE_CASE
         )
 
@@ -143,9 +143,13 @@ class ReservationDetailParser : RideDataParser {
             RegexOption.IGNORE_CASE
         )
 
+        // NOVO: captura texto entre pickups que parece endereço (sem CEP obrigatório)
         private val ADDRESS_REGEX = Regex(
-            """.*\d{5}-\d{3}.*"""
+            """(?:.*\d{5}-\d{3}.*|^[A-Za-zÀ-Úà-ú].*[a-záéíóú].*\d)""",
+            RegexOption.IGNORE_CASE
         )
+
+        // ANTIGO (somente CEP) — mantido como fallback em extractPickup/extractDropoff
 
         private val TIME12_PATTERN = Regex(
             """\d{1,2}:\d{2}\s+(AM|PM)""",

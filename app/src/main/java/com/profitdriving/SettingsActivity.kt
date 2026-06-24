@@ -19,6 +19,13 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
+import com.profitdriving.accessibility.extractor.RawCardData
+import com.profitdriving.parser.App99CardParser
+import com.profitdriving.parser.DiscoveryCardParser
+import com.profitdriving.parser.ExclusiveCardParser
+import com.profitdriving.parser.RadarCardParser
+import com.profitdriving.parser.ReservationDetailParser
+import com.profitdriving.parser.RideDataParser
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -285,6 +292,46 @@ class SettingsActivity : BaseActivity() {
         }
 
         findViewById<TextView>(R.id.btnSuggestFromCosts).setOnClickListener { showMarginSelector() }
+
+        findViewById<TextView>(R.id.btnReprocess).setOnClickListener { showReprocessDialog() }
+    }
+
+    private fun showReprocessDialog() {
+        val db = DatabaseHelper(this)
+        val failedCount = db.getFailedRawCards().size
+        val pendingCount = db.getPendingRawCards().size
+        val totalCount = failedCount + pendingCount
+
+        if (totalCount == 0) {
+            AlertDialog.Builder(this)
+                .setTitle("Reprocessar Cards")
+                .setMessage("Nenhum card com falha encontrado.")
+                .setPositiveButton("OK", null)
+                .show()
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Reprocessar Cards")
+            .setMessage("$failedCount cards com status 'failed' e $pendingCount com status 'pending'. Tentar reprocessar com parsers atualizados?")
+            .setPositiveButton("Reprocessar") { _, _ ->
+                val parsers: List<RideDataParser> = listOf(
+                    ReservationDetailParser(),
+                    RadarCardParser(),
+                    ExclusiveCardParser(),
+                    App99CardParser(),
+                    DiscoveryCardParser()
+                )
+                val reprocessor = RawCardReprocessor(this, parsers)
+                reprocessor.reprocessInBackground(limit = 50) { count ->
+                    runOnUiThread {
+                        Toast.makeText(this, "$count card(s) reprocessados com sucesso!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                Toast.makeText(this, "Reprocessamento iniciado em background!", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun showMarginSelector() {

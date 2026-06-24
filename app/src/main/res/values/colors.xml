@@ -25,10 +25,10 @@
     <!-- ============================================ -->
     <!-- DECISÃO ANALISAR / MÉDIA / ATENÇÃO          -->
     <!-- ============================================ -->
-    <color name="warning">#F7B500</color>         <!-- Laranja primário -->
+    <color name="warning">#F97316</color>         <!-- Laranja primário -->
     <color name="warning_bg">#FEF3C7</color>      <!-- Fundo laranja claro -->
     <color name="warning_text">#92400E</color>    <!-- Texto laranja escuro -->
-    <color name="warning_border">#F7B500</color>  <!-- Borda laranja -->
+    <color name="warning_border">#F97316</color>  <!-- Borda laranja -->
 
     <!-- ============================================ -->
     <!-- DECISÃO RECUSAR / RUIM / PREJUÍZO           -->
@@ -42,7 +42,7 @@
     <!-- VALORES DE MÉTRICAS (R$/km, R$/h, R$/min)  -->
     <!-- ============================================ -->
     <color name="metric_good">#00A86B</color>     <!-- Verde claro -->
-    <color name="metric_medium">#F7B500</color>   <!-- Laranja claro -->
+    <color name="metric_medium">#F97316</color>   <!-- Laranja claro -->
     <color name="metric_bad">#DC2626</color>      <!-- Vermelho claro -->
     <color name="metric_absent">#AAAAAA</color>   <!-- Cinza ausente -->
 
@@ -55,7 +55,7 @@
     <color name="overlay_text_primary">#F8FAFC</color>
     <color name="overlay_text_secondary">#94A3B8</color>
     <color name="overlay_success">#00A86B</color>
-    <color name="overlay_warning">#F97316</color>
+    <color name="overlay_warning">#F7B500</color>
     <color name="overlay_error">#DC2626</color>
 
     <!-- ============================================ -->
@@ -64,7 +64,7 @@
     <color name="energy_gasoline">#1E40AF</color>
     <color name="energy_ethanol">#059669</color>
     <color name="energy_diesel">#D97706</color>
-    <color name="energy_gnv">#F7B500</color>
+    <color name="energy_gnv">#F97316</color>
     <color name="energy_electric">#3B82F6</color>
     <color name="energy_hybrid">#8B5CF6</color>
 
@@ -118,7 +118,7 @@
     <color name="service_black">#111827</color>
     <color name="service_comfort">#2563EB</color>
     <color name="service_moto">#00A86B</color>
-    <color name="service_delivery">#F7B500</color>
+    <color name="service_delivery">#F97316</color>
 
     <!-- ============================================ -->
     <!-- COMPATIBILIDADE (nomes antigos)             -->

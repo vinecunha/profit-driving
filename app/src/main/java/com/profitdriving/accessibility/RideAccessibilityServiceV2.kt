@@ -307,6 +307,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         }
 
         saveOrUpdateRide(ride, cardHash, db)
+        db.updateRawLogRideData(currentRawLogId, ride)
         db.updateRawLogStatus(currentRawLogId, rideId = lastInsertedId.takeIf { it >= 0 }, status = "success")
 
         cardVisible = true

@@ -157,6 +157,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 android.util.Log.e("DB", "v23 migration failed: ${e.message}")
             }
         }
+        if (oldVersion < 24) {
+            try {
+                db.execSQL("ALTER TABLE $TABLE_RAW_LOGS ADD COLUMN $COL_RAW_PROCESSED_AT INTEGER")
+            } catch (e: Exception) {
+                android.util.Log.w("DB", "v24 migration: ${e.message}")
+            }
+        }
     }
 
     private fun rebuildFuelRefuelsTable(db: SQLiteDatabase) {
@@ -410,6 +417,100 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
+    fun getRawCardByHash(cardHash: String): RawCardLog? = synchronized(dbLock) {
+        val cursor = readableDatabase.query(
+            TABLE_RAW_LOGS, null,
+            "$COL_RAW_CARD_HASH = ?",
+            arrayOf(cardHash),
+            null, null,
+            "$COL_RAW_TIMESTAMP DESC",
+            "1"
+        )
+        cursor.use {
+            if (it.moveToFirst()) rawCardLogFromCursor(it) else null
+        }
+    }
+
+    fun getFailedRawCards(limit: Int = 50): List<RawCardLog> = synchronized(dbLock) {
+        val result = mutableListOf<RawCardLog>()
+        val cursor = readableDatabase.query(
+            TABLE_RAW_LOGS, null,
+            "$COL_RAW_STATUS = 'failed'",
+            null, null, null,
+            "$COL_RAW_TIMESTAMP ASC",
+            limit.toString()
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                result.add(rawCardLogFromCursor(it))
+            }
+        }
+        return result
+    }
+
+    fun getPendingRawCards(limit: Int = 50): List<RawCardLog> = synchronized(dbLock) {
+        val result = mutableListOf<RawCardLog>()
+        val cursor = readableDatabase.query(
+            TABLE_RAW_LOGS, null,
+            "$COL_RAW_STATUS = 'pending'",
+            null, null, null,
+            "$COL_RAW_TIMESTAMP ASC",
+            limit.toString()
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                result.add(rawCardLogFromCursor(it))
+            }
+        }
+        return result
+    }
+
+    fun markRawCardAsProcessed(
+        logId: Long,
+        status: String,
+        rideDataJson: String? = null
+    ) = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_RAW_STATUS, status)
+                put(COL_RAW_PROCESSED_AT, System.currentTimeMillis())
+                rideDataJson?.let { put(COL_RAW_RIDE_DATA, it) }
+            }
+            db.update(TABLE_RAW_LOGS, cv, "$COL_RAW_ID = ?", arrayOf(logId.toString()))
+        } finally {
+            db.close()
+        }
+    }
+
+    fun updateRawLogRideData(logId: Long, rideData: RideData) = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_RAW_RIDE_DATA, buildRawDataString(rideData))
+            }
+            db.update(TABLE_RAW_LOGS, cv, "$COL_RAW_ID = ?", arrayOf(logId.toString()))
+        } finally {
+            db.close()
+        }
+    }
+
+    private fun rawCardLogFromCursor(c: android.database.Cursor): RawCardLog {
+        return RawCardLog(
+            id = c.getSafeLong(COL_RAW_ID) ?: 0L,
+            rideId = c.getSafeLong(COL_RAW_RIDE_ID),
+            cardHash = c.getSafeString(COL_RAW_CARD_HASH),
+            timestamp = c.getSafeLong(COL_RAW_TIMESTAMP) ?: 0L,
+            packageName = c.getSafeString(COL_RAW_PACKAGE) ?: "",
+            cardType = c.getSafeString(COL_RAW_CARD_TYPE),
+            rawTextsJson = c.getSafeString(COL_RAW_TEXTS) ?: "",
+            rideDataJson = c.getSafeString(COL_RAW_RIDE_DATA),
+            status = c.getSafeString(COL_RAW_STATUS) ?: "pending",
+            error = c.getSafeString(COL_RAW_ERROR),
+            processedAt = c.getSafeLong(COL_RAW_PROCESSED_AT)
+        )
+    }
+
     fun getRawRideDataByCardHash(cardHash: String): String? = synchronized(dbLock) {
         val cursor = readableDatabase.query(
             TABLE_RAW_LOGS,
@@ -445,6 +546,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return result
     }
 
+    fun buildRawDataStringExternal(ride: RideData): String {
+        return buildRawDataString(ride)
+    }
+
     private fun buildRawDataString(ride: RideData): String {
         return buildString {
             appendLine("Value: ${ride.value}")
@@ -454,6 +559,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             appendLine("ServiceType: ${ride.serviceType}")
             appendLine("PickupAddress: ${CardHashGenerator.maskAddress(ride.pickupAddress)}")
             appendLine("DropoffAddress: ${CardHashGenerator.maskAddress(ride.dropoffAddress)}")
+            appendLine("PickupDistance: ${ride.pickupDistanceKm}")
+            appendLine("PickupTime: ${ride.pickupTimeMin}")
+            appendLine("TripDistance: ${ride.tripDistanceKm}")
+            appendLine("TripTime: ${ride.tripTimeMin}")
             appendLine("PriorityBonus: ${ride.priorityBonus}")
             appendLine("DynamicBonus: ${ride.dynamicBonus}")
         }
@@ -1210,7 +1319,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     companion object {
         private val dbLock = Any()
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 23
+        private const val DATABASE_VERSION = 24
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"
@@ -1258,6 +1367,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_RAW_RIDE_DATA = "ride_data_json"
         private const val COL_RAW_STATUS = "status"
         private const val COL_RAW_ERROR = "error"
+        private const val COL_RAW_PROCESSED_AT = "processed_at"
 
         // Fuel refuels columns
         private const val COL_R_TIMESTAMP = "timestamp"
@@ -1466,7 +1576,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_RAW_TEXTS TEXT NOT NULL,
                 $COL_RAW_RIDE_DATA TEXT,
                 $COL_RAW_STATUS TEXT DEFAULT 'pending',
-                $COL_RAW_ERROR TEXT
+                $COL_RAW_ERROR TEXT,
+                $COL_RAW_PROCESSED_AT INTEGER
             )
         """.trimIndent()
 
@@ -1505,6 +1616,26 @@ data class RideRecord(
     val costPerKmAtTime: Double? = null,
     val cardHash: String? = null
 )
+
+data class RawCardLog(
+    val id: Long = 0,
+    val rideId: Long? = null,
+    val cardHash: String? = null,
+    val timestamp: Long = 0L,
+    val packageName: String = "",
+    val cardType: String? = null,
+    val rawTextsJson: String = "",
+    val rideDataJson: String? = null,
+    val status: String = "pending",
+    val error: String? = null,
+    val processedAt: Long? = null
+) {
+    val rawTextsList: List<String>
+        get() = rawTextsJson.split("\n---\n")
+
+    val fullText: String
+        get() = rawTextsList.joinToString(" ")
+}
 
 data class RefuelRecord(
     val id: Long = 0,

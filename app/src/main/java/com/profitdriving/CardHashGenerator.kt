@@ -73,7 +73,7 @@ object CardHashGenerator {
     }
 
     fun maskAddress(fullAddress: String?): String {
-        if (fullAddress.isNullOrBlank()) return ""
+        if (fullAddress.isNullOrBlank()) return "Endereço não informado"
 
         var masked = fullAddress
 
@@ -81,14 +81,12 @@ object CardHashGenerator {
         masked = masked.replace(Regex(""",?\s*\d+(?:-\d+)?\s*[,]?"""), " ")
         masked = masked.replace(Regex("""\s+nº\s*\d+""", RegexOption.IGNORE_CASE), " ")
 
-        // 2. Normalizar hífens
-        masked = masked.replace(Regex("""\s*-\s*"""), " - ")
+        // 2. Remover UF e CEP no final (ex: " - RJ, 26070-584" ou ", SP 01305-000")
+        masked = masked.replace(Regex("""\s*[-–,]\s*[A-Za-z]{2}(?:\s*,?\s*\d{5}-\d{3})?\s*$"""), "")
+        masked = masked.replace(Regex("""\s*\d{5}-\d{3}"""), "")
 
-        // 3. Mascarar CEP (manter apenas 3 últimos dígitos)
-        masked = masked.replace(Regex("""(\d{5})[-]?(\d{3})""")) { match ->
-            val suffix = match.groupValues[2]
-            "XXXXX-$suffix"
-        }
+        // 3. Remover traço residual no final
+        masked = masked.replace(Regex("""[-–,]\s*$"""), "")
 
         // 4. Limpar múltiplos espaços e vírgulas
         masked = masked
@@ -105,7 +103,7 @@ object CardHashGenerator {
             masked = masked.take(100) + "..."
         }
 
-        return masked
+        return masked.ifBlank { "Endereço não informado" }
     }
 
     fun isValidRide(record: RideRecord): Boolean {
@@ -122,19 +120,27 @@ object CardHashGenerator {
 
     fun recoverRideFromRawLogs(record: RideRecord, db: DatabaseHelper): RideRecord {
         val hash = record.cardHash ?: return record
-        val rawData = db.getRawRideDataByCardHash(hash) ?: return record
+        val rawLog = db.getRawCardByHash(hash)
+        val rawData = rawLog?.rideDataJson ?: db.getRawRideDataByCardHash(hash) ?: return record
         val lines = rawData.lines()
         fun parseLine(prefix: String): String? {
             return lines.firstOrNull { it.startsWith(prefix, ignoreCase = true) }
                 ?.removePrefix(prefix)?.trim()?.takeIf { it.isNotBlank() && it != "null" }
         }
 
+        val rawValue = parseLine("Value:")?.toDoubleOrNull()
         val rawDist = parseLine("Distance:")?.toDoubleOrNull()
         val rawTime = parseLine("Time:")?.toIntOrNull()
-        val rawPickup = parseLine("PickupAddress:")
-        val rawDropoff = parseLine("DropoffAddress:")
-        val rawValue = parseLine("Value:")?.toDoubleOrNull()
         val rawRating = parseLine("Rating:")?.toDoubleOrNull()
+        val rawServiceType = parseLine("ServiceType:")
+        val rawPickupAddress = parseLine("PickupAddress:")
+        val rawDropoffAddress = parseLine("DropoffAddress:")
+        val rawPickupDist = parseLine("PickupDistance:")?.toDoubleOrNull()
+        val rawPickupTime = parseLine("PickupTime:")?.toIntOrNull()
+        val rawTripDist = parseLine("TripDistance:")?.toDoubleOrNull()
+        val rawTripTime = parseLine("TripTime:")?.toIntOrNull()
+        val rawPriorityBonus = parseLine("PriorityBonus:")?.toDoubleOrNull()
+        val rawDynamicBonus = parseLine("DynamicBonus:")?.toDoubleOrNull()
 
         val distOk = (record.distanceKm != null && record.distanceKm > 0) ||
             ((record.pickupDistanceKm ?: 0.0) + (record.tripDistanceKm ?: 0.0)) > 0
@@ -142,23 +148,38 @@ object CardHashGenerator {
             ((record.pickupTimeMin ?: 0) + (record.tripTimeMin ?: 0)) > 0
         val addressOk = !record.pickupAddress.isNullOrBlank() || !record.dropoffAddress.isNullOrBlank()
 
-        val recoveredDist = if (!distOk && rawDist != null) rawDist else null
-        val recoveredTime = if (!timeOk && rawTime != null) rawTime else null
-        val recoveredPickup = if (!addressOk && rawPickup != null) rawPickup else null
-        val recoveredDropoff = if (!addressOk && rawDropoff != null) rawDropoff else null
-        val recoveredValue = if ((record.value == null || record.value <= 0) && rawValue != null) rawValue else null
-        val recoveredRating = if ((record.rating == null || record.rating <= 0) && rawRating != null) rawRating else null
+        val hasAnyChange = listOf(
+            !distOk to rawDist,
+            !timeOk to rawTime,
+            !addressOk to rawPickupAddress,
+            !addressOk to rawDropoffAddress,
+            (record.value == null || record.value <= 0) to rawValue,
+            (record.rating == null || record.rating <= 0) to rawRating,
+            (record.serviceType.isNullOrBlank()) to rawServiceType,
+            (record.pickupDistanceKm == null || record.pickupDistanceKm <= 0) to rawPickupDist,
+            (record.pickupTimeMin == null || record.pickupTimeMin <= 0) to rawPickupTime,
+            (record.tripDistanceKm == null || record.tripDistanceKm <= 0) to rawTripDist,
+            (record.tripTimeMin == null || record.tripTimeMin <= 0) to rawTripTime,
+            (record.priorityBonus == null || record.priorityBonus <= 0) to rawPriorityBonus,
+            (record.dynamicBonus == null || record.dynamicBonus <= 0) to rawDynamicBonus
+        ).any { (needsRecovery, raw) -> needsRecovery && raw != null }
 
-        if (recoveredDist == null && recoveredTime == null && recoveredPickup == null &&
-            recoveredDropoff == null && recoveredValue == null && recoveredRating == null) return record
+        if (!hasAnyChange) return record
 
         return record.copy(
-            distanceKm = recoveredDist ?: record.distanceKm,
-            timeMin = recoveredTime ?: record.timeMin,
-            pickupAddress = recoveredPickup ?: record.pickupAddress,
-            dropoffAddress = recoveredDropoff ?: record.dropoffAddress,
-            value = recoveredValue ?: record.value,
-            rating = recoveredRating ?: record.rating
+            value = if ((record.value == null || record.value <= 0) && rawValue != null) rawValue else record.value,
+            distanceKm = if (!distOk && rawDist != null) rawDist else record.distanceKm,
+            timeMin = if (!timeOk && rawTime != null) rawTime else record.timeMin,
+            rating = if ((record.rating == null || record.rating <= 0) && rawRating != null) rawRating else record.rating,
+            serviceType = if (record.serviceType.isNullOrBlank() && rawServiceType != null) rawServiceType else record.serviceType,
+            pickupAddress = if (!addressOk && rawPickupAddress != null) rawPickupAddress else record.pickupAddress,
+            dropoffAddress = if (!addressOk && rawDropoffAddress != null) rawDropoffAddress else record.dropoffAddress,
+            pickupDistanceKm = if ((record.pickupDistanceKm == null || record.pickupDistanceKm <= 0) && rawPickupDist != null) rawPickupDist else record.pickupDistanceKm,
+            pickupTimeMin = if ((record.pickupTimeMin == null || record.pickupTimeMin <= 0) && rawPickupTime != null) rawPickupTime else record.pickupTimeMin,
+            tripDistanceKm = if ((record.tripDistanceKm == null || record.tripDistanceKm <= 0) && rawTripDist != null) rawTripDist else record.tripDistanceKm,
+            tripTimeMin = if ((record.tripTimeMin == null || record.tripTimeMin <= 0) && rawTripTime != null) rawTripTime else record.tripTimeMin,
+            priorityBonus = if ((record.priorityBonus == null || record.priorityBonus <= 0) && rawPriorityBonus != null) rawPriorityBonus else record.priorityBonus,
+            dynamicBonus = if ((record.dynamicBonus == null || record.dynamicBonus <= 0) && rawDynamicBonus != null) rawDynamicBonus else record.dynamicBonus
         )
     }
 
