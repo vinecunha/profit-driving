@@ -3,114 +3,184 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/white">
+    android:background="@color/bg_screen"
+    android:orientation="vertical">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/primary"
-        app:titleTextColor="@color/white"
+        android:background="@color/bg_card"
+        android:elevation="0dp"
+        app:titleTextColor="@color/text_primary"
         app:navigationIcon="@drawable/ic_arrow_back" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/border" />
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp"
-            android:gravity="center_horizontal">
+            android:paddingHorizontal="16dp"
+            android:paddingTop="32dp"
+            android:paddingBottom="24dp">
 
-            <ImageView
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:src="@drawable/ic_launcher_foreground"
-                android:layout_marginTop="32dp" />
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/bg_logo_circle">
+                <ImageView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_launcher_foreground"
+                    android:tint="@color/accent" />
+            </FrameLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Profit Driving"
-                android:textSize="24sp"
-                android:textStyle="bold"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="14dp"
+                android:text="@string/app_name"
                 android:textColor="@color/text_primary"
-                android:layout_marginTop="16dp" />
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/textVersion"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Versão 1.0.0"
-                android:textSize="14sp"
-                android:textColor="@color/text_secondary" />
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/text_tertiary"
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/textBuild"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Build 1"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginTop="4dp" />
+                android:layout_gravity="center_horizontal"
+                android:textColor="@color/text_tertiary"
+                android:textSize="12sp" />
 
-            <View
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/border"
-                android:layout_marginVertical="24dp" />
-
-            <TextView
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📱 Maximize seus ganhos no Uber"
-                android:textSize="14sp"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginTop="28dp"
+                app:cardBackgroundColor="@color/bg_card"
+                app:cardCornerRadius="@dimen/card_corner_radius"
+                app:cardElevation="0dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🔒 Seus dados são 100% privados"
-                android:textSize="14sp"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="8dp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/card_padding">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="💡 Dados ficam apenas no seu dispositivo"
-                android:textSize="14sp"
-                android:textColor="@color/text_primary" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+                        <View
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:background="@drawable/dot_success"
+                            android:layout_marginEnd="14dp" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/feature_maximize_earnings"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/border"
-                android:layout_marginVertical="24dp" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="14dp">
+                        <View
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:background="@drawable/dot_success"
+                            android:layout_marginEnd="14dp" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/feature_private_data"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <View
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:background="@drawable/dot_success"
+                            android:layout_marginEnd="14dp" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/feature_local_data"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
             <Button
                 android:id="@+id/buttonPrivacy"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Política de Privacidade" />
+                android:layout_marginTop="24dp"
+                android:background="@drawable/button_primary"
+                android:text="@string/privacy_policy"
+                android:textColor="@color/text_inverse"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:padding="14dp" />
 
             <Button
                 android:id="@+id/buttonTerms"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Termos de Uso" />
+                android:layout_marginTop="10dp"
+                android:background="@drawable/button_ghost"
+                android:text="@string/terms_of_use"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:padding="14dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="© 2026 Profit Driving"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginTop="32dp" />
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="28dp"
+                android:text="@string/copyright"
+                android:textColor="@color/text_tertiary"
+                android:textSize="11sp" />
 
         </LinearLayout>
     </ScrollView>

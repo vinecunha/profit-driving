@@ -74,8 +74,16 @@
     <string name="permission_step4">Ative a chave do serviço</string>
 
     <!-- Subscription -->
-    <string name="subscription_title">Escolha seu Plano</string>
+    <string name="subscription_title">Assinatura</string>
     <string name="subscription_subtitle">Acesse todas as funcionalidades</string>
+    <string name="subscription_badge_active">● Ativa</string>
+    <string name="subscription_full_access_title">Acesso completo</string>
+    <string name="subscription_full_access_desc">Você tem acesso a todas as funcionalidades</string>
+    <string name="subscription_plan_name">Plano ativo</string>
+    <string name="subscription_valid_until">Válido até</string>
+    <string name="subscription_manage_btn">GERENCIAR ASSINATURA</string>
+    <string name="subscription_restore">Restaurar compra</string>
+    <string name="subscription_secure_payment">Pagamento seguro via Google Play</string>
     <string name="plan_monthly">Mensal</string>
     <string name="plan_yearly">Anual</string>
     <string name="plan_recommended">Recomendado</string>
@@ -83,4 +91,13 @@
     <string name="benefit_cancel_anytime">Cancele quando quiser</string>
     <string name="benefit_save_30">Economize 30%</string>
     <string name="privacy_secure">Pagamento seguro via Google Play</string>
+
+    <!-- About -->
+    <string name="about_title">Sobre</string>
+    <string name="feature_maximize_earnings">Maximize seus ganhos no Uber e 99</string>
+    <string name="feature_private_data">Seus dados são 100% privados</string>
+    <string name="feature_local_data">Dados ficam apenas no seu dispositivo</string>
+    <string name="privacy_policy">POLÍTICA DE PRIVACIDADE</string>
+    <string name="terms_of_use">TERMOS DE USO</string>
+    <string name="copyright">© 2026 CorridaCerta</string>
 </resources>
