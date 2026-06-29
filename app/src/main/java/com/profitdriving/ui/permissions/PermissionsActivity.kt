@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.provider.Settings
 import android.widget.Button
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import com.profitdriving.L
@@ -25,9 +26,15 @@ class PermissionsActivity : AppCompatActivity() {
     private lateinit var check3: TextView
     private lateinit var statusCard: CardView
 
+    private val accessibilityLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        L.d(TAG, "Voltou das configurações — verificando status")
+        checkAccessibilityStatus()
+    }
+
     companion object {
         private const val TAG = "PermissionsActivity"
-        private const val REQUEST_CODE_ACCESSIBILITY = 1001
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,20 +147,11 @@ class PermissionsActivity : AppCompatActivity() {
     private fun openAccessibilitySettings() {
         try {
             val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-            startActivityForResult(intent, REQUEST_CODE_ACCESSIBILITY)
+            accessibilityLauncher.launch(intent)
         } catch (e: Exception) {
             L.e(TAG, "Erro ao abrir configurações de acessibilidade", e)
             val intent = Intent(Settings.ACTION_SETTINGS)
-            startActivityForResult(intent, REQUEST_CODE_ACCESSIBILITY)
-        }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_ACCESSIBILITY) {
-            L.d(TAG, "Voltou das configurações — verificando status")
-            checkAccessibilityStatus()
+            accessibilityLauncher.launch(intent)
         }
     }
 }
