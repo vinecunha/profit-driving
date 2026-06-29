@@ -2,6 +2,7 @@ package com.profitdriving
 
 import android.content.Intent
 import android.os.Bundle
+import com.profitdriving.FormatUtils
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
@@ -10,6 +11,11 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.profitdriving.ConsumptionCalculator
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -61,7 +67,7 @@ class CostsActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         try { loadData() } catch (e: Exception) {
-            android.util.Log.e("CostsActivity", "Error loading data", e)
+            L.e("CostsActivity", "Error loading data", e)
         }
     }
 
@@ -124,16 +130,29 @@ class CostsActivity : BaseActivity() {
     }
 
     private fun loadData() {
-        refuels = db.getRefuels()
-        allExpenses = db.getAllExpenses()
-        monthlyKm = db.getMonthlyKm()
+        lifecycleScope.launch {
+            try {
+                val (loadedRefuels, loadedExpenses, loadedMonthlyKm) = withContext(Dispatchers.IO) {
+                    Triple(db.getRefuels(), db.getAllExpenses(), db.getMonthlyKm())
+                }
+                refuels = loadedRefuels
+                allExpenses = loadedExpenses
+                monthlyKm = loadedMonthlyKm
 
-        etMonthlyKm.setText(monthlyKm.toString())
-        renderRefuelList()
-        renderExpenseLists()
-        updateEnergyStats()
-        updateSummary()
-        updateSimulator()
+                etMonthlyKm.setText(loadedMonthlyKm.toString())
+                renderRefuelList()
+                renderExpenseLists()
+                updateEnergyStats()
+                updateFuelStats()
+                updateSummary()
+                updateSimulator()
+            } catch (e: Exception) {
+                L.e("CostsActivity", "Erro ao carregar dados", e)
+                android.widget.Toast.makeText(this@CostsActivity,
+                    "Erro ao carregar dados: ${e.message}",
+                    android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun renderRefuelList() {
@@ -162,14 +181,14 @@ class CostsActivity : BaseActivity() {
                 "%.0f".format(refuel.odometerKm)
 
             row.findViewById<TextView>(R.id.tvRefuelLiters).text =
-                "%.1f".format(refuel.amount).replace(".", ",")
+                FormatUtils.decimal1(refuel.amount)
 
             row.findViewById<TextView>(R.id.tvRefuelPrice).text =
                 currencyFormat.format(refuel.totalValue)
 
             val consumption = calculateRefuelConsumption(refuel)
             row.findViewById<TextView>(R.id.tvRefuelConsumption).text =
-                if (consumption > 0) "%.1f".format(consumption).replace(".", ",") else "--"
+                if (consumption > 0) FormatUtils.decimal1(consumption) else "--"
 
             refuelList.addView(row)
         }
@@ -208,19 +227,19 @@ class CostsActivity : BaseActivity() {
 
             val consumptionUnit = if (type.unit == "kWh") "km/kWh" else "km/L"
             tvConsumption.text = if (stats.avgConsumption > 0) {
-                "Consumo: ${"%.1f".format(stats.avgConsumption).replace(".", ",")} $consumptionUnit"
+                "Consumo: ${FormatUtils.decimal1(stats.avgConsumption)} $consumptionUnit"
             } else {
                 "Consumo: -- $consumptionUnit"
             }
 
             tvCost.text = if (stats.costPerKm > 0) {
-                "Custo: R$ ${"%.2f".format(stats.costPerKm).replace(".", ",")}/km"
+                "Custo: ${FormatUtils.currency(stats.costPerKm)}/km"
             } else {
                 "Custo: -- R\$/km"
             }
 
             val totalFormat = if (type.unit == "kWh") "%.0f %s" else "%.1f %s"
-            tvTotal.text = "Total: ${String.format(totalFormat, stats.totalAmount, type.unit).replace(".", ",")} \u00B7 R$ ${"%.2f".format(stats.totalCost).replace(".", ",")}"
+            tvTotal.text = "Total: ${String.format(totalFormat, stats.totalAmount, type.unit).replace(".", ",")} \u00B7 ${FormatUtils.currency(stats.totalCost)}"
 
             val lastDate = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
                 .format(Date(stats.lastDate))
@@ -238,6 +257,60 @@ class CostsActivity : BaseActivity() {
                 setPadding(0, 16, 0, 16)
             }
             container.addView(empty)
+        }
+    }
+
+    private fun updateFuelStats() {
+        val refuels = db.getRefuels()
+        val result = ConsumptionCalculator.calculateConsumption(refuels)
+
+        val methodText = when (result.method) {
+            ConsumptionCalculator.CalculationMethod.SINGLE_FUEL ->
+                "\u2705 Combust\u00EDvel \u00FAnico"
+            ConsumptionCalculator.CalculationMethod.PRIMARY_WITH_SECONDARY ->
+                "\uD83D\uDD27 Principal + complementar (total)"
+            ConsumptionCalculator.CalculationMethod.MULTIPLE_SIMULTANEOUS ->
+                "\u26A1 M\u00FAltiplos simult\u00E2neos (total)"
+            ConsumptionCalculator.CalculationMethod.INSUFFICIENT_DATA ->
+                "\u26A0\uFE0F Dados insuficientes (adicione ao menos 2 abastecimentos)"
+            else -> "\u2753 Desconhecido"
+        }
+        findViewById<TextView>(R.id.tvCalculationMethod)?.text = methodText
+
+        findViewById<TextView>(R.id.tvCostPerKm)?.text =
+            "${FormatUtils.currency(result.costPerKm)} / km"
+
+        findViewById<TextView>(R.id.tvConsumption)?.text =
+            "${FormatUtils.decimal1(result.consumptionKmPerLiter)} km/l"
+
+        findViewById<TextView>(R.id.tvTotalKm)?.text =
+            "${String.format("%.0f", result.totalKm)} km"
+
+        findViewById<TextView>(R.id.tvTotalCost)?.text =
+            "${FormatUtils.currency(result.totalCost)}"
+
+        findViewById<TextView>(R.id.tvTotalLiters)?.text =
+            "${FormatUtils.decimal1(result.totalLiters)} L"
+
+        val titleView = findViewById<TextView>(R.id.tvDetailsTitle)
+        val container = findViewById<LinearLayout>(R.id.layoutFuelDetails)
+        if (result.detailsByType.isNotEmpty()) {
+            titleView?.visibility = View.VISIBLE
+            container?.removeAllViews()
+
+            result.detailsByType.forEach { (type, detail) ->
+                val view = layoutInflater.inflate(R.layout.item_fuel_detail, container, false)
+                view.findViewById<TextView>(R.id.tvFuelType).text = type.display
+                view.findViewById<TextView>(R.id.tvFuelPercent).text =
+                    "${FormatUtils.decimal1(detail.percentageOfTotal)}%"
+                view.findViewById<TextView>(R.id.tvFuelLiters).text =
+                    "${FormatUtils.decimal1(detail.liters)} ${type.unit}"
+                view.findViewById<TextView>(R.id.tvFuelCost).text =
+                    "${FormatUtils.currency(detail.cost)}"
+                container?.addView(view)
+            }
+        } else {
+            titleView?.visibility = View.GONE
         }
     }
 
@@ -372,8 +445,8 @@ class CostsActivity : BaseActivity() {
 
         val input = android.widget.EditText(this).apply {
             inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-            hint = "Valor a pagar (R\$ ${"%.2f".format(installmentValue).replace(".", ",")})"
-            setText(String.format("%.2f", installmentValue).replace(".", ","))
+            hint = "Valor a pagar (${FormatUtils.currency(installmentValue)})"
+            setText(FormatUtils.decimal(installmentValue))
             selectAll()
         }
 
@@ -403,15 +476,13 @@ class CostsActivity : BaseActivity() {
 
     private fun showSavingFeedback(action: () -> Unit) {
         progressOverlay.visibility = View.VISIBLE
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            try {
-                action()
-            } catch (e: Exception) {
-                android.util.Log.e("CostsActivity", "Error saving", e)
-                android.widget.Toast.makeText(this, "Erro: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
-            }
-            progressOverlay.visibility = View.GONE
-        }, 100)
+        try {
+            action()
+        } catch (e: Exception) {
+            L.e("CostsActivity", "Error saving", e)
+            android.widget.Toast.makeText(this, "Erro: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+        }
+        progressOverlay.visibility = View.GONE
     }
 
     private fun updateSummary() {

@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
 import java.util.Locale
+import com.profitdriving.FormatUtils
 
 class MyDayRideAdapter(
     private var items: List<DailyRide>,
@@ -47,8 +48,8 @@ class MyDayRideAdapter(
         holder.tvTime.text = if (record != null)
             dateFormat.format(java.util.Date(record.timestamp)) else "--:--"
         holder.tvService.text = record?.serviceType ?: "Corrida"
-        holder.tvOriginalValue.text = "R$ %.2f".format(ride.originalValue).replace(".", ",")
-        holder.tvFinalValue.text = "R$ %.2f".format(ride.finalValue).replace(".", ",")
+        holder.tvOriginalValue.text = FormatUtils.currency(ride.originalValue)
+        holder.tvFinalValue.text = FormatUtils.currency(ride.finalValue)
 
         holder.chkCompleted.text = if (ride.isCompleted) "\u2611" else "\u2610"
         holder.chkCompleted.setTextColor(
@@ -58,10 +59,10 @@ class MyDayRideAdapter(
         if (ride.tipAmount > 0 || ride.adjustmentDifference != 0.0) {
             val parts = mutableListOf<String>()
             if (ride.tipAmount > 0)
-                parts.add("Gorjeta: +R$ %.2f".format(ride.tipAmount).replace(".", ","))
+                parts.add("Gorjeta: +${FormatUtils.currency(ride.tipAmount)}")
             if (ride.adjustmentDifference != 0.0) {
                 val sinal = if (ride.adjustmentDifference > 0) "+" else ""
-                parts.add("Reajuste: $sinal" + "R$ %.2f".format(ride.adjustmentDifference).replace(".", ","))
+                parts.add("Reajuste: $sinal" + FormatUtils.currency(ride.adjustmentDifference))
             }
             holder.tvExtras.text = parts.joinToString(" | ")
             holder.tvExtras.visibility = View.VISIBLE
@@ -114,12 +115,12 @@ class MyDayRideAdapter(
             .replace(".", ",")
 
         // Valor base
-        holder.tvDetailBaseValue.text = "R$ %.2f".format(ride.originalValue).replace(".", ",")
+        holder.tvDetailBaseValue.text = FormatUtils.currency(ride.originalValue)
 
         // Gorjeta
         if (ride.tipAmount > 0) {
             holder.layoutDetailTip.visibility = View.VISIBLE
-            holder.tvDetailTip.text = "+R$ %.2f".format(ride.tipAmount).replace(".", ",")
+            holder.tvDetailTip.text = "+${FormatUtils.currency(ride.tipAmount)}"
         } else {
             holder.layoutDetailTip.visibility = View.GONE
         }
@@ -128,33 +129,32 @@ class MyDayRideAdapter(
         if (ride.adjustmentDifference != 0.0) {
             holder.layoutDetailAdjust.visibility = View.VISIBLE
             val sinal = if (ride.adjustmentDifference > 0) "+" else ""
-            holder.tvDetailAdjust.text = "$sinal" + "R$ %.2f".format(ride.adjustmentDifference).replace(".", ",")
+            holder.tvDetailAdjust.text = "$sinal" + FormatUtils.currency(ride.adjustmentDifference)
         } else {
             holder.layoutDetailAdjust.visibility = View.GONE
         }
 
         // Total corrida
-        holder.tvDetailFinalValue.text = "R$ %.2f".format(ride.finalValue).replace(".", ",")
+        holder.tvDetailFinalValue.text = FormatUtils.currency(ride.finalValue)
 
         // Custo (using total distance)
         val rideCost = totalDist * costPerKm
         if (totalDist > 0 && costPerKm > 0) {
-            holder.tvDetailCost.text = "-R$ %.2f (%.2f/km)".format(rideCost, costPerKm)
-                .replace(".", ",")
+            holder.tvDetailCost.text = "-${FormatUtils.currency(rideCost)} (${FormatUtils.decimal(costPerKm)}/km)"
         } else {
-            holder.tvDetailCost.text = "-R$ %.2f".format(rideCost).replace(".", ",")
+            holder.tvDetailCost.text = "-${FormatUtils.currency(rideCost)}"
         }
 
         // Lucro
         val profit = ride.finalValue - rideCost
-        holder.tvDetailProfit.text = "R$ %.2f".format(profit).replace(".", ",")
+        holder.tvDetailProfit.text = FormatUtils.currency(profit)
         holder.tvDetailProfit.setTextColor(
             if (profit >= 0) AppColors.success else AppColors.error
         )
 
         if (ride.finalValue > 0) {
             val pct = (profit / ride.finalValue) * 100
-            holder.tvDetailProfitPercent.text = "%.1f%% de margem".format(pct).replace(".", ",")
+            holder.tvDetailProfitPercent.text = "${FormatUtils.decimal1(pct)}% de margem"
             holder.tvDetailProfitPercent.visibility = View.VISIBLE
         } else {
             holder.tvDetailProfitPercent.visibility = View.GONE

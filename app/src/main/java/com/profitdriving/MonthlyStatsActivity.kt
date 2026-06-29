@@ -64,7 +64,7 @@ class MonthlyStatsActivity : BaseActivity() {
                         value = km,
                         maxValue = maxKm,
                         unit = " km",
-                        color = "#00A86B"
+                        color = AppColors.success
                     )
                 )
             }
@@ -84,7 +84,7 @@ class MonthlyStatsActivity : BaseActivity() {
                         value = cost,
                         maxValue = maxFuel,
                         unit = " R\$",
-                        color = "#F97316",
+                        color = AppColors.warning,
                         format = "%.0f"
                     )
                 )
@@ -121,7 +121,7 @@ class MonthlyStatsActivity : BaseActivity() {
         value: Double,
         maxValue: Double,
         unit: String,
-        color: String,
+        color: Int,
         format: String = "%.0f"
     ): LinearLayout {
         val row = LinearLayout(this)
@@ -138,9 +138,7 @@ class MonthlyStatsActivity : BaseActivity() {
         val progress = android.widget.ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal)
         progress.max = 100
         progress.progress = ((value / maxValue) * 100).toInt().coerceIn(0, 100)
-        progress.progressTintList = android.content.res.ColorStateList.valueOf(
-            android.graphics.Color.parseColor(color)
-        )
+        progress.progressTintList = android.content.res.ColorStateList.valueOf(color)
         progress.progressBackgroundTintList = android.content.res.ColorStateList.valueOf(
             AppColors.border
         )

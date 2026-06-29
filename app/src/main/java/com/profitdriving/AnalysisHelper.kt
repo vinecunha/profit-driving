@@ -742,12 +742,6 @@ object AnalysisHelperV2 {
         return match?.groupValues?.get(1)?.trim()
     }
 
-    fun formatBr(value: Double): String =
-        "%.2f".format(value).replace(".", ",")
-
-    fun formatBr1(value: Double): String =
-        "%.1f".format(value).replace(".", ",")
-
     fun hoursMinutes(totalMin: Int): String =
         if (totalMin > 0) "${totalMin / 60}h${totalMin % 60}min" else "0min"
 }

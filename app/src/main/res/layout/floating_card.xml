@@ -34,7 +34,7 @@
             android:id="@+id/tvServiceType"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/overlay_warning"
+            android:textColor="@color/highlight"
             android:textSize="11sp"
             android:textStyle="bold"
             android:layout_marginStart="8dp"
@@ -46,7 +46,7 @@
         android:id="@+id/tvBonus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/overlay_warning"
+        android:textColor="@color/highlight"
         android:textSize="12sp"
         android:textStyle="bold"
         android:visibility="gone" />
@@ -61,7 +61,7 @@
             android:id="@+id/tvPriorityBonus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/overlay_warning"
+            android:textColor="@color/highlight"
             android:textSize="12sp"
             android:textStyle="bold"
             android:visibility="gone" />
@@ -70,7 +70,7 @@
             android:id="@+id/tvDynamicBonus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/overlay_warning"
+            android:textColor="@color/highlight"
             android:textSize="12sp"
             android:textStyle="bold"
             android:layout_marginStart="8dp"
@@ -331,7 +331,7 @@
             android:layout_width="14dp"
             android:layout_height="14dp"
             android:src="@drawable/ic_multiple_stops"
-            android:tint="@color/overlay_warning" />
+            android:tint="@color/highlight" />
 
         <TextView
             android:id="@+id/tvStops"
@@ -339,20 +339,35 @@
             android:layout_height="wrap_content"
             android:text=" Várias paradas"
             android:textSize="10sp"
-            android:textColor="@color/overlay_warning"
+            android:textColor="@color/highlight"
             android:layout_marginStart="4dp" />
 
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvKnownDestination"
+    <LinearLayout
+        android:id="@+id/llKnownDestination"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="\uD83D\uDCCD Destino conhecido · 0x"
-        android:textSize="10sp"
-        android:textStyle="bold"
-        android:textColor="@color/overlay_warning"
         android:layout_marginTop="2dp"
-        android:visibility="gone" />
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/ivKnownDestination"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:src="@drawable/ic_favorite"
+            android:tint="@color/highlight" />
+
+        <TextView
+            android:id="@+id/tvKnownDestination"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" Destino conhecido · 0x"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:textColor="@color/highlight"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
 
 </LinearLayout>

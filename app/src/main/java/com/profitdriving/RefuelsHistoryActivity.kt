@@ -6,6 +6,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
+import com.profitdriving.FormatUtils
 import java.util.Date
 import java.util.Locale
 
@@ -64,14 +65,14 @@ class RefuelsHistoryActivity : BaseActivity() {
                 "%.0f".format(refuel.odometerKm)
 
             row.findViewById<TextView>(R.id.tvRefuelLiters).text =
-                "%.1f".format(refuel.amount).replace(".", ",")
+                FormatUtils.decimal1(refuel.amount)
 
             row.findViewById<TextView>(R.id.tvRefuelPrice).text =
                 currencyFormat.format(refuel.totalValue)
 
             val consumption = calculateRefuelConsumption(refuel)
             row.findViewById<TextView>(R.id.tvRefuelConsumption).text =
-                if (consumption > 0) "%.1f".format(consumption).replace(".", ",") else "--"
+                if (consumption > 0) FormatUtils.decimal1(consumption) else "--"
 
             row.setOnLongClickListener {
                 showRefuelOptionsDialog(refuel)

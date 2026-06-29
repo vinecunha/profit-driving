@@ -3,4 +3,84 @@
     <string name="app_name">CorridaCerta</string>
     <string name="accessibility_description">CorridaCerta analisa cards de corrida do Uber e 99 para calcular R$/km, R$/h e nota, exibindo um card flutuante com a avaliação.</string>
     <string name="accessibility_service_description">O CorridaCerta usa este serviço para ler informações das corridas exibidas no Uber Driver e 99 Driver, ajudando você a analisar a rentabilidade em tempo real.</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Início</string>
+    <string name="nav_day">Meu Dia</string>
+    <string name="nav_analysis">Análise</string>
+    <string name="nav_costs">Custos</string>
+
+    <!-- Actions -->
+    <string name="action_save">Salvar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_confirm">Confirmar</string>
+    <string name="action_add">Adicionar</string>
+    <string name="action_remove">Remover</string>
+    <string name="action_share">Compartilhar</string>
+    <string name="action_delete">Excluir</string>
+    <string name="action_edit">Editar</string>
+    <string name="action_back">Voltar</string>
+    <string name="action_today">Hoje</string>
+    <string name="action_next">Próximo</string>
+    <string name="action_view_all">Ver todos</string>
+
+    <!-- Status -->
+    <string name="status_active">Ativo</string>
+    <string name="status_inactive">Inativo</string>
+    <string name="status_loading">Carregando…</string>
+    <string name="status_empty">Nenhum registro encontrado</string>
+    <string name="status_error">Erro ao carregar dados</string>
+
+    <!-- Periods -->
+    <string name="period_day">Dia</string>
+    <string name="period_week">Semana</string>
+    <string name="period_month">Mês</string>
+    <string name="period_today">hoje</string>
+    <string name="period_this_week">esta semana</string>
+    <string name="period_this_month">este mês</string>
+
+    <!-- Metrics -->
+    <string name="metric_km">R$/KM</string>
+    <string name="metric_hour">R$/H</string>
+    <string name="metric_min">R$/MIN</string>
+    <string name="metric_cost_per_km">Custo por km</string>
+    <string name="metric_total_consumption">Consumo total</string>
+    <string name="metric_total_km">Total km rodados</string>
+    <string name="metric_total_cost">Total gasto</string>
+    <string name="metric_total_liters">Total abastecido</string>
+
+    <!-- Fuel -->
+    <string name="fuel_consumption">Consumo de combustível</string>
+    <string name="fuel_refuels">Abastecimentos</string>
+    <string name="fuel_details">Detalhamento por combustível</string>
+    <string name="fuel_no_data">Nenhum abastecimento registrado</string>
+    <string name="fuel_insufficient">Dados insuficientes (adicione ao menos 2 abastecimentos)</string>
+
+    <!-- Decision labels -->
+    <string name="decision_accept">Aceitar</string>
+    <string name="decision_analyze">Analisar</string>
+    <string name="decision_reject">Recusar</string>
+    <string name="decision_good">Bom</string>
+    <string name="decision_medium">Médio</string>
+    <string name="decision_bad">Ruim</string>
+
+    <!-- Permissions -->
+    <string name="permission_title">Permissão de Acessibilidade</string>
+    <string name="permission_desc">O app precisa da permissão de acessibilidade para ler automaticamente os dados das corridas na tela do Uber.</string>
+    <string name="permission_activate">ATIVAR ACESSIBILIDADE</string>
+    <string name="permission_step1">Abra as Configurações do Android</string>
+    <string name="permission_step2">Toque em Acessibilidade</string>
+    <string name="permission_step3">Selecione CorridaCerta</string>
+    <string name="permission_step4">Ative a chave do serviço</string>
+
+    <!-- Subscription -->
+    <string name="subscription_title">Escolha seu Plano</string>
+    <string name="subscription_subtitle">Acesse todas as funcionalidades</string>
+    <string name="plan_monthly">Mensal</string>
+    <string name="plan_yearly">Anual</string>
+    <string name="plan_recommended">Recomendado</string>
+    <string name="benefit_free_trial">7 dias grátis</string>
+    <string name="benefit_cancel_anytime">Cancele quando quiser</string>
+    <string name="benefit_save_30">Economize 30%</string>
+    <string name="privacy_secure">Pagamento seguro via Google Play</string>
 </resources>

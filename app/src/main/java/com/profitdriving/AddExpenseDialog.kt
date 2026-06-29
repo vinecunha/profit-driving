@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.app.AlertDialog
+import com.profitdriving.FormatUtils
 
 class AddExpenseDialog(
     private val context: Context,
@@ -76,7 +77,7 @@ class AddExpenseDialog(
         fun selectSuggestion(name: String, defaultValue: Double) {
             selectedName = name
             etName.visibility = View.GONE
-            etValue.setText(String.format("%.4f", defaultValue).replace(".", ","))
+            etValue.setText(FormatUtils.decimal4(defaultValue))
         }
 
         view.findViewById<TextView>(R.id.btnPerKmManutencao).setOnClickListener { selectSuggestion("Manuten\u00E7\u00E3o", 0.07) }
@@ -92,11 +93,11 @@ class AddExpenseDialog(
         if (existing?.costType == CostType.PER_KM) {
             selectedName = existing.name
             if (ExpenseSuggestions.perKmSuggestions.any { it.name == existing.name }) {
-                etValue.setText(String.format("%.4f", existing.value).replace(".", ","))
+                etValue.setText(FormatUtils.decimal4(existing.value))
             } else {
                 etName.setText(existing.name)
                 etName.visibility = View.VISIBLE
-                etValue.setText(String.format("%.4f", existing.value).replace(".", ","))
+                etValue.setText(FormatUtils.decimal4(existing.value))
             }
         }
 
@@ -149,7 +150,7 @@ class AddExpenseDialog(
         fun selectSuggestion(name: String, defaultValue: Double) {
             selectedName = name
             etName.visibility = View.GONE
-            etValue.setText(String.format("%.2f", defaultValue).replace(".", ","))
+            etValue.setText(FormatUtils.decimal(defaultValue))
         }
 
         fun selectPeriodicity(per: Periodicity) {
@@ -196,11 +197,11 @@ class AddExpenseDialog(
             selectedName = existing.name
             val displayValue = existing.totalOriginalValue ?: existing.value
             if (ExpenseSuggestions.fixedSuggestions.any { it.name == existing.name }) {
-                etValue.setText(String.format("%.2f", displayValue).replace(".", ","))
+                etValue.setText(FormatUtils.decimal(displayValue))
             } else {
                 etName.setText(existing.name)
                 etName.visibility = View.VISIBLE
-                etValue.setText(String.format("%.2f", displayValue).replace(".", ","))
+                etValue.setText(FormatUtils.decimal(displayValue))
             }
             selectPeriodicity(existing.periodicity ?: Periodicity.MONTHLY)
             if (existing.installmentTotal > 1) {
@@ -271,7 +272,7 @@ class AddExpenseDialog(
         fun selectSuggestion(name: String, defaultValue: Double) {
             selectedName = name
             etName.visibility = View.GONE
-            etValue.setText(String.format("%.2f", defaultValue).replace(".", ","))
+            etValue.setText(FormatUtils.decimal(defaultValue))
         }
 
         view.findViewById<TextView>(R.id.btnEventEstacionamento).setOnClickListener { selectSuggestion("Estacionamento", 20.0) }
@@ -286,11 +287,11 @@ class AddExpenseDialog(
         if (existing?.costType == CostType.EVENT) {
             selectedName = existing.name
             if (ExpenseSuggestions.eventSuggestions.any { it.name == existing.name }) {
-                etValue.setText(String.format("%.2f", existing.value).replace(".", ","))
+                etValue.setText(FormatUtils.decimal(existing.value))
             } else {
                 etName.setText(existing.name)
                 etName.visibility = View.VISIBLE
-                etValue.setText(String.format("%.2f", existing.value).replace(".", ","))
+                etValue.setText(FormatUtils.decimal(existing.value))
             }
             etFreq.setText((existing.estimatedEventsPerMonth ?: 1).toString())
         }

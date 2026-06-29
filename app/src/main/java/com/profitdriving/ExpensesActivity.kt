@@ -70,7 +70,7 @@ class ExpensesActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
         try { loadData() } catch (e: Exception) {
-            android.util.Log.e("ExpensesActivity", "Error loading data", e)
+            L.e("ExpensesActivity", "Error loading data", e)
         }
     }
 

@@ -146,7 +146,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 try {
                     db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN $col")
                 } catch (e: Exception) {
-                    android.util.Log.w("DB", "Ignored ALTER TABLE ADD COLUMN $col: ${e.message}")
+                    L.w("DB", "Ignored ALTER TABLE ADD COLUMN $col: ${e.message}")
                 }
             }
         }
@@ -154,14 +154,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             try {
                 rebuildFuelRefuelsTable(db)
             } catch (e: Exception) {
-                android.util.Log.e("DB", "v23 migration failed: ${e.message}")
+                L.e("DB", "v23 migration failed: ${e.message}")
             }
         }
         if (oldVersion < 24) {
             try {
                 db.execSQL("ALTER TABLE $TABLE_RAW_LOGS ADD COLUMN $COL_RAW_PROCESSED_AT INTEGER")
             } catch (e: Exception) {
-                android.util.Log.w("DB", "v24 migration: ${e.message}")
+                L.w("DB", "v24 migration: ${e.message}")
             }
         }
     }
@@ -417,7 +417,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
-    fun getRawCardByHash(cardHash: String): RawCardLog? = synchronized(dbLock) {
+    fun getRawCardByHash(cardHash: String): RawCardLog? {
         val cursor = readableDatabase.query(
             TABLE_RAW_LOGS, null,
             "$COL_RAW_CARD_HASH = ?",
@@ -427,11 +427,35 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             "1"
         )
         cursor.use {
-            if (it.moveToFirst()) rawCardLogFromCursor(it) else null
+            if (it.moveToFirst()) return rawCardLogFromCursor(it)
         }
+        return null
     }
 
-    fun getFailedRawCards(limit: Int = 50): List<RawCardLog> = synchronized(dbLock) {
+    fun getRawCardsByHashes(hashes: List<String>): Map<String, RawCardLog> {
+        if (hashes.isEmpty()) return emptyMap()
+        val validHashes = hashes.filter { it.isNotBlank() }.distinct()
+        if (validHashes.isEmpty()) return emptyMap()
+
+        val placeholders = validHashes.joinToString(",") { "?" }
+        val result = mutableMapOf<String, RawCardLog>()
+        val cursor = readableDatabase.rawQuery(
+            "SELECT * FROM $TABLE_RAW_LOGS WHERE $COL_RAW_CARD_HASH IN ($placeholders) ORDER BY $COL_RAW_TIMESTAMP DESC",
+            validHashes.toTypedArray()
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                val log = rawCardLogFromCursor(it)
+                val hash = log.cardHash ?: continue
+                if (hash !in result) {
+                    result[hash] = log
+                }
+            }
+        }
+        return result
+    }
+
+    fun getFailedRawCards(limit: Int = 50): List<RawCardLog> {
         val result = mutableListOf<RawCardLog>()
         val cursor = readableDatabase.query(
             TABLE_RAW_LOGS, null,
@@ -448,7 +472,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return result
     }
 
-    fun getPendingRawCards(limit: Int = 50): List<RawCardLog> = synchronized(dbLock) {
+    fun getPendingRawCards(limit: Int = 50): List<RawCardLog> {
         val result = mutableListOf<RawCardLog>()
         val cursor = readableDatabase.query(
             TABLE_RAW_LOGS, null,
@@ -511,7 +535,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         )
     }
 
-    fun getRawRideDataByCardHash(cardHash: String): String? = synchronized(dbLock) {
+    fun getRawRideDataByCardHash(cardHash: String): String? {
         val cursor = readableDatabase.query(
             TABLE_RAW_LOGS,
             arrayOf(COL_RAW_RIDE_DATA),
@@ -522,11 +546,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             "1"
         )
         cursor.use {
-            if (it.moveToFirst()) it.getString(0) else null
+            if (it.moveToFirst()) return it.getString(0)
         }
+        return null
     }
 
-    fun getFailedRawLogs(limit: Int = 100): List<Pair<Long, String>> = synchronized(dbLock) {
+    fun getFailedRawLogs(limit: Int = 100): List<Pair<Long, String>> {
         val result = mutableListOf<Pair<Long, String>>()
         val cursor = readableDatabase.query(
             TABLE_RAW_LOGS,
@@ -595,15 +620,19 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return getFiltered(sinceMs, null, 0)
     }
 
-    fun getFiltered(sinceMs: Long?, limit: Int?, offset: Int = 0): List<RideRecord> {
+    fun getFiltered(sinceMs: Long?, limit: Int?, offset: Int = 0, untilMs: Long? = null): List<RideRecord> {
         val list = mutableListOf<RideRecord>()
         val conditions = mutableListOf("$COL_VALUE > 0 AND ($COL_DISTANCE_KM > 0 OR $COL_TIME_MIN > 0)")
         if (sinceMs != null) conditions.add("$COL_TIMESTAMP >= ?")
+        if (untilMs != null) conditions.add("$COL_TIMESTAMP <= ?")
         val selection = conditions.joinToString(" AND ")
-        val selectionArgs = if (sinceMs != null) arrayOf(sinceMs.toString()) else null
+        val selectionArgs = arrayListOf<String>()
+        if (sinceMs != null) selectionArgs.add(sinceMs.toString())
+        if (untilMs != null) selectionArgs.add(untilMs.toString())
+        val argsArray = selectionArgs.toTypedArray().takeIf { it.isNotEmpty() }
         val limitClause = if (limit != null) "$limit OFFSET $offset" else null
         val cursor = readableDatabase.query(
-            TABLE_NAME, null, selection, selectionArgs, null, null,
+            TABLE_NAME, null, selection, argsArray, null, null,
             "$COL_TIMESTAMP DESC", limitClause
         )
         cursor.use {
@@ -639,19 +668,20 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return list
     }
 
-    fun getCount(sinceMs: Long?): Int {
-        val db = readableDatabase
-        try {
-            val selection = if (sinceMs != null) "$COL_TIMESTAMP >= ?" else null
-            val selectionArgs = if (sinceMs != null) arrayOf(sinceMs.toString()) else null
-            val sql = "SELECT COUNT(*) FROM $TABLE_NAME" +
-                    (if (selection != null) " WHERE $selection" else "")
-            val cursor = db.rawQuery(sql, selectionArgs)
-            cursor.use {
-                return if (it.moveToFirst()) it.getInt(0) else 0
-            }
-        } finally {
-            db.close()
+    fun getCount(sinceMs: Long?, untilMs: Long? = null): Int {
+        val conditions = mutableListOf<String>()
+        if (sinceMs != null) conditions.add("$COL_TIMESTAMP >= ?")
+        if (untilMs != null) conditions.add("$COL_TIMESTAMP <= ?")
+        val selection = conditions.joinToString(" AND ").takeIf { it.isNotEmpty() }
+        val selectionArgs = arrayListOf<String>()
+        if (sinceMs != null) selectionArgs.add(sinceMs.toString())
+        if (untilMs != null) selectionArgs.add(untilMs.toString())
+        val argsArray = selectionArgs.toTypedArray().takeIf { it.isNotEmpty() }
+        val sql = "SELECT COUNT(*) FROM $TABLE_NAME" +
+                (if (selection != null) " WHERE $selection" else "")
+        val cursor = readableDatabase.rawQuery(sql, argsArray)
+        cursor.use {
+            return if (it.moveToFirst()) it.getInt(0) else 0
         }
     }
 
@@ -675,6 +705,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         } finally {
             db.close()
         }
+    }
+
+    fun deleteRide(id: Long) = synchronized(dbLock) {
+        writableDatabase.delete(TABLE_NAME, "$COL_ID = ?", arrayOf(id.toString()))
     }
 
     // ── Fuel Refuels ──
@@ -1654,6 +1688,8 @@ data class RefuelRecord(
 ) {
     val energyType: EnergyType
         get() = EnergyType.fromString(fuelType)
+    val fuelTypeEnum: FuelType
+        get() = FuelType.fromEnergyType(energyType)
 }
 
 data class FixedExpense(
@@ -1700,7 +1736,9 @@ data class CostSummary(
     val variableCostPerKm: Double,
     val totalCostPerKm: Double,
     val costPerHour: Double,
-    val costPerMinute: Double
+    val costPerMinute: Double,
+    val calculationMethod: ConsumptionCalculator.CalculationMethod? = null,
+    val detailsByType: Map<FuelType, ConsumptionCalculator.TypeDetail>? = null
 )
 
 enum class CostType { FIXED, PER_KM, EVENT }

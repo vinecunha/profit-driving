@@ -205,42 +205,26 @@ class FloatingBubbleService : Service() {
     }
 
     private fun applyBubbleColors(view: View, status: String?) {
-        val ringColor: String
-        val dotColor: String
-        when (status) {
-            "good" -> {
-                ringColor = "#00A86B"
-                dotColor = "#00A86B"
-            }
-            "medium" -> {
-                ringColor = "#F97316"
-                dotColor = "#F97316"
-            }
-            "bad" -> {
-                ringColor = "#DC2626"
-                dotColor = "#DC2626"
-            }
-            else -> {
-                ringColor = "#94A3B8"
-                dotColor = "#94A3B8"
-            }
+        val color = when (status) {
+            "good" -> AppColors.success
+            "medium" -> AppColors.warning
+            "bad" -> AppColors.error
+            else -> AppColors.metricAbsent
         }
 
         val ring = view.findViewById<View>(R.id.statusRing)
         val ringDrawable = GradientDrawable()
         ringDrawable.shape = GradientDrawable.OVAL
-        ringDrawable.setStroke(3.dpToPx(), Color.parseColor(ringColor))
+        ringDrawable.setStroke(3.dpToPx(), color)
         ringDrawable.setColor(Color.TRANSPARENT)
         ring.background = ringDrawable
 
         val dot = view.findViewById<View>(R.id.statusDot)
         val dotDrawable = GradientDrawable()
         dotDrawable.shape = GradientDrawable.OVAL
-        dotDrawable.setColor(Color.parseColor(dotColor))
+        dotDrawable.setColor(color)
         dot.background = dotDrawable
     }
-
-    private fun Int.dpToPx(): Int = (this * resources.displayMetrics.density).toInt()
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

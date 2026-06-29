@@ -6,10 +6,10 @@ enum class ProfitRange(
     val label: String,
     val minPercent: Double
 ) {
-    LUCRO_ALTO("🟢💰", 0xFF00A86B.toInt(), "Lucro", 50.0),
-    LUCRO_MEDIO("📈", 0xFFF97316.toInt(), "Lucro Médio", 20.0),
-    LUCRO_BAIXO("⚠️", 0xFFF97316.toInt(), "Lucro Baixo", 0.0),
-    PREJUIZO("🔴⚠️", 0xFFDC2626.toInt(), "Prejuízo", Double.NEGATIVE_INFINITY);
+    LUCRO_ALTO("🟢💰", 0xFF22CB82.toInt(), "Lucro", 50.0),
+    LUCRO_MEDIO("📈", 0xFFFC7E3B.toInt(), "Lucro Médio", 20.0),
+    LUCRO_BAIXO("⚠️", 0xFFFC7E3B.toInt(), "Lucro Baixo", 0.0),
+    PREJUIZO("🔴⚠️", 0xFFCE2C48.toInt(), "Prejuízo", Double.NEGATIVE_INFINITY);
 
     companion object {
         fun fromPercent(percent: Double): ProfitRange {

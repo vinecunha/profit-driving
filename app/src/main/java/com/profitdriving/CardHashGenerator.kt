@@ -5,6 +5,12 @@ import java.util.Locale
 
 object CardHashGenerator {
 
+    private val addressCache = mutableMapOf<String, String>()
+
+    fun clearAddressCache() {
+        addressCache.clear()
+    }
+
     fun generateStableHash(
         serviceType: String?,
         pickupAddress: String?,
@@ -74,6 +80,7 @@ object CardHashGenerator {
 
     fun maskAddress(fullAddress: String?): String {
         if (fullAddress.isNullOrBlank()) return "Endereço não informado"
+        addressCache[fullAddress]?.let { return it }
 
         var masked = fullAddress
 
@@ -103,7 +110,9 @@ object CardHashGenerator {
             masked = masked.take(100) + "..."
         }
 
-        return masked.ifBlank { "Endereço não informado" }
+        val result = masked.ifBlank { "Endereço não informado" }
+        addressCache[fullAddress] = result
+        return result
     }
 
     fun isValidRide(record: RideRecord): Boolean {
@@ -194,5 +203,80 @@ object CardHashGenerator {
                 "v=${"%.2f".format(v)}|ts=$ts|d=${"%.1f".format(dist)}|t=$dur"
             }
         }.values.map { group -> group.maxByOrNull { it.timestamp }!! }
+    }
+
+    fun recoverRidesFromRawLogs(rides: List<RideRecord>, db: DatabaseHelper): List<RideRecord> {
+        if (rides.isEmpty()) return rides
+
+        val hashes = rides.mapNotNull { it.cardHash }.filter { it.isNotBlank() }.distinct()
+        if (hashes.isEmpty()) return rides
+
+        val rawLogsMap = db.getRawCardsByHashes(hashes)
+
+        return rides.map { ride ->
+            val hash = ride.cardHash ?: return@map ride
+            val rawLog = rawLogsMap[hash] ?: return@map ride
+            val rawData = rawLog.rideDataJson ?: return@map ride
+
+            val lines = rawData.lines()
+            fun parseLine(prefix: String): String? {
+                return lines.firstOrNull { it.startsWith(prefix, ignoreCase = true) }
+                    ?.removePrefix(prefix)?.trim()?.takeIf { it.isNotBlank() && it != "null" }
+            }
+
+            val rawValue = parseLine("Value:")?.toDoubleOrNull()
+            val rawDist = parseLine("Distance:")?.toDoubleOrNull()
+            val rawTime = parseLine("Time:")?.toIntOrNull()
+            val rawRating = parseLine("Rating:")?.toDoubleOrNull()
+            val rawServiceType = parseLine("ServiceType:")
+            val rawPickupAddress = parseLine("PickupAddress:")
+            val rawDropoffAddress = parseLine("DropoffAddress:")
+            val rawPickupDist = parseLine("PickupDistance:")?.toDoubleOrNull()
+            val rawPickupTime = parseLine("PickupTime:")?.toIntOrNull()
+            val rawTripDist = parseLine("TripDistance:")?.toDoubleOrNull()
+            val rawTripTime = parseLine("TripTime:")?.toIntOrNull()
+            val rawPriorityBonus = parseLine("PriorityBonus:")?.toDoubleOrNull()
+            val rawDynamicBonus = parseLine("DynamicBonus:")?.toDoubleOrNull()
+
+            val distOk = (ride.distanceKm != null && ride.distanceKm > 0) ||
+                ((ride.pickupDistanceKm ?: 0.0) + (ride.tripDistanceKm ?: 0.0)) > 0
+            val timeOk = (ride.timeMin != null && ride.timeMin > 0) ||
+                ((ride.pickupTimeMin ?: 0) + (ride.tripTimeMin ?: 0)) > 0
+            val addressOk = !ride.pickupAddress.isNullOrBlank() || !ride.dropoffAddress.isNullOrBlank()
+
+            val hasAnyChange = listOf(
+                !distOk to rawDist,
+                !timeOk to rawTime,
+                !addressOk to rawPickupAddress,
+                !addressOk to rawDropoffAddress,
+                (ride.value == null || ride.value <= 0) to rawValue,
+                (ride.rating == null || ride.rating <= 0) to rawRating,
+                (ride.serviceType.isNullOrBlank()) to rawServiceType,
+                (ride.pickupDistanceKm == null || ride.pickupDistanceKm <= 0) to rawPickupDist,
+                (ride.pickupTimeMin == null || ride.pickupTimeMin <= 0) to rawPickupTime,
+                (ride.tripDistanceKm == null || ride.tripDistanceKm <= 0) to rawTripDist,
+                (ride.tripTimeMin == null || ride.tripTimeMin <= 0) to rawTripTime,
+                (ride.priorityBonus == null || ride.priorityBonus <= 0) to rawPriorityBonus,
+                (ride.dynamicBonus == null || ride.dynamicBonus <= 0) to rawDynamicBonus
+            ).any { (needsRecovery, raw) -> needsRecovery && raw != null }
+
+            if (!hasAnyChange) return@map ride
+
+            ride.copy(
+                value = if ((ride.value == null || ride.value <= 0) && rawValue != null) rawValue else ride.value,
+                distanceKm = if (!distOk && rawDist != null) rawDist else ride.distanceKm,
+                timeMin = if (!timeOk && rawTime != null) rawTime else ride.timeMin,
+                rating = if ((ride.rating == null || ride.rating <= 0) && rawRating != null) rawRating else ride.rating,
+                serviceType = if (ride.serviceType.isNullOrBlank() && rawServiceType != null) rawServiceType else ride.serviceType,
+                pickupAddress = if (!addressOk && rawPickupAddress != null) rawPickupAddress else ride.pickupAddress,
+                dropoffAddress = if (!addressOk && rawDropoffAddress != null) rawDropoffAddress else ride.dropoffAddress,
+                pickupDistanceKm = if ((ride.pickupDistanceKm == null || ride.pickupDistanceKm <= 0) && rawPickupDist != null) rawPickupDist else ride.pickupDistanceKm,
+                pickupTimeMin = if ((ride.pickupTimeMin == null || ride.pickupTimeMin <= 0) && rawPickupTime != null) rawPickupTime else ride.pickupTimeMin,
+                tripDistanceKm = if ((ride.tripDistanceKm == null || ride.tripDistanceKm <= 0) && rawTripDist != null) rawTripDist else ride.tripDistanceKm,
+                tripTimeMin = if ((ride.tripTimeMin == null || ride.tripTimeMin <= 0) && rawTripTime != null) rawTripTime else ride.tripTimeMin,
+                priorityBonus = if ((ride.priorityBonus == null || ride.priorityBonus <= 0) && rawPriorityBonus != null) rawPriorityBonus else ride.priorityBonus,
+                dynamicBonus = if ((ride.dynamicBonus == null || ride.dynamicBonus <= 0) && rawDynamicBonus != null) rawDynamicBonus else ride.dynamicBonus
+            )
+        }
     }
 }

@@ -32,29 +32,29 @@ class SplashActivity : AppCompatActivity() {
         val subscriptionActive = preferenceManager.isSubscriptionActive()
         val isServiceEnabled = isAccessibilityServiceEnabled()
 
-        android.util.Log.d("Splash", "onboarding: $onboardingCompleted")
-        android.util.Log.d("Splash", "permissions: $hasSeenPermissions")
-        android.util.Log.d("Splash", "subscription: $subscriptionActive")
-        android.util.Log.d("Splash", "service: $isServiceEnabled")
+        L.d("Splash", "onboarding: $onboardingCompleted")
+        L.d("Splash", "permissions: $hasSeenPermissions")
+        L.d("Splash", "subscription: $subscriptionActive")
+        L.d("Splash", "service: $isServiceEnabled")
 
         when {
             !onboardingCompleted -> {
-                android.util.Log.d("Splash", "→ Onboarding")
+                L.d("Splash", "→ Onboarding")
                 startActivity(Intent(this, OnboardingActivity::class.java))
                 finish()
             }
             !hasSeenPermissions || !isServiceEnabled -> {
-                android.util.Log.d("Splash", "→ Permissions")
+                L.d("Splash", "→ Permissions")
                 startActivity(Intent(this, PermissionsActivity::class.java))
                 finish()
             }
             !subscriptionActive -> {
-                android.util.Log.d("Splash", "→ Subscription")
+                L.d("Splash", "→ Subscription")
                 startActivity(Intent(this, SubscriptionActivity::class.java))
                 finish()
             }
             else -> {
-                android.util.Log.d("Splash", "→ Main")
+                L.d("Splash", "→ Main")
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
             }

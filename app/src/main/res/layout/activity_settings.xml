@@ -1164,7 +1164,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Tentar reprocessar cards que falharam no parse com os parsers atualizados"
+                        android:text="Algum card no histórico está com informações erradas ou faltantes? Tente reprocessar cards que falharam"
                         android:textSize="12sp"
                         android:textColor="@color/text_tertiary"
                         android:layout_marginBottom="16dp" />

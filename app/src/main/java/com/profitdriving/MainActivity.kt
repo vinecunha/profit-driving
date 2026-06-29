@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import com.profitdriving.SecurePreferences
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
@@ -53,12 +54,15 @@ class MainActivity : BaseActivity() {
     private lateinit var btnRadar: View
     private var adapter: HistoryAdapter? = null
     private var filterDays = 0
+    private var customStartMs: Long? = null
+    private var customEndMs: Long? = null
     private var selectedPeriodFilter: String? = null
     private var selectedTypeFilter = "all"
     private var selectedScoreFilter = "all"
     private var currentPage = 0
     private var pageSize = 100
     private var hasMore = false
+    private var needsRefresh = true
     private val handler = Handler(Looper.getMainLooper())
 
     private val dataUpdateReceiver = object : BroadcastReceiver() {
@@ -187,7 +191,10 @@ class MainActivity : BaseActivity() {
         pageSize = SecurePreferences.get(this)
             .getInt(SettingsActivity.KEY_PAGE_SIZE, 100)
         setupTypeFilter()
-        loadFilteredHistory()
+        if (needsRefresh) {
+            loadFilteredHistory()
+            needsRefresh = false
+        }
         updateStatus()
 
         val overlayOk = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
@@ -200,6 +207,7 @@ class MainActivity : BaseActivity() {
 
     override fun onPause() {
         super.onPause()
+        needsRefresh = true
         try { LocalBroadcastManager.getInstance(this)
             .unregisterReceiver(dataUpdateReceiver) } catch (_: Exception) {}
     }
@@ -218,40 +226,48 @@ class MainActivity : BaseActivity() {
             btnLoadMore.visibility = View.GONE
         }
         lifecycleScope.launch {
+            try {
             val (records, totalCount) = withContext(Dispatchers.IO) {
-                val sinceMs = if (filterDays >= 0) {
-                    val cal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -filterDays) }
-                    cal.apply {
+                val sinceMs: Long?
+                val untilMs: Long?
+                if (filterDays >= 0) {
+                    sinceMs = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -filterDays) }.apply {
                         set(Calendar.HOUR_OF_DAY, 0)
                         set(Calendar.MINUTE, 0)
                         set(Calendar.SECOND, 0)
                         set(Calendar.MILLISECOND, 0)
                     }.timeInMillis
-                } else null
-
-                var allRecords = if (sinceMs != null) db.getFiltered(sinceMs) else db.getAll()
-
-                if (selectedTypeFilter != "all") {
-                    allRecords = allRecords.filter { it.serviceType == selectedTypeFilter }
+                    untilMs = null
+                } else if (customStartMs != null) {
+                    sinceMs = customStartMs
+                    untilMs = customEndMs
+                } else {
+                    sinceMs = null
+                    untilMs = null
                 }
 
-                allRecords = when (selectedScoreFilter) {
-                    "good" -> allRecords.filter { it.scorePercent != null && it.scorePercent >= 80.0 }
-                    "medium" -> allRecords.filter { it.scorePercent != null && it.scorePercent >= 50.0 && it.scorePercent < 80.0 }
-                    "bad" -> allRecords.filter { it.scorePercent != null && it.scorePercent < 50.0 }
-                    else -> allRecords
-                }
+                val pageRecords = db.getFiltered(sinceMs, pageSize, currentPage * pageSize, untilMs = untilMs)
 
-                allRecords = allRecords
-                    .map { CardHashGenerator.recoverRideFromRawLogs(it, db) }
+                val filtered = pageRecords
+                    .let { records ->
+                        if (selectedTypeFilter != "all") records.filter { it.serviceType == selectedTypeFilter }
+                        else records
+                    }
+                    .let { records ->
+                        when (selectedScoreFilter) {
+                            "good" -> records.filter { it.scorePercent != null && it.scorePercent >= 80.0 }
+                            "medium" -> records.filter { it.scorePercent != null && it.scorePercent >= 50.0 && it.scorePercent < 80.0 }
+                            "bad" -> records.filter { it.scorePercent != null && it.scorePercent < 50.0 }
+                            else -> records
+                        }
+                    }
+
+                val records = filtered
+                    .let { CardHashGenerator.recoverRidesFromRawLogs(it, db) }
                     .filter { CardHashGenerator.isValidRide(it) }
                     .filter { it.value != null && it.value > 0 && (it.distanceKm != null && it.distanceKm > 0 || it.timeMin != null && it.timeMin > 0) }
-                    .let { CardHashGenerator.deduplicateRides(it) }
 
-                val totalCount = allRecords.size
-                val fromIndex = currentPage * pageSize
-                val toIndex = minOf(fromIndex + pageSize, totalCount)
-                val records = if (fromIndex < totalCount) allRecords.subList(fromIndex, toIndex) else emptyList<com.profitdriving.RideRecord>()
+                val totalCount = db.getCount(sinceMs, untilMs)
                 Pair(records, totalCount)
             }
 
@@ -280,7 +296,22 @@ class MainActivity : BaseActivity() {
                         idealMinute = prefs.getFloat(SettingsActivity.KEY_IDEAL_MINUTE, 0f),
                         minRating = prefs.getFloat(SettingsActivity.KEY_MIN_RATING, 0f),
                         idealRating = prefs.getFloat(SettingsActivity.KEY_IDEAL_RATING, 0f),
-                        costPerKm = costSummary.totalCostPerKm
+                        costPerKm = costSummary.totalCostPerKm,
+                        onDeleteRide = { ride ->
+                            AlertDialog.Builder(this@MainActivity)
+                                .setTitle("Excluir corrida")
+                                .setMessage("Tem certeza que deseja excluir esta corrida?")
+                                .setPositiveButton("Excluir") { _, _ ->
+                                    lifecycleScope.launch(Dispatchers.IO) {
+                                        db.deleteRide(ride.id)
+                                        withContext(Dispatchers.Main) {
+                                            loadFilteredHistory()
+                                        }
+                                    }
+                                }
+                                .setNegativeButton("Cancelar", null)
+                                .show()
+                        }
                     )
                     recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
                     recyclerView.adapter = adapter
@@ -290,8 +321,14 @@ class MainActivity : BaseActivity() {
                 val loadedSoFar = (currentPage + 1) * pageSize
                 hasMore = loadedSoFar < totalCount
                 btnLoadMore.visibility = if (hasMore) View.VISIBLE else View.GONE
-                btnLoadMore.text = if (hasMore)
+                    btnLoadMore.text = if (hasMore)
                     "Ver mais (${totalCount - loadedSoFar} restantes)" else ""
+            }
+            } catch (e: Exception) {
+                if (reset) progressBar.visibility = View.GONE
+                L.e("MainActivity", "Erro ao carregar página", e)
+                Snackbar.make(findViewById(android.R.id.content),
+                    "Erro ao carregar dados", Snackbar.LENGTH_SHORT).show()
             }
         }
     }
@@ -372,7 +409,8 @@ class MainActivity : BaseActivity() {
         val options = listOf(
             FilterManager.FilterOption("0", "Hoje"),
             FilterManager.FilterOption("7", "7 dias"),
-            FilterManager.FilterOption("30", "30 dias")
+            FilterManager.FilterOption("30", "30 dias"),
+            FilterManager.FilterOption("custom", "Período", "\uD83D\uDCC5")
         )
         val selected = selectedPeriodFilter?.let { setOf(it) } ?: emptySet()
         val view = filterManager.createFilterSection(
@@ -383,8 +421,14 @@ class MainActivity : BaseActivity() {
             singleSelection = true,
             callback = object : FilterManager.FilterCallback {
                 override fun onFilterChanged(filterId: String, isSelected: Boolean) {
+                    if (filterId == "custom" && isSelected) {
+                        showDateRangePicker()
+                        return
+                    }
                     selectedPeriodFilter = if (isSelected) filterId else null
                     filterDays = selectedPeriodFilter?.toIntOrNull() ?: 0
+                    customStartMs = null
+                    customEndMs = null
                     loadFilteredHistory()
                 }
                 override fun onClearAll() {}
@@ -399,6 +443,38 @@ class MainActivity : BaseActivity() {
         view.layoutParams = params
         
         container.addView(view)
+    }
+
+    private fun showDateRangePicker() {
+        val cal = Calendar.getInstance()
+        val startYear = cal.get(Calendar.YEAR)
+        val startMonth = cal.get(Calendar.MONTH)
+        val startDay = cal.get(Calendar.DAY_OF_MONTH)
+
+        android.app.DatePickerDialog(this, { _, year, month, day ->
+            cal.set(year, month, day, 0, 0, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+            val startTime = cal.timeInMillis
+
+            android.app.DatePickerDialog(this, { _, y, m, d ->
+                cal.set(y, m, d, 23, 59, 59)
+                cal.set(Calendar.MILLISECOND, 999)
+                val endTime = cal.timeInMillis
+
+                customStartMs = startTime
+                customEndMs = endTime
+                filterDays = -1
+                selectedPeriodFilter = "custom"
+                setupPeriodFilter()
+                loadFilteredHistory()
+            }, startYear, startMonth, startDay).apply {
+                setTitle("Data final")
+                datePicker.maxDate = System.currentTimeMillis()
+            }.show()
+        }, startYear, startMonth, startDay).apply {
+            setTitle("Data inicial")
+            datePicker.maxDate = System.currentTimeMillis()
+        }.show()
     }
  
     private fun setupTypeFilter() {
@@ -563,44 +639,39 @@ class HistoryAdapter(
     private val idealMinute: Float,
     private val minRating: Float,
     private val idealRating: Float,
-    private val costPerKm: Double = 0.0
+    private val costPerKm: Double = 0.0,
+    private val onDeleteRide: ((RideRecord) -> Unit)? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private val records = records.toMutableList()
+    private data class DisplayRide(
+        val ride: RideRecord,
+        val maskedPickup: String,
+        val maskedDropoff: String,
+        val profitRange: ProfitRange,
+        val profitValue: String
+    )
+
+    private var displayRecords: List<DisplayRide> = records.map { it.toDisplay() }
     private val dateFormat = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
     private val expandedItems = mutableSetOf<Int>()
+
+    private fun RideRecord.toDisplay(): DisplayRide {
+        return DisplayRide(
+            ride = this,
+            maskedPickup = CardHashGenerator.maskAddress(pickupAddress),
+            maskedDropoff = CardHashGenerator.maskAddress(dropoffAddress),
+            profitRange = getProfitRangeForRide(this),
+            profitValue = formatProfitValue(this)
+        )
+    }
 
     companion object {
         private const val TYPE_NORMAL = 0
     }
 
     // ============================================================
-    // FUNÇÕES SEGURAS DE FORMATAÇÃO
+    // FORMATAÇÃO DELEGADA AO FormatUtils
     // ============================================================
-    
-    private fun formatMoney(value: Double?): String {
-        return value?.let { "R$ %.2f".format(it).replace(".", ",") } ?: "---"
-    }
-
-    private fun formatDecimal(value: Double?): String {
-        return value?.let { "%.2f".format(it).replace(".", ",") } ?: "---"
-    }
-
-    private fun formatPercent(value: Double?): String {
-        return value?.let { "%.0f".format(it) } ?: "0"
-    }
-
-    private fun formatDistance(value: Double?): String {
-        return value?.let { "%.1f km".format(it).replace(".", ",") } ?: ""
-    }
-
-    private fun formatTime(value: Int?): String {
-        return value?.let { "${it} min" } ?: ""
-    }
-
-    private fun formatBonus(value: Double?): String {
-        return value?.let { "%.2f".format(it).replace(".", ",") } ?: "0,00"
-    }
 
     override fun getItemViewType(position: Int): Int {
         return TYPE_NORMAL
@@ -641,6 +712,7 @@ class HistoryAdapter(
         val tvProfitIcon: TextView = view.findViewById(R.id.tvProfitIcon)
         val tvProfitLabel: TextView = view.findViewById(R.id.tvProfitLabel)
         val tvProfitValue: TextView = view.findViewById(R.id.tvProfitValue)
+        val ivCardMenu: ImageView = view.findViewById(R.id.ivCardMenu)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -668,7 +740,8 @@ class HistoryAdapter(
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val r = records[position] as RideRecord
+        val display = displayRecords[position]
+        val r = display.ride
         val vh = holder as ViewHolder
 
         val serviceType = r.serviceType ?: r.appName
@@ -715,9 +788,9 @@ class HistoryAdapter(
         vh.tvServiceType.setTextColor(textColor)
 
         val decisionText = when {
-            r.scorePercent != null && r.scorePercent >= 80 -> "✅ BOA (${formatPercent(r.scorePercent)}%)"
-            r.scorePercent != null && r.scorePercent >= 50 -> "⚠️ MÉDIA (${formatPercent(r.scorePercent)}%)"
-            else -> "❌ RUIM (${formatPercent(r.scorePercent)}%)"
+            r.scorePercent != null && r.scorePercent >= 80 -> "✅ BOA (${FormatUtils.percent(r.scorePercent)})"
+            r.scorePercent != null && r.scorePercent >= 50 -> "⚠️ MÉDIA (${FormatUtils.percent(r.scorePercent)})"
+            else -> "❌ RUIM (${FormatUtils.percent(r.scorePercent)})"
         }
         val decisionBg = when {
             r.scorePercent != null && r.scorePercent >= 80 -> AppColors.successBg
@@ -739,15 +812,15 @@ class HistoryAdapter(
         vh.tvDecisionBadge.setTextColor(decisionTextColor)
         vh.tvDecisionBadge.visibility = if (r.scorePercent != null) View.VISIBLE else View.GONE
 
-        vh.tvPrice.text = formatMoney(r.value)
-        vh.tvRatingText.text = formatDecimal(r.rating)
-        vh.tvPricePerKm.text = formatDecimal(r.pricePerKm)
-        vh.tvPricePerHour.text = formatDecimal(r.pricePerHour)
+        vh.tvPrice.text = FormatUtils.currency(r.value)
+        vh.tvRatingText.text = FormatUtils.decimal(r.rating)
+        vh.tvPricePerKm.text = FormatUtils.decimal(r.pricePerKm)
+        vh.tvPricePerHour.text = FormatUtils.decimal(r.pricePerHour)
 
         val pricePerMin = if (r.timeMin != null && r.timeMin > 0 && r.value != null) 
             r.value / r.timeMin 
         else null
-        vh.tvPricePerMin.text = formatDecimal(pricePerMin)
+        vh.tvPricePerMin.text = FormatUtils.decimal(pricePerMin)
 
         val kmState = evaluateState(r.pricePerKm, minKm, idealKm)
         val hourState = evaluateState(r.pricePerHour, minHour, idealHour)
@@ -811,20 +884,20 @@ class HistoryAdapter(
         val totalTime = (pickupTime ?: 0) + (tripTime ?: r.timeMin ?: 0)
 
         vh.tvPickupDistance.text = if (pickupDist != null && pickupDist > 0) 
-            formatDistance(pickupDist) else ""
+            FormatUtils.distance(pickupDist) else ""
         vh.tvPickupTime.text = if (pickupTime != null && pickupTime > 0) 
-            formatTime(pickupTime) else ""
-        vh.tvPickupAddress.text = CardHashGenerator.maskAddress(r.pickupAddress)
+            FormatUtils.time(pickupTime) else ""
+        vh.tvPickupAddress.text = display.maskedPickup
 
         vh.tvDropoffDistance.text = if (tripDist != null && tripDist > 0) 
-            formatDistance(tripDist) else ""
+            FormatUtils.distance(tripDist) else ""
         vh.tvDropoffTime.text = if (tripTime != null && tripTime > 0) 
-            formatTime(tripTime) else ""
-        vh.tvDropoffAddress.text = CardHashGenerator.maskAddress(r.dropoffAddress)
+            FormatUtils.time(tripTime) else ""
+        vh.tvDropoffAddress.text = display.maskedDropoff
 
         val totalParts = mutableListOf<String>()
         if (totalDist > 0) {
-            totalParts.add(formatDistance(totalDist))
+            totalParts.add(FormatUtils.distance(totalDist))
         }
         if (totalTime > 0) {
             totalParts.add("${totalTime} min")
@@ -838,28 +911,26 @@ class HistoryAdapter(
         val dynamicBonus = r.dynamicBonus
 
         if (priorityBonus != null && priorityBonus > 0) {
-            vh.tvPriorityBonus.text = "\u26A1 R$${formatBonus(priorityBonus)} prioridade"
+            vh.tvPriorityBonus.text = "\u26A1 R$${FormatUtils.decimal(priorityBonus)} prioridade"
             vh.tvPriorityBonus.visibility = View.VISIBLE
         } else {
             vh.tvPriorityBonus.visibility = View.GONE
         }
 
         if (dynamicBonus != null && dynamicBonus > 0) {
-            vh.tvDynamicBonus.text = "\uD83D\uDD25 R$${formatBonus(dynamicBonus)} din\u00E2mica"
+            vh.tvDynamicBonus.text = "\uD83D\uDD25 R$${FormatUtils.decimal(dynamicBonus)} din\u00E2mica"
             vh.tvDynamicBonus.visibility = View.VISIBLE
         } else {
             vh.tvDynamicBonus.visibility = View.GONE
         }
 
-        val profitRange = getProfitRangeForRide(r)
-        val profitValue = formatProfitValue(r)
-        vh.tvProfitIcon.text = profitRange.icon
+        vh.tvProfitIcon.text = display.profitRange.icon
         vh.tvProfitIcon.visibility = View.VISIBLE
-        vh.tvProfitLabel.text = profitRange.label
-        vh.tvProfitLabel.setTextColor(profitRange.color)
+        vh.tvProfitLabel.text = display.profitRange.label
+        vh.tvProfitLabel.setTextColor(display.profitRange.color)
         vh.tvProfitLabel.visibility = View.VISIBLE
-        vh.tvProfitValue.text = profitValue
-        vh.tvProfitValue.setTextColor(profitRange.color)
+        vh.tvProfitValue.text = display.profitValue
+        vh.tvProfitValue.setTextColor(display.profitRange.color)
         vh.tvProfitValue.visibility = View.VISIBLE
 
         if (r.hasMultipleStops) {
@@ -885,13 +956,13 @@ class HistoryAdapter(
             val detailText = buildString {
                 appendLine("\uD83D\uDCCA Detalhamento do Lucro:")
                 appendLine("─────────────────────────")
-                appendLine("Valor da corrida: ${formatMoney(rideValue)}")
-                appendLine("Custo por km: ${formatDecimal(usedCostPerKm)}")
-                appendLine("Distância: ${formatDistance(distance)}")
-                appendLine("Custo total: ${formatMoney(totalCost)}")
+                appendLine("Valor da corrida: ${FormatUtils.currency(rideValue)}")
+                appendLine("Custo por km: ${FormatUtils.decimal(usedCostPerKm)}")
+                appendLine("Distância: ${FormatUtils.distance(distance)}")
+                appendLine("Custo total: ${FormatUtils.currency(totalCost)}")
                 appendLine("─────────────────────────")
-                val lucroStr = formatMoney(lucro)
-                val percStr = formatDecimal(lucroPerc)
+                val lucroStr = FormatUtils.currency(lucro)
+                val percStr = FormatUtils.decimal(lucroPerc)
                 append("\uD83D\uDCB5 Lucro: $lucroStr ($percStr%)")
             }
             vh.tvProfitDetail.text = detailText
@@ -925,7 +996,50 @@ class HistoryAdapter(
             }
 
             vh.tvTimestamp.text = dateFormat.format(java.util.Date(r.timestamp))
+
+            vh.ivCardMenu.setOnClickListener { menuView ->
+                val popup = android.widget.PopupMenu(menuView.context, menuView)
+                popup.menu.add(0, 1, 0, "Compartilhar")
+                popup.menu.add(0, 2, 0, "Excluir")
+                popup.setOnMenuItemClickListener { item ->
+                    when (item.itemId) {
+                        1 -> shareCardAsImage(menuView.context, vh.cardRoot)
+                        2 -> onDeleteRide?.invoke(r)
+                    }
+                    true
+                }
+                popup.show()
+            }
         }
+
+    private fun shareCardAsImage(context: android.content.Context, cardRoot: View) {
+        val w = if (cardRoot.measuredWidth > 0) cardRoot.measuredWidth else cardRoot.width
+        val h = if (cardRoot.measuredHeight > 0) cardRoot.measuredHeight else cardRoot.height
+        if (w <= 0 || h <= 0) return
+        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        cardRoot.draw(canvas)
+        val cacheDir = java.io.File(context.cacheDir, "images")
+        cacheDir.mkdirs()
+        val file = java.io.File(cacheDir, "card_${System.currentTimeMillis()}.png")
+        try {
+            val out = java.io.FileOutputStream(file)
+            out.use {
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+            }
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context, "${context.packageName}.fileprovider", file
+            )
+            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "image/png"
+                putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(android.content.Intent.createChooser(intent, "Compartilhar corrida"))
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
     private fun getProfitRangeForRide(ride: RideRecord): ProfitRange {
         val rideValue = ride.value ?: 0.0
@@ -945,34 +1059,35 @@ class HistoryAdapter(
         val profit = rideValue - totalCost
         val profitPercent = if (rideValue > 0) (profit / rideValue) * 100 else 0.0
         
-        val profitFormatted = formatMoney(profit)
-        val percentFormatted = formatDecimal(profitPercent)
+        val profitFormatted = FormatUtils.currency(profit)
+        val percentFormatted = FormatUtils.decimal(profitPercent)
         
         return if (profit >= 0) {
             "$profitFormatted ($percentFormatted%)"
         } else {
-            "-${formatMoney(-profit).replace("R$", "").trim()} ($percentFormatted%)"
+            "-${FormatUtils.decimal(-profit)} ($percentFormatted%)"
         }
     }
 
     fun appendData(newRecords: List<RideRecord>) {
-        records.addAll(newRecords)
-        notifyItemRangeInserted(records.size - newRecords.size, newRecords.size)
+        val newDisplay = newRecords.map { it.toDisplay() }
+        displayRecords = displayRecords + newDisplay
+        notifyItemRangeInserted(displayRecords.size - newDisplay.size, newDisplay.size)
     }
 
     fun updateData(newRecords: List<RideRecord>) {
+        val newDisplay = newRecords.map { it.toDisplay() }
         val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-            override fun getOldListSize() = records.size
-            override fun getNewListSize() = newRecords.size
+            override fun getOldListSize() = displayRecords.size
+            override fun getNewListSize() = newDisplay.size
             override fun areItemsTheSame(o: Int, n: Int) =
-                records[o].id == newRecords[n].id
+                displayRecords[o].ride.id == newDisplay[n].ride.id
             override fun areContentsTheSame(o: Int, n: Int) =
-                records[o] == newRecords[n]
+                displayRecords[o].ride == newDisplay[n].ride
         })
-        records.clear()
-        records.addAll(newRecords)
+        displayRecords = newDisplay
         diff.dispatchUpdatesTo(this)
     }
 
-    override fun getItemCount() = records.size
+    override fun getItemCount() = displayRecords.size
 }

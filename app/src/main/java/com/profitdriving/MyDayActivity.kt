@@ -28,6 +28,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.CopyOnWriteArrayList
+import com.profitdriving.FormatUtils
 
 class MyDayActivity : BaseActivity() {
 
@@ -120,6 +121,7 @@ class MyDayActivity : BaseActivity() {
 
     private val isoDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     private val dayFormatter = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("pt", "BR"))
+    private val badgeDayFormatter = SimpleDateFormat("dd/MM", Locale("pt", "BR"))
     private val weekFormatter = SimpleDateFormat("dd/MM", Locale("pt", "BR"))
     private val monthFormatter = SimpleDateFormat("MMMM, yyyy", Locale("pt", "BR"))
 
@@ -397,6 +399,23 @@ class MyDayActivity : BaseActivity() {
         loadDataForCurrentPeriod()
     }
 
+    private fun isCurrentPeriod(): Boolean {
+        val now = Calendar.getInstance()
+        return when (currentMode) {
+            ViewMode.DAY ->
+                referenceCalendar.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
+                referenceCalendar.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)
+            ViewMode.WEEK -> {
+                val refStart = getWeekStart(referenceCalendar)
+                val todayStart = getWeekStart(now)
+                refStart.timeInMillis == todayStart.timeInMillis
+            }
+            ViewMode.MONTH ->
+                referenceCalendar.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
+                referenceCalendar.get(Calendar.MONTH) == now.get(Calendar.MONTH)
+        }
+    }
+
     private fun updatePeriodTitle() {
         val title = when (currentMode) {
             ViewMode.DAY -> dayFormatter.format(referenceCalendar.time)
@@ -410,9 +429,13 @@ class MyDayActivity : BaseActivity() {
         tvPeriodTitle.text = title
 
         tvPeriodBadge.text = when (currentMode) {
-            ViewMode.DAY -> "hoje"
-            ViewMode.WEEK -> "esta semana"
-            ViewMode.MONTH -> "este m\u00EAs"
+            ViewMode.DAY -> if (isCurrentPeriod()) "hoje" else badgeDayFormatter.format(referenceCalendar.time)
+            ViewMode.WEEK -> if (isCurrentPeriod()) "esta semana" else {
+                val start = getWeekStart(referenceCalendar)
+                val end = getWeekEnd(referenceCalendar)
+                "${weekFormatter.format(start.time)} - ${weekFormatter.format(end.time)}"
+            }
+            ViewMode.MONTH -> if (isCurrentPeriod()) "este m\u00EAs" else monthFormatter.format(referenceCalendar.time)
         }
     }
 
@@ -674,7 +697,7 @@ class MyDayActivity : BaseActivity() {
             val pa = record?.pickupAddress ?: ""
             val da = record?.dropoffAddress ?: ""
             val an = record?.appName ?: ""
-            val valueStr = "R\$ %.2f".format(rideValue).replace(".", ",")
+            val valueStr = FormatUtils.currency(rideValue)
             val hour = if (record != null) Calendar.getInstance().apply { timeInMillis = record.timestamp }
                 .get(Calendar.HOUR_OF_DAY) else -1
             val timeDesc = when (hour) {
@@ -730,23 +753,23 @@ class MyDayActivity : BaseActivity() {
         val minutes = totalDuration % 60
 
         tvRideCount.text = "$count"
-        tvTotalDistance.text = "%.1f".format(totalKm).replace(".", ",")
+        tvTotalDistance.text = FormatUtils.decimal1(totalKm)
         tvTotalDuration.text = "${hours}h ${minutes}min"
 
-        tvGrossRevenue.text = "R$ %.2f".format(grossRevenue).replace(".", ",")
+        tvGrossRevenue.text = FormatUtils.currency(grossRevenue)
 
-        tvNetProfit.text = "R$ %.2f".format(netProfit).replace(".", ",")
+        tvNetProfit.text = FormatUtils.currency(netProfit)
         tvNetProfit.setTextColor(
             if (netProfit >= 0) AppColors.success else AppColors.error
         )
 
-        tvProfitPercent.text = "%.1f%% de margem".format(profitPercent).replace(".", ",")
+        tvProfitPercent.text = "${FormatUtils.decimal1(profitPercent)}% de margem"
         tvProfitPercent.setTextColor(
             if (profitPercent >= 0) AppColors.textSecondary else AppColors.error
         )
 
-        tvRevenuePerKm.text = "R\$/km: %.2f".format(revenuePerKm).replace(".", ",")
-        tvRevenuePerHour.text = "R\$/h: %.2f".format(revenuePerHour).replace(".", ",")
+        tvRevenuePerKm.text = "R\$/km: ${FormatUtils.decimal(revenuePerKm)}"
+        tvRevenuePerHour.text = "R\$/h: ${FormatUtils.decimal(revenuePerHour)}"
 
         updateCostBreakdown(totalKm)
     }
@@ -791,8 +814,8 @@ class MyDayActivity : BaseActivity() {
                     val dayCost = item.costPerKm * dayTotalKm
 
                     tvName.text = item.name
-                    tvValue.text = "R$ %.4f/km".format(item.costPerKm).replace(".", ",")
-                    tvDayTotal.text = "R$ %.2f".format(dayCost).replace(".", ",")
+                    tvValue.text = "R$ ${FormatUtils.decimal4(item.costPerKm)}/km"
+                    tvDayTotal.text = FormatUtils.currency(dayCost)
                     tvPercent.text = "%d%%".format((item.percentage * 100).toInt())
 
                     progress.progressDrawable = android.graphics.drawable.ClipDrawable(
@@ -843,7 +866,7 @@ class MyDayActivity : BaseActivity() {
 
         builder.setView(view)
             .setTitle("Valor da taxa de deslocamento")
-            .setMessage("O valor original (R$ ${String.format("%.2f", ride.originalValue).replace(".", ",")}) será substituído pela taxa.\n\nA distância considerada será APENAS o trajeto até o passageiro (${String.format("%.1f", record.pickupDistanceKm ?: record.distanceKm ?: 0.0)} km).")
+            .setMessage("O valor original (R$ ${FormatUtils.decimal(ride.originalValue)}) será substituído pela taxa.\n\nA distância considerada será APENAS o trajeto até o passageiro (${FormatUtils.decimal1(record.pickupDistanceKm ?: record.distanceKm ?: 0.0)} km).")
             .setPositiveButton("Aplicar taxa") { _, _ ->
                 val feeValue = parseDecimal(etFeeValue.text.toString()) ?: 0.0
 
@@ -856,7 +879,7 @@ class MyDayActivity : BaseActivity() {
                     val updated = ride.copy(
                         adjustedValue = feeValue,
                         cancelledWithFee = true,
-                        notes = "Cancelado com taxa - valor original: R$ ${String.format("%.2f", ride.originalValue)}. Distância considerada: ${String.format("%.1f", cancelDistance)} km",
+                        notes = "Cancelado com taxa - valor original: R$ ${FormatUtils.decimal(ride.originalValue)}. Distância considerada: ${FormatUtils.decimal1(cancelDistance)} km",
                         updatedAt = System.currentTimeMillis()
                     )
                     allDailyRides[idx] = updated
@@ -872,7 +895,7 @@ class MyDayActivity : BaseActivity() {
                     allRideRecords[record.id] = updatedRecord
 
                     applyFilters()
-                    Toast.makeText(this, "Taxa de deslocamento aplicada! Distância considerada: ${String.format("%.1f", cancelDistance)} km", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Taxa de deslocamento aplicada! Distância considerada: ${FormatUtils.decimal1(cancelDistance)} km", Toast.LENGTH_LONG).show()
                 }
             }
             .setNegativeButton("Cancelar", null)
@@ -880,19 +903,23 @@ class MyDayActivity : BaseActivity() {
     }
 
     private fun onAddToDay(record: RideRecord) {
-        val dailyRide = DailyRide(
-            rideId = record.id,
-            date = currentDateStr(),
-            originalValue = record.value ?: 0.0,
-            isCompleted = true
-        )
-        val id = db.insertDailyRide(dailyRide)
-        allDailyRides.add(dailyRide.copy(id = id))
-        availableRidesList.removeAll { it.id == record.id }
-        availableAdapter.updateData(availableRidesList)
-        updateHistoryInfo()
-        applyFilters()
-        checkForEvent(record.pickupAddress, record.dropoffAddress)
+        lifecycleScope.launch(Dispatchers.IO) {
+            val dailyRide = DailyRide(
+                rideId = record.id,
+                date = currentDateStr(),
+                originalValue = record.value ?: 0.0,
+                isCompleted = true
+            )
+            val id = db.insertDailyRide(dailyRide)
+            withContext(Dispatchers.Main) {
+                allDailyRides.add(dailyRide.copy(id = id))
+                availableRidesList.removeAll { it.id == record.id }
+                availableAdapter.updateData(availableRidesList)
+                updateHistoryInfo()
+                applyFilters()
+                checkForEvent(record.pickupAddress, record.dropoffAddress)
+            }
+        }
     }
 
     private fun checkForEvent(pickupAddress: String?, dropoffAddress: String?) {
@@ -946,7 +973,7 @@ class MyDayActivity : BaseActivity() {
 
         val record = allRideRecords[ride.rideId]
         val serviceName = record?.serviceType ?: "Corrida"
-        tvInfo.text = "$serviceName - R$ %.2f".format(ride.originalValue).replace(".", ",")
+        tvInfo.text = "$serviceName - ${FormatUtils.currency(ride.originalValue)}"
 
         builder.setView(view)
             .setPositiveButton("Adicionar") { _, _ ->
@@ -974,11 +1001,11 @@ class MyDayActivity : BaseActivity() {
         val etReason = view.findViewById<TextView>(R.id.etAdjReason)
 
         val record = allRideRecords[ride.rideId]
-        tvInfo.text = "Corrida original: R$ %.2f".format(ride.originalValue).replace(".", ",")
+        tvInfo.text = "Corrida original: ${FormatUtils.currency(ride.originalValue)}"
         if (record != null) {
             val dist = record.tripDistanceKm ?: record.distanceKm
             val dur = record.tripTimeMin ?: record.timeMin
-            if (dist != null) tvDist.text = "Dist\u00E2ncia original: %.1f km".format(dist).replace(".", ",")
+            if (dist != null) tvDist.text = "Dist\u00E2ncia original: ${FormatUtils.distance(dist)}"
             else tvDist.visibility = View.GONE
             if (dur != null) tvTime.text = "Tempo original: %d min".format(dur)
             else tvTime.visibility = View.GONE

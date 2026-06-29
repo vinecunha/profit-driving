@@ -90,7 +90,7 @@
         android:textSize="13sp"
         android:textColor="@color/text_inverse"
         android:textStyle="bold"
-        android:background="@drawable/pill_selected"
+        android:background="@drawable/pill_selected_ripple"
         android:clickable="true"
         android:focusable="true" />
 

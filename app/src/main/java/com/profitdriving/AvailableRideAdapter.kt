@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.profitdriving.FormatUtils
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -14,9 +15,11 @@ class AvailableRideAdapter(
 ) : RecyclerView.Adapter<AvailableRideAdapter.ViewHolder>() {
 
     private val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    private val loadingIds = mutableSetOf<Long>()
 
     fun updateData(newItems: List<RideRecord>) {
         items = newItems
+        loadingIds.clear()
         notifyDataSetChanged()
     }
 
@@ -42,29 +45,38 @@ class AvailableRideAdapter(
         holder.tvService.text = record.serviceType ?: "Corrida"
 
         val displayValue = record.value ?: 0.0
-        holder.tvValue.text = "R$ %.2f".format(displayValue).replace(".", ",")
+        holder.tvValue.text = FormatUtils.currency(displayValue)
 
-        // Distância TOTAL (pickup + trip)
         val totalDist = (record.pickupDistanceKm ?: 0.0) + (record.tripDistanceKm ?: record.distanceKm ?: 0.0)
         val totalTime = (record.pickupTimeMin ?: 0) + (record.tripTimeMin ?: record.timeMin ?: 0)
 
         if (totalDist > 0) {
-            holder.tvDistance.text = "📍 %.1f km".format(totalDist).replace(".", ",")
+            holder.tvDistance.text = "\uD83D\uDCCD ${FormatUtils.decimal1(totalDist)} km"
             holder.tvDistance.visibility = View.VISIBLE
         } else {
             holder.tvDistance.visibility = View.GONE
         }
 
         if (totalTime > 0) {
-            holder.tvDuration.text = "⏱ %d min".format(totalTime)
+            holder.tvDuration.text = "\u23F1 %d min".format(totalTime)
             holder.tvDuration.visibility = View.VISIBLE
         } else {
             holder.tvDuration.visibility = View.GONE
         }
 
-        holder.btnAdd.setOnClickListener { onAddToDay(record) }
+        val isLoading = loadingIds.contains(record.id)
+        holder.btnAdd.isEnabled = !isLoading
+        holder.btnAdd.text = if (isLoading) "\u23F3 Adicionando..." else "\u2795 Adicionar"
 
-        // Destino
+        holder.btnAdd.setOnClickListener {
+            if (loadingIds.contains(record.id)) return@setOnClickListener
+            loadingIds.add(record.id)
+            holder.btnAdd.isEnabled = false
+            holder.btnAdd.text = "\u23F3 Adicionando..."
+
+            onAddToDay(record)
+        }
+
         val maskedDropoff = CardHashGenerator.maskAddress(record.dropoffAddress)
         if (maskedDropoff.isNotEmpty()) {
             holder.tvDestination.text = "\uD83C\uDFC1 $maskedDropoff"

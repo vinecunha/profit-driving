@@ -3,8 +3,6 @@ package com.profitdriving
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -13,6 +11,10 @@ import android.widget.LinearLayout
 import android.widget.LinearLayout.HORIZONTAL
 import android.widget.LinearLayout.VERTICAL
 import android.widget.TextView
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -34,7 +36,6 @@ class AnalysisActivity : BaseActivity() {
 
     private var currentMode = ViewMode.DAY
     private var referenceCalendar = Calendar.getInstance()
-    private val handler = Handler(Looper.getMainLooper())
 
     private val dayFormatter = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("pt", "BR"))
     private val weekFormatter = SimpleDateFormat("dd/MM", Locale("pt", "BR"))
@@ -68,27 +69,26 @@ class AnalysisActivity : BaseActivity() {
         setViewMode(ViewMode.DAY)
     }
 
-    override fun onDestroy() {
-        handler.removeCallbacksAndMessages(null)
-        super.onDestroy()
-    }
-
     private fun loadDataForCurrentPeriod() {
         showSkeleton()
         val (periodStart, periodEnd) = getPeriodTimestamps()
 
-        Thread {
-            val records = db.getFiltered(periodStart)
-            val dailyRides = db.getDailyRidesByDateRange(periodStart, periodEnd)
-            val costPerKm = kotlinx.coroutines.runBlocking {
-                CostSummaryCache.getCurrentSummary(this@AnalysisActivity).totalCostPerKm
-            }
-            val result = AnalysisHelperV2.calculate(records, dailyRides, costPerKm)
-            handler.post {
+        lifecycleScope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    val records = db.getFiltered(periodStart)
+                    val dailyRides = db.getDailyRidesByDateRange(periodStart, periodEnd)
+                    val costPerKm = CostSummaryCache.getCurrentSummary(this@AnalysisActivity).totalCostPerKm
+                    AnalysisHelperV2.calculate(records, dailyRides, costPerKm)
+                }
                 hideSkeleton()
                 buildCards(result)
+            } catch (e: Exception) {
+                hideSkeleton()
+                L.e("AnalysisActivity", "Erro ao carregar dados", e)
+                findViewById<TextView>(R.id.tvPeriodTitle)?.text = "Erro ao carregar"
             }
-        }.start()
+        }
     }
 
     private fun showSkeleton() {
@@ -499,14 +499,14 @@ class AnalysisActivity : BaseActivity() {
 
         addText(card, "\uD83D\uDCCB Corridas ofertadas: ${r.offeredCount}", 13f, AppColors.textPrimary)
         addText(card, "\u2705 Corridas aceitas: ${r.acceptedCount} (${"%.1f".format(r.acceptanceRate)}%)", 13f, GREEN)
-        addText(card, "\uD83D\uDCB0 Faturamento bruto: R\$ ${AnalysisHelperV2.formatBr(r.totalEarnings)}", 13f, AppColors.textPrimary)
-        addText(card, "\uD83D\uDEE3\uFE0F Km total: ${AnalysisHelperV2.formatBr1(r.totalKm)} km", 13f, AppColors.textPrimary)
+        addText(card, "\uD83D\uDCB0 Faturamento bruto: R\$ ${FormatUtils.decimal(r.totalEarnings)}", 13f, AppColors.textPrimary)
+        addText(card, "\uD83D\uDEE3\uFE0F Km total: ${FormatUtils.decimal1(r.totalKm)} km", 13f, AppColors.textPrimary)
         addText(card, "\u23F1\uFE0F Tempo total: ${AnalysisHelperV2.hoursMinutes(r.totalMinutes)}", 13f, AppColors.textPrimary)
 
         addDivider(card)
         addText(card, "\uD83D\uDCCA M\u00E9dias", 13f, AppColors.textPrimary, true)
-        addText(card, "R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.avgPricePerKm)}", 12f, AppColors.textSecondary)
-        addText(card, "R\$/h m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(r.avgPricePerHour)}", 12f, AppColors.textSecondary)
+        addText(card, "R\$/km m\u00E9dio: R\$ ${FormatUtils.decimal(r.avgPricePerKm)}", 12f, AppColors.textSecondary)
+        addText(card, "R\$/h m\u00E9dio: R\$ ${FormatUtils.decimal(r.avgPricePerHour)}", 12f, AppColors.textSecondary)
         addText(card, "Nota m\u00E9dia: ${"%.2f".format(r.avgRating)}", 12f, AppColors.textSecondary)
 
         container.addView(card)
@@ -531,8 +531,8 @@ class AnalysisActivity : BaseActivity() {
                 append("Presente em ${"%.0f".format(p.percentage)}% das corridas")
             }, 12f, AppColors.textSecondary)
             addText(card, buildString {
-                append("R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(p.avgPricePerKm)}")
-                append("  (sem: R\$ ${AnalysisHelperV2.formatBr(p.avgPricePerKmWithout)})")
+                append("R\$/km m\u00E9dio: R\$ ${FormatUtils.decimal(p.avgPricePerKm)}")
+                append("  (sem: R\$ ${FormatUtils.decimal(p.avgPricePerKmWithout)})")
             }, 12f, AppColors.textSecondary)
             addText(card, buildString {
                 append("\u2B06 ${"%.0f".format(diffPctP)}% melhor R\$/km  |  ${"%.0f".format(goodDiffP)}% mais corridas \"boas\"")
@@ -553,8 +553,8 @@ class AnalysisActivity : BaseActivity() {
                 append("Presente em ${"%.0f".format(d.percentage)}% das corridas")
             }, 12f, AppColors.textSecondary)
             addText(card, buildString {
-                append("R\$/km m\u00E9dio: R\$ ${AnalysisHelperV2.formatBr(d.avgPricePerKm)}")
-                append("  (sem: R\$ ${AnalysisHelperV2.formatBr(d.avgPricePerKmWithout)})")
+                append("R\$/km m\u00E9dio: R\$ ${FormatUtils.decimal(d.avgPricePerKm)}")
+                append("  (sem: R\$ ${FormatUtils.decimal(d.avgPricePerKmWithout)})")
             }, 12f, AppColors.textSecondary)
             addText(card, buildString {
                 append("\u2B06 ${"%.0f".format(diffPctD)}% melhor R\$/km  |  ${"%.0f".format(goodDiffD)}% mais corridas \"boas\"")
@@ -578,7 +578,7 @@ class AnalysisActivity : BaseActivity() {
         if (bestData != null && bestData.rideCount > 0) {
             addText(card, buildString {
                 append("\u2B50 Melhor hor\u00E1rio: ${bestData.hour}h \u00E0s ${(bestData.hour + 1) % 24}h")
-                append("  |  R\$ ${AnalysisHelperV2.formatBr(bestData.avgPricePerKm)}/km")
+                append("  |  R\$ ${FormatUtils.decimal(bestData.avgPricePerKm)}/km")
                 append("  |  ${bestData.rideCount} corridas")
             }, 12f, GREEN, true)
         }
@@ -598,7 +598,7 @@ class AnalysisActivity : BaseActivity() {
                 setPadding(0, 4, 0, 0)
             }
             for (h in topHours) {
-                addBar(hContainer, "${h.hour}h", "R\$ ${AnalysisHelperV2.formatBr(h.avgPricePerKm)}",
+                addBar(hContainer, "${h.hour}h", "R\$ ${FormatUtils.decimal(h.avgPricePerKm)}",
                     (h.avgPricePerKm / maxVal).toFloat())
             }
             card.addView(hContainer)
@@ -679,7 +679,7 @@ class AnalysisActivity : BaseActivity() {
             row.addView(header)
 
             addText(row, buildString {
-                append("R\$/km: R\$ ${AnalysisHelperV2.formatBr(c.avgPricePerKm)}")
+                append("R\$/km: R\$ ${FormatUtils.decimal(c.avgPricePerKm)}")
                 append("  |  Din\u00E2mica: ${"%.0f".format(c.dynamicPercentage)}%")
                 append("  |  Melhor hor\u00E1rio: ${c.bestHour}h")
             }, 11f, AppColors.textSecondary)
@@ -730,7 +730,7 @@ class AnalysisActivity : BaseActivity() {
 
             row.addView(TextView(this).apply {
                 layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
-                text = "R\$ ${AnalysisHelperV2.formatBr(n.avgPricePerKm)} | ${"%.0f".format(n.dynamicPercentage)}%"
+                text = "R\$ ${FormatUtils.decimal(n.avgPricePerKm)} | ${"%.0f".format(n.dynamicPercentage)}%"
                 textSize = 11f
                 setTextColor(AppColors.textSecondary)
             })
@@ -766,7 +766,7 @@ class AnalysisActivity : BaseActivity() {
             })
 
             addDetailRow(hourContainer, "\uD83D\uDCB0", "Ganho m\u00E9dio",
-                "R\$ ${AnalysisHelperV2.formatBr(hour.avgEarningsPerHour)}/hora", AppColors.textPrimary)
+                "R\$ ${FormatUtils.decimal(hour.avgEarningsPerHour)}/hora", AppColors.textPrimary)
             addDetailRow(hourContainer, "\uD83D\uDE97", "Corridas", "${hour.rideCount}", AppColors.textPrimary)
 
             val dinamicaColor = if (hour.dynamicPercent >= 30) AppColors.success else AppColors.warning
@@ -834,8 +834,8 @@ class AnalysisActivity : BaseActivity() {
         if (lost.lostCount == 0) return
         val card = createCard("\u274C Corridas perdidas (n\u00E3o aceitas)")
 
-        addText(card, "\uD83D\uDCB0 Valor m\u00E9dio perdido: R\$ ${AnalysisHelperV2.formatBr(lost.avgLostValue)}")
-        addText(card, "\uD83D\uDCCA R\$/km m\u00E9dio perdido: R\$ ${AnalysisHelperV2.formatBr(lost.avgLostPricePerKm)}")
+        addText(card, "\uD83D\uDCB0 Valor m\u00E9dio perdido: R\$ ${FormatUtils.decimal(lost.avgLostValue)}")
+        addText(card, "\uD83D\uDCCA R\$/km m\u00E9dio perdido: R\$ ${FormatUtils.decimal(lost.avgLostPricePerKm)}")
         addText(card, "\u23F0 Hor\u00E1rio com mais perdas: ${lost.peakLossHour} (${"%.0f".format(lost.peakLossPercent)}%)")
         addText(card, "\uD83D\uDE97 Categoria: ${lost.topLostCategory} (${"%.0f".format(lost.topLostCategoryPercent)}% das perdas)")
         addText(card, "\uD83D\uDCCD Cidade: ${lost.topLostCity} (${"%.0f".format(lost.topLostCityPercent)}% das perdas)")
@@ -865,20 +865,20 @@ class AnalysisActivity : BaseActivity() {
         if (p.completedRides == 0) return
         val card = createCard("\uD83C\uDFAF Proje\u00E7\u00E3o do dia")
 
-        addText(card, "\uD83D\uDCB0 Ganho atual: R\$ ${AnalysisHelperV2.formatBr(p.currentEarnings)} (${p.completedRides} corridas)")
+        addText(card, "\uD83D\uDCB0 Ganho atual: R\$ ${FormatUtils.decimal(p.currentEarnings)} (${p.completedRides} corridas)")
         addText(card, "\u23F1\uFE0F Horas trabalhadas: ${"%.1f".format(p.hoursWorked)}h")
-        addText(card, "\uD83D\uDCC8 Ganho m\u00E9dio/h: R\$ ${AnalysisHelperV2.formatBr(p.avgPerHour)}")
+        addText(card, "\uD83D\uDCC8 Ganho m\u00E9dio/h: R\$ ${FormatUtils.decimal(p.avgPerHour)}")
 
         addDivider(card)
 
-        addText(card, "\uD83C\uDFAF Meta do dia: R\$ ${AnalysisHelperV2.formatBr(p.targetDay)}")
-        addText(card, "\uD83D\uDCCA Proje\u00E7\u00E3o (${"%.0f".format(p.targetHours)}h): R\$ ${AnalysisHelperV2.formatBr(p.projectedWithTargetHours)}")
+        addText(card, "\uD83C\uDFAF Meta do dia: R\$ ${FormatUtils.decimal(p.targetDay)}")
+        addText(card, "\uD83D\uDCCA Proje\u00E7\u00E3o (${"%.0f".format(p.targetHours)}h): R\$ ${FormatUtils.decimal(p.projectedWithTargetHours)}")
 
         val remainingColor = if (p.remaining <= 0) GREEN else ORANGE
         val remainingText = if (p.remaining <= 0) {
-            "\u2705 Meta atingida! Excedente: R\$ ${AnalysisHelperV2.formatBr(-p.remaining)}"
+            "\u2705 Meta atingida! Excedente: R\$ ${FormatUtils.decimal(-p.remaining)}"
         } else {
-            "\u26A0\uFE0F Faltam R\$ ${AnalysisHelperV2.formatBr(p.remaining)} para bater a meta"
+            "\u26A0\uFE0F Faltam R\$ ${FormatUtils.decimal(p.remaining)} para bater a meta"
         }
         addText(card, remainingText, 12f, remainingColor, true)
 
@@ -908,10 +908,10 @@ class AnalysisActivity : BaseActivity() {
             })
 
             addDetailRow(dayContainer, "\uD83D\uDCB0", "Lucro m\u00E9dio",
-                "R\$ ${AnalysisHelperV2.formatBr(day.avgEarnings)}", day.avgEarnings > 0)
+                "R\$ ${FormatUtils.decimal(day.avgEarnings)}", day.avgEarnings > 0)
             addDetailRow(dayContainer, "\uD83D\uDE97", "Corridas", "${day.rideCount}", true)
             addDetailRow(dayContainer, "\uD83D\uDCCA", "R\$/km m\u00E9dio",
-                "R\$ ${AnalysisHelperV2.formatBr(day.avgPricePerKm)}", true)
+                "R\$ ${FormatUtils.decimal(day.avgPricePerKm)}", true)
 
             val fraction = (day.avgEarnings / maxProfit).toFloat()
             val progressContainer = LinearLayout(this).apply {
@@ -958,19 +958,19 @@ class AnalysisActivity : BaseActivity() {
 
         val netProfit = r.totalEarnings - r.totalCost
 
-        addInfoRow(card, "Faturamento bruto", "R$ ${AnalysisHelperV2.formatBr(r.totalEarnings)}", "#1A2C3E")
-        addInfoRow(card, "Custo total", "-R$ ${AnalysisHelperV2.formatBr(r.totalCost)}", "#DC2626")
+        addInfoRow(card, "Faturamento bruto", "R$ ${FormatUtils.decimal(r.totalEarnings)}", AppColors.textPrimary)
+        addInfoRow(card, "Custo total", "-R$ ${FormatUtils.decimal(r.totalCost)}", AppColors.error)
         addDivider(card)
-        addInfoRow(card, "Lucro líquido", "R$ ${AnalysisHelperV2.formatBr(netProfit)}",
-            if (netProfit >= 0) "#00A86B" else "#DC2626", bold = true)
-        addInfoRow(card, "Custo por km", "R$ ${AnalysisHelperV2.formatBr(r.totalCostPerKm)}", "#6B7280")
+        addInfoRow(card, "Lucro líquido", "R$ ${FormatUtils.decimal(netProfit)}",
+            if (netProfit >= 0) AppColors.success else AppColors.error, bold = true)
+        addInfoRow(card, "Custo por km", "R$ ${FormatUtils.decimal(r.totalCostPerKm)}", AppColors.textSecondary)
         addInfoRow(card, "Margem líquida", "${"%.1f".format(r.profitMargin)}%",
-            if (r.profitMargin >= 20) "#00A86B" else if (r.profitMargin >= 0) "#F97316" else "#DC2626")
+            if (r.profitMargin >= 20) AppColors.success else if (r.profitMargin >= 0) AppColors.warning else AppColors.error)
 
         container.addView(card)
     }
 
-    private fun addInfoRow(container: LinearLayout, label: String, value: String, colorHex: String, bold: Boolean = false) {
+    private fun addInfoRow(container: LinearLayout, label: String, value: String, color: Int, bold: Boolean = false) {
         val row = LinearLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
             orientation = HORIZONTAL
@@ -986,7 +986,7 @@ class AnalysisActivity : BaseActivity() {
         row.addView(TextView(this).apply {
             text = value
             textSize = 13f
-            setTextColor(Color.parseColor(colorHex))
+            setTextColor(color)
             if (bold) setTypeface(null, android.graphics.Typeface.BOLD)
         })
         container.addView(row)
@@ -1044,8 +1044,8 @@ class AnalysisActivity : BaseActivity() {
             (ridesDiff.toDouble() / r.previousPeriodRides) * 100 else 0.0
 
         addComparisonRow(card, "Faturamento",
-            "R$ ${AnalysisHelperV2.formatBr(r.totalEarnings)}",
-            "R$ ${AnalysisHelperV2.formatBr(r.previousPeriodEarnings)}",
+            "R$ ${FormatUtils.decimal(r.totalEarnings)}",
+            "R$ ${FormatUtils.decimal(r.previousPeriodEarnings)}",
             earningsDiff, earningsPct)
 
         addComparisonRow(card, "Corridas",
@@ -1080,10 +1080,10 @@ class AnalysisActivity : BaseActivity() {
         row.addView(headerRow)
 
         val arrowIcon = if (diff > 0) "▲" else if (diff < 0) "▼" else "●"
-        val arrowColor = if (diff > 0) "#00A86B" else if (diff < 0) "#DC2626" else "#94A3B8"
+        val arrowColor = if (diff > 0) AppColors.success else if (diff < 0) AppColors.error else AppColors.metricAbsent
 
-        addText(row, "$arrowIcon ${"%.1f".format(Math.abs(pct))}% (${if (diff > 0) "+" else ""}${AnalysisHelperV2.formatBr(diff)})",
-            11f, Color.parseColor(arrowColor))
+        addText(row, "$arrowIcon ${"%.1f".format(Math.abs(pct))}% (${if (diff > 0) "+" else ""}${FormatUtils.decimal(diff)})",
+            11f, arrowColor)
 
         container.addView(row)
     }
@@ -1106,16 +1106,16 @@ class AnalysisActivity : BaseActivity() {
 
         val bestHour = r.hourlyData.maxByOrNull { it.avgPricePerKm }
         if (bestHour != null && bestHour.rideCount >= 3) {
-            insights.add("⏰ Melhor horário para trabalhar: ${bestHour.hour}h (R$ ${AnalysisHelperV2.formatBr(bestHour.avgPricePerKm)}/km)")
+            insights.add("⏰ Melhor horário para trabalhar: ${bestHour.hour}h (R$ ${FormatUtils.decimal(bestHour.avgPricePerKm)}/km)")
         }
 
         if (r.priorityImpact.count > 0 && r.priorityImpact.avgPricePerKm > r.priorityImpact.avgPricePerKmWithout) {
             val diff = r.priorityImpact.avgPricePerKm - r.priorityImpact.avgPricePerKmWithout
-            insights.add("✨ Prioridade aumenta seu R$/km em R$ ${AnalysisHelperV2.formatBr(diff)}. Vale a pena priorizar!")
+            insights.add("✨ Prioridade aumenta seu R$/km em R$ ${FormatUtils.decimal(diff)}. Vale a pena priorizar!")
         }
 
         if (r.lostRides.lostCount > 0 && r.lostRides.avgLostPricePerKm > 0) {
-            insights.add("📉 Você deixou de ganhar R$ ${AnalysisHelperV2.formatBr(r.lostRides.avgLostValue)} em média por corrida não aceita.")
+            insights.add("📉 Você deixou de ganhar R$ ${FormatUtils.decimal(r.lostRides.avgLostValue)} em média por corrida não aceita.")
         }
 
         if (insights.isEmpty()) {

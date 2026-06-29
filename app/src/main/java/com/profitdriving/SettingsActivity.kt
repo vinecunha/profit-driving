@@ -14,6 +14,7 @@ import android.view.View
 import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.Switch
 import android.widget.TextView
@@ -31,6 +32,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
+import com.profitdriving.FormatUtils
 import androidx.appcompat.app.AlertDialog
 
 class SettingsActivity : BaseActivity() {
@@ -369,12 +371,12 @@ class SettingsActivity : BaseActivity() {
         val radioGroupIdeal = view.findViewById<RadioGroup>(R.id.radioGroupIdeal)
         val tvWarning = view.findViewById<TextView>(R.id.tvWarning)
 
-        tvCostInfo.text = "Seu custo total/km: ${formatCurrency(costPerKm)}"
+        tvCostInfo.text = "Seu custo total/km: ${FormatUtils.currency(costPerKm)}"
 
         for ((index, margin) in margins.withIndex()) {
             val radioMin = RadioButton(this).apply {
                 id = View.generateViewId()
-                text = "${margin.first} \u2192 ${formatCurrency(margin.second)}/km"
+                text = "${margin.first} \u2192 ${FormatUtils.currency(margin.second)}/km"
                 setPadding(8, 8, 8, 8)
                 tag = margin.second
             }
@@ -382,7 +384,7 @@ class SettingsActivity : BaseActivity() {
 
             val radioIdeal = RadioButton(this).apply {
                 id = View.generateViewId()
-                text = "${margin.first} \u2192 ${formatCurrency(margin.second)}/km"
+                text = "${margin.first} \u2192 ${FormatUtils.currency(margin.second)}/km"
                 setPadding(8, 8, 8, 8)
                 tag = margin.second
             }
@@ -413,18 +415,18 @@ class SettingsActivity : BaseActivity() {
                     return@setPositiveButton
                 }
 
-                etMinKm.setText(formatCurrencySimple(minValue))
-                etIdealKm.setText(formatCurrencySimple(idealValue))
+                etMinKm.setText(FormatUtils.decimal(minValue))
+                etIdealKm.setText(FormatUtils.decimal(idealValue))
 
                 val minHour = minValue * 30
                 val idealHour = idealValue * 30
                 val minMinute = minHour / 60
                 val idealMinute = idealHour / 60
 
-                etMinHour.setText(formatCurrencySimple(minHour))
-                etIdealHour.setText(formatCurrencySimple(idealHour))
-                etMinMinute.setText(formatCurrencySimple(minMinute))
-                etIdealMinute.setText(formatCurrencySimple(idealMinute))
+                etMinHour.setText(FormatUtils.decimal(minHour))
+                etIdealHour.setText(FormatUtils.decimal(idealHour))
+                etMinMinute.setText(FormatUtils.decimal(minMinute))
+                etIdealMinute.setText(FormatUtils.decimal(idealMinute))
 
                 debouncedUpdatePreview()
                 Toast.makeText(this, "Par\u00e2metros atualizados! Revise e salve se desejar.", Toast.LENGTH_LONG).show()
@@ -441,14 +443,6 @@ class SettingsActivity : BaseActivity() {
             }
         }
         return 0.0
-    }
-
-    private fun formatCurrency(value: Double): String {
-        return NumberFormat.getCurrencyInstance(Locale("pt", "BR")).format(value)
-    }
-
-    private fun formatCurrencySimple(value: Double): String {
-        return String.format("%.2f", value).replace(".", ",")
     }
 
     private fun toggleLayout(isColumn: Boolean) {
@@ -504,7 +498,7 @@ class SettingsActivity : BaseActivity() {
     private fun loadValues() {
         fun loadFloat(key: String, def: Float): String {
             val v = prefs.getFloat(key, def)
-            return if (v == 0f) "" else "%.2f".format(v).replace(".", ",")
+            return if (v == 0f) "" else FormatUtils.decimal(v)
         }
         etMinKm.setText(loadFloat(KEY_MIN_KM, 2.5f))
         etIdealKm.setText(loadFloat(KEY_IDEAL_KM, 4.0f))

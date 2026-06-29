@@ -6,6 +6,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import com.profitdriving.FormatUtils
 import com.profitdriving.SecurePreferences
 import android.graphics.Color
 import android.graphics.PixelFormat
@@ -22,6 +23,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.WindowManager.BadTokenException
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
@@ -190,7 +192,7 @@ class FloatingCardService : Service() {
 
         tvApp.text = ride.appName.ifEmpty { "" }
         tvValue.text = ride.value
-            ?.let { "R$ %.2f".format(it).replace(".", ",") } ?: "---"
+            ?.let { FormatUtils.currency(it) } ?: "---"
 
         tvServiceType.text = ride.serviceType ?: ""
         tvServiceType.visibility =
@@ -199,33 +201,33 @@ class FloatingCardService : Service() {
         tvBonus.visibility = View.GONE
 
         tvPriorityBonus.text = ride.priorityBonus
-            ?.let { "\u26A1 R$ ${"%.2f".format(it).replace(".", ",")}" } ?: ""
+            ?.let { "\u26A1 R$ ${FormatUtils.decimal(it)}" } ?: ""
         tvPriorityBonus.visibility =
             if (ride.priorityBonus != null) View.VISIBLE else View.GONE
 
         tvDynamicBonus.text = ride.dynamicBonus
-            ?.let { "\uD83D\uDD25 R$ ${"%.2f".format(it).replace(".", ",")}" } ?: ""
+            ?.let { "\uD83D\uDD25 R$ ${FormatUtils.decimal(it)}" } ?: ""
         tvDynamicBonus.visibility =
             if (ride.dynamicBonus != null) View.VISIBLE else View.GONE
 
         tvKm.text = if (pricePerKm != null)
-            "%.2f".format(pricePerKm).replace(".", ",")
+            FormatUtils.decimal(pricePerKm)
         else "---"
 
         tvHour.text = if (pricePerHour != null)
-            "%.2f".format(pricePerHour).replace(".", ",")
+            FormatUtils.decimal(pricePerHour)
         else "---"
 
         tvMinute.text = if (pricePerMinute != null)
-            "%.2f".format(pricePerMinute).replace(".", ",")
+            FormatUtils.decimal(pricePerMinute)
         else "---"
 
         tvRating.text = if (ride.rating != null)
-            "%.2f".format(ride.rating).replace(".", ",")
+            FormatUtils.decimal(ride.rating)
         else "---"
 
         tvDistance.text = ride.distanceKm
-            ?.let { "%.1f km".format(it).replace(".", ",") } ?: ""
+                ?.let { FormatUtils.distance(it) } ?: ""
         tvTime.text = ride.timeMin?.let { "${it} min" } ?: ""
 
         val result = DecisionEngine.evaluate(
@@ -272,6 +274,8 @@ class FloatingCardService : Service() {
         }
 
         val tvKnownDestination = view.findViewById<TextView>(R.id.tvKnownDestination)
+        val ivKnownDestination = view.findViewById<ImageView>(R.id.ivKnownDestination)
+        val llKnownDestination = if (cardLayout != "row") view.findViewById<View>(R.id.llKnownDestination) else null
         if (!ride.dropoffAddress.isNullOrEmpty() && !isDemo) {
             serviceScope.launch(Dispatchers.IO) {
                 val db = DatabaseHelper(this@FloatingCardService)
@@ -280,14 +284,18 @@ class FloatingCardService : Service() {
                 withContext(Dispatchers.Main) {
                     if (visitCount > 0) {
                         val visitText = if (visitCount == 1) "1x" else "${visitCount}x"
-                        tvKnownDestination.text = "\uD83D\uDCCD Destino conhecido · $visitText"
+                        tvKnownDestination.text = "Destino conhecido · $visitText"
                         tvKnownDestination.visibility = View.VISIBLE
+                        ivKnownDestination.visibility = View.VISIBLE
+                        llKnownDestination?.visibility = View.VISIBLE
                     }
                 }
             }
         } else if (isDemo && ride.dropoffAddress != null) {
-            tvKnownDestination.text = "\uD83D\uDCCD Destino conhecido · 3x"
+            tvKnownDestination.text = "Destino conhecido · 3x"
             tvKnownDestination.visibility = View.VISIBLE
+            ivKnownDestination.visibility = View.VISIBLE
+            llKnownDestination?.visibility = View.VISIBLE
         }
 
         // Congela o costPerKm no momento da criação do card
@@ -311,9 +319,9 @@ class FloatingCardService : Service() {
                     tvProfitLabel.visibility = View.VISIBLE
 
                     val profitValue = if (estimatedProfit >= 0) {
-                        "R$ ${String.format("%.2f", estimatedProfit).replace(".", ",")} (${String.format("%.0f", estimatedProfitPercent)}%)"
+                        "${FormatUtils.currency(estimatedProfit)} (${FormatUtils.integer(estimatedProfitPercent.toInt())}%)"
                     } else {
-                        "-R$ ${String.format("%.2f", -estimatedProfit).replace(".", ",")} (${String.format("%.0f", estimatedProfitPercent)}%)"
+                        "-${FormatUtils.currency(-estimatedProfit)} (${FormatUtils.integer(estimatedProfitPercent.toInt())}%)"
                     }
                     tvProfit.text = profitValue
                     tvProfit.setTextColor(profitRange.color)
@@ -446,18 +454,16 @@ class FloatingCardService : Service() {
 
     private fun applyDecisionBorder(view: View, decision: DecisionEngine.Decision) {
         val borderColor = when (decision) {
-            DecisionEngine.Decision.ACEITAR -> "#00A86B"
-            DecisionEngine.Decision.ANALISAR -> "#F97316"
-            DecisionEngine.Decision.RECUSAR -> "#DC2626"
+            DecisionEngine.Decision.ACEITAR -> AppColors.success
+            DecisionEngine.Decision.ANALISAR -> AppColors.warning
+            DecisionEngine.Decision.RECUSAR -> AppColors.error
         }
         val gd = GradientDrawable()
         gd.setColor(AppColors.textPrimary)
         gd.cornerRadius = 14f * resources.displayMetrics.density
-        gd.setStroke(3.dpToPx(), Color.parseColor(borderColor))
+        gd.setStroke(3.dpToPx(), borderColor)
         view.background = gd
     }
-
-    private fun Int.dpToPx(): Int = (this * resources.displayMetrics.density).toInt()
 
     companion object {
         private const val TAG = "CorridaCerta"

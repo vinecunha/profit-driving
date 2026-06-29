@@ -3,47 +3,53 @@
     <!-- ============================================ -->
     <!-- CORES PRIMÁRIAS (Azul como marca)           -->
     <!-- ============================================ -->
-    <color name="primary">#1E40AF</color>        <!-- Azul escuro - Toolbar, headers -->
+    <color name="primary">#315AA3</color>        <!-- Azul - Toolbar, headers -->
     <color name="primary_dark">#1E3A8A</color>   <!-- Azul mais escuro -->
     <color name="primary_light">#DBEAFE</color>  <!-- Azul claro - fundos -->
 
     <!-- ============================================ -->
     <!-- CORES DE AÇÃO (Botões, links)               -->
     <!-- ============================================ -->
-    <color name="accent">#2563EB</color>          <!-- Azul médio - botões -->
-    <color name="accent_dark">#1D4ED8</color>     <!-- Azul 700 -->
+    <color name="accent">#315AA3</color>          <!-- Azul médio - botões -->
+    <color name="accent_dark">#1E3A8A</color>     <!-- Azul escuro -->
     <color name="accent_light">#EFF6FF</color>    <!-- Azul 50 -->
+    <color name="card_header_dark">#0F0F0F</color>
 
     <!-- ============================================ -->
     <!-- DECISÃO ACEITAR / BOA / LUCRO               -->
     <!-- ============================================ -->
-    <color name="success">#00A86B</color>         <!-- Verde primário -->
-    <color name="success_bg">#D1FAE5</color>      <!-- Fundo verde claro -->
-    <color name="success_text">#064E3B</color>    <!-- Texto verde escuro -->
-    <color name="success_border">#00A86B</color>  <!-- Borda verde -->
+    <color name="success">#22CB82</color>         <!-- Verde vibrante -->
+    <color name="success_bg">#D4FBE6</color>      <!-- Fundo verde claro -->
+    <color name="success_text">#065F35</color>    <!-- Texto verde escuro -->
+    <color name="success_border">#22CB82</color>  <!-- Borda verde -->
 
     <!-- ============================================ -->
     <!-- DECISÃO ANALISAR / MÉDIA / ATENÇÃO          -->
     <!-- ============================================ -->
-    <color name="warning">#F97316</color>         <!-- Laranja primário -->
-    <color name="warning_bg">#FEF3C7</color>      <!-- Fundo laranja claro -->
-    <color name="warning_text">#92400E</color>    <!-- Texto laranja escuro -->
-    <color name="warning_border">#F97316</color>  <!-- Borda laranja -->
+    <color name="warning">#FC7E3B</color>         <!-- Laranja -->
+    <color name="warning_bg">#FEE6D3</color>      <!-- Fundo laranja claro -->
+    <color name="warning_text">#8B3A0C</color>    <!-- Texto laranja escuro -->
+    <color name="warning_border">#FC7E3B</color>  <!-- Borda laranja -->
 
     <!-- ============================================ -->
     <!-- DECISÃO RECUSAR / RUIM / PREJUÍZO           -->
     <!-- ============================================ -->
-    <color name="error">#DC2626</color>           <!-- Vermelho primário -->
-    <color name="error_bg">#FEE2E2</color>        <!-- Fundo vermelho claro -->
-    <color name="error_text">#991B1B</color>      <!-- Texto vermelho escuro -->
-    <color name="error_border">#DC2626</color>    <!-- Borda vermelha -->
+    <color name="error">#CE2C48</color>           <!-- Vermelho carmesim -->
+    <color name="error_bg">#F5D2D8</color>        <!-- Fundo vermelho claro -->
+    <color name="error_text">#7A0F25</color>      <!-- Texto vermelho escuro -->
+    <color name="error_border">#CE2C48</color>    <!-- Borda vermelha -->
+
+    <!-- ============================================ -->
+    <!-- DESTAQUE / HIGHLIGHT                        -->
+    <!-- ============================================ -->
+    <color name="highlight">#FFDD00</color>       <!-- Amarelo -->
 
     <!-- ============================================ -->
     <!-- VALORES DE MÉTRICAS (R$/km, R$/h, R$/min)  -->
     <!-- ============================================ -->
-    <color name="metric_good">#00A86B</color>     <!-- Verde claro -->
-    <color name="metric_medium">#F97316</color>   <!-- Laranja claro -->
-    <color name="metric_bad">#DC2626</color>      <!-- Vermelho claro -->
+    <color name="metric_good">#22CB82</color>     <!-- Verde -->
+    <color name="metric_medium">#FC7E3B</color>   <!-- Laranja -->
+    <color name="metric_bad">#CE2C48</color>      <!-- Vermelho carmesim -->
     <color name="metric_absent">#AAAAAA</color>   <!-- Cinza ausente -->
 
     <!-- ============================================ -->
@@ -54,24 +60,24 @@
     <color name="overlay_border">#334155</color>  <!-- Slate 700 -->
     <color name="overlay_text_primary">#F8FAFC</color>
     <color name="overlay_text_secondary">#94A3B8</color>
-    <color name="overlay_success">#00A86B</color>
-    <color name="overlay_warning">#F7B500</color>
-    <color name="overlay_error">#DC2626</color>
+    <color name="overlay_success">#22CB82</color>
+    <color name="overlay_warning">#FC7E3B</color>
+    <color name="overlay_error">#CE2C48</color>
 
     <!-- ============================================ -->
     <!-- CORES DE TIPO DE ENERGIA                    -->
     <!-- ============================================ -->
     <color name="energy_gasoline">#1E40AF</color>
-    <color name="energy_ethanol">#059669</color>
+    <color name="energy_ethanol">#22CB82</color>
     <color name="energy_diesel">#D97706</color>
-    <color name="energy_gnv">#F97316</color>
+    <color name="energy_gnv">#FC7E3B</color>
     <color name="energy_electric">#3B82F6</color>
     <color name="energy_hybrid">#8B5CF6</color>
 
     <!-- ============================================ -->
     <!-- FUNDOS E SUPERFÍCIES                        -->
     <!-- ============================================ -->
-    <color name="bg_screen">#F8FAFC</color>       <!-- Slate 50 -->
+    <color name="bg_screen">#F5F5F5</color>
     <color name="bg_card">#FFFFFF</color>         <!-- Branco -->
     <color name="bg_surface">#F1F5F9</color>      <!-- Slate 100 -->
 
@@ -79,8 +85,6 @@
     <!-- BORDAS E DIVISORES                          -->
     <!-- ============================================ -->
     <color name="border">#E2E8F0</color>          <!-- Slate 200 -->
-    <color name="border_light">#F1F5F9</color>    <!-- Slate 100 -->
-    <color name="border_focus">#2563EB</color>    <!-- Azul 600 -->
 
     <!-- ============================================ -->
     <!-- OVERLAYS (fundos translúcidos)               -->
@@ -91,34 +95,22 @@
     <!-- ============================================ -->
     <!-- TEXTOS                                      -->
     <!-- ============================================ -->
-    <color name="text_primary">#0F172A</color>    <!-- Slate 900 -->
+    <color name="text_primary">#0C0C0C</color>
     <color name="text_secondary">#475569</color>  <!-- Slate 600 -->
     <color name="text_tertiary">#94A3B8</color>   <!-- Slate 400 -->
     <color name="text_disabled">#CBD5E1</color>   <!-- Slate 300 -->
     <color name="text_inverse">#FFFFFF</color>
 
     <!-- ============================================ -->
-    <!-- PREÇOS (Compatibilidade)                     -->
-    <!-- ============================================ -->
-    <color name="text_price">@color/text_primary</color>
-    <color name="text_price_positive">@color/success</color>
-    <color name="text_price_negative">@color/error</color>
-
-    <!-- ============================================ -->
     <!-- ÍCONES                                      -->
     <!-- ============================================ -->
     <color name="icon_primary">#475569</color>
     <color name="icon_secondary">#94A3B8</color>
-    <color name="icon_accent">#2563EB</color>
 
     <!-- ============================================ -->
     <!-- TIPOS DE SERVIÇO                            -->
     <!-- ============================================ -->
     <color name="service_uberx">#1E293B</color>
-    <color name="service_black">#111827</color>
-    <color name="service_comfort">#2563EB</color>
-    <color name="service_moto">#00A86B</color>
-    <color name="service_delivery">#F97316</color>
 
     <!-- ============================================ -->
     <!-- COMPATIBILIDADE (nomes antigos)             -->
@@ -131,17 +123,6 @@
     <color name="pill_active_text">#FFFFFF</color>
     <color name="pill_inactive_bg">#E2E8F0</color>
     <color name="pill_inactive_text">@color/text_secondary</color>
-
-    <color name="rating_good_bg">@color/success_border</color>
-    <color name="rating_good_text">@color/success_text</color>
-    <color name="rating_medium_bg">@color/warning_border</color>
-    <color name="rating_medium_text">@color/warning_text</color>
-    <color name="rating_bad_bg">@color/error_border</color>
-    <color name="rating_bad_text">@color/error_text</color>
-
-    <color name="card_border_good">@color/success_border</color>
-    <color name="card_border_medium">@color/warning_border</color>
-    <color name="card_border_bad">@color/error_border</color>
 
     <!-- ============================================ -->
     <!-- SPLASH SCREEN                                -->

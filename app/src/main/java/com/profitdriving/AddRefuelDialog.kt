@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import com.profitdriving.FormatUtils
 
 class AddRefuelDialog(
     private val context: Context,
@@ -109,10 +110,10 @@ class AddRefuelDialog(
         }
 
         if (refuel != null) {
-            etOdometer.setText("%.0f".format(refuel.odometerKm).replace(".", ","))
-            etPricePerUnit.setText("%.2f".format(refuel.pricePerUnit).replace(".", ","))
-            etTotalValue.setText("%.2f".format(refuel.totalValue).replace(".", ","))
-            etAmount.setText("%.2f".format(refuel.amount).replace(".", ","))
+            etOdometer.setText(FormatUtils.decimal(refuel.odometerKm))
+            etPricePerUnit.setText(FormatUtils.decimal(refuel.pricePerUnit))
+            etTotalValue.setText(FormatUtils.decimal(refuel.totalValue))
+            etAmount.setText(FormatUtils.decimal(refuel.amount))
             refuel.percentageStart?.let { etPercentageStart.setText(it.toString()) }
             refuel.percentageEnd?.let { etPercentageEnd.setText(it.toString()) }
             toggleFullTank(refuel.isFullTank)
@@ -122,7 +123,7 @@ class AddRefuelDialog(
             val total = etTotalValue.text.toString().replace(",", ".").toDoubleOrNull() ?: 0.0
             val price = etPricePerUnit.text.toString().replace(",", ".").toDoubleOrNull() ?: 0.0
             val amount = if (price > 0) total / price else 0.0
-            etAmount.setText(if (amount > 0) "%.2f".format(amount).replace(".", ",") else "")
+            etAmount.setText(if (amount > 0) FormatUtils.decimal(amount) else "")
         }
 
         val amountWatcher = object : TextWatcher {

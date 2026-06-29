@@ -89,7 +89,7 @@ object RideDataValidator {
         // 3. CASO 1: PICKUP E TRIP SÃO DIFERENTES - DADOS COMPLETOS
         // ============================================================
         if (arePickupAndTripDifferent) {
-            Log.d(TAG, "✅ COMPLETE: pickup e trip diferentes")
+            L.d(TAG, "✅ COMPLETE: pickup e trip diferentes")
             quality = DataQuality.COMPLETE
             // Mantém os dados originais
             finalPickupDist = pickupDist
@@ -135,7 +135,7 @@ object RideDataValidator {
             when {
                 // CASO 1: Distâncias DIFERENTES, Tempos DIFERENTES, Endereços DIFERENTES
                 !distancesEqual && hasPickupTime && hasTripTime && !timesEqual && addressesDifferent -> {
-                    Log.d(TAG, "✅ CASO 1: Corrida normal (distâncias e tempos diferentes, endereços diferentes)")
+                    L.d(TAG, "✅ CASO 1: Corrida normal (distâncias e tempos diferentes, endereços diferentes)")
                     quality = DataQuality.COMPLETE
                     finalPickupDist = pickupDist
                     finalPickupTime = pickupTime
@@ -145,7 +145,7 @@ object RideDataValidator {
                 
                 // CASO 2: Distâncias DIFERENTES, Tempos DIFERENTES, Endereços IGUAIS
                 !distancesEqual && hasPickupTime && hasTripTime && !timesEqual && !addressesDifferent -> {
-                    Log.d(TAG, "🔄 CASO 2: Ida e volta (distâncias e tempos diferentes, mesmo local)")
+                    L.d(TAG, "🔄 CASO 2: Ida e volta (distâncias e tempos diferentes, mesmo local)")
                     quality = DataQuality.COMPLETE
                     finalPickupDist = pickupDist
                     finalPickupTime = pickupTime
@@ -305,7 +305,7 @@ object RideDataValidator {
         )
         
         val reason = if (issues.isEmpty()) "OK" else issues.joinToString("; ")
-        Log.d(TAG, "Validação final: quality=$quality, totalDistance=${String.format("%.1f", totalDistance)}km, totalTime=${totalTimeValue}min, $reason")
+        L.d(TAG, "Validação final: quality=$quality, totalDistance=${String.format("%.1f", totalDistance)}km, totalTime=${totalTimeValue}min, $reason")
         
         return ValidationResult(true, cleaned, reason, quality)
     }
@@ -377,7 +377,7 @@ object RideDataValidator {
         val now = System.currentTimeMillis()
         
         if (currentHash == lastRideHash && (now - lastRideTime) < thresholdMs) {
-            Log.d(TAG, "Corrida duplicada ignorada")
+            L.d(TAG, "Corrida duplicada ignorada")
             return true
         }
         return false

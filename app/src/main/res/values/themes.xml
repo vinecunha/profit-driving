@@ -116,50 +116,6 @@
     <!-- TEXT APPEARANCES                                             -->
     <!-- ============================================================ -->
 
-    <!-- TextAppearance base -->
-    <style name="TextAppearance.CorridaCerta" parent="TextAppearance.AppCompat" />
-
-    <!-- Título da Toolbar -->
-    <style name="TextAppearance.CorridaCerta.ToolbarTitle" parent="TextAppearance.AppCompat.Title">
-        <item name="android:textSize">18sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
-    </style>
-
-    <!-- Título de Seção -->
-    <style name="TextAppearance.CorridaCerta.SectionTitle" parent="TextAppearance.AppCompat.Title">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text_primary</item>
-    </style>
-
-    <!-- Subtítulo -->
-    <style name="TextAppearance.CorridaCerta.Subtitle">
-        <item name="android:textSize">12sp</item>
-        <item name="android:textColor">@color/text_secondary</item>
-    </style>
-
-    <!-- Corpo do Texto -->
-    <style name="TextAppearance.CorridaCerta.Body">
-        <item name="android:textSize">13sp</item>
-        <item name="android:textColor">@color/text_secondary</item>
-    </style>
-
-    <!-- Texto Pequeno -->
-    <style name="TextAppearance.CorridaCerta.Caption">
-        <item name="android:textSize">11sp</item>
-        <item name="android:textColor">@color/text_tertiary</item>
-    </style>
-
-    <!-- Valor Monetário -->
-    <style name="TextAppearance.CorridaCerta.MoneyValue">
-        <item name="android:textSize">16sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text_price</item>
-        <item name="android:fontFamily">monospace</item>
-    </style>
-
     <!-- ============================================================ -->
     <!-- ANIMAÇÕES                                                    -->
     <!-- ============================================================ -->

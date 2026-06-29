@@ -41,12 +41,9 @@ object CostCalculator {
         currentFuelType: String = "gasoline",
         averageRevenuePerKm: Double = 0.0
     ): CostSummary {
-        val avgConsumption = calculateAvgConsumption(refuels, currentFuelType)
-        val avgPricePerLiter = refuels.filter { it.fuelType == currentFuelType && it.amount > 0 }
-            .map { it.pricePerUnit }
-            .average().takeIf { it > 0 } ?: 0.0
-
-        val fuelCostPerKm = if (avgConsumption > 0) avgPricePerLiter / avgConsumption else 0.0
+        val consumption = ConsumptionCalculator.calculateConsumption(refuels)
+        val fuelCostPerKm = consumption.costPerKm
+        val avgConsumption = consumption.consumptionKmPerLiter
 
         // Separate expenses by type
         val fixedExpenses = expenses.filter { it.costType == CostType.FIXED }
@@ -143,7 +140,9 @@ object CostCalculator {
             variableCostPerKm = totalVariableCostPerKm,
             totalCostPerKm = totalCostPerKm,
             costPerHour = costPerHour,
-            costPerMinute = costPerMinute
+            costPerMinute = costPerMinute,
+            calculationMethod = consumption.method,
+            detailsByType = consumption.detailsByType
         )
     }
 
