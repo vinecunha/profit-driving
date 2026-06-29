@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.profitdriving.accessibility.RideAccessibilityServiceV2
 import com.profitdriving.ui.permissions.PermissionsActivity
 import com.profitdriving.ui.subscription.SubscriptionActivity
@@ -16,6 +17,7 @@ class SplashActivity : AppCompatActivity() {
     private lateinit var preferenceManager: PreferenceManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 

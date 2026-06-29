@@ -11,6 +11,7 @@ material = "1.11.0"
 security-crypto = "1.1.0-alpha06"
 localbroadcastmanager = "1.1.0"
 viewpager2 = "1.0.0"
+core-splashscreen = "1.0.1"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -23,6 +24,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "security-crypto" }
 localbroadcastmanager = { group = "androidx.localbroadcastmanager", name = "localbroadcastmanager", version.ref = "localbroadcastmanager" }
 viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewpager2" }
+core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "core-splashscreen" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
