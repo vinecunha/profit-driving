@@ -4,15 +4,19 @@ import android.accessibilityservice.AccessibilityService
 import android.content.Intent
 import android.os.Build
 import android.os.CombinedVibration
-import android.os.Handler
-import android.os.HandlerThread
-import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import com.profitdriving.BuildConfig
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.profitdriving.CardHashGenerator
 import com.profitdriving.DatabaseHelper
 import com.profitdriving.DecisionEngine
@@ -34,10 +38,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 class RideAccessibilityServiceV2 : AccessibilityService() {
 
-    private val handler = Handler(Looper.getMainLooper())
-    private val bgThread = HandlerThread("RideDetectionThread").also { it.start() }
-    private val bgHandler = Handler(bgThread.looper)
-    private var pendingRunnable: Runnable? = null
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var pendingJob: Job? = null
     private var lastHash = ""
     private var lastSaveTime = 0L
     private var cardVisible = false
@@ -81,10 +83,11 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                 pkg.contains("app99")
 
         if (isUberEvent) {
-            pendingRunnable?.let { bgHandler.removeCallbacks(it) }
+            pendingJob?.cancel()
 
-            pendingRunnable = Runnable {
-                val root = findUberWindow() ?: return@Runnable
+            pendingJob = scope.launch(Dispatchers.IO) {
+                delay(300)
+                val root = findUberWindow() ?: return@launch
                 val detectedPkg = root.packageName?.toString() ?: ""
                 try {
                     detectRideCard(root, detectedPkg)
@@ -95,8 +98,6 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                     }
                 }
             }
-
-            bgHandler.postDelayed(pendingRunnable!!, 300L)
             return
         }
 
@@ -107,10 +108,11 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             }
             uberWindowWasVisible = uberVisibleNow
 
-            pendingRunnable?.let { bgHandler.removeCallbacks(it) }
+            pendingJob?.cancel()
 
-            pendingRunnable = Runnable {
-                val root = findUberWindow() ?: return@Runnable
+            pendingJob = scope.launch(Dispatchers.IO) {
+                delay(300)
+                val root = findUberWindow() ?: return@launch
                 val detectedPkg = root.packageName?.toString() ?: ""
                 try {
                     detectRideCard(root, detectedPkg)
@@ -121,21 +123,17 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                     }
                 }
             }
-
-            bgHandler.postDelayed(pendingRunnable!!, 300L)
         }
     }
 
     override fun onInterrupt() {
-        handler.removeCallbacksAndMessages(null)
-        bgHandler.removeCallbacksAndMessages(null)
+        pendingJob?.cancel()
+        pendingJob = null
     }
 
     override fun onDestroy() {
         FloatingBubbleService.stop(this)
-        bgThread.quitSafely()
-        handler.removeCallbacksAndMessages(null)
-        bgHandler.removeCallbacksAndMessages(null)
+        scope.cancel()
         super.onDestroy()
     }
 
@@ -199,13 +197,12 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     }
 
     private fun onUberWindowDismissed() {
-        handler.post {
-            cardVisible = false
-            lastHash = ""
-            lastSaveTime = 0L
-            pendingRunnable?.let { bgHandler.removeCallbacks(it) }
-            L.d(TAG, "Janela Uber saiu — estado resetado")
-        }
+        cardVisible = false
+        lastHash = ""
+        lastSaveTime = 0L
+        pendingJob?.cancel()
+        pendingJob = null
+        L.d(TAG, "Janela Uber saiu — estado resetado")
     }
 
     private fun buildCardHash(texts: List<String>): String {
@@ -253,7 +250,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                     lastSaveTime = 0L
                     lastInsertedId = -1L
                     statusLocked = false
-                    pendingRunnable?.let { bgHandler.removeCallbacks(it) }
+                    pendingJob?.cancel()
                 }
                 return
             }
