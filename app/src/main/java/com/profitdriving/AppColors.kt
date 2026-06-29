@@ -38,4 +38,7 @@ object AppColors {
     val metricAbsent by lazy { c(R.color.metric_absent) }
     val serviceUberx by lazy { c(R.color.service_uberx) }
     val overlayBg by lazy { c(R.color.overlay_bg) }
+    val textDisabled by lazy { c(R.color.text_disabled) }
+    val pillActiveText by lazy { c(R.color.pill_active_text) }
+    val pillInactiveText by lazy { c(R.color.pill_inactive_text) }
 }

@@ -6,7 +6,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+
 import androidx.viewpager2.widget.ViewPager2
 import com.profitdriving.ui.permissions.PermissionsActivity
 
@@ -95,8 +95,8 @@ class OnboardingActivity : AppCompatActivity() {
                 text = "●"
                 textSize = 18f
                 setTextColor(
-                    if (i == 0) ContextCompat.getColor(this@OnboardingActivity, R.color.text_inverse)
-                    else ContextCompat.getColor(this@OnboardingActivity, R.color.text_disabled)
+                    if (i == 0) AppColors.textInverse
+                    else AppColors.textDisabled
                 )
                 setPadding(8, 0, 8, 0)
             }
@@ -108,8 +108,8 @@ class OnboardingActivity : AppCompatActivity() {
         for (i in 0 until dotsContainer.childCount) {
             val dot = dotsContainer.getChildAt(i) as TextView
             dot.setTextColor(
-                if (i == position) ContextCompat.getColor(this, R.color.text_inverse)
-                else ContextCompat.getColor(this, R.color.text_disabled)
+                if (i == position) AppColors.textInverse
+                else AppColors.textDisabled
             )
         }
     }

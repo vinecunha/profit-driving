@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
-import androidx.core.content.ContextCompat
+
 
 class FilterManager(private val context: Context) {
 
@@ -122,10 +122,10 @@ class FilterManager(private val context: Context) {
     internal fun updatePillStyle(pill: TextView, isSelected: Boolean) {
         if (isSelected) {
             pill.setBackgroundResource(R.drawable.pill_selected)
-            pill.setTextColor(ContextCompat.getColor(context, R.color.pill_active_text))
+            pill.setTextColor(AppColors.pillActiveText)
         } else {
             pill.setBackgroundResource(R.drawable.pill_unselected)
-            pill.setTextColor(ContextCompat.getColor(context, R.color.pill_inactive_text))
+            pill.setTextColor(AppColors.pillInactiveText)
         }
     }
 }

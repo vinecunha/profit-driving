@@ -5,7 +5,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+
 
 enum class Screen {
     HOME, PARAMS, MY_DAY, COSTS, ANALYSIS
@@ -101,28 +101,28 @@ abstract class BaseActivity : AppCompatActivity() {
         when (currentScreen) {
             Screen.HOME -> {
                 iconHome?.alpha = 1.0f
-                iconHome?.setTextColor(ContextCompat.getColor(this, R.color.accent))
-                labelHome?.setTextColor(ContextCompat.getColor(this, R.color.accent))
+                iconHome?.setTextColor(AppColors.accent)
+                labelHome?.setTextColor(AppColors.accent)
             }
             Screen.PARAMS -> {
                 iconParams?.alpha = 1.0f
-                iconParams?.setTextColor(ContextCompat.getColor(this, R.color.accent))
-                labelParams?.setTextColor(ContextCompat.getColor(this, R.color.accent))
+                iconParams?.setTextColor(AppColors.accent)
+                labelParams?.setTextColor(AppColors.accent)
             }
             Screen.MY_DAY -> {
                 iconMyDay?.alpha = 1.0f
-                iconMyDay?.setTextColor(ContextCompat.getColor(this, R.color.accent))
-                labelMyDay?.setTextColor(ContextCompat.getColor(this, R.color.accent))
+                iconMyDay?.setTextColor(AppColors.accent)
+                labelMyDay?.setTextColor(AppColors.accent)
             }
             Screen.COSTS -> {
                 iconCosts?.alpha = 1.0f
-                iconCosts?.setTextColor(ContextCompat.getColor(this, R.color.accent))
-                labelCosts?.setTextColor(ContextCompat.getColor(this, R.color.accent))
+                iconCosts?.setTextColor(AppColors.accent)
+                labelCosts?.setTextColor(AppColors.accent)
             }
             Screen.ANALYSIS -> {
                 iconAnalysis?.alpha = 1.0f
-                iconAnalysis?.setTextColor(ContextCompat.getColor(this, R.color.accent))
-                labelAnalysis?.setTextColor(ContextCompat.getColor(this, R.color.accent))
+                iconAnalysis?.setTextColor(AppColors.accent)
+                labelAnalysis?.setTextColor(AppColors.accent)
             }
         }
 
