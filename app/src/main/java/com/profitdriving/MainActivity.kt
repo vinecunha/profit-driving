@@ -131,16 +131,29 @@ class MainActivity : BaseActivity() {
         // Configurar Navigation Drawer
         setupNavigationDrawer()
 
-        filterDays = savedInstanceState?.getInt("filterDays", 0) ?: 0
+        filterDays = savedInstanceState?.getInt("filterDays", -1) ?: -1
+        if (filterDays == -1) {
+            filterDays = FilterManager.loadInt(this, "main_filter_days", 0)
+        }
 
         db = DatabaseHelper(this)
         recyclerView = findViewById(R.id.recyclerView)
         emptyState = findViewById(R.id.emptyState)
         progressBar = findViewById(R.id.progressBar)
 
-        selectedTypeFilter = savedInstanceState?.getString("typeFilter", "all") ?: "all"
-        selectedScoreFilter = savedInstanceState?.getString("scoreFilter", "all") ?: "all"
-        filtersExpanded = savedInstanceState?.getBoolean("filtersExpanded", false) ?: false
+        if (savedInstanceState != null) {
+            selectedTypeFilter = savedInstanceState.getString("typeFilter", "all") ?: "all"
+            selectedScoreFilter = savedInstanceState.getString("scoreFilter", "all") ?: "all"
+            filtersExpanded = savedInstanceState.getBoolean("filtersExpanded", false)
+        } else {
+            selectedTypeFilter = FilterManager.loadString(this, "main_filter_type", "all") ?: "all"
+            selectedScoreFilter = FilterManager.loadString(this, "main_filter_score", "all") ?: "all"
+            filtersExpanded = FilterManager.loadBoolean(this, "main_filter_expanded", false)
+        }
+
+        selectedPeriodFilter = FilterManager.loadString(this, "main_filter_period", null)
+        customStartMs = FilterManager.loadLong(this, "main_filter_custom_start", 0L).let { if (it == 0L) null else it }
+        customEndMs = FilterManager.loadLong(this, "main_filter_custom_end", 0L).let { if (it == 0L) null else it }
 
         tvA11yBadge = findViewById(R.id.tvAccessibilityBadge)
         btnRadar = findViewById(R.id.btnRadar)
@@ -168,6 +181,7 @@ class MainActivity : BaseActivity() {
             filtersExpanded = !filtersExpanded
             filterContainer.visibility = if (filtersExpanded) View.VISIBLE else View.GONE
             tvFilterToggleIcon.text = if (filtersExpanded) "\u25B2" else "\u25BC"
+            FilterManager.saveBoolean(this, "main_filter_expanded", filtersExpanded)
         }
 
         findViewById<TextView>(R.id.btnClearFilters).setOnClickListener {
@@ -175,6 +189,7 @@ class MainActivity : BaseActivity() {
             selectedPeriodFilter = null
             selectedTypeFilter = "all"
             selectedScoreFilter = "all"
+            FilterManager.clearAll(this)
             setupPeriodFilter()
             setupTypeFilter()
             setupScoreFilter()
@@ -429,6 +444,10 @@ class MainActivity : BaseActivity() {
                     filterDays = selectedPeriodFilter?.toIntOrNull() ?: 0
                     customStartMs = null
                     customEndMs = null
+                    FilterManager.saveString(this@MainActivity, "main_filter_period", selectedPeriodFilter ?: "")
+                    FilterManager.saveInt(this@MainActivity, "main_filter_days", filterDays)
+                    FilterManager.saveLong(this@MainActivity, "main_filter_custom_start", 0L)
+                    FilterManager.saveLong(this@MainActivity, "main_filter_custom_end", 0L)
                     loadFilteredHistory()
                 }
                 override fun onClearAll() {}
@@ -493,6 +512,7 @@ class MainActivity : BaseActivity() {
             callback = object : FilterManager.FilterCallback {
                 override fun onFilterChanged(filterId: String, isSelected: Boolean) {
                     selectedTypeFilter = if (isSelected) filterId else "all"
+                    FilterManager.saveString(this@MainActivity, "main_filter_type", selectedTypeFilter)
                     loadFilteredHistory()
                 }
                 override fun onClearAll() {}
@@ -520,6 +540,7 @@ class MainActivity : BaseActivity() {
             callback = object : FilterManager.FilterCallback {
                 override fun onFilterChanged(filterId: String, isSelected: Boolean) {
                     selectedScoreFilter = if (isSelected) filterId else "all"
+                    FilterManager.saveString(this@MainActivity, "main_filter_score", selectedScoreFilter)
                     loadFilteredHistory()
                 }
                 override fun onClearAll() {}

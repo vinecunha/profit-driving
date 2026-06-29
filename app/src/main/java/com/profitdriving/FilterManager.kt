@@ -12,6 +12,55 @@ import android.widget.TextView
 
 class FilterManager(private val context: Context) {
 
+    companion object {
+        private const val PREFS_NAME = "filter_prefs"
+
+        fun saveString(context: Context, key: String, value: String) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit().putString(key, value).apply()
+        }
+
+        fun saveInt(context: Context, key: String, value: Int) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit().putInt(key, value).apply()
+        }
+
+        fun saveLong(context: Context, key: String, value: Long) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit().putLong(key, value).apply()
+        }
+
+        fun saveBoolean(context: Context, key: String, value: Boolean) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit().putBoolean(key, value).apply()
+        }
+
+        fun loadString(context: Context, key: String, default: String? = null): String? {
+            return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(key, default)
+        }
+
+        fun loadInt(context: Context, key: String, default: Int = 0): Int {
+            return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getInt(key, default)
+        }
+
+        fun loadLong(context: Context, key: String, default: Long = 0L): Long {
+            return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getLong(key, default)
+        }
+
+        fun loadBoolean(context: Context, key: String, default: Boolean = false): Boolean {
+            return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getBoolean(key, default)
+        }
+
+        fun clearAll(context: Context) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit().clear().apply()
+        }
+    }
+
     data class FilterOption(
         val id: String,
         val label: String,

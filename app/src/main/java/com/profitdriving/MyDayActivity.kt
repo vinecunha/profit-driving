@@ -134,6 +134,20 @@ class MyDayActivity : BaseActivity() {
         referenceCalendar = Calendar.getInstance()
 
         initViews()
+
+        if (savedInstanceState != null) {
+            selectedTimeFilter = savedInstanceState.getInt("timeFilter", -1).let { if (it == -1) null else it }
+            selectedValueFilter = savedInstanceState.getInt("valueFilter", -1).let { if (it == -1) null else it }
+            selectedCategory = savedInstanceState.getString("categoryFilter", null)
+        } else {
+            val savedTime = FilterManager.loadString(this, "myday_filter_time", null)
+            selectedTimeFilter = if (savedTime.isNullOrEmpty()) null else savedTime.toIntOrNull()
+            val savedValue = FilterManager.loadString(this, "myday_filter_value", null)
+            selectedValueFilter = if (savedValue.isNullOrEmpty()) null else savedValue.toIntOrNull()
+            val savedCategory = FilterManager.loadString(this, "myday_filter_category", null)
+            selectedCategory = if (savedCategory.isNullOrEmpty()) null else savedCategory
+        }
+
         setupPeriodNavigation()
         setupRecyclerViews()
         setupTimeFilters()
@@ -146,6 +160,13 @@ class MyDayActivity : BaseActivity() {
     override fun onPause() {
         super.onPause()
         saveData()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        selectedTimeFilter?.let { outState.putInt("timeFilter", it) }
+        selectedValueFilter?.let { outState.putInt("valueFilter", it) }
+        selectedCategory?.let { outState.putString("categoryFilter", it) }
     }
 
     private fun initViews() {
@@ -200,6 +221,9 @@ class MyDayActivity : BaseActivity() {
             selectedCategory = null
             searchQuery = ""
             etSearchRides.setText("")
+            FilterManager.saveString(this@MyDayActivity, "myday_filter_time", "")
+            FilterManager.saveString(this@MyDayActivity, "myday_filter_value", "")
+            FilterManager.saveString(this@MyDayActivity, "myday_filter_category", "")
             setupTimeFilters()
             setupValueFilters()
             setupCategoryFilters()
@@ -248,6 +272,7 @@ class MyDayActivity : BaseActivity() {
             callback = object : FilterManager.FilterCallback {
                 override fun onFilterChanged(filterId: String, isSelected: Boolean) {
                     selectedTimeFilter = if (isSelected) filterId.toIntOrNull() else null
+                    FilterManager.saveString(this@MyDayActivity, "myday_filter_time", selectedTimeFilter?.toString() ?: "")
                     applyFilters()
                     loadAvailableRides(reset = true)
                 }
@@ -276,6 +301,7 @@ class MyDayActivity : BaseActivity() {
             callback = object : FilterManager.FilterCallback {
                 override fun onFilterChanged(filterId: String, isSelected: Boolean) {
                     selectedValueFilter = if (isSelected) filterId.toIntOrNull() else null
+                    FilterManager.saveString(this@MyDayActivity, "myday_filter_value", selectedValueFilter?.toString() ?: "")
                     applyFilters()
                     loadAvailableRides(reset = true)
                 }
@@ -298,6 +324,7 @@ class MyDayActivity : BaseActivity() {
         val allPill = filterManager.createPill(allOpt, selectedCategory == null)
         allPill.setOnClickListener {
             selectedCategory = null
+            FilterManager.saveString(this@MyDayActivity, "myday_filter_category", "")
             setupCategoryFilters()
             applyFilters()
             loadAvailableRides(reset = true)
@@ -309,6 +336,7 @@ class MyDayActivity : BaseActivity() {
             val pill = filterManager.createPill(opt, selectedCategory == cat)
             pill.setOnClickListener {
                 selectedCategory = cat
+                FilterManager.saveString(this@MyDayActivity, "myday_filter_category", cat)
                 setupCategoryFilters()
                 applyFilters()
                 loadAvailableRides(reset = true)
