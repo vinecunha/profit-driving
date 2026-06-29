@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="@color/white">
+    android:background="@color/bg_screen">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -60,9 +60,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/bg_card">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -193,18 +193,20 @@
             android:layout_height="56dp"
             android:text="ATIVAR ACESSIBILIDADE"
             android:textAllCaps="true"
-            android:textSize="@dimen/text_size_16"
+            android:textSize="@dimen/text_size_14"
+            android:textStyle="bold"
+            android:textColor="@color/text_inverse"
             android:layout_marginTop="24dp"
-            android:backgroundTint="@color/primary" />
+            android:background="@drawable/button_primary_square" />
 
         <!-- Passo a Passo -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardCornerRadius="@dimen/card_corner_radius"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/bg_card">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -337,10 +339,12 @@
             android:layout_height="56dp"
             android:text="PRÓXIMO"
             android:textAllCaps="true"
-            android:textSize="@dimen/text_size_16"
+            android:textSize="@dimen/text_size_14"
+            android:textStyle="bold"
+            android:textColor="@color/text_inverse"
             android:layout_marginTop="16dp"
             android:enabled="false"
-            android:backgroundTint="@color/primary" />
+            android:background="@drawable/button_primary_square" />
 
         <!-- Rodapé -->
         <TextView
