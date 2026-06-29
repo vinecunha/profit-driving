@@ -31,7 +31,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.material.snackbar.Snackbar
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -200,8 +199,13 @@ class MainActivity : BaseActivity() {
     override fun onResume() {
         super.onResume()
 
-        LocalBroadcastManager.getInstance(this)
-            .registerReceiver(dataUpdateReceiver, IntentFilter("NEW_RIDE_SAVED"))
+        val filter = IntentFilter("NEW_RIDE_SAVED")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(dataUpdateReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(dataUpdateReceiver, filter)
+        }
 
         pageSize = SecurePreferences.get(this)
             .getInt(SettingsActivity.KEY_PAGE_SIZE, 100)
@@ -223,8 +227,7 @@ class MainActivity : BaseActivity() {
     override fun onPause() {
         super.onPause()
         needsRefresh = true
-        try { LocalBroadcastManager.getInstance(this)
-            .unregisterReceiver(dataUpdateReceiver) } catch (_: Exception) {}
+        try { unregisterReceiver(dataUpdateReceiver) } catch (_: Exception) {}
     }
 
     private fun loadFilteredHistory() {

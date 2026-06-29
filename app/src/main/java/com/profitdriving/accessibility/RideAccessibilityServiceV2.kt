@@ -34,7 +34,7 @@ import com.profitdriving.parser.ExclusiveCardParser
 import com.profitdriving.parser.RadarCardParser
 import com.profitdriving.parser.ReservationDetailParser
 import com.profitdriving.parser.RideDataParser
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
+
 
 class RideAccessibilityServiceV2 : AccessibilityService() {
 
@@ -377,7 +377,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         statusLocked = false
         vibrateFeedback()
 
-        LocalBroadcastManager.getInstance(this).sendBroadcast(Intent("NEW_RIDE_SAVED"))
+        sendBroadcast(Intent("NEW_RIDE_SAVED").setPackage(packageName))
 
         getSharedPreferences(SettingsActivity.PREF_NAME, 0).edit().apply {
             ride.value?.let { putFloat("last_value", it.toFloat()) }
