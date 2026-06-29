@@ -15,7 +15,7 @@
             android:id="@+id/tvStatMonth"
             android:layout_width="80dp"
             android:layout_height="wrap_content"
-            android:textSize="11sp"
+            android:textSize="@dimen/text_size_11"
             android:textStyle="bold"
             android:textColor="@color/text_primary" />
 
@@ -33,7 +33,7 @@
             android:id="@+id/tvStatValue"
             android:layout_width="70dp"
             android:layout_height="wrap_content"
-            android:textSize="11sp"
+            android:textSize="@dimen/text_size_11"
             android:textColor="@color/text_secondary"
             android:gravity="end"
             android:layout_marginStart="8dp" />

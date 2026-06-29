@@ -9,7 +9,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Informe o valor da taxa de deslocamento recebida:"
-        android:textSize="14sp"
+        android:textSize="@dimen/text_size_14"
         android:layout_marginBottom="12dp" />
 
     <EditText
@@ -18,6 +18,6 @@
         android:layout_height="48dp"
         android:hint="R$ 0,00"
         android:inputType="numberDecimal"
-        android:textSize="16sp" />
+        android:textSize="@dimen/text_size_16" />
 
 </LinearLayout>

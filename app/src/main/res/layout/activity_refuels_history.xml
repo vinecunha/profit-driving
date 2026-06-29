@@ -22,7 +22,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Data"
-            android:textSize="10sp"
+            android:textSize="@dimen/text_size_10"
             android:textColor="@color/text_tertiary"
             android:textStyle="bold" />
 
@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Hod\u00f4metro"
-            android:textSize="10sp"
+            android:textSize="@dimen/text_size_10"
             android:textColor="@color/text_tertiary"
             android:textStyle="bold"
             android:gravity="center" />
@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.7"
             android:text="Litros"
-            android:textSize="10sp"
+            android:textSize="@dimen/text_size_10"
             android:textColor="@color/text_tertiary"
             android:textStyle="bold"
             android:gravity="center" />
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Pre\u00e7o"
-            android:textSize="10sp"
+            android:textSize="@dimen/text_size_10"
             android:textColor="@color/text_tertiary"
             android:textStyle="bold"
             android:gravity="center" />
@@ -61,7 +61,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="km/L"
-            android:textSize="10sp"
+            android:textSize="@dimen/text_size_10"
             android:textColor="@color/text_tertiary"
             android:textStyle="bold"
             android:gravity="end" />

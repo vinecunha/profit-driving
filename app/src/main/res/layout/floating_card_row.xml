@@ -34,7 +34,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/overlay_text_primary"
-                android:textSize="18sp"
+                android:textSize="@dimen/text_size_18"
                 android:textStyle="bold" />
 
             <TextView
@@ -42,7 +42,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/highlight"
-                android:textSize="11sp"
+                android:textSize="@dimen/text_size_11"
                 android:textStyle="bold"
                 android:layout_marginTop="2dp"
                 android:visibility="gone" />
@@ -70,7 +70,7 @@
                     android:layout_height="wrap_content"
                     android:text="📈"
                     android:textColor="@color/overlay_success"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:ellipsize="start"
                     android:textStyle="bold" />
 
@@ -79,7 +79,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/overlay_success"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textStyle="bold"
                     android:layout_marginStart="2dp"
                     android:visibility="gone" />
@@ -99,7 +99,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/highlight"
-                    android:textSize="9sp"
+                    android:textSize="@dimen/text_size_9"
                     android:textStyle="bold"
                     android:layout_marginEnd="4dp"
                     android:visibility="gone" />
@@ -109,7 +109,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/highlight"
-                    android:textSize="9sp"
+                    android:textSize="@dimen/text_size_9"
                     android:textStyle="bold"
                     android:visibility="gone" />
 
@@ -144,14 +144,14 @@
                 android:layout_height="wrap_content"
                 android:text="R$/km"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="9sp" />
+                android:textSize="@dimen/text_size_9" />
 
             <TextView
                 android:id="@+id/tvKm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/overlay_text_primary"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_size_14"
                 android:textStyle="bold"
                 android:layout_marginTop="2dp" />
 
@@ -172,14 +172,14 @@
                 android:layout_height="wrap_content"
                 android:text="R$/h"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="9sp" />
+                android:textSize="@dimen/text_size_9" />
 
             <TextView
                 android:id="@+id/tvHour"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/overlay_text_primary"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_size_14"
                 android:textStyle="bold"
                 android:layout_marginTop="2dp" />
 
@@ -200,14 +200,14 @@
                 android:layout_height="wrap_content"
                 android:text="R$/min"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="9sp" />
+                android:textSize="@dimen/text_size_9" />
 
             <TextView
                 android:id="@+id/tvMinute"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/overlay_text_primary"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_size_14"
                 android:textStyle="bold"
                 android:layout_marginTop="2dp" />
 
@@ -228,14 +228,14 @@
                 android:layout_height="wrap_content"
                 android:text="★"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="9sp" />
+                android:textSize="@dimen/text_size_9" />
 
             <TextView
                 android:id="@+id/tvRating"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/overlay_text_primary"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_size_14"
                 android:textStyle="bold"
                 android:layout_marginTop="2dp" />
 
@@ -264,14 +264,14 @@
                 android:layout_height="wrap_content"
                 android:text="🛣️"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="10sp" />
+                android:textSize="@dimen/text_size_10" />
 
             <TextView
                 android:id="@+id/tvDistance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="10sp"
+                android:textSize="@dimen/text_size_10"
                 android:layout_marginStart="2dp" />
 
         </LinearLayout>
@@ -288,14 +288,14 @@
                 android:layout_height="wrap_content"
                 android:text="⏱"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="10sp" />
+                android:textSize="@dimen/text_size_10" />
 
             <TextView
                 android:id="@+id/tvTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="10sp"
+                android:textSize="@dimen/text_size_10"
                 android:layout_marginStart="3dp" />
 
         </LinearLayout>
@@ -313,7 +313,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textSize="9sp"
+            android:textSize="@dimen/text_size_9"
             android:textColor="@color/highlight"
             android:gravity="start"
             android:maxLines="1"
@@ -341,7 +341,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text=" Paradas"
-                android:textSize="8sp"
+                android:textSize="@dimen/text_size_8"
                 android:textColor="@color/highlight"
                 android:layout_marginStart="3dp" />
 

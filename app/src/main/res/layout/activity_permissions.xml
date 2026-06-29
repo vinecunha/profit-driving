@@ -37,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Permissão de Acessibilidade"
-            android:textSize="24sp"
+            android:textSize="@dimen/text_size_24"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
             android:layout_marginTop="16dp"
@@ -48,7 +48,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="O Profit Driving precisa da permissão de acessibilidade para ler automaticamente os dados das corridas na tela do Uber."
-            android:textSize="16sp"
+            android:textSize="@dimen/text_size_16"
             android:textColor="@color/text_secondary"
             android:gravity="center"
             android:layout_marginTop="12dp"
@@ -81,7 +81,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Status do Serviço"
-                        android:textSize="16sp"
+                        android:textSize="@dimen/text_size_16"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary" />
 
@@ -90,7 +90,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="❌ Desativado"
-                        android:textSize="16sp"
+                        android:textSize="@dimen/text_size_16"
                         android:textStyle="bold"
                         android:textColor="@color/error" />
                 </LinearLayout>
@@ -110,7 +110,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Com esta permissão, o app pode:"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textColor="@color/text_secondary"
                         android:layout_marginBottom="8dp" />
 
@@ -125,14 +125,14 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:text="⬜"
-                            android:textSize="18sp" />
+                            android:textSize="@dimen/text_size_18" />
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Ler dados das corridas na tela do Uber"
-                            android:textSize="14sp"
+                            android:textSize="@dimen/text_size_14"
                             android:textColor="@color/text_primary"
                             android:layout_marginStart="8dp" />
                     </LinearLayout>
@@ -148,14 +148,14 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:text="⬜"
-                            android:textSize="18sp" />
+                            android:textSize="@dimen/text_size_18" />
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Detectar automaticamente quando o Uber está aberto"
-                            android:textSize="14sp"
+                            android:textSize="@dimen/text_size_14"
                             android:textColor="@color/text_primary"
                             android:layout_marginStart="8dp" />
                     </LinearLayout>
@@ -171,14 +171,14 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:text="⬜"
-                            android:textSize="18sp" />
+                            android:textSize="@dimen/text_size_18" />
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Calcular R$/km e R$/hora automaticamente"
-                            android:textSize="14sp"
+                            android:textSize="@dimen/text_size_14"
                             android:textColor="@color/text_primary"
                             android:layout_marginStart="8dp" />
                     </LinearLayout>
@@ -193,7 +193,7 @@
             android:layout_height="56dp"
             android:text="ATIVAR ACESSIBILIDADE"
             android:textAllCaps="true"
-            android:textSize="16sp"
+            android:textSize="@dimen/text_size_16"
             android:layout_marginTop="24dp"
             android:backgroundTint="@color/primary" />
 
@@ -216,7 +216,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="📖 Como ativar:"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/text_size_16"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
                     android:layout_marginBottom="12dp" />
@@ -235,7 +235,7 @@
                         android:background="@drawable/badge_number"
                         android:gravity="center"
                         android:textColor="@color/white"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textStyle="bold" />
 
                     <TextView
@@ -243,7 +243,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Clique no botão 'Ativar Acessibilidade'"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textColor="@color/text_primary"
                         android:layout_marginStart="12dp" />
                 </LinearLayout>
@@ -262,7 +262,7 @@
                         android:background="@drawable/badge_number"
                         android:gravity="center"
                         android:textColor="@color/white"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textStyle="bold" />
 
                     <TextView
@@ -270,7 +270,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Encontre 'Corrida Certa' na lista"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textColor="@color/text_primary"
                         android:layout_marginStart="12dp" />
                 </LinearLayout>
@@ -289,7 +289,7 @@
                         android:background="@drawable/badge_number"
                         android:gravity="center"
                         android:textColor="@color/white"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textStyle="bold" />
 
                     <TextView
@@ -297,7 +297,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Ative a chave ao lado do nome"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textColor="@color/text_primary"
                         android:layout_marginStart="12dp" />
                 </LinearLayout>
@@ -315,7 +315,7 @@
                         android:background="@drawable/badge_number"
                         android:gravity="center"
                         android:textColor="@color/white"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textStyle="bold" />
 
                     <TextView
@@ -323,7 +323,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Volte ao app - o status vai mudar para 'Ativado'"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textColor="@color/text_primary"
                         android:layout_marginStart="12dp" />
                 </LinearLayout>
@@ -337,7 +337,7 @@
             android:layout_height="56dp"
             android:text="PRÓXIMO"
             android:textAllCaps="true"
-            android:textSize="16sp"
+            android:textSize="@dimen/text_size_16"
             android:layout_marginTop="16dp"
             android:enabled="false"
             android:backgroundTint="@color/primary" />
@@ -347,7 +347,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="🔒 Seus dados são 100% privados e ficam apenas no seu dispositivo"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_size_12"
             android:textColor="@color/text_secondary"
             android:gravity="center"
             android:layout_marginTop="24dp"

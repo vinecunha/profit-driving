@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:text="Profit Driving"
         android:textColor="@color/white"
-        android:textSize="20sp"
+        android:textSize="@dimen/text_size_20"
         android:textStyle="bold"
         android:layout_marginTop="8dp" />
 
@@ -26,6 +26,6 @@
         android:layout_height="wrap_content"
         android:text="v1.0"
         android:textColor="@color/white_70"
-        android:textSize="14sp" />
+        android:textSize="@dimen/text_size_14" />
 
 </LinearLayout>

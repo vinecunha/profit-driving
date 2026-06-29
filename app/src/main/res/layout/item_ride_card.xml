@@ -83,7 +83,7 @@
                         android:id="@+id/tvServiceType"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="12sp"
+                        android:textSize="@dimen/text_size_12"
                         android:textStyle="bold"
                         android:textColor="@color/text_inverse"
                         android:letterSpacing="0.02"
@@ -98,7 +98,7 @@
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="12dp"
                     android:paddingVertical="5dp"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textStyle="bold"
                     android:letterSpacing="0.02"
                     android:visibility="gone"
@@ -148,7 +148,7 @@
                         android:id="@+id/tvPrice"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="32sp"
+                        android:textSize="@dimen/text_size_32"
                         android:textStyle="bold"
                         android:textColor="@color/text_inverse"
                         android:lineSpacingExtra="0dp" />
@@ -173,7 +173,7 @@
                         android:id="@+id/tvProfitLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="9sp"
+                        android:textSize="@dimen/text_size_9"
                         android:textStyle="bold"
                         android:textColor="@color/text_inverse"
                         android:alpha="0.8"
@@ -185,7 +185,7 @@
                         android:id="@+id/tvProfitValue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textStyle="bold"
                         android:visibility="gone" />
 
@@ -211,7 +211,7 @@
                     android:id="@+id/tvPriorityBonus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="10sp"
+                    android:textSize="@dimen/text_size_10"
                     android:textStyle="bold"
                     android:textColor="@color/warning"
                     android:background="@drawable/bg_bonus_pill_dark"
@@ -225,7 +225,7 @@
                     android:id="@+id/tvDynamicBonus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="10sp"
+                    android:textSize="@dimen/text_size_10"
                     android:textStyle="bold"
                     android:textColor="@color/warning"
                     android:background="@drawable/bg_bonus_pill_dark"
@@ -254,7 +254,7 @@
                         android:id="@+id/tvRatingText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="11sp"
+                        android:textSize="@dimen/text_size_11"
                         android:textStyle="bold"
                         android:textColor="@color/text_inverse" />
 
@@ -262,7 +262,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="★"
-                        android:textSize="11sp"
+                        android:textSize="@dimen/text_size_11"
                         android:textColor="@color/overlay_warning" />
 
                 </LinearLayout>
@@ -306,7 +306,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$/KM"
-                        android:textSize="9sp"
+                        android:textSize="@dimen/text_size_9"
                         android:textStyle="bold"
                         android:textColor="@color/text_secondary"
                         android:letterSpacing="0.07" />
@@ -315,7 +315,7 @@
                         android:id="@+id/tvPricePerKm"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="16sp"
+                        android:textSize="@dimen/text_size_16"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary"
                         android:layout_marginTop="3dp" />
@@ -324,7 +324,7 @@
                         android:id="@+id/tvKmBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="9sp"
+                        android:textSize="@dimen/text_size_9"
                         android:textStyle="bold"
                         android:paddingHorizontal="6dp"
                         android:paddingVertical="2dp"
@@ -348,7 +348,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$/H"
-                        android:textSize="9sp"
+                        android:textSize="@dimen/text_size_9"
                         android:textStyle="bold"
                         android:textColor="@color/text_secondary"
                         android:letterSpacing="0.07" />
@@ -357,7 +357,7 @@
                         android:id="@+id/tvPricePerHour"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="16sp"
+                        android:textSize="@dimen/text_size_16"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary"
                         android:layout_marginTop="3dp" />
@@ -366,7 +366,7 @@
                         android:id="@+id/tvHourBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="9sp"
+                        android:textSize="@dimen/text_size_9"
                         android:textStyle="bold"
                         android:paddingHorizontal="6dp"
                         android:paddingVertical="2dp"
@@ -390,7 +390,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$/MIN"
-                        android:textSize="9sp"
+                        android:textSize="@dimen/text_size_9"
                         android:textStyle="bold"
                         android:textColor="@color/text_secondary"
                         android:letterSpacing="0.07" />
@@ -399,7 +399,7 @@
                         android:id="@+id/tvPricePerMin"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="16sp"
+                        android:textSize="@dimen/text_size_16"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary"
                         android:layout_marginTop="3dp" />
@@ -408,7 +408,7 @@
                         android:id="@+id/tvMinBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="9sp"
+                        android:textSize="@dimen/text_size_9"
                         android:textStyle="bold"
                         android:paddingHorizontal="6dp"
                         android:paddingVertical="2dp"
@@ -481,7 +481,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="EMBARQUE"
-                            android:textSize="9sp"
+                            android:textSize="@dimen/text_size_9"
                             android:textStyle="bold"
                             android:textColor="@color/text_secondary"
                             android:letterSpacing="0.07"
@@ -491,7 +491,7 @@
                             android:id="@+id/tvPickupAddress"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textSize="13sp"
+                            android:textSize="@dimen/text_size_13"
                             android:textColor="@color/text_primary"
                             android:maxLines="1"
                             android:ellipsize="end" />
@@ -507,7 +507,7 @@
                                 android:id="@+id/tvPickupDistance"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:textSize="11sp"
+                                android:textSize="@dimen/text_size_11"
                                 android:textStyle="bold"
                                 android:textColor="@color/text_secondary" />
 
@@ -515,14 +515,14 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text=" · "
-                                android:textSize="11sp"
+                                android:textSize="@dimen/text_size_11"
                                 android:textColor="@color/text_secondary" />
 
                             <TextView
                                 android:id="@+id/tvPickupTime"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:textSize="11sp"
+                                android:textSize="@dimen/text_size_11"
                                 android:textStyle="bold"
                                 android:textColor="@color/text_secondary" />
 
@@ -569,7 +569,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="DESTINO"
-                            android:textSize="9sp"
+                            android:textSize="@dimen/text_size_9"
                             android:textStyle="bold"
                             android:textColor="@color/text_secondary"
                             android:letterSpacing="0.07"
@@ -579,7 +579,7 @@
                             android:id="@+id/tvDropoffAddress"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textSize="13sp"
+                            android:textSize="@dimen/text_size_13"
                             android:textColor="@color/text_primary"
                             android:maxLines="1"
                             android:ellipsize="end" />
@@ -595,7 +595,7 @@
                                 android:id="@+id/tvDropoffDistance"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:textSize="11sp"
+                                android:textSize="@dimen/text_size_11"
                                 android:textStyle="bold"
                                 android:textColor="@color/text_secondary" />
 
@@ -603,14 +603,14 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text=" · "
-                                android:textSize="11sp"
+                                android:textSize="@dimen/text_size_11"
                                 android:textColor="@color/text_secondary" />
 
                             <TextView
                                 android:id="@+id/tvDropoffTime"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:textSize="11sp"
+                                android:textSize="@dimen/text_size_11"
                                 android:textStyle="bold"
                                 android:textColor="@color/text_secondary" />
 
@@ -645,7 +645,7 @@
                     android:id="@+id/tvStops"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textStyle="bold"
                     android:textColor="@color/warning"
                     android:visibility="gone" />
@@ -671,7 +671,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Total"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_secondary"
                     android:layout_marginEnd="6dp" />
 
@@ -680,7 +680,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_13"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary" />
 
@@ -690,7 +690,7 @@
                     android:layout_height="wrap_content"
                     android:paddingHorizontal="12dp"
                     android:paddingVertical="4dp"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textStyle="bold"
                     android:background="@drawable/bg_score_pill" />
 
@@ -712,7 +712,7 @@
                     android:id="@+id/tvProfitDetail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_secondary"
                     android:gravity="center" />
 
@@ -730,14 +730,14 @@
                     android:id="@+id/tvStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="13sp" />
+                    android:textSize="@dimen/text_size_13" />
 
                 <TextView
                     android:id="@+id/btnExpandProfit"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="+ detalhar corrida"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textColor="@color/text_secondary"
                     android:clickable="true"
                     android:focusable="true"
@@ -755,7 +755,7 @@
                     android:id="@+id/tvTimestamp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textColor="@color/text_tertiary" />
 
             </LinearLayout>

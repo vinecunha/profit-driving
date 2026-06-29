@@ -15,14 +15,14 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_size_12"
             android:textColor="@color/text_primary" />
 
         <TextView
             android:id="@+id/tvBreakdownValue"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="11sp"
+            android:textSize="@dimen/text_size_11"
             android:textColor="@color/text_secondary"
             android:layout_marginEnd="8dp" />
 
@@ -30,7 +30,7 @@
             android:id="@+id/tvBreakdownDayTotal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_size_12"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
             android:layout_marginEnd="6dp" />
@@ -39,7 +39,7 @@
             android:id="@+id/tvBreakdownPercent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="11sp"
+            android:textSize="@dimen/text_size_11"
             android:textColor="@color/text_tertiary" />
 
     </LinearLayout>

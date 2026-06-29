@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="GNV"
-        android:textSize="14sp"
+        android:textSize="@dimen/text_size_14"
         android:textStyle="bold" />
 
     <TextView
@@ -20,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="75%"
-        android:textSize="14sp"
+        android:textSize="@dimen/text_size_14"
         android:layout_marginEnd="12dp" />
 
     <TextView
@@ -28,7 +28,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="80 L"
-        android:textSize="14sp"
+        android:textSize="@dimen/text_size_14"
         android:layout_marginEnd="12dp" />
 
     <TextView
@@ -36,7 +36,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="R$ 320,00"
-        android:textSize="14sp"
+        android:textSize="@dimen/text_size_14"
         android:textColor="@color/text_primary" />
 
 </LinearLayout>

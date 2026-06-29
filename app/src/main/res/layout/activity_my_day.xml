@@ -46,7 +46,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="\uD83D\uDCC5 Dia"
-                        android:textSize="13sp"
+                        android:textSize="@dimen/text_size_13"
                         android:textStyle="bold"
                         android:background="@color/primary"
                         android:textColor="@color/text_inverse"
@@ -61,7 +61,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="\uD83D\uDCC6 Semana"
-                        android:textSize="13sp"
+                        android:textSize="@dimen/text_size_13"
                         android:background="@drawable/pill_unselected"
                         android:layout_marginHorizontal="4dp"
                         android:clickable="true"
@@ -74,7 +74,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:text="\uD83D\uDCCA M\u00EAs"
-                        android:textSize="13sp"
+                        android:textSize="@dimen/text_size_13"
                         android:background="@drawable/pill_unselected"
                         android:layout_marginStart="4dp"
                         android:clickable="true"
@@ -96,7 +96,7 @@
                         android:layout_height="40dp"
                         android:gravity="center"
                         android:text="\u25C0"
-                        android:textSize="16sp"
+                        android:textSize="@dimen/text_size_16"
                         android:textColor="@color/text_primary"
                         android:clickable="true"
                         android:focusable="true" />
@@ -107,7 +107,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Carregando..."
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary"
                         android:gravity="center" />
@@ -118,7 +118,7 @@
                         android:layout_height="40dp"
                         android:gravity="center"
                         android:text="\u25B6"
-                        android:textSize="16sp"
+                        android:textSize="@dimen/text_size_16"
                         android:textColor="@color/text_primary"
                         android:clickable="true"
                         android:focusable="true" />
@@ -131,7 +131,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="32dp"
                     android:text="Hoje"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textColor="@color/success"
                     android:paddingHorizontal="16dp"
                     android:gravity="center"
@@ -166,7 +166,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="\uD83D\uDCCA RESUMO"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary" />
 
@@ -175,7 +175,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="hoje"
-                        android:textSize="10sp"
+                        android:textSize="@dimen/text_size_10"
                         android:textColor="@color/accent"
                         android:layout_marginStart="8dp"
                         android:gravity="center" />
@@ -202,7 +202,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="20sp"
+                            android:textSize="@dimen/text_size_20"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary" />
 
@@ -210,7 +210,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Corridas"
-                            android:textSize="10sp"
+                            android:textSize="@dimen/text_size_10"
                             android:textColor="@color/text_tertiary" />
 
                     </LinearLayout>
@@ -228,7 +228,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textSize="20sp"
+                            android:textSize="@dimen/text_size_20"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary" />
 
@@ -236,7 +236,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Km"
-                            android:textSize="10sp"
+                            android:textSize="@dimen/text_size_10"
                             android:textColor="@color/text_tertiary" />
 
                     </LinearLayout>
@@ -262,7 +262,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0h"
-                            android:textSize="20sp"
+                            android:textSize="@dimen/text_size_20"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary" />
 
@@ -270,7 +270,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Horas"
-                            android:textSize="10sp"
+                            android:textSize="@dimen/text_size_10"
                             android:textColor="@color/text_tertiary" />
 
                     </LinearLayout>
@@ -288,7 +288,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="R$0"
-                            android:textSize="20sp"
+                            android:textSize="@dimen/text_size_20"
                             android:textStyle="bold"
                             android:textColor="@color/success" />
 
@@ -296,7 +296,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Faturamento"
-                            android:textSize="10sp"
+                            android:textSize="@dimen/text_size_10"
                             android:textColor="@color/text_tertiary" />
 
                     </LinearLayout>
@@ -321,7 +321,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="\uD83D\uDCB0 Lucro l\u00EDquido"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textColor="@color/text_primary"
                         android:textStyle="bold" />
 
@@ -330,7 +330,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$ 0,00"
-                        android:textSize="18sp"
+                        android:textSize="@dimen/text_size_18"
                         android:textStyle="bold"
                         android:textColor="@color/success" />
 
@@ -347,7 +347,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0% de margem"
-                        android:textSize="11sp"
+                        android:textSize="@dimen/text_size_11"
                         android:textColor="@color/text_tertiary" />
 
                     <View
@@ -362,7 +362,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$/km: 0,00"
-                        android:textSize="11sp"
+                        android:textSize="@dimen/text_size_11"
                         android:textColor="@color/text_tertiary" />
 
                     <View
@@ -377,7 +377,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="R$/h: 0,00"
-                        android:textSize="11sp"
+                        android:textSize="@dimen/text_size_11"
                         android:textColor="@color/text_tertiary" />
 
                 </LinearLayout>
@@ -388,7 +388,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="\u25BC Ver detalhes dos custos"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textColor="@color/success"
                     android:paddingTop="12dp"
                     android:clickable="true"
@@ -425,7 +425,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="\u2705 CORRIDAS REALIZADAS"
-                        android:textSize="13sp"
+                        android:textSize="@dimen/text_size_13"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary" />
 
@@ -434,7 +434,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="20dp"
                         android:text="0"
-                        android:textSize="11sp"
+                        android:textSize="@dimen/text_size_11"
                         android:textColor="@color/text_inverse"
                         android:background="@color/success"
                         android:paddingHorizontal="8dp"
@@ -447,7 +447,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Nenhuma corrida adicionada."
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:padding="32dp"
@@ -484,7 +484,7 @@
                     android:layout_height="32dp"
                     android:gravity="center"
                     android:text="\u2795"
-                    android:textSize="18sp"
+                    android:textSize="@dimen/text_size_18"
                     android:background="@color/accent_light"
                     android:padding="6dp" />
 
@@ -499,7 +499,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Adicionar corrida manual"
-                        android:textSize="13sp"
+                        android:textSize="@dimen/text_size_13"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary" />
 
@@ -507,7 +507,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Corrida n\u00E3o foi detectada?"
-                        android:textSize="10sp"
+                        android:textSize="@dimen/text_size_10"
                         android:textColor="@color/text_tertiary" />
 
                 </LinearLayout>
@@ -517,7 +517,7 @@
                     android:layout_height="28dp"
                     android:gravity="center"
                     android:text="Adicionar"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textColor="@color/text_inverse"
                     android:background="@color/accent"
                     android:paddingHorizontal="12dp" />
@@ -544,7 +544,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="\uD83D\uDCCB CORRIDAS DISPON\u00CDVEIS"
-                        android:textSize="13sp"
+                        android:textSize="@dimen/text_size_13"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary" />
 
@@ -552,7 +552,7 @@
                         android:id="@+id/tvHistoryInfo"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="10sp"
+                        android:textSize="@dimen/text_size_10"
                         android:textColor="@color/text_tertiary" />
 
                 </LinearLayout>
@@ -579,7 +579,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="\uD83D\uDD0D FILTROS"
-                            android:textSize="11sp"
+                            android:textSize="@dimen/text_size_11"
                             android:textStyle="bold"
                             android:textColor="@color/text_secondary" />
 
@@ -588,7 +588,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="\u25BC"
-                            android:textSize="10sp"
+                            android:textSize="@dimen/text_size_10"
                             android:textColor="@color/text_tertiary" />
 
                     </LinearLayout>
@@ -616,7 +616,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="\uD83D\uDD0E"
-                                android:textSize="12sp"
+                                android:textSize="@dimen/text_size_12"
                                 android:layout_marginEnd="8dp" />
 
                             <EditText
@@ -625,7 +625,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:hint="Buscar por tipo, local..."
-                                android:textSize="11sp"
+                                android:textSize="@dimen/text_size_11"
                                 android:background="@null"
                                 android:inputType="text"
                                 android:maxLines="1" />
@@ -635,7 +635,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="\u2716"
-                                android:textSize="11sp"
+                                android:textSize="@dimen/text_size_11"
                                 android:textColor="@color/text_tertiary"
                                 android:padding="4dp"
                                 android:visibility="gone" />
@@ -647,7 +647,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="\u23F0 Horário"
-                            android:textSize="11sp"
+                            android:textSize="@dimen/text_size_11"
                             android:textColor="@color/text_tertiary"
                             android:layout_marginBottom="6dp" />
 
@@ -663,7 +663,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="\uD83D\uDCB0 Valor"
-                            android:textSize="11sp"
+                            android:textSize="@dimen/text_size_11"
                             android:textColor="@color/text_tertiary"
                             android:layout_marginBottom="6dp" />
 
@@ -679,7 +679,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="\uD83D\uDE97 Categoria"
-                            android:textSize="11sp"
+                            android:textSize="@dimen/text_size_11"
                             android:textColor="@color/text_tertiary"
                             android:layout_marginBottom="6dp" />
 
@@ -695,7 +695,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Limpar filtros"
-                            android:textSize="11sp"
+                            android:textSize="@dimen/text_size_11"
                             android:textColor="@color/metric_bad"
                             android:padding="4dp"
                             android:clickable="true"
@@ -710,7 +710,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Todas as corridas j\u00E1 foram adicionadas."
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:padding="32dp"
@@ -730,7 +730,7 @@
                     android:layout_height="40dp"
                     android:gravity="center"
                     android:text="Ver mais"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_primary"
                     android:background="@color/bg_surface"
                     android:layout_marginTop="8dp"

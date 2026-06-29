@@ -41,7 +41,7 @@
                 android:background="@drawable/badge_success"
                 android:text="@string/subscription_badge_active"
                 android:textColor="@color/success_text"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textStyle="bold"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="5dp" />
@@ -54,7 +54,7 @@
                 android:layout_marginTop="10dp"
                 android:text="@string/subscription_full_access_title"
                 android:textColor="@color/text_primary"
-                android:textSize="22sp"
+                android:textSize="@dimen/text_size_22"
                 android:textStyle="bold" />
 
             <!-- Subtítulo (Kotlin atualiza via textSubtitle) -->
@@ -65,7 +65,7 @@
                 android:layout_marginTop="4dp"
                 android:text="@string/subscription_full_access_desc"
                 android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
+                android:textSize="@dimen/text_size_14" />
 
             <!-- Status Container (ativo) -->
             <LinearLayout
@@ -83,7 +83,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="@color/success_text"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/text_size_14"
                     android:textStyle="bold" />
 
                 <Button
@@ -94,7 +94,7 @@
                     android:background="@drawable/button_primary_square"
                     android:text="@string/subscription_manage_btn"
                     android:textColor="@color/text_inverse"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_13"
                     android:textStyle="bold"
                     android:padding="14dp" />
             </LinearLayout>
@@ -130,7 +130,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/plan_monthly"
-                            android:textSize="18sp"
+                            android:textSize="@dimen/text_size_18"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary" />
 
@@ -138,7 +138,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="R$ 9,90"
-                            android:textSize="20sp"
+                            android:textSize="@dimen/text_size_20"
                             android:textStyle="bold"
                             android:textColor="@color/accent" />
 
@@ -146,7 +146,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="/mes"
-                            android:textSize="14sp"
+                            android:textSize="@dimen/text_size_14"
                             android:textColor="@color/text_secondary"
                             android:layout_marginStart="4dp" />
                     </LinearLayout>
@@ -161,7 +161,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/benefit_free_trial"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textColor="@color/text_primary"
                         android:layout_marginBottom="4dp" />
 
@@ -169,7 +169,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/benefit_cancel_anytime"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textColor="@color/text_primary" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -205,7 +205,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="@string/plan_yearly"
-                            android:textSize="18sp"
+                            android:textSize="@dimen/text_size_18"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary" />
 
@@ -213,7 +213,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="R$ 69,90"
-                            android:textSize="20sp"
+                            android:textSize="@dimen/text_size_20"
                             android:textStyle="bold"
                             android:textColor="@color/accent" />
 
@@ -221,7 +221,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="/ano"
-                            android:textSize="14sp"
+                            android:textSize="@dimen/text_size_14"
                             android:textColor="@color/text_secondary"
                             android:layout_marginStart="4dp" />
                     </LinearLayout>
@@ -236,7 +236,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/benefit_free_trial"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textColor="@color/text_primary"
                         android:layout_marginBottom="4dp" />
 
@@ -244,7 +244,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/benefit_save_30"
-                        android:textSize="14sp"
+                        android:textSize="@dimen/text_size_14"
                         android:textColor="@color/text_primary"
                         android:layout_marginBottom="4dp" />
 
@@ -252,7 +252,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/plan_recommended"
-                        android:textSize="12sp"
+                        android:textSize="@dimen/text_size_12"
                         android:textColor="@color/text_inverse"
                         android:background="@drawable/badge_recommended"
                         android:paddingHorizontal="8dp"
@@ -269,7 +269,7 @@
                 android:background="@drawable/button_primary"
                 android:text="@string/subscription_manage_btn"
                 android:textColor="@color/text_inverse"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_size_13"
                 android:textStyle="bold"
                 android:padding="14dp" />
 
@@ -282,7 +282,7 @@
                 android:layout_marginTop="14dp"
                 android:text="@string/subscription_restore"
                 android:textColor="@color/accent"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_size_13"
                 android:clickable="true"
                 android:focusable="true" />
 
@@ -303,7 +303,7 @@
                     android:text="MODO DESENVOLVIMENTO"
                     android:textColor="@color/warning"
                     android:textStyle="bold"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/text_size_14"
                     android:layout_marginBottom="8dp" />
 
                 <TextView
@@ -311,7 +311,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Status: Inativa"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_secondary"
                     android:layout_marginBottom="8dp" />
 
@@ -354,7 +354,7 @@
                 android:layout_marginTop="16dp"
                 android:text="@string/subscription_secure_payment"
                 android:textColor="@color/text_tertiary"
-                android:textSize="11sp" />
+                android:textSize="@dimen/text_size_11" />
 
         </LinearLayout>
     </ScrollView>

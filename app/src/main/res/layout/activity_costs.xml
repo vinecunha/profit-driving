@@ -31,7 +31,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="\u26FD Abastecimentos"
-                android:textSize="16sp"
+                android:textSize="@dimen/text_size_16"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp" />
@@ -69,7 +69,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="\uD83D\uDCCA \u00daltimos abastecimentos"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_size_13"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold"
                 android:layout_marginBottom="6dp" />
@@ -88,7 +88,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Data"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textColor="@color/text_secondary"
                     android:textStyle="bold" />
 
@@ -97,7 +97,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Hod\u00f4metro"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textColor="@color/text_secondary"
                     android:textStyle="bold"
                     android:gravity="center" />
@@ -107,7 +107,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="0.7"
                     android:text="Litros"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textColor="@color/text_secondary"
                     android:textStyle="bold"
                     android:gravity="center" />
@@ -117,7 +117,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Pre\u00e7o"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textColor="@color/text_secondary"
                     android:textStyle="bold"
                     android:gravity="center" />
@@ -127,7 +127,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="km/L"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textColor="@color/text_secondary"
                     android:textStyle="bold"
                     android:gravity="end" />
@@ -155,7 +155,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Nenhum abastecimento registrado"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:paddingVertical="12dp" />
@@ -173,7 +173,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="\uD83D\uDCCA M\u00e9dias por tipo de energia"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_size_13"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold"
                 android:layout_marginTop="12dp"
@@ -201,7 +201,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="\u26FD Consumo de combustível"
-                android:textSize="16sp"
+                android:textSize="@dimen/text_size_16"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp" />
@@ -211,7 +211,7 @@
                 android:id="@+id/tvCalculationMethod"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textColor="@color/text_tertiary"
                 android:layout_marginBottom="12dp" />
 
@@ -228,7 +228,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Custo por km"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_13"
                     android:textColor="@color/text_secondary" />
 
                 <TextView
@@ -236,7 +236,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="R$ 0,00 / km"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/text_size_16"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary" />
 
@@ -255,7 +255,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Consumo total"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_13"
                     android:textColor="@color/text_secondary" />
 
                 <TextView
@@ -263,7 +263,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0,0 km/l"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/text_size_16"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary" />
 
@@ -282,7 +282,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Total km rodados"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_13"
                     android:textColor="@color/text_secondary" />
 
                 <TextView
@@ -290,7 +290,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0 km"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/text_size_16"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary" />
 
@@ -309,7 +309,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Total gasto"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_13"
                     android:textColor="@color/text_secondary" />
 
                 <TextView
@@ -317,7 +317,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="R$ 0,00"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/text_size_16"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary" />
 
@@ -336,7 +336,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Total abastecido"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_13"
                     android:textColor="@color/text_secondary" />
 
                 <TextView
@@ -344,7 +344,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0,0 L"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/text_size_16"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary" />
 
@@ -362,7 +362,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Detalhamento por combustível"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textStyle="bold"
                 android:textColor="@color/text_secondary"
                 android:visibility="gone"
@@ -389,7 +389,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="\uD83D\uDCB0 Despesas"
-                android:textSize="16sp"
+                android:textSize="@dimen/text_size_16"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp" />
@@ -405,7 +405,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Km mensal:"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_secondary"
                     android:layout_marginEnd="8dp" />
 
@@ -414,7 +414,7 @@
                     android:layout_width="100dp"
                     android:layout_height="36dp"
                     android:inputType="number"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/text_size_14"
                     android:textColor="@color/text_primary"
                     android:background="@drawable/pill_unselected"
                     android:paddingHorizontal="10dp"
@@ -424,7 +424,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="km"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_secondary"
                     android:layout_marginStart="6dp" />
 
@@ -435,7 +435,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="\uD83D\uDEE4\uFE0F Vari\u00e1veis (por km)"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_size_13"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="4dp" />
@@ -451,7 +451,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Nenhum custo vari\u00e1vel"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:paddingVertical="6dp" />
@@ -519,7 +519,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="\uD83D\uDCCB Fixos"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_size_13"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="4dp" />
@@ -535,7 +535,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Nenhum custo fixo"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:paddingVertical="6dp" />
@@ -557,7 +557,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="\uD83D\uDCCB Por evento"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_size_13"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="4dp" />
@@ -573,7 +573,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Nenhum custo por evento"
-                    android:textSize="12sp"
+                    android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:paddingVertical="6dp" />
@@ -595,7 +595,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="\uD83D\uDCB0 RESUMO DE CUSTOS"
-                android:textSize="16sp"
+                android:textSize="@dimen/text_size_16"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp" />
@@ -611,7 +611,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="\uD83D\uDCCB Despesas por km (detalhado)"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_13"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
                     android:layout_marginBottom="6dp" />
@@ -633,7 +633,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Combust\u00edvel/km: --"
-            android:textSize="15sp"
+            android:textSize="@dimen/text_size_15"
                     android:textColor="@color/text_secondary" />
 
         <TextView
@@ -641,7 +641,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Total fixos/km: --"
-            android:textSize="15sp"
+            android:textSize="@dimen/text_size_15"
                     android:textColor="@color/text_secondary"
                     android:layout_marginTop="2dp" />
 
@@ -650,7 +650,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Var\u00e1veis/km: --"
-            android:textSize="15sp"
+            android:textSize="@dimen/text_size_15"
                     android:textColor="@color/text_secondary"
                     android:layout_marginTop="2dp" />
 
@@ -665,7 +665,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="CUSTO TOTAL/km: --"
-            android:textSize="17sp"
+            android:textSize="@dimen/text_size_17"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary" />
 
@@ -683,7 +683,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Custo/hora: --"
-            android:textSize="15sp"
+            android:textSize="@dimen/text_size_15"
                     android:textColor="@color/text_secondary" />
 
         <TextView
@@ -692,7 +692,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Custo/min: --"
-            android:textSize="15sp"
+            android:textSize="@dimen/text_size_15"
                     android:textColor="@color/text_secondary"
                     android:gravity="end" />
 
@@ -713,7 +713,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="\uD83C\uDFAF SIMULADOR DE LUCRO"
-                android:textSize="16sp"
+                android:textSize="@dimen/text_size_16"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="12dp" />
@@ -738,7 +738,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Ruim"
-                        android:textSize="11sp"
+                        android:textSize="@dimen/text_size_11"
                         android:textColor="@color/error"
                         android:textStyle="bold" />
 
@@ -747,7 +747,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Aceit\u00e1vel"
-                        android:textSize="11sp"
+                        android:textSize="@dimen/text_size_11"
                         android:textColor="@color/warning"
                         android:textStyle="bold"
                         android:gravity="center" />
@@ -757,7 +757,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Bom"
-                        android:textSize="11sp"
+                        android:textSize="@dimen/text_size_11"
                         android:textColor="@color/success"
                         android:textStyle="bold"
                         android:gravity="end" />
@@ -781,7 +781,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="R$ --"
-            android:textSize="11sp"
+            android:textSize="@dimen/text_size_11"
             android:textColor="@color/error" />
 
                 <TextView
@@ -790,7 +790,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="R$ --"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textColor="@color/warning"
                     android:gravity="center" />
 
@@ -800,7 +800,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="R$ --"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textColor="@color/success"
                     android:gravity="end" />
 
@@ -813,7 +813,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Seu custo/km: --"
-            android:textSize="15sp"
+            android:textSize="@dimen/text_size_15"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="8dp" />
@@ -823,7 +823,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Para lucro de 30%: precisa R$ --/km"
-            android:textSize="15sp"
+            android:textSize="@dimen/text_size_15"
                 android:textColor="@color/text_secondary"
                 android:layout_marginBottom="4dp" />
 
@@ -832,7 +832,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Para lucro de 50%: precisa R$ --/km"
-            android:textSize="15sp"
+            android:textSize="@dimen/text_size_15"
                 android:textColor="@color/text_secondary"
                 android:layout_marginBottom="4dp" />
 
@@ -841,7 +841,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Para lucro de 100%: precisa R$ --/km"
-            android:textSize="15sp"
+            android:textSize="@dimen/text_size_15"
                 android:textColor="@color/text_secondary" />
 
         </LinearLayout>
@@ -859,7 +859,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="\uD83D\uDCCA Estat\u00edsticas"
-                android:textSize="16sp"
+                android:textSize="@dimen/text_size_16"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:layout_marginBottom="8dp" />
@@ -868,7 +868,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Acompanhe seu desempenho por m\u00eas: KM rodados, custo de combust\u00edvel e consumo m\u00e9dio."
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textColor="@color/text_secondary"
                 android:layout_marginBottom="12dp" />
 

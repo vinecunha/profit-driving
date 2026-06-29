@@ -22,7 +22,7 @@
             android:layout_height="28dp"
             android:gravity="center"
             android:text="\u2610"
-            android:textSize="18sp"
+            android:textSize="@dimen/text_size_18"
             android:textColor="@color/text_secondary"
             android:clickable="true"
             android:focusable="true" />
@@ -43,7 +43,7 @@
                     android:id="@+id/tvRideTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/text_size_14"
                     android:textColor="@color/text_secondary"
                     android:layout_marginEnd="6dp" />
 
@@ -51,7 +51,7 @@
                     android:id="@+id/tvRideService"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp"
+                    android:textSize="@dimen/text_size_14"
                     android:textColor="@color/text_secondary" />
 
             </LinearLayout>
@@ -60,7 +60,7 @@
                 android:id="@+id/tvRideOriginalValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
+                android:textSize="@dimen/text_size_18"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:layout_marginTop="2dp" />
@@ -69,7 +69,7 @@
                 android:id="@+id/tvRideExtras"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textColor="@color/success"
                 android:visibility="gone" />
 
@@ -77,7 +77,7 @@
                 android:id="@+id/tvRideDestination"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textColor="@color/text_tertiary"
                 android:maxLines="1"
                 android:ellipsize="end"
@@ -95,7 +95,7 @@
                 android:id="@+id/tvRideFinalValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="18sp"
+                android:textSize="@dimen/text_size_18"
                 android:textStyle="bold"
                 android:textColor="@color/success" />
 
@@ -104,7 +104,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="\u25BC"
-                android:textSize="10sp"
+                android:textSize="@dimen/text_size_10"
                 android:textColor="@color/text_tertiary"
                 android:layout_marginTop="2dp" />
 
@@ -134,14 +134,14 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="\uD83D\uDCCD Embarque:"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_secondary" />
 
             <TextView
                 android:id="@+id/tvDetailPickup"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold" />
 
@@ -159,14 +159,14 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="\uD83C\uDFC1 Viagem:"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_secondary" />
 
             <TextView
                 android:id="@+id/tvDetailTrip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold" />
 
@@ -187,7 +187,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="\uD83D\uDCCD Total:"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary" />
 
@@ -195,7 +195,7 @@
                 android:id="@+id/tvDetailTotal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary" />
 
@@ -219,14 +219,14 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="\uD83D\uDCB0 Valor base:"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_secondary" />
 
             <TextView
                 android:id="@+id/tvDetailBaseValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold" />
 
@@ -246,14 +246,14 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="\uD83C\uDF6F Gorjeta:"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_secondary" />
 
             <TextView
                 android:id="@+id/tvDetailTip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textColor="@color/success"
                 android:textStyle="bold" />
 
@@ -273,14 +273,14 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="\uD83D\uDD04 Reajuste:"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_secondary" />
 
             <TextView
                 android:id="@+id/tvDetailAdjust"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textColor="@color/warning"
                 android:textStyle="bold" />
 
@@ -298,7 +298,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="\uD83D\uDCB5 Total corrida:"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textColor="@color/text_primary"
                 android:textStyle="bold" />
 
@@ -306,7 +306,7 @@
                 android:id="@+id/tvDetailFinalValue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary" />
 
@@ -324,14 +324,14 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="\uD83D\uDCC9 Custo:"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                     android:textColor="@color/text_secondary" />
 
             <TextView
                 android:id="@+id/tvDetailCost"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textColor="@color/error"
                 android:textStyle="bold" />
 
@@ -355,7 +355,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Lucro:"
-                android:textSize="12sp"
+                android:textSize="@dimen/text_size_12"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary" />
 
@@ -363,7 +363,7 @@
                 android:id="@+id/tvDetailProfit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
+                android:textSize="@dimen/text_size_14"
                 android:textStyle="bold"
                 android:textColor="@color/success" />
 
@@ -373,7 +373,7 @@
             android:id="@+id/tvDetailProfitPercent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="11sp"
+            android:textSize="@dimen/text_size_11"
             android:textColor="@color/text_tertiary"
             android:layout_marginStart="8dp"
             android:layout_marginBottom="4dp" />
@@ -386,7 +386,7 @@
         android:layout_height="36dp"
         android:gravity="center"
         android:text="\u2699\uFE0F A\u00E7\u00F5es"
-        android:textSize="12sp"
+        android:textSize="@dimen/text_size_12"
         android:textColor="@color/text_secondary"
         android:textStyle="bold"
         android:background="@drawable/pill_unselected"

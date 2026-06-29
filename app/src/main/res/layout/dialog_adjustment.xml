@@ -9,7 +9,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="\u21BB Reajustar Valor da Corrida"
-        android:textSize="18sp"
+        android:textSize="@dimen/text_size_18"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
         android:layout_marginBottom="12dp" />
@@ -18,7 +18,7 @@
         android:id="@+id/tvAdjRideInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="13sp"
+        android:textSize="@dimen/text_size_13"
         android:textColor="@color/text_secondary"
         android:layout_marginBottom="4dp" />
 
@@ -26,7 +26,7 @@
         android:id="@+id/tvAdjDistance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="12sp"
+        android:textSize="@dimen/text_size_12"
         android:textColor="@color/text_tertiary"
         android:layout_marginBottom="4dp" />
 
@@ -34,7 +34,7 @@
         android:id="@+id/tvAdjTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="12sp"
+        android:textSize="@dimen/text_size_12"
         android:textColor="@color/text_tertiary"
         android:layout_marginBottom="16dp" />
 
@@ -42,7 +42,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Novo valor real:"
-        android:textSize="13sp"
+        android:textSize="@dimen/text_size_13"
         android:textColor="@color/text_primary"
         android:layout_marginBottom="4dp" />
 
@@ -52,7 +52,7 @@
         android:layout_height="44dp"
         android:inputType="numberDecimal"
         android:hint="R$ 20,00"
-        android:textSize="16sp"
+        android:textSize="@dimen/text_size_16"
         android:textColor="@color/text_primary"
         android:background="@drawable/pill_unselected"
         android:paddingHorizontal="12dp"
@@ -62,7 +62,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Motivo (opcional):"
-        android:textSize="13sp"
+        android:textSize="@dimen/text_size_13"
         android:textColor="@color/text_primary"
         android:layout_marginBottom="4dp" />
 
@@ -72,7 +72,7 @@
         android:layout_height="40dp"
         android:inputType="text"
         android:hint="Ex: Trânsito, desvio..."
-        android:textSize="14sp"
+        android:textSize="@dimen/text_size_14"
         android:textColor="@color/text_primary"
         android:background="@drawable/pill_unselected"
         android:paddingHorizontal="12dp" />

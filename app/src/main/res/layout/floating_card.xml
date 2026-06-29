@@ -26,7 +26,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/overlay_text_primary"
-            android:textSize="16sp"
+            android:textSize="@dimen/text_size_16"
             android:textStyle="bold"
             android:layout_marginStart="8dp" />
 
@@ -35,7 +35,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/highlight"
-            android:textSize="11sp"
+            android:textSize="@dimen/text_size_11"
             android:textStyle="bold"
             android:layout_marginStart="8dp"
             android:visibility="gone" />
@@ -47,7 +47,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/highlight"
-        android:textSize="12sp"
+        android:textSize="@dimen/text_size_12"
         android:textStyle="bold"
         android:visibility="gone" />
 
@@ -62,7 +62,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/highlight"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_size_12"
             android:textStyle="bold"
             android:visibility="gone" />
 
@@ -71,7 +71,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/highlight"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_size_12"
             android:textStyle="bold"
             android:layout_marginStart="8dp"
             android:visibility="gone" />
@@ -92,14 +92,14 @@
             android:layout_height="wrap_content"
             android:text="R$/km"
             android:textColor="@color/overlay_text_secondary"
-            android:textSize="13sp" />
+            android:textSize="@dimen/text_size_13" />
 
         <TextView
             android:id="@+id/tvKm"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/overlay_text_primary"
-            android:textSize="16sp"
+            android:textSize="@dimen/text_size_16"
             android:textStyle="bold"
             android:layout_marginStart="8dp" />
 
@@ -125,14 +125,14 @@
             android:layout_height="wrap_content"
             android:text="R$/h"
             android:textColor="@color/overlay_text_secondary"
-            android:textSize="13sp" />
+            android:textSize="@dimen/text_size_13" />
 
         <TextView
             android:id="@+id/tvHour"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/overlay_text_primary"
-            android:textSize="16sp"
+            android:textSize="@dimen/text_size_16"
             android:textStyle="bold"
             android:layout_marginStart="8dp" />
 
@@ -158,14 +158,14 @@
             android:layout_height="wrap_content"
             android:text="R$/min"
             android:textColor="@color/overlay_text_secondary"
-            android:textSize="13sp" />
+            android:textSize="@dimen/text_size_13" />
 
         <TextView
             android:id="@+id/tvMinute"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/overlay_text_primary"
-            android:textSize="16sp"
+            android:textSize="@dimen/text_size_16"
             android:textStyle="bold"
             android:layout_marginStart="8dp" />
 
@@ -191,14 +191,14 @@
             android:layout_height="wrap_content"
             android:text="Nota"
             android:textColor="@color/overlay_text_secondary"
-            android:textSize="13sp" />
+            android:textSize="@dimen/text_size_13" />
 
         <TextView
             android:id="@+id/tvRating"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/overlay_text_primary"
-            android:textSize="16sp"
+            android:textSize="@dimen/text_size_16"
             android:textStyle="bold"
             android:layout_marginStart="8dp" />
 
@@ -229,14 +229,14 @@
                 android:layout_height="wrap_content"
                 android:text="🛣️"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="10sp" />
+                android:textSize="@dimen/text_size_10" />
 
             <TextView
                 android:id="@+id/tvDistance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="10sp"
+                android:textSize="@dimen/text_size_10"
                 android:layout_marginStart="3dp" />
 
         </LinearLayout>
@@ -253,14 +253,14 @@
                 android:layout_height="wrap_content"
                 android:text="⏱"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="10sp" />
+                android:textSize="@dimen/text_size_10" />
 
             <TextView
                 android:id="@+id/tvTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/overlay_text_secondary"
-                android:textSize="10sp"
+                android:textSize="@dimen/text_size_10"
                 android:layout_marginStart="3dp" />
 
         </LinearLayout>
@@ -272,7 +272,7 @@
         android:layout_width="match_parent"
         android:layout_height="28dp"
         android:gravity="center"
-        android:textSize="9sp"
+        android:textSize="@dimen/text_size_9"
         android:textStyle="bold"
         android:textColor="@color/overlay_text_primary"
         android:layout_marginTop="6dp"
@@ -282,7 +282,7 @@
         android:id="@+id/tvScore"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="6sp"
+        android:textSize="@dimen/text_size_6"
         android:textColor="@color/overlay_text_secondary"
         android:gravity="center"
         android:layout_marginTop="6dp" />
@@ -298,7 +298,7 @@
             android:id="@+id/tvProfitLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="10sp"
+            android:textSize="@dimen/text_size_10"
             android:textColor="@color/overlay_text_secondary"
             android:layout_marginEnd="4dp"
             android:singleLine="true"
@@ -309,7 +309,7 @@
             android:id="@+id/tvProfit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="10sp"
+            android:textSize="@dimen/text_size_10"
             android:textStyle="bold"
             android:textColor="@color/overlay_success"
             android:gravity="center"
@@ -338,7 +338,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=" Várias paradas"
-            android:textSize="10sp"
+            android:textSize="@dimen/text_size_10"
             android:textColor="@color/highlight"
             android:layout_marginStart="4dp" />
 
@@ -364,7 +364,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=" Destino conhecido · 0x"
-            android:textSize="10sp"
+            android:textSize="@dimen/text_size_10"
             android:textStyle="bold"
             android:textColor="@color/highlight"
             android:layout_marginStart="4dp" />

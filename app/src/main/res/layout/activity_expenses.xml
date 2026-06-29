@@ -35,7 +35,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="\uD83D\uDCCA RESUMO"
-                    android:textSize="11sp"
+                    android:textSize="@dimen/text_size_11"
                     android:textColor="@color/text_tertiary"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
@@ -45,7 +45,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Custo total/km: --"
-                    android:textSize="24sp"
+                    android:textSize="@dimen/text_size_24"
                     android:textStyle="bold"
                     android:textColor="@color/text_inverse"
                     android:layout_marginBottom="4dp" />
@@ -55,7 +55,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Custo fixo mensal: --"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_13"
                     android:textColor="@color/text_tertiary" />
 
             </LinearLayout>
@@ -73,14 +73,14 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="48sp"
+                    android:textSize="@dimen/text_size_48"
                     android:text="\uD83D\uDCB0" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Nenhuma despesa cadastrada"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/text_size_16"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
                     android:layout_marginTop="12dp" />
@@ -89,7 +89,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Adicione seus custos para\ncalcular o custo por km real"
-                    android:textSize="13sp"
+                    android:textSize="@dimen/text_size_13"
                     android:textColor="@color/text_tertiary"
                     android:gravity="center"
                     android:layout_marginTop="6dp" />
@@ -125,7 +125,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="CUSTOS POR KM"
-                            android:textSize="11sp"
+                            android:textSize="@dimen/text_size_11"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary" />
 
@@ -135,7 +135,7 @@
                             android:layout_height="28dp"
                             android:gravity="center"
                             android:text="\u2795"
-                            android:textSize="14sp"
+                            android:textSize="@dimen/text_size_14"
                             android:clickable="true"
                             android:focusable="true" />
 
@@ -176,7 +176,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="CUSTOS FIXOS"
-                            android:textSize="11sp"
+                            android:textSize="@dimen/text_size_11"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary" />
 
@@ -186,7 +186,7 @@
                             android:layout_height="28dp"
                             android:gravity="center"
                             android:text="\u2795"
-                            android:textSize="14sp"
+                            android:textSize="@dimen/text_size_14"
                             android:clickable="true"
                             android:focusable="true" />
 
@@ -227,7 +227,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="CUSTOS POR EVENTO"
-                            android:textSize="11sp"
+                            android:textSize="@dimen/text_size_11"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary" />
 
@@ -237,7 +237,7 @@
                             android:layout_height="28dp"
                             android:gravity="center"
                             android:text="\u2795"
-                            android:textSize="14sp"
+                            android:textSize="@dimen/text_size_14"
                             android:clickable="true"
                             android:focusable="true" />
 
@@ -265,7 +265,7 @@
                 android:layout_height="46dp"
                 android:gravity="center"
                 android:text="\u2795 ADICIONAR DESPESA"
-                android:textSize="13sp"
+                android:textSize="@dimen/text_size_13"
                 android:textStyle="bold"
                 android:textColor="@color/text_inverse"
                 android:background="@drawable/pill_selected"

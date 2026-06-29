@@ -12,7 +12,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="12sp"
+        android:textSize="@dimen/text_size_12"
         android:textColor="@color/text_secondary" />
 
     <TextView
@@ -20,7 +20,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="12sp"
+        android:textSize="@dimen/text_size_12"
         android:textColor="@color/text_secondary"
         android:gravity="center" />
 
@@ -29,7 +29,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="0.7"
-        android:textSize="12sp"
+        android:textSize="@dimen/text_size_12"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
         android:gravity="center" />
@@ -39,7 +39,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="12sp"
+        android:textSize="@dimen/text_size_12"
         android:textColor="@color/text_secondary"
         android:gravity="center" />
 
@@ -48,7 +48,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="12sp"
+        android:textSize="@dimen/text_size_12"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
         android:gravity="end" />
@@ -64,7 +64,7 @@
             android:layout_height="32dp"
             android:gravity="center"
             android:text="✏️"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_size_14"
             android:clickable="true" />
 
         <TextView
@@ -73,7 +73,7 @@
             android:layout_height="32dp"
             android:gravity="center"
             android:text="🗑️"
-            android:textSize="14sp"
+            android:textSize="@dimen/text_size_14"
             android:clickable="true" />
 
     </LinearLayout>
