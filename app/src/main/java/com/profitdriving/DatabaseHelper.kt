@@ -1665,7 +1665,10 @@ data class RawCardLog(
     val processedAt: Long? = null
 ) {
     val rawTextsList: List<String>
-        get() = rawTextsJson.split("\n---\n")
+        get() = when {
+            rawTextsJson.isBlank() -> emptyList()
+            else -> rawTextsJson.split("\n---\n").filter { it.isNotBlank() }
+        }
 
     val fullText: String
         get() = rawTextsList.joinToString(" ")

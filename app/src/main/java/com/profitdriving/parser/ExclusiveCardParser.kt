@@ -69,7 +69,8 @@ class ExclusiveCardParser : RideDataParser {
             priorityBonus = priorityBonus,
             dynamicBonus = dynamicBonus,
             pickupAddress = pickupAddress,
-            dropoffAddress = dropoffAddress
+            dropoffAddress = dropoffAddress,
+            exclusiveHash = "exclusive"
         )
     }
 

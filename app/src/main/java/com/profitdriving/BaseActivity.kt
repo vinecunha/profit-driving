@@ -1,10 +1,13 @@
 package com.profitdriving
 
 import android.content.Intent
+import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 
 
 enum class Screen {
@@ -12,6 +15,16 @@ enum class Screen {
 }
 
 abstract class BaseActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        applyThemeMode()
+        super.onCreate(savedInstanceState)
+    }
+
+    private fun applyThemeMode() {
+        val mode = SecurePreferences.get(this).getInt(KEY_THEME_MODE, THEME_MODE_SYSTEM)
+        AppCompatDelegate.setDefaultNightMode(mode)
+    }
 
     protected fun setupToolbar(
         title: String? = null,
@@ -85,8 +98,9 @@ abstract class BaseActivity : AppCompatActivity() {
         val labelAnalysis = findViewById<TextView>(R.id.tvNavAnalysisLabel)
 
         fun resetAll() {
+            val secondary = ctxColor(R.color.text_secondary)
             listOf(labelHome, labelParams, labelMyDay, labelCosts, labelAnalysis).forEach {
-                it?.setTextColor(AppColors.textSecondary)
+                it?.setTextColor(secondary)
             }
             listOf(iconHome, iconParams, iconMyDay, iconCosts, iconAnalysis).forEach {
                 it?.alpha = 0.5f
@@ -98,31 +112,33 @@ abstract class BaseActivity : AppCompatActivity() {
 
         resetAll()
 
+        val accent = ctxColor(R.color.accent)
+
         when (currentScreen) {
             Screen.HOME -> {
                 iconHome?.alpha = 1.0f
-                iconHome?.setTextColor(AppColors.accent)
-                labelHome?.setTextColor(AppColors.accent)
+                iconHome?.setTextColor(accent)
+                labelHome?.setTextColor(accent)
             }
             Screen.PARAMS -> {
                 iconParams?.alpha = 1.0f
-                iconParams?.setTextColor(AppColors.accent)
-                labelParams?.setTextColor(AppColors.accent)
+                iconParams?.setTextColor(accent)
+                labelParams?.setTextColor(accent)
             }
             Screen.MY_DAY -> {
                 iconMyDay?.alpha = 1.0f
-                iconMyDay?.setTextColor(AppColors.accent)
-                labelMyDay?.setTextColor(AppColors.accent)
+                iconMyDay?.setTextColor(accent)
+                labelMyDay?.setTextColor(accent)
             }
             Screen.COSTS -> {
                 iconCosts?.alpha = 1.0f
-                iconCosts?.setTextColor(AppColors.accent)
-                labelCosts?.setTextColor(AppColors.accent)
+                iconCosts?.setTextColor(accent)
+                labelCosts?.setTextColor(accent)
             }
             Screen.ANALYSIS -> {
                 iconAnalysis?.alpha = 1.0f
-                iconAnalysis?.setTextColor(AppColors.accent)
-                labelAnalysis?.setTextColor(AppColors.accent)
+                iconAnalysis?.setTextColor(accent)
+                labelAnalysis?.setTextColor(accent)
             }
         }
 
@@ -165,5 +181,19 @@ abstract class BaseActivity : AppCompatActivity() {
                 })
             }
         }
+    }
+
+    protected fun ctxColor(id: Int) = ContextCompat.getColor(this, id)
+
+    protected fun ctxColor(id: Int, alpha: Float) = run {
+        val color = ContextCompat.getColor(this, id)
+        (color and 0x00FFFFFF) or ((alpha * 255).toInt() shl 24)
+    }
+
+    companion object {
+        const val KEY_THEME_MODE = "theme_mode"
+        const val THEME_MODE_SYSTEM = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        const val THEME_MODE_LIGHT = AppCompatDelegate.MODE_NIGHT_NO
+        const val THEME_MODE_DARK = AppCompatDelegate.MODE_NIGHT_YES
     }
 }

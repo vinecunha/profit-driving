@@ -34,6 +34,7 @@ import java.text.NumberFormat
 import java.util.Locale
 import com.profitdriving.FormatUtils
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDelegate
 
 class SettingsActivity : BaseActivity() {
 
@@ -296,6 +297,8 @@ class SettingsActivity : BaseActivity() {
         findViewById<TextView>(R.id.btnSuggestFromCosts).setOnClickListener { showMarginSelector() }
 
         findViewById<TextView>(R.id.btnReprocess).setOnClickListener { showReprocessDialog() }
+
+        setupThemePills()
     }
 
     private fun showReprocessDialog() {
@@ -714,6 +717,33 @@ class SettingsActivity : BaseActivity() {
         val cleaned = value.trim().replace(",", ".")
         val parsed = cleaned.toFloatOrNull()
         return if (parsed != null && parsed >= min && parsed <= max) parsed else null
+    }
+
+    private fun setupThemePills() {
+        val btnSystem = findViewById<TextView>(R.id.btnThemeSystem)
+        val btnLight = findViewById<TextView>(R.id.btnThemeLight)
+        val btnDark = findViewById<TextView>(R.id.btnThemeDark)
+        val currentMode = prefs.getInt(KEY_THEME_MODE, THEME_MODE_SYSTEM)
+
+        fun selectTheme(mode: Int) {
+            prefs.edit().putInt(KEY_THEME_MODE, mode).apply()
+            AppCompatDelegate.setDefaultNightMode(mode)
+            recreate()
+        }
+
+        fun applyPillStyle(btn: TextView, selected: Boolean) {
+            btn.isSelected = selected
+            btn.setBackgroundResource(if (selected) R.drawable.pill_selected else R.drawable.pill_unselected)
+            btn.setTextColor(if (selected) AppColors.textInverse else AppColors.textSecondary)
+        }
+
+        applyPillStyle(btnSystem, currentMode == THEME_MODE_SYSTEM)
+        applyPillStyle(btnLight, currentMode == THEME_MODE_LIGHT)
+        applyPillStyle(btnDark, currentMode == THEME_MODE_DARK)
+
+        btnSystem.setOnClickListener { selectTheme(THEME_MODE_SYSTEM) }
+        btnLight.setOnClickListener { selectTheme(THEME_MODE_LIGHT) }
+        btnDark.setOnClickListener { selectTheme(THEME_MODE_DARK) }
     }
 
     companion object {

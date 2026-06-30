@@ -18,7 +18,8 @@ data class RideData(
     val priorityBonus: Double? = null,
     val dynamicBonus: Double? = null,
     val pickupAddress: String? = null,
-    val dropoffAddress: String? = null
+    val dropoffAddress: String? = null,
+    val exclusiveHash: String? = null
 ) {
     val effectivePricePerKm: Double?
         get() = pricePerKm ?: if (value != null && distanceKm != null && distanceKm > 0)

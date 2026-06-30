@@ -115,7 +115,7 @@ class ExpensesActivity : BaseActivity() {
             val empty = TextView(this).apply {
                 text = "Nenhuma despesa cadastrada"
                 textSize = 12f
-                setTextColor(AppColors.textSecondary)
+                setTextColor(ctxColor(R.color.text_secondary))
                 gravity = Gravity.CENTER
                 setPadding(0, 16, 0, 16)
             }
@@ -139,7 +139,7 @@ class ExpensesActivity : BaseActivity() {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT, 1
                     ).apply { setMargins(14, 0, 14, 0) }
-                    setBackgroundColor(AppColors.bgSurface)
+                    setBackgroundColor(ctxColor(R.color.bg_surface))
                 }
             } else null
 
@@ -152,14 +152,14 @@ class ExpensesActivity : BaseActivity() {
             val nameText = TextView(this).apply {
                 text = expense.name
                 textSize = 13f
-                setTextColor(AppColors.textPrimary)
+                setTextColor(ctxColor(R.color.text_primary))
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             }
 
             val valueText = TextView(this).apply {
                 text = formatValue(expense, index)
                 textSize = 12f
-                setTextColor(AppColors.textSecondary)
+                setTextColor(ctxColor(R.color.text_secondary))
                 setPadding(8, 0, 8, 0)
             }
 

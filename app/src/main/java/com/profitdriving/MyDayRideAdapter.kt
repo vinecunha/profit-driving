@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -48,6 +49,25 @@ class MyDayRideAdapter(
         holder.tvTime.text = if (record != null)
             dateFormat.format(java.util.Date(record.timestamp)) else "--:--"
         holder.tvService.text = record?.serviceType ?: "Corrida"
+        val iconRes = when {
+            record?.serviceType == null -> R.drawable.ic_ride_generic
+            record?.serviceType?.contains("Moto", ignoreCase = true) == true -> R.drawable.ic_moto
+            record?.serviceType?.contains("Black", ignoreCase = true) == true ||
+            record?.serviceType?.contains("Bag", ignoreCase = true) == true ||
+            record?.serviceType == "99Top" || record?.serviceType == "Top" ||
+            record?.serviceType == "99Black" || record?.serviceType == "99VIP" -> R.drawable.ic_car_luxury
+            record?.serviceType?.contains("Entrega", ignoreCase = true) == true ||
+            record?.serviceType?.contains("Flash", ignoreCase = true) == true ||
+            record?.serviceType?.contains("Envios", ignoreCase = true) == true -> R.drawable.ic_delivery
+            record?.serviceType?.contains("UberX", ignoreCase = true) == true ||
+            record?.serviceType?.contains("99Pop", ignoreCase = true) == true ||
+            record?.serviceType?.contains("Pop", ignoreCase = true) == true ||
+            record?.serviceType?.contains("Comfort", ignoreCase = true) == true ||
+            record?.serviceType?.contains("Juntos", ignoreCase = true) == true ||
+            record?.serviceType?.startsWith("Manual - ") == true -> R.drawable.ic_car
+            else -> R.drawable.ic_ride_generic
+        }
+        holder.ivServiceIcon.setImageResource(iconRes)
         holder.tvOriginalValue.text = FormatUtils.currency(ride.originalValue)
         holder.tvFinalValue.text = FormatUtils.currency(ride.finalValue)
 
@@ -73,7 +93,7 @@ class MyDayRideAdapter(
         // Destino
         val maskedDropoff = CardHashGenerator.maskAddress(record?.dropoffAddress)
         if (maskedDropoff.isNotEmpty()) {
-            holder.tvDestination.text = "\uD83C\uDFC1 $maskedDropoff"
+            holder.tvDestination.text = "\uD83D\uDCCD $maskedDropoff"
             holder.tvDestination.visibility = View.VISIBLE
         } else {
             holder.tvDestination.visibility = View.GONE
@@ -217,6 +237,7 @@ class MyDayRideAdapter(
         val root: LinearLayout = itemView.findViewById(R.id.rootRideCard)
         val chkCompleted: TextView = itemView.findViewById(R.id.chkCompleted)
         val tvTime: TextView = itemView.findViewById(R.id.tvRideTime)
+        val ivServiceIcon: ImageView = itemView.findViewById(R.id.ivServiceIcon)
         val tvService: TextView = itemView.findViewById(R.id.tvRideService)
         val tvOriginalValue: TextView = itemView.findViewById(R.id.tvRideOriginalValue)
         val tvExtras: TextView = itemView.findViewById(R.id.tvRideExtras)

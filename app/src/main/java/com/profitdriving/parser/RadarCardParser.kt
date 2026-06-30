@@ -68,7 +68,8 @@ class RadarCardParser : RideDataParser {
             priorityBonus = priorityBonus,
             dynamicBonus = dynamicBonus,
             pickupAddress = pickupAddress,
-            dropoffAddress = dropoffAddress
+            dropoffAddress = dropoffAddress,
+            exclusiveHash = null
         )
     }
 

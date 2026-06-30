@@ -16,19 +16,27 @@
         android:textColor="@color/text_secondary" />
 
     <TextView
+        android:id="@+id/tvRefuelType"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.4"
+        android:textSize="@dimen/text_size_13"
+        android:gravity="center" />
+
+    <TextView
         android:id="@+id/tvRefuelOdometer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_weight="0.9"
         android:textSize="@dimen/text_size_12"
         android:textColor="@color/text_secondary"
         android:gravity="center" />
 
     <TextView
-        android:id="@+id/tvRefuelLiters"
+        android:id="@+id/tvRefuelVolume"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="0.7"
+        android:layout_weight="0.8"
         android:textSize="@dimen/text_size_12"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
@@ -38,7 +46,7 @@
         android:id="@+id/tvRefuelPrice"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_weight="0.9"
         android:textSize="@dimen/text_size_12"
         android:textColor="@color/text_secondary"
         android:gravity="center" />
@@ -47,35 +55,10 @@
         android:id="@+id/tvRefuelConsumption"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_weight="0.9"
         android:textSize="@dimen/text_size_12"
         android:textStyle="bold"
         android:textColor="@color/text_primary"
         android:gravity="end" />
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/btnEditRefuel"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:gravity="center"
-            android:text="✏️"
-            android:textSize="@dimen/text_size_14"
-            android:clickable="true" />
-
-        <TextView
-            android:id="@+id/btnDeleteRefuel"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:gravity="center"
-            android:text="🗑️"
-            android:textSize="@dimen/text_size_14"
-            android:clickable="true" />
-
-    </LinearLayout>
 
 </LinearLayout>

@@ -7,6 +7,17 @@
 
     <include layout="@layout/toolbar_default" />
 
+    <!-- Hint -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="\uD83D\uDC46 Segure para editar/excluir \u2022 Arraste para os lados"
+        android:textSize="@dimen/text_size_10"
+        android:textColor="@color/text_tertiary"
+        android:gravity="center"
+        android:paddingVertical="4dp"
+        android:background="@color/bg_screen" />
+
     <!-- Table header -->
     <LinearLayout
         android:layout_width="match_parent"
@@ -29,7 +40,17 @@
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_weight="0.4"
+            android:text="Tipo"
+            android:textSize="@dimen/text_size_10"
+            android:textColor="@color/text_tertiary"
+            android:textStyle="bold"
+            android:gravity="center" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.9"
             android:text="Hod\u00f4metro"
             android:textSize="@dimen/text_size_10"
             android:textColor="@color/text_tertiary"
@@ -39,8 +60,8 @@
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.7"
-            android:text="Litros"
+            android:layout_weight="0.8"
+            android:text="Volume"
             android:textSize="@dimen/text_size_10"
             android:textColor="@color/text_tertiary"
             android:textStyle="bold"
@@ -49,7 +70,7 @@
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_weight="0.9"
             android:text="Pre\u00e7o"
             android:textSize="@dimen/text_size_10"
             android:textColor="@color/text_tertiary"
@@ -59,17 +80,12 @@
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="km/L"
+            android:layout_weight="0.9"
+            android:text="Consumo"
             android:textSize="@dimen/text_size_10"
             android:textColor="@color/text_tertiary"
             android:textStyle="bold"
             android:gravity="end" />
-
-        <View
-            android:layout_width="64dp"
-            android:layout_height="0dp"
-            android:visibility="invisible" />
 
     </LinearLayout>
 
@@ -94,6 +110,31 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:paddingVertical="4dp" />
+
+            <TextView
+                android:id="@+id/btnLoadMore"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Carregar mais"
+                android:textSize="@dimen/text_size_12"
+                android:textColor="@color/accent"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingVertical="12dp"
+                android:visibility="gone" />
+
+            <!-- Legend -->
+            <TextView
+                android:id="@+id/tvLegend"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_size_10"
+                android:textColor="@color/text_tertiary"
+                android:gravity="center"
+                android:paddingVertical="8dp"
+                android:paddingHorizontal="8dp"
+                android:visibility="gone" />
 
         </LinearLayout>
 

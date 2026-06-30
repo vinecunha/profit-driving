@@ -15,19 +15,25 @@ object CardHashGenerator {
         serviceType: String?,
         pickupAddress: String?,
         dropoffAddress: String?,
-        rating: Double?
+        rating: Double?,
+        value: Double? = null,
+        distanceKm: Double? = null,
+        timeMin: Int? = null,
+        exclusiveHash: String? = null
     ): String {
-        val normalizedService = normalizeServiceType(serviceType)
-        val normalizedPickup = normalizeAddress(pickupAddress)
-        val normalizedDropoff = normalizeAddress(dropoffAddress)
-        val normalizedRating = normalizeRating(rating)
+        val parts = mutableListOf(
+            normalizeServiceType(serviceType),
+            normalizeAddress(pickupAddress),
+            normalizeAddress(dropoffAddress),
+            normalizeRating(rating)
+        )
 
-        val input = listOf(
-            normalizedService,
-            normalizedPickup,
-            normalizedDropoff,
-            normalizedRating
-        ).filter { it.isNotEmpty() }
+        value?.let { parts.add(String.format("%.2f", it)) }
+        distanceKm?.let { parts.add(String.format("%.1f", it)) }
+        timeMin?.let { parts.add(it.toString()) }
+        if (!exclusiveHash.isNullOrBlank()) parts.add(exclusiveHash!!)
+
+        val input = parts.filter { it.isNotEmpty() }
             .joinToString("|")
 
         return sha256(input)

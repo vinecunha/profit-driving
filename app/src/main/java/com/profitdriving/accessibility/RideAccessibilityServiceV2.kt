@@ -257,9 +257,8 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         }
 
         if (hash == lastHash && cardVisible) {
-            L.d(TAG, "Mesmo card ainda visível — ignorando")
+            L.d(TAG, "Mesmo card ainda visível — prosseguindo")
             db.updateRawLogStatus(currentRawLogId, status = "duplicate", error = "same card still visible")
-            return
         }
 
         val parser = selectParser(raw)
@@ -281,7 +280,11 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             serviceType = ride.serviceType,
             pickupAddress = ride.pickupAddress,
             dropoffAddress = ride.dropoffAddress,
-            rating = ride.rating
+            rating = ride.rating,
+            value = ride.value,
+            distanceKm = ride.distanceKm,
+            timeMin = ride.timeMin,
+            exclusiveHash = ride.exclusiveHash
         )
 
         if (!isValidRide(ride)) {
@@ -298,9 +301,8 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         }
 
         if ((now - lastSaveTime) < 5_000L && ride.value == lastSavedValue) {
-            L.d(TAG, "⏱️ Duplicata rápida: valor R$${ride.value} salvo há ${now - lastSaveTime}ms — ignorando")
+            L.d(TAG, "⏱️ Duplicata rápida: valor R$${ride.value} salvo há ${now - lastSaveTime}ms — prosseguindo")
             db.updateRawLogStatus(currentRawLogId, status = "duplicate", error = "same value within 5s")
-            return
         }
 
         saveOrUpdateRide(ride, cardHash, db)

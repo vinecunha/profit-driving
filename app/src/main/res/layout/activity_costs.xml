@@ -546,34 +546,6 @@
 
             </LinearLayout>
 
-            <!-- Custos Variáveis (por km) -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="\uD83D\uDEE4\uFE0F Vari\u00e1veis (por km)"
-                android:textSize="@dimen/text_size_13"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="4dp" />
-
-            <LinearLayout
-                android:id="@+id/perKmList"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingVertical="2dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Nenhum custo vari\u00e1vel"
-                    android:textSize="@dimen/text_size_12"
-                    android:textColor="@color/text_tertiary"
-                    android:gravity="center"
-                    android:paddingVertical="6dp" />
-
-            </LinearLayout>
-
 <!-- Action row -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -617,82 +589,6 @@
                     android:layout_weight="1"
                     android:layout_marginStart="3dp"
                     android:text="\uD83D\uDC41\uFE0F Ver todos" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Custos Fixos -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/card_bg_costs"
-            android:padding="16dp"
-            android:layout_marginBottom="12dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="\uD83D\uDCCB Fixos"
-                android:textSize="@dimen/text_size_13"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="4dp" />
-
-            <LinearLayout
-                android:id="@+id/fixedList"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingVertical="2dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Nenhum custo fixo"
-                    android:textSize="@dimen/text_size_12"
-                    android:textColor="@color/text_tertiary"
-                    android:gravity="center"
-                    android:paddingVertical="6dp" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Custos por Evento -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/card_bg_costs"
-            android:padding="16dp"
-            android:layout_marginBottom="12dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="\uD83D\uDCCB Por evento"
-                android:textSize="@dimen/text_size_13"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="4dp" />
-
-            <LinearLayout
-                android:id="@+id/eventList"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingVertical="2dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Nenhum custo por evento"
-                    android:textSize="@dimen/text_size_12"
-                    android:textColor="@color/text_tertiary"
-                    android:gravity="center"
-                    android:paddingVertical="6dp" />
 
             </LinearLayout>
 

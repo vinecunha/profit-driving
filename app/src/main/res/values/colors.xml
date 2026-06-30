@@ -100,6 +100,7 @@
     <color name="text_tertiary">#94A3B8</color>   <!-- Slate 400 -->
     <color name="text_disabled">#CBD5E1</color>   <!-- Slate 300 -->
     <color name="text_inverse">#FFFFFF</color>
+    <color name="text_on_dark">#F8FAFC</color>
 
     <!-- ============================================ -->
     <!-- ÍCONES                                      -->

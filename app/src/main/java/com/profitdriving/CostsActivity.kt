@@ -24,9 +24,6 @@ class CostsActivity : BaseActivity() {
     private lateinit var db: DatabaseHelper
     private lateinit var etMonthlyKm: EditText
     private lateinit var refuelList: LinearLayout
-    private lateinit var perKmList: LinearLayout
-    private lateinit var fixedList: LinearLayout
-    private lateinit var eventList: LinearLayout
     private lateinit var normalizedExpenseList: LinearLayout
     private lateinit var progressOverlay: View
     private var allRefuels = listOf<RefuelRecord>()
@@ -72,10 +69,14 @@ class CostsActivity : BaseActivity() {
             startActivity(Intent(this, MonthlyStatsActivity::class.java))
         }
         findViewById<TextView>(R.id.btnViewAllRefuels).setOnClickListener {
-            startActivity(Intent(this, RefuelsHistoryActivity::class.java))
+            val (periodStart, periodEnd) = getPeriodTimestamps()
+            startActivity(Intent(this, RefuelsHistoryActivity::class.java).apply {
+                putExtra(RefuelsHistoryActivity.EXTRA_PERIOD_START, periodStart)
+                putExtra(RefuelsHistoryActivity.EXTRA_PERIOD_END, periodEnd)
+            })
         }
 
-        setViewMode(ViewMode.DAY)
+        setViewMode(ViewMode.MONTH)
     }
 
     override fun onResume() {
@@ -239,9 +240,9 @@ class CostsActivity : BaseActivity() {
         btnModeWeek.setBackgroundResource(if (currentMode == ViewMode.WEEK) R.drawable.pill_selected else R.drawable.pill_unselected)
         btnModeMonth.setBackgroundResource(if (currentMode == ViewMode.MONTH) R.drawable.pill_selected else R.drawable.pill_unselected)
 
-        btnModeDay.setTextColor(if (currentMode == ViewMode.DAY) AppColors.textInverse else AppColors.textSecondary)
-        btnModeWeek.setTextColor(if (currentMode == ViewMode.WEEK) AppColors.textInverse else AppColors.textSecondary)
-        btnModeMonth.setTextColor(if (currentMode == ViewMode.MONTH) AppColors.textInverse else AppColors.textSecondary)
+        btnModeDay.setTextColor(if (currentMode == ViewMode.DAY) ctxColor(R.color.text_inverse) else ctxColor(R.color.text_secondary))
+        btnModeWeek.setTextColor(if (currentMode == ViewMode.WEEK) ctxColor(R.color.text_inverse) else ctxColor(R.color.text_secondary))
+        btnModeMonth.setTextColor(if (currentMode == ViewMode.MONTH) ctxColor(R.color.text_inverse) else ctxColor(R.color.text_secondary))
     }
 
     private fun navigatePeriod(direction: Int) {
@@ -308,7 +309,9 @@ class CostsActivity : BaseActivity() {
 
     private fun filterExpensesByPeriod(items: List<Expense>): List<Expense> {
         val (periodStart, periodEnd) = getPeriodTimestamps()
-        return items.filter { it.createdAt in periodStart..periodEnd }
+        return items.filter { e ->
+            e.createdAt == 0L || e.createdAt in periodStart..periodEnd
+        }
     }
 
     private fun loadData() {
@@ -323,7 +326,6 @@ class CostsActivity : BaseActivity() {
 
                 etMonthlyKm.setText(loadedMonthlyKm.toString())
                 renderRefuelList()
-                renderExpenseLists()
                 updateEnergyStats()
                 updateFuelStats()
                 updateSummary()
@@ -345,7 +347,7 @@ class CostsActivity : BaseActivity() {
             val empty = TextView(this).apply {
                 text = "Nenhum abastecimento registrado"
                 textSize = 12f
-                setTextColor(AppColors.textSecondary)
+                setTextColor(ctxColor(R.color.text_secondary))
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, 24, 0, 8)
             }
@@ -355,22 +357,29 @@ class CostsActivity : BaseActivity() {
 
         for (refuel in allRefuels.take(4)) {
             val row = layoutInflater.inflate(R.layout.item_refuel_history, refuelList, false)
+            val energyType = EnergyType.fromString(refuel.fuelType)
 
             row.findViewById<TextView>(R.id.tvRefuelDate).text =
                 dateFormat.format(Date(refuel.timestamp))
 
+            row.findViewById<TextView>(R.id.tvRefuelType).apply {
+                text = energyType.icon
+                setTextColor(ctxColor(energyType.colorRes))
+            }
+
             row.findViewById<TextView>(R.id.tvRefuelOdometer).text =
                 "%.0f".format(refuel.odometerKm)
 
-            row.findViewById<TextView>(R.id.tvRefuelLiters).text =
-                FormatUtils.decimal1(refuel.amount)
+            row.findViewById<TextView>(R.id.tvRefuelVolume).text =
+                "${FormatUtils.decimal1(refuel.amount)} ${energyType.unit}"
 
             row.findViewById<TextView>(R.id.tvRefuelPrice).text =
                 currencyFormat.format(refuel.totalValue)
 
             val consumption = calculateRefuelConsumption(refuel)
+            val consumptionUnit = if (energyType.unit == "kWh") "km/kWh" else "km/${energyType.unit}"
             row.findViewById<TextView>(R.id.tvRefuelConsumption).text =
-                if (consumption > 0) FormatUtils.decimal1(consumption) else "--"
+                if (consumption > 0) "${FormatUtils.decimal1(consumption)} $consumptionUnit" else "--"
 
             refuelList.addView(row)
         }
@@ -434,7 +443,7 @@ class CostsActivity : BaseActivity() {
             val empty = TextView(this).apply {
                 text = "Nenhum dado de abastecimento"
                 textSize = 12f
-                setTextColor(AppColors.textTertiary)
+                setTextColor(ctxColor(R.color.text_tertiary))
                 gravity = android.view.Gravity.CENTER
                 setPadding(0, 16, 0, 16)
             }
@@ -443,7 +452,6 @@ class CostsActivity : BaseActivity() {
     }
 
     private fun updateFuelStats() {
-        val allRefuels = db.getRefuels()
         val result = ConsumptionCalculator.calculateConsumption(allRefuels)
 
         val methodText = when (result.method) {
@@ -496,16 +504,6 @@ class CostsActivity : BaseActivity() {
         }
     }
 
-    private fun renderExpenseLists() {
-        perKmList = findViewById(R.id.perKmList)
-        fixedList = findViewById(R.id.fixedList)
-        eventList = findViewById(R.id.eventList)
-
-        renderExpenseList(perKmList, allExpenses.filter { it.costType == CostType.PER_KM }, "nenhum custo vari\u00E1vel")
-        renderExpenseList(fixedList, allExpenses.filter { it.costType == CostType.FIXED }, "nenhum custo fixo")
-        renderExpenseList(eventList, allExpenses.filter { it.costType == CostType.EVENT }, "nenhum custo por evento")
-    }
-
     private fun formatExpenseValue(expense: Expense): String {
         return when (expense.costType) {
             CostType.FIXED -> {
@@ -544,118 +542,6 @@ class CostsActivity : BaseActivity() {
         return sb.toString()
     }
 
-    private fun renderExpenseList(container: LinearLayout, expenses: List<Expense>, emptyMessage: String) {
-        container.removeAllViews()
-
-        if (expenses.isEmpty()) {
-            val empty = TextView(this).apply {
-                text = emptyMessage
-                textSize = 11f
-                setTextColor(AppColors.textSecondary)
-                gravity = android.view.Gravity.CENTER
-                setPadding(0, 6, 0, 6)
-            }
-            container.addView(empty)
-            return
-        }
-
-        for (expense in expenses) {
-            val row = layoutInflater.inflate(R.layout.item_expense, container, false)
-
-            row.findViewById<TextView>(R.id.tvExpenseIcon).text = expense.category.icon
-            row.findViewById<TextView>(R.id.tvExpenseName).text = expense.name
-
-            val statusText = when (expense.paymentStatus) {
-                "PAID" -> if (expense.installmentTotal > 1)
-                    "\u2705 Quitado (${expense.installmentCurrent}/${expense.installmentTotal})"
-                    else "\u2705 Quitado"
-                "PARTIAL" -> "\u23F3 Pago parcialmente (${expense.installmentCurrent}/${expense.installmentTotal})"
-                else -> "\u23F1 Pendente"
-            }
-            val statusColor = when (expense.paymentStatus) {
-                "PAID" -> AppColors.success
-                "PARTIAL" -> AppColors.warning
-                else -> AppColors.textSecondary
-            }
-            row.findViewById<TextView>(R.id.tvExpenseStatus).text = statusText
-            row.findViewById<TextView>(R.id.tvExpenseStatus).setTextColor(statusColor)
-
-            row.findViewById<TextView>(R.id.tvExpenseValue).text = formatExpenseValue(expense)
-
-            val detail = formatExpenseDetail(expense)
-            row.findViewById<TextView>(R.id.tvExpenseDetail).text = detail
-
-            // Payment action buttons
-            val btnPay = row.findViewById<TextView>(R.id.btnPayPartial)
-            val btnQuit = row.findViewById<TextView>(R.id.btnQuit)
-            if (expense.paymentStatus != "PAID") {
-                btnPay.visibility = View.VISIBLE
-                btnQuit.visibility = View.VISIBLE
-                btnPay.setOnClickListener {
-                    showPaymentDialog(expense)
-                }
-                btnQuit.setOnClickListener {
-                    db.updateExpenseItem(expense.copy(
-                        paymentStatus = "PAID",
-                        installmentCurrent = expense.installmentTotal,
-                        paidAmount = expense.totalOriginalValue ?: expense.value,
-                        lastPaymentDate = System.currentTimeMillis()
-                    ))
-                    loadData()
-                }
-            }
-
-            container.addView(row)
-        }
-    }
-
-    private fun showPaymentDialog(expense: Expense) {
-        val remaining = (expense.totalOriginalValue ?: expense.value) - expense.paidAmount
-        if (remaining <= 0) {
-            db.updateExpenseItem(expense.copy(
-                paymentStatus = "PAID",
-                installmentCurrent = expense.installmentTotal,
-                paidAmount = expense.totalOriginalValue ?: expense.value,
-                lastPaymentDate = System.currentTimeMillis()
-            ))
-            loadData()
-            return
-        }
-
-        val installmentValue = (expense.totalOriginalValue ?: expense.value) / expense.installmentTotal
-        val remainingInstallments = expense.installmentTotal - expense.installmentCurrent
-
-        val input = android.widget.EditText(this).apply {
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-            hint = "Valor a pagar (${FormatUtils.currency(installmentValue)})"
-            setText(FormatUtils.decimal(installmentValue))
-            selectAll()
-        }
-
-        AlertDialog.Builder(this)
-            .setTitle("\uD83D\uDCB0 Registrar pagamento")
-            .setMessage("Restam ${remainingInstallments}x de ${currencyFormat.format(installmentValue)}")
-            .setView(input)
-            .setPositiveButton("Pagar") { _, _ ->
-                val payValue = input.text.toString().replace(",", ".").toDoubleOrNull() ?: installmentValue
-                val newPaidAmount = expense.paidAmount + payValue
-                val newInstallmentCurrent = (newPaidAmount / installmentValue).toInt()
-                    .coerceAtMost(expense.installmentTotal)
-                val totalValue = expense.totalOriginalValue ?: expense.value
-                val newStatus = if (newPaidAmount >= totalValue) "PAID" else "PARTIAL"
-
-                db.updateExpenseItem(expense.copy(
-                    paymentStatus = newStatus,
-                    paidAmount = newPaidAmount,
-                    installmentCurrent = newInstallmentCurrent,
-                    lastPaymentDate = System.currentTimeMillis()
-                ))
-                loadData()
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
-
     private fun showSavingFeedback(action: () -> Unit) {
         progressOverlay.visibility = View.VISIBLE
         try {
@@ -677,7 +563,7 @@ class CostsActivity : BaseActivity() {
             val empty = TextView(this).apply {
                 text = "Nenhuma despesa cadastrada"
                 textSize = 11f
-                setTextColor(AppColors.textSecondary)
+                setTextColor(ctxColor(R.color.text_secondary))
             }
             normalizedExpenseList.addView(empty)
         } else {
@@ -723,7 +609,7 @@ class CostsActivity : BaseActivity() {
         return TextView(this).apply {
             this.text = text
             textSize = 11f
-            setTextColor(AppColors.textPrimary)
+            setTextColor(ctxColor(R.color.text_primary))
             setTypeface(null, android.graphics.Typeface.BOLD)
             setPadding(0, 4, 0, 2)
         }
@@ -733,7 +619,7 @@ class CostsActivity : BaseActivity() {
         return TextView(this).apply {
             text = "${ne.name}: ${currencyFormat.format(ne.costPerKm)}/km"
             textSize = 11f
-            setTextColor(AppColors.textSecondary)
+            setTextColor(ctxColor(R.color.text_secondary))
             setPadding(0, 0, 0, 2)
         }
     }

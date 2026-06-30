@@ -101,8 +101,9 @@ class RawCardReprocessor(
         onComplete: ((Int) -> Unit)? = null
     ) {
         scope.launch {
-            val count = reprocessFailedCards(limit)
-            onComplete?.invoke(count)
+            val failedCount = reprocessFailedCards(limit)
+            val pendingCount = reprocessPendingCards(limit)
+            onComplete?.invoke(failedCount + pendingCount)
         }
     }
 
