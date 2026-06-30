@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#315AA3</color>
+    <color name="primary_dark">#1E3A8A</color>
+    <color name="primary_light">#1E293B</color>
+
+    <color name="accent">#315AA3</color>
+    <color name="accent_dark">#1E3A8A</color>
+    <color name="accent_light">#1E293B</color>
+    <color name="card_header_dark">#0F0F0F</color>
+
+    <color name="success">#22CB82</color>
+    <color name="success_bg">#064E3B</color>
+    <color name="success_text">#6EE7B7</color>
+    <color name="success_border">#22CB82</color>
+
+    <color name="warning">#FC7E3B</color>
+    <color name="warning_bg">#78350F</color>
+    <color name="warning_text">#FDBA74</color>
+    <color name="warning_border">#FC7E3B</color>
+
+    <color name="error">#CE2C48</color>
+    <color name="error_bg">#4C1124</color>
+    <color name="error_text">#FDA4AF</color>
+    <color name="error_border">#CE2C48</color>
+
+    <color name="highlight">#FFDD00</color>
+
+    <color name="metric_good">#22CB82</color>
+    <color name="metric_medium">#FC7E3B</color>
+    <color name="metric_bad">#CE2C48</color>
+    <color name="metric_absent">#475569</color>
+
+    <color name="overlay_bg">#0F172A</color>
+    <color name="overlay_surface">#1E293B</color>
+    <color name="overlay_border">#334155</color>
+    <color name="overlay_text_primary">#F8FAFC</color>
+    <color name="overlay_text_secondary">#94A3B8</color>
+    <color name="overlay_success">#22CB82</color>
+    <color name="overlay_warning">#FC7E3B</color>
+    <color name="overlay_error">#CE2C48</color>
+
+    <color name="energy_gasoline">#1E40AF</color>
+    <color name="energy_ethanol">#22CB82</color>
+    <color name="energy_diesel">#D97706</color>
+    <color name="energy_gnv">#FC7E3B</color>
+    <color name="energy_electric">#3B82F6</color>
+    <color name="energy_hybrid">#8B5CF6</color>
+
+    <color name="bg_screen">#0F172A</color>
+    <color name="bg_card">#1E293B</color>
+    <color name="bg_surface">#0F172A</color>
+
+    <color name="border">#334155</color>
+
+    <color name="overlay_btn_action">#14FFFFFF</color>
+    <color name="overlay_service_badge">#1AFFFFFF</color>
+
+    <color name="text_primary">#F8FAFC</color>
+    <color name="text_secondary">#94A3B8</color>
+    <color name="text_tertiary">#64748B</color>
+    <color name="text_disabled">#475569</color>
+    <color name="text_inverse">#0F172A</color>
+
+    <color name="icon_primary">#94A3B8</color>
+    <color name="icon_secondary">#64748B</color>
+
+    <color name="service_uberx">#475569</color>
+
+    <color name="colorPrimary">@color/primary</color>
+    <color name="colorPrimaryDark">@color/primary_dark</color>
+    <color name="colorAccent">@color/accent</color>
+
+    <color name="pill_active_bg">@color/accent</color>
+    <color name="pill_active_text">#FFFFFF</color>
+    <color name="pill_inactive_bg">#334155</color>
+    <color name="pill_inactive_text">#94A3B8</color>
+
+    <color name="splash_background">#0F172A</color>
+    <color name="white">#FFFFFF</color>
+    <color name="white_70">#B3FFFFFF</color>
+</resources>

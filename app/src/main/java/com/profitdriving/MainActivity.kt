@@ -64,6 +64,32 @@ class MainActivity : BaseActivity() {
     private var needsRefresh = true
     private val handler = Handler(Looper.getMainLooper())
 
+    private fun computeFilterTimeRange(): Pair<Long?, Long?> {
+        return if (filterDays >= 0) {
+            val sinceMs = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -filterDays) }.apply {
+                set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            sinceMs to null
+        } else if (customStartMs != null) {
+            customStartMs to customEndMs
+        } else {
+            null to null
+        }
+    }
+
+    private fun applyExtraFilters(records: List<RideRecord>): List<RideRecord> {
+        return records
+            .let { r -> if (selectedTypeFilter != "all") r.filter { it.serviceType == selectedTypeFilter } else r }
+            .let { r ->
+                when (selectedScoreFilter) {
+                    "good" -> r.filter { it.scorePercent != null && it.scorePercent >= 80.0 }
+                    "medium" -> r.filter { it.scorePercent != null && it.scorePercent >= 50.0 && it.scorePercent < 80.0 }
+                    "bad" -> r.filter { it.scorePercent != null && it.scorePercent < 50.0 }
+                    else -> r
+                }
+            }
+    }
+
     private val dataUpdateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == "NEW_RIDE_SAVED") {
@@ -90,24 +116,18 @@ class MainActivity : BaseActivity() {
             showLogo = true,
             actionText = "LIMPAR HISTÓRICO",
             actionListener = {
-                val sinceMs = if (filterDays >= 0) {
-                    val cal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -filterDays) }
-                    cal.apply {
-                        set(Calendar.HOUR_OF_DAY, 0)
-                        set(Calendar.MINUTE, 0)
-                        set(Calendar.SECOND, 0)
-                        set(Calendar.MILLISECOND, 0)
-                    }.timeInMillis
-                } else null
-
-                val recordsToDelete = if (sinceMs != null) db.getFiltered(sinceMs) else db.getAll()
+                val (sinceMs, untilMs) = computeFilterTimeRange()
+                val allRange = db.getFiltered(sinceMs, limit = null, untilMs = untilMs)
+                val recordsToDelete = applyExtraFilters(allRange)
                 val count = recordsToDelete.size
 
                 AlertDialog.Builder(this)
-                    .setTitle(if (filterDays > 0) "Limpar período" else "Limpar histórico")
-                    .setMessage("$count corrida(s) serão apagadas permanentemente.\nEsta ação não pode ser desfeita.")
+                    .setTitle(if (filterDays != 0 || customStartMs != null) "Limpar filtrados" else "Limpar hist\u00F3rico")
+                    .setMessage("$count corrida(s) ser\u00E3o apagadas permanentemente.\nEsta a\u00E7\u00E3o n\u00E3o pode ser desfeita.")
                     .setPositiveButton("Apagar") { _, _ ->
-                        db.deleteByTimestamp(sinceMs)
+                        for (r in recordsToDelete) {
+                            db.deleteRide(r.id)
+                        }
                         loadFilteredHistory()
                         Snackbar.make(findViewById(android.R.id.content),
                             "$count corrida(s) apagada(s)", Snackbar.LENGTH_LONG)
@@ -246,39 +266,9 @@ class MainActivity : BaseActivity() {
         lifecycleScope.launch {
             try {
             val (records, totalCount) = withContext(Dispatchers.IO) {
-                val sinceMs: Long?
-                val untilMs: Long?
-                if (filterDays >= 0) {
-                    sinceMs = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -filterDays) }.apply {
-                        set(Calendar.HOUR_OF_DAY, 0)
-                        set(Calendar.MINUTE, 0)
-                        set(Calendar.SECOND, 0)
-                        set(Calendar.MILLISECOND, 0)
-                    }.timeInMillis
-                    untilMs = null
-                } else if (customStartMs != null) {
-                    sinceMs = customStartMs
-                    untilMs = customEndMs
-                } else {
-                    sinceMs = null
-                    untilMs = null
-                }
-
+                val (sinceMs, untilMs) = computeFilterTimeRange()
                 val pageRecords = db.getFiltered(sinceMs, pageSize, currentPage * pageSize, untilMs = untilMs)
-
-                val filtered = pageRecords
-                    .let { records ->
-                        if (selectedTypeFilter != "all") records.filter { it.serviceType == selectedTypeFilter }
-                        else records
-                    }
-                    .let { records ->
-                        when (selectedScoreFilter) {
-                            "good" -> records.filter { it.scorePercent != null && it.scorePercent >= 80.0 }
-                            "medium" -> records.filter { it.scorePercent != null && it.scorePercent >= 50.0 && it.scorePercent < 80.0 }
-                            "bad" -> records.filter { it.scorePercent != null && it.scorePercent < 50.0 }
-                            else -> records
-                        }
-                    }
+                val filtered = applyExtraFilters(pageRecords)
 
                 val records = filtered
                     .let { CardHashGenerator.recoverRidesFromRawLogs(it, db) }

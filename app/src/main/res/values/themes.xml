@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Tema Base do Aplicativo -->
-    <style name="Theme.CorridaCerta" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="Theme.CorridaCerta" parent="Theme.AppCompat.DayNight.NoActionBar">
         <!-- Cores principais -->
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
