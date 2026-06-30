@@ -2,7 +2,6 @@ package com.profitdriving
 
 import android.content.Intent
 import android.os.Bundle
-import com.profitdriving.FormatUtils
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
@@ -10,14 +9,13 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.profitdriving.ConsumptionCalculator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -31,11 +29,24 @@ class CostsActivity : BaseActivity() {
     private lateinit var eventList: LinearLayout
     private lateinit var normalizedExpenseList: LinearLayout
     private lateinit var progressOverlay: View
-    private var refuels = listOf<RefuelRecord>()
+    private var allRefuels = listOf<RefuelRecord>()
     private var allExpenses = listOf<Expense>()
     private var monthlyKm = 3000
     private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("pt", "BR"))
     private val dateFormat = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
+
+    private var currentMode = ViewMode.DAY
+    private var referenceCalendar = Calendar.getInstance()
+    private lateinit var btnModeDay: TextView
+    private lateinit var btnModeWeek: TextView
+    private lateinit var btnModeMonth: TextView
+    private lateinit var btnPrevPeriod: TextView
+    private lateinit var btnNextPeriod: TextView
+    private lateinit var tvPeriodTitle: TextView
+    private lateinit var btnToday: TextView
+    private val dayFormatter = SimpleDateFormat("EEEE, dd/MM/yyyy", Locale("pt", "BR"))
+    private val weekFormatter = SimpleDateFormat("dd/MM", Locale.getDefault())
+    private val monthFormatter = SimpleDateFormat("MMMM yyyy", Locale("pt", "BR"))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +63,7 @@ class CostsActivity : BaseActivity() {
         setupRefuelButton()
         setupExpenseButtons()
         setupMonthlyKm()
+        setupPeriodNavigation()
 
         findViewById<TextView>(R.id.btnViewExpenses).setOnClickListener {
             startActivity(Intent(this, ExpensesActivity::class.java))
@@ -62,6 +74,8 @@ class CostsActivity : BaseActivity() {
         findViewById<TextView>(R.id.btnViewAllRefuels).setOnClickListener {
             startActivity(Intent(this, RefuelsHistoryActivity::class.java))
         }
+
+        setViewMode(ViewMode.DAY)
     }
 
     override fun onResume() {
@@ -69,6 +83,23 @@ class CostsActivity : BaseActivity() {
         try { loadData() } catch (e: Exception) {
             L.e("CostsActivity", "Error loading data", e)
         }
+    }
+
+    private fun setupPeriodNavigation() {
+        btnModeDay = findViewById(R.id.btnModeDay)
+        btnModeWeek = findViewById(R.id.btnModeWeek)
+        btnModeMonth = findViewById(R.id.btnModeMonth)
+        btnPrevPeriod = findViewById(R.id.btnPrevPeriod)
+        btnNextPeriod = findViewById(R.id.btnNextPeriod)
+        tvPeriodTitle = findViewById(R.id.tvPeriodTitle)
+        btnToday = findViewById(R.id.btnToday)
+
+        btnModeDay.setOnClickListener { setViewMode(ViewMode.DAY) }
+        btnModeWeek.setOnClickListener { setViewMode(ViewMode.WEEK) }
+        btnModeMonth.setOnClickListener { setViewMode(ViewMode.MONTH) }
+        btnPrevPeriod.setOnClickListener { navigatePeriod(-1) }
+        btnNextPeriod.setOnClickListener { navigatePeriod(1) }
+        btnToday.setOnClickListener { goToToday() }
     }
 
     private fun setupRefuelButton() {
@@ -129,14 +160,165 @@ class CostsActivity : BaseActivity() {
         })
     }
 
+    private fun getPeriodTimestamps(): Pair<Long, Long> {
+        val start: Calendar
+        val end: Calendar
+        when (currentMode) {
+            ViewMode.DAY -> {
+                start = referenceCalendar.clone() as Calendar
+                start.set(Calendar.HOUR_OF_DAY, 0)
+                start.set(Calendar.MINUTE, 0)
+                start.set(Calendar.SECOND, 0)
+                start.set(Calendar.MILLISECOND, 0)
+                end = start.clone() as Calendar
+                end.set(Calendar.HOUR_OF_DAY, 23)
+                end.set(Calendar.MINUTE, 59)
+                end.set(Calendar.SECOND, 59)
+                end.set(Calendar.MILLISECOND, 999)
+            }
+            ViewMode.WEEK -> {
+                start = getWeekStart(referenceCalendar)
+                start.set(Calendar.HOUR_OF_DAY, 0)
+                start.set(Calendar.MINUTE, 0)
+                start.set(Calendar.SECOND, 0)
+                start.set(Calendar.MILLISECOND, 0)
+                end = getWeekEnd(referenceCalendar)
+                end.set(Calendar.HOUR_OF_DAY, 23)
+                end.set(Calendar.MINUTE, 59)
+                end.set(Calendar.SECOND, 59)
+                end.set(Calendar.MILLISECOND, 999)
+            }
+            ViewMode.MONTH -> {
+                start = referenceCalendar.clone() as Calendar
+                start.set(Calendar.DAY_OF_MONTH, 1)
+                start.set(Calendar.HOUR_OF_DAY, 0)
+                start.set(Calendar.MINUTE, 0)
+                start.set(Calendar.SECOND, 0)
+                start.set(Calendar.MILLISECOND, 0)
+                end = start.clone() as Calendar
+                end.set(Calendar.DAY_OF_MONTH, start.getActualMaximum(Calendar.DAY_OF_MONTH))
+                end.set(Calendar.HOUR_OF_DAY, 23)
+                end.set(Calendar.MINUTE, 59)
+                end.set(Calendar.SECOND, 59)
+                end.set(Calendar.MILLISECOND, 999)
+            }
+        }
+        return Pair(start.timeInMillis, end.timeInMillis)
+    }
+
+    private fun getWeekStart(cal: Calendar): Calendar {
+        val c = cal.clone() as Calendar
+        c.set(Calendar.DAY_OF_WEEK, c.firstDayOfWeek)
+        return c
+    }
+
+    private fun getWeekEnd(cal: Calendar): Calendar {
+        val c = getWeekStart(cal)
+        c.add(Calendar.DAY_OF_WEEK, 6)
+        return c
+    }
+
+    private fun setViewMode(mode: ViewMode) {
+        currentMode = mode
+        referenceCalendar = when (mode) {
+            ViewMode.DAY -> referenceCalendar
+            ViewMode.WEEK -> getWeekStart(referenceCalendar)
+            ViewMode.MONTH -> {
+                val cal = referenceCalendar.clone() as Calendar
+                cal.set(Calendar.DAY_OF_MONTH, 1)
+                cal
+            }
+        }
+        updateModeStyles()
+        updatePeriodTitle()
+        loadData()
+    }
+
+    private fun updateModeStyles() {
+        btnModeDay.setBackgroundResource(if (currentMode == ViewMode.DAY) R.drawable.pill_selected else R.drawable.pill_unselected)
+        btnModeWeek.setBackgroundResource(if (currentMode == ViewMode.WEEK) R.drawable.pill_selected else R.drawable.pill_unselected)
+        btnModeMonth.setBackgroundResource(if (currentMode == ViewMode.MONTH) R.drawable.pill_selected else R.drawable.pill_unselected)
+
+        btnModeDay.setTextColor(if (currentMode == ViewMode.DAY) AppColors.textInverse else AppColors.textSecondary)
+        btnModeWeek.setTextColor(if (currentMode == ViewMode.WEEK) AppColors.textInverse else AppColors.textSecondary)
+        btnModeMonth.setTextColor(if (currentMode == ViewMode.MONTH) AppColors.textInverse else AppColors.textSecondary)
+    }
+
+    private fun navigatePeriod(direction: Int) {
+        when (currentMode) {
+            ViewMode.DAY -> referenceCalendar.add(Calendar.DAY_OF_MONTH, direction)
+            ViewMode.WEEK -> referenceCalendar.add(Calendar.DAY_OF_MONTH, direction * 7)
+            ViewMode.MONTH -> referenceCalendar.add(Calendar.MONTH, direction)
+        }
+        updatePeriodTitle()
+        loadData()
+    }
+
+    private fun goToToday() {
+        referenceCalendar = Calendar.getInstance()
+        if (currentMode != ViewMode.DAY) {
+            referenceCalendar = when (currentMode) {
+                ViewMode.WEEK -> getWeekStart(referenceCalendar)
+                ViewMode.MONTH -> {
+                    val cal = referenceCalendar.clone() as Calendar
+                    cal.set(Calendar.DAY_OF_MONTH, 1)
+                    cal
+                }
+                else -> referenceCalendar
+            }
+        }
+        updatePeriodTitle()
+        loadData()
+    }
+
+    private fun updatePeriodTitle() {
+        val title = when (currentMode) {
+            ViewMode.DAY -> dayFormatter.format(referenceCalendar.time)
+            ViewMode.WEEK -> {
+                val start = getWeekStart(referenceCalendar)
+                val end = getWeekEnd(referenceCalendar)
+                "${weekFormatter.format(start.time)} - ${weekFormatter.format(end.time)}"
+            }
+            ViewMode.MONTH -> monthFormatter.format(referenceCalendar.time)
+        }
+        tvPeriodTitle.text = title.replaceFirstChar { it.uppercaseChar() }
+    }
+
+    private fun isCurrentPeriod(): Boolean {
+        val now = Calendar.getInstance()
+        return when (currentMode) {
+            ViewMode.DAY ->
+                referenceCalendar.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
+                referenceCalendar.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)
+            ViewMode.WEEK -> {
+                val refStart = getWeekStart(referenceCalendar)
+                val todayStart = getWeekStart(now)
+                refStart.timeInMillis == todayStart.timeInMillis
+            }
+            ViewMode.MONTH ->
+                referenceCalendar.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
+                referenceCalendar.get(Calendar.MONTH) == now.get(Calendar.MONTH)
+        }
+    }
+
+    private fun filterRefuelsByPeriod(items: List<RefuelRecord>): List<RefuelRecord> {
+        val (periodStart, periodEnd) = getPeriodTimestamps()
+        return items.filter { it.timestamp in periodStart..periodEnd }
+    }
+
+    private fun filterExpensesByPeriod(items: List<Expense>): List<Expense> {
+        val (periodStart, periodEnd) = getPeriodTimestamps()
+        return items.filter { it.createdAt in periodStart..periodEnd }
+    }
+
     private fun loadData() {
         lifecycleScope.launch {
             try {
                 val (loadedRefuels, loadedExpenses, loadedMonthlyKm) = withContext(Dispatchers.IO) {
                     Triple(db.getRefuels(), db.getAllExpenses(), db.getMonthlyKm())
                 }
-                refuels = loadedRefuels
-                allExpenses = loadedExpenses
+                allRefuels = filterRefuelsByPeriod(loadedRefuels)
+                allExpenses = filterExpensesByPeriod(loadedExpenses)
                 monthlyKm = loadedMonthlyKm
 
                 etMonthlyKm.setText(loadedMonthlyKm.toString())
@@ -159,7 +341,7 @@ class CostsActivity : BaseActivity() {
         refuelList = findViewById(R.id.refuelList)
         refuelList.removeAllViews()
 
-        if (refuels.isEmpty()) {
+        if (allRefuels.isEmpty()) {
             val empty = TextView(this).apply {
                 text = "Nenhum abastecimento registrado"
                 textSize = 12f
@@ -171,7 +353,7 @@ class CostsActivity : BaseActivity() {
             return
         }
 
-        for (refuel in refuels.take(4)) {
+        for (refuel in allRefuels.take(4)) {
             val row = layoutInflater.inflate(R.layout.item_refuel_history, refuelList, false)
 
             row.findViewById<TextView>(R.id.tvRefuelDate).text =
@@ -195,10 +377,10 @@ class CostsActivity : BaseActivity() {
     }
 
     private fun calculateRefuelConsumption(refuel: RefuelRecord): Double {
-        val allRefuels = refuels.sortedByDescending { it.timestamp }
-        val idx = allRefuels.indexOfFirst { it.id == refuel.id }
-        if (idx < 0 || idx >= allRefuels.size - 1) return 0.0
-        val next = allRefuels[idx + 1]
+        val sorted = allRefuels.sortedByDescending { it.timestamp }
+        val idx = sorted.indexOfFirst { it.id == refuel.id }
+        if (idx < 0 || idx >= sorted.size - 1) return 0.0
+        val next = sorted[idx + 1]
         val kmDiff = refuel.odometerKm - next.odometerKm
         return if (kmDiff > 0 && refuel.amount > 0) kmDiff / refuel.amount else 0.0
     }
@@ -210,7 +392,7 @@ class CostsActivity : BaseActivity() {
         val energyTypes = EnergyType.entries
 
         for (type in energyTypes) {
-            val stats = CostCalculator.calculateEnergyStats(refuels, type)
+            val stats = CostCalculator.calculateEnergyStats(allRefuels, type)
             if (stats.count == 0) continue
 
             val card = layoutInflater.inflate(R.layout.item_energy_stat, container, false)
@@ -261,8 +443,8 @@ class CostsActivity : BaseActivity() {
     }
 
     private fun updateFuelStats() {
-        val refuels = db.getRefuels()
-        val result = ConsumptionCalculator.calculateConsumption(refuels)
+        val allRefuels = db.getRefuels()
+        val result = ConsumptionCalculator.calculateConsumption(allRefuels)
 
         val methodText = when (result.method) {
             ConsumptionCalculator.CalculationMethod.SINGLE_FUEL ->
@@ -486,7 +668,7 @@ class CostsActivity : BaseActivity() {
     }
 
     private fun updateSummary() {
-        val summary = CostCalculator.calculateCostSummary(refuels, allExpenses, monthlyKm, currentFuelType = "gasoline")
+        val summary = CostCalculator.calculateCostSummary(allRefuels, allExpenses, monthlyKm, currentFuelType = "gasoline")
 
         normalizedExpenseList = findViewById(R.id.normalizedExpenseList)
         normalizedExpenseList.removeAllViews()
@@ -557,7 +739,7 @@ class CostsActivity : BaseActivity() {
     }
 
     private fun updateSimulator() {
-        val summary = CostCalculator.calculateCostSummary(refuels, allExpenses, monthlyKm, currentFuelType = "gasoline")
+        val summary = CostCalculator.calculateCostSummary(allRefuels, allExpenses, monthlyKm, currentFuelType = "gasoline")
         val costPerKm = summary.totalCostPerKm
 
         findViewById<TextView>(R.id.tvYourCost).text =
