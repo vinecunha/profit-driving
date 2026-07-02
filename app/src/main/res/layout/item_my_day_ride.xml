@@ -423,7 +423,7 @@
         android:gravity="center"
         android:text="\u2699\uFE0F A\u00E7\u00F5es"
         android:textSize="@dimen/text_size_12"
-        android:textColor="@color/text_secondary"
+        android:textColor="@color/text_primary"
         android:textStyle="bold"
         android:background="@drawable/pill_unselected"
         android:layout_marginTop="8dp"

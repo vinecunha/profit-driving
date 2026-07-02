@@ -1,6 +1,6 @@
 package com.profitdriving
 
-import android.app.AlertDialog
+import androidx.appcompat.app.AlertDialog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -197,25 +197,53 @@ class MyDayRideAdapter(
         holder.chkCompleted.setOnClickListener { onToggleCompleted(ride) }
         holder.btnActions.setOnClickListener {
             val context = holder.itemView.context
-            val options = mutableListOf<String>()
             val actions = mutableListOf<() -> Unit>()
 
             if (!ride.cancelledWithFee) {
-                options.add("\uD83D\uDEAB Cancelar com taxa")
                 actions.add { onCancelWithFee(ride) }
             }
-            options.add("\uD83C\uDF6F Adicionar gorjeta")
             actions.add { onAddTip(ride) }
-            options.add("\u21BB Reajustar valor")
             actions.add { onAdjust(ride) }
-            options.add("\u21BA Remover da lista")
             actions.add { onToggleCompleted(ride) }
+
+            val labels = mutableListOf<String>()
+            if (!ride.cancelledWithFee) labels.add("\uD83D\uDEAB Cancelar com taxa")
+            labels.add("\uD83C\uDF6F Adicionar gorjeta")
+            labels.add("\u21BB Reajustar valor")
+            labels.add("\u21BA Remover da lista")
+
+            val view = LayoutInflater.from(context).inflate(R.layout.dialog_actions, null)
+            val btn1 = view.findViewById<TextView>(R.id.btnAction1)
+            val btn2 = view.findViewById<TextView>(R.id.btnAction2)
+            val btn3 = view.findViewById<TextView>(R.id.btnAction3)
+            val btn4 = view.findViewById<TextView>(R.id.btnAction4)
+            val divider1 = view.findViewById<View>(R.id.divider1)
+
+            var offset = 0
+            if (!ride.cancelledWithFee) {
+                btn1.text = labels[0]
+                btn1.visibility = View.VISIBLE
+                divider1.visibility = View.VISIBLE
+                btn1.setOnClickListener { actions[0].invoke() }
+                offset = 1
+            } else {
+                btn1.visibility = View.GONE
+                divider1.visibility = View.GONE
+            }
+
+            btn2.text = labels[offset]
+            btn2.visibility = View.VISIBLE
+            btn2.setOnClickListener { actions[offset].invoke() }
+            btn3.text = labels[offset + 1]
+            btn3.visibility = View.VISIBLE
+            btn3.setOnClickListener { actions[offset + 1].invoke() }
+            btn4.text = labels[offset + 2]
+            btn4.visibility = View.VISIBLE
+            btn4.setOnClickListener { actions[offset + 2].invoke() }
 
             AlertDialog.Builder(context)
                 .setTitle("A\u00E7\u00F5es")
-                .setItems(options.toTypedArray()) { _, which ->
-                    actions.getOrNull(which)?.invoke()
-                }
+                .setView(view)
                 .setNegativeButton("Cancelar", null)
                 .show()
         }

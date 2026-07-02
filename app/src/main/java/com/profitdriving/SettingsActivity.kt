@@ -11,14 +11,18 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
+import android.view.animation.DecelerateInterpolator
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.LinearLayout
 import android.widget.SeekBar
+import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import android.widget.AdapterView
 import androidx.lifecycle.lifecycleScope
 import com.profitdriving.accessibility.extractor.RawCardData
 import com.profitdriving.parser.App99CardParser
@@ -31,8 +35,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
+import java.util.Calendar
 import java.util.Locale
 import com.profitdriving.FormatUtils
+import com.profitdriving.models.WorkProfile
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 
@@ -88,6 +94,15 @@ class SettingsActivity : BaseActivity() {
     private lateinit var seekCardDuration: SeekBar
     private lateinit var tvCardDurationLabel: TextView
     private var cardDurationSeconds = 30
+    private lateinit var spinnerCardAnimation: Spinner
+    private lateinit var tvAnimationPreview: TextView
+    private lateinit var btnProfileBadDay: TextView
+    private lateinit var btnProfileNormal: TextView
+    private lateinit var btnProfileDynamic: TextView
+    private lateinit var btnProfileCustom: TextView
+    private lateinit var tvProfileDesc: TextView
+    private var activeProfile = WorkProfile.NORMAL
+    private var isUpdatingFromProfile = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -143,6 +158,13 @@ class SettingsActivity : BaseActivity() {
         btnPage500 = findViewById(R.id.btnPage500)
         seekCardDuration = findViewById(R.id.seekCardDuration)
         tvCardDurationLabel = findViewById(R.id.tvCardDurationLabel)
+        spinnerCardAnimation = findViewById(R.id.spinnerCardAnimation)
+        tvAnimationPreview = findViewById(R.id.tvAnimationPreview)
+        btnProfileBadDay = findViewById(R.id.btnProfileBadDay)
+        btnProfileNormal = findViewById(R.id.btnProfileNormal)
+        btnProfileDynamic = findViewById(R.id.btnProfileDynamic)
+        btnProfileCustom = findViewById(R.id.btnProfileCustom)
+        tvProfileDesc = findViewById(R.id.tvProfileDesc)
 
         seekCardDuration.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -158,7 +180,12 @@ class SettingsActivity : BaseActivity() {
         val textWatcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) { debouncedUpdatePreview() }
+            override fun afterTextChanged(s: Editable?) {
+                if (!isUpdatingFromProfile && activeProfile != WorkProfile.CUSTOM) {
+                    selectWorkProfile(WorkProfile.CUSTOM)
+                }
+                debouncedUpdatePreview()
+            }
         }
         etMinKm.addTextChangedListener(textWatcher)
         etIdealKm.addTextChangedListener(textWatcher)
@@ -299,6 +326,8 @@ class SettingsActivity : BaseActivity() {
         findViewById<TextView>(R.id.btnReprocess).setOnClickListener { showReprocessDialog() }
 
         setupThemePills()
+        setupWorkProfileSelector()
+        setupAnimationSelector()
     }
 
     private fun showReprocessDialog() {
@@ -559,6 +588,10 @@ class SettingsActivity : BaseActivity() {
         cardDurationSeconds = prefs.getInt(KEY_CARD_DURATION, 30)
         seekCardDuration.progress = (cardDurationSeconds - 5) / 5
         tvCardDurationLabel.text = "Dura\u00e7\u00e3o do card: ${cardDurationSeconds}s"
+
+        val profileKey = prefs.getString(KEY_ACTIVE_PROFILE, "normal") ?: "normal"
+        activeProfile = WorkProfile.entries.firstOrNull { it.prefKey == profileKey } ?: WorkProfile.NORMAL
+        selectWorkProfile(activeProfile)
     }
 
     private fun saveValues(showToast: Boolean = true) {
@@ -625,6 +658,17 @@ class SettingsActivity : BaseActivity() {
             putInt(KEY_THRESHOLD_ANALISAR, seekThresholdAnalisar.progress + 20)
             putInt(KEY_PAGE_SIZE, selectedPageSize)
             putInt(KEY_CARD_DURATION, cardDurationSeconds)
+            putString(KEY_ACTIVE_PROFILE, activeProfile.prefKey)
+            if (activeProfile == WorkProfile.CUSTOM) {
+                putFloat(KEY_CUSTOM_MIN_KM, minKm)
+                putFloat(KEY_CUSTOM_IDEAL_KM, idealKm)
+                putFloat(KEY_CUSTOM_MIN_HOUR, minHour)
+                putFloat(KEY_CUSTOM_IDEAL_HOUR, idealHour)
+                putFloat(KEY_CUSTOM_MIN_MINUTE, minMinute)
+                putFloat(KEY_CUSTOM_IDEAL_MINUTE, idealMinute)
+                putFloat(KEY_CUSTOM_MIN_RATING, minRating)
+                putFloat(KEY_CUSTOM_IDEAL_RATING, idealRating)
+            }
             apply()
         }
 
@@ -746,6 +790,201 @@ class SettingsActivity : BaseActivity() {
         btnDark.setOnClickListener { selectTheme(THEME_MODE_DARK) }
     }
 
+    private fun setupWorkProfileSelector() {
+        btnProfileBadDay.setOnClickListener { selectWorkProfile(WorkProfile.BAD_DAY) }
+        btnProfileNormal.setOnClickListener { selectWorkProfile(WorkProfile.NORMAL) }
+        btnProfileDynamic.setOnClickListener { selectWorkProfile(WorkProfile.DYNAMIC) }
+        btnProfileCustom.setOnClickListener { selectWorkProfile(WorkProfile.CUSTOM) }
+    }
+
+    private fun selectWorkProfile(profile: WorkProfile) {
+        activeProfile = profile
+
+        // Update pill visual state for all 4 profiles
+        btnProfileBadDay.isSelected = profile == WorkProfile.BAD_DAY
+        btnProfileNormal.isSelected = profile == WorkProfile.NORMAL
+        btnProfileDynamic.isSelected = profile == WorkProfile.DYNAMIC
+        btnProfileCustom.isSelected = profile == WorkProfile.CUSTOM
+
+        btnProfileBadDay.setBackgroundResource(
+            if (profile == WorkProfile.BAD_DAY) R.drawable.pill_selected else R.drawable.pill_unselected
+        )
+        btnProfileNormal.setBackgroundResource(
+            if (profile == WorkProfile.NORMAL) R.drawable.pill_selected else R.drawable.pill_unselected
+        )
+        btnProfileDynamic.setBackgroundResource(
+            if (profile == WorkProfile.DYNAMIC) R.drawable.pill_selected else R.drawable.pill_unselected
+        )
+        btnProfileCustom.setBackgroundResource(
+            if (profile == WorkProfile.CUSTOM) R.drawable.pill_selected else R.drawable.pill_unselected
+        )
+
+        btnProfileBadDay.setTextColor(
+            if (profile == WorkProfile.BAD_DAY) AppColors.textInverse else AppColors.textSecondary
+        )
+        btnProfileNormal.setTextColor(
+            if (profile == WorkProfile.NORMAL) AppColors.textInverse else AppColors.textSecondary
+        )
+        btnProfileDynamic.setTextColor(
+            if (profile == WorkProfile.DYNAMIC) AppColors.textInverse else AppColors.textSecondary
+        )
+        btnProfileCustom.setTextColor(
+            if (profile == WorkProfile.CUSTOM) AppColors.textInverse else AppColors.textSecondary
+        )
+
+        // CUSTOM: restore from snapshot or fall back to saved values
+        if (profile == WorkProfile.CUSTOM) {
+            tvProfileDesc.setText(R.string.profile_custom_desc)
+            isUpdatingFromProfile = true
+            fun lf(key: String, def: Float): String {
+                val v = prefs.getFloat(key, def)
+                return if (v == 0f) "" else FormatUtils.decimal(v)
+            }
+            if (prefs.contains(KEY_CUSTOM_MIN_KM)) {
+                etMinKm.setText(lf(KEY_CUSTOM_MIN_KM, 2.5f))
+                etIdealKm.setText(lf(KEY_CUSTOM_IDEAL_KM, 4.0f))
+                etMinHour.setText(lf(KEY_CUSTOM_MIN_HOUR, 30f))
+                etIdealHour.setText(lf(KEY_CUSTOM_IDEAL_HOUR, 60f))
+                etMinMinute.setText(lf(KEY_CUSTOM_MIN_MINUTE, 0.5f))
+                etIdealMinute.setText(lf(KEY_CUSTOM_IDEAL_MINUTE, 1.0f))
+                etMinRating.setText(lf(KEY_CUSTOM_MIN_RATING, 4.5f))
+                etIdealRating.setText(lf(KEY_CUSTOM_IDEAL_RATING, 4.9f))
+            } else {
+                etMinKm.setText(lf(KEY_MIN_KM, 2.5f))
+                etIdealKm.setText(lf(KEY_IDEAL_KM, 4.0f))
+                etMinHour.setText(lf(KEY_MIN_HOUR, 30f))
+                etIdealHour.setText(lf(KEY_IDEAL_HOUR, 60f))
+                etMinMinute.setText(lf(KEY_MIN_MINUTE, 0.5f))
+                etIdealMinute.setText(lf(KEY_IDEAL_MINUTE, 1.0f))
+                etMinRating.setText(lf(KEY_MIN_RATING, 4.5f))
+                etIdealRating.setText(lf(KEY_IDEAL_RATING, 4.9f))
+            }
+            isUpdatingFromProfile = false
+            debouncedUpdatePreview()
+            return
+        }
+
+        tvProfileDesc.setText(when (profile) {
+            WorkProfile.BAD_DAY -> R.string.profile_bad_day_desc
+            WorkProfile.NORMAL -> R.string.profile_normal_desc
+            WorkProfile.DYNAMIC -> R.string.profile_dynamic_desc
+            else -> R.string.profile_custom_desc
+        })
+
+        val db = DatabaseHelper(this)
+        val values = WorkProfileCalculator.calculate(profile, db)
+
+        val stats = db.getRideStats(
+            Calendar.getInstance().apply { add(Calendar.MONTH, -3) }.timeInMillis
+        )
+        val usedDefault = stats == null || stats.count < 10
+        val toastMsg = if (usedDefault) R.string.profile_applied_default
+                       else R.string.profile_applied_stats
+
+        isUpdatingFromProfile = true
+        etMinKm.setText(FormatUtils.decimal(values.minKm))
+        etIdealKm.setText(FormatUtils.decimal(values.idealKm))
+        etMinHour.setText(FormatUtils.decimal(values.minHour))
+        etIdealHour.setText(FormatUtils.decimal(values.idealHour))
+        etMinMinute.setText(FormatUtils.decimal(values.minMinute))
+        etIdealMinute.setText(FormatUtils.decimal(values.idealMinute))
+        etMinRating.setText(FormatUtils.decimal(values.minRating))
+        etIdealRating.setText(FormatUtils.decimal(values.idealRating))
+        isUpdatingFromProfile = false
+
+        debouncedUpdatePreview()
+        Toast.makeText(this, toastMsg, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun setupAnimationSelector() {
+        val prefs = PreferenceManager(this)
+        val currentAnimation = prefs.getCardAnimation()
+        val labels = AnimationConstants.getAnimationLabels()
+        val animationNames = AnimationConstants.getAnimationNames()
+        val animationLabels = animationNames.map { labels[it] ?: it }
+
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            animationLabels
+        )
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerCardAnimation.adapter = adapter
+
+        val currentIndex = animationNames.indexOf(currentAnimation)
+        spinnerCardAnimation.setSelection(if (currentIndex >= 0) currentIndex else 0)
+
+        spinnerCardAnimation.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selected = animationNames[position]
+                prefs.setCardAnimation(selected)
+                showAnimationPreview(selected)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+    }
+
+    private fun showAnimationPreview(animation: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            tvAnimationPreview.visibility = View.GONE
+            return
+        }
+
+        tvAnimationPreview.visibility = View.VISIBLE
+        val animNames = mapOf(
+            AnimationConstants.ANIMATION_NONE to "Instantâneo",
+            AnimationConstants.ANIMATION_FADE to "Fade In",
+            AnimationConstants.ANIMATION_SLIDE_RIGHT to "→ Direita",
+            AnimationConstants.ANIMATION_SLIDE_LEFT to "← Esquerda",
+            AnimationConstants.ANIMATION_FADE_SLIDE to "Fade + Slide ↑"
+        )
+        tvAnimationPreview.text = "Preview: ${animNames[animation] ?: animation}"
+
+        tvAnimationPreview.alpha = 0f
+        tvAnimationPreview.translationX = 0f
+        tvAnimationPreview.translationY = 0f
+
+        when (animation) {
+            AnimationConstants.ANIMATION_NONE -> {
+                tvAnimationPreview.alpha = 1f
+            }
+            AnimationConstants.ANIMATION_FADE -> {
+                tvAnimationPreview.animate()
+                    .alpha(1f)
+                    .setDuration(500)
+                    .setInterpolator(DecelerateInterpolator())
+                    .start()
+            }
+            AnimationConstants.ANIMATION_SLIDE_RIGHT -> {
+                tvAnimationPreview.translationX = 100f
+                tvAnimationPreview.animate()
+                    .translationX(0f)
+                    .setDuration(500)
+                    .setInterpolator(DecelerateInterpolator())
+                    .start()
+            }
+            AnimationConstants.ANIMATION_SLIDE_LEFT -> {
+                tvAnimationPreview.translationX = -100f
+                tvAnimationPreview.animate()
+                    .translationX(0f)
+                    .setDuration(500)
+                    .setInterpolator(DecelerateInterpolator())
+                    .start()
+            }
+            AnimationConstants.ANIMATION_FADE_SLIDE -> {
+                tvAnimationPreview.alpha = 0f
+                tvAnimationPreview.translationY = 40f
+                tvAnimationPreview.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(500)
+                    .setInterpolator(DecelerateInterpolator())
+                    .start()
+            }
+        }
+    }
+
     companion object {
         const val PREF_NAME = "profit_driving_prefs"
         const val KEY_MIN_KM = "min_km"
@@ -756,6 +995,15 @@ class SettingsActivity : BaseActivity() {
         const val KEY_IDEAL_RATING = "ideal_rating"
         const val KEY_MIN_MINUTE = "min_minute"
         const val KEY_IDEAL_MINUTE = "ideal_minute"
+
+        const val KEY_CUSTOM_MIN_KM = "custom_min_km"
+        const val KEY_CUSTOM_IDEAL_KM = "custom_ideal_km"
+        const val KEY_CUSTOM_MIN_HOUR = "custom_min_hour"
+        const val KEY_CUSTOM_IDEAL_HOUR = "custom_ideal_hour"
+        const val KEY_CUSTOM_MIN_MINUTE = "custom_min_minute"
+        const val KEY_CUSTOM_IDEAL_MINUTE = "custom_ideal_minute"
+        const val KEY_CUSTOM_MIN_RATING = "custom_min_rating"
+        const val KEY_CUSTOM_IDEAL_RATING = "custom_ideal_rating"
 
         const val KEY_LAST_VALUE = "last_value"
         const val KEY_LAST_DISTANCE = "last_distance"
@@ -781,6 +1029,7 @@ class SettingsActivity : BaseActivity() {
         const val KEY_THRESHOLD_ANALISAR = "threshold_analisar"
         const val KEY_PAGE_SIZE = "page_size"
         const val KEY_CARD_DURATION = "card_duration"
+        const val KEY_ACTIVE_PROFILE = "active_work_profile"
 
         const val DEFAULT_CARD_LAYOUT = "column"
         const val DEFAULT_CARD_POSITION = "left"

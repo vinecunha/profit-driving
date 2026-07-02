@@ -12,14 +12,15 @@ import com.profitdriving.FormatUtils
 class AddExpenseDialog(
     private val context: Context,
     private val existing: Expense? = null,
+    private val type: CostType? = null,
     private val onSave: (Expense) -> Unit
 ) {
 
     fun show() {
-        if (existing != null) {
-            showTypeSpecific(existing.costType)
-        } else {
-            showTypePicker()
+        when {
+            type != null -> showTypeSpecific(type)
+            existing != null -> showTypeSpecific(existing.costType)
+            else -> showTypePicker()
         }
     }
 

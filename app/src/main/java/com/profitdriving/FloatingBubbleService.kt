@@ -7,18 +7,24 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import com.profitdriving.SecurePreferences
+import com.profitdriving.accessibility.RideAccessibilityServiceV2
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.provider.Settings
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.ImageView
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -34,6 +40,11 @@ class FloatingBubbleService : Service() {
     private var initialY = 0
     private var initialTouchX = 0f
     private var initialTouchY = 0f
+    private var lastTapTime = 0L
+    private var tapCount = 0
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val doubleTapDelay = 400L
+    private var isDragging = false
 
     override fun onCreate() {
         super.onCreate()
@@ -117,6 +128,73 @@ class FloatingBubbleService : Service() {
         }
     }
 
+    private fun processTapAction(count: Int) {
+        when (count) {
+            1 -> onSingleTap()
+            2 -> onDoubleTap()
+            3 -> onTripleTap()
+        }
+    }
+
+    private fun onSingleTap() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        startActivity(intent)
+    }
+
+    private fun onDoubleTap() {
+        val accService = RideAccessibilityServiceV2.instance
+        if (accService != null) {
+            accService.triggerReScan()
+            Toast.makeText(this, "Reanalisando tela...", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Serviço de acessibilidade não disponível", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun onTripleTap() {
+        val db = DatabaseHelper(this)
+        val lastRide = db.getLastRide()
+
+        if (lastRide != null) {
+            showLastRideCard(lastRide)
+
+            bubbleView?.let { view ->
+                val icon = view.findViewById<ImageView>(R.id.bubbleIcon)
+                icon.setColorFilter(ContextCompat.getColor(this, R.color.success))
+                mainHandler.postDelayed({
+                    icon.clearColorFilter()
+                }, 500)
+            }
+
+            Toast.makeText(this, "Última corrida reexibida", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Nenhuma corrida salva ainda", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showLastRideCard(ride: RideRecord) {
+        val intent = Intent(this, FloatingCardService::class.java).apply {
+            putExtra("ACTION", "SHOW_LAST_RIDE")
+            putExtra("value", ride.value ?: 0.0)
+            putExtra("distanceKm", ride.distanceKm ?: 0.0)
+            putExtra("timeMin", ride.timeMin ?: 0)
+            putExtra("serviceType", ride.serviceType ?: "")
+            putExtra("rating", ride.rating ?: 0.0)
+            putExtra("appName", ride.appName)
+            putExtra("pickupAddress", ride.pickupAddress ?: "")
+            putExtra("dropoffAddress", ride.dropoffAddress ?: "")
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+    }
+
     private fun showBubble(status: String?) {
         if (bubbleView != null) return
 
@@ -167,12 +245,35 @@ class FloatingBubbleService : Service() {
                     initialY = params.y
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
+                    isDragging = false
+
+                    val now = System.currentTimeMillis()
+                    if (now - lastTapTime < doubleTapDelay) {
+                        tapCount++
+                    } else {
+                        tapCount = 1
+                    }
+                    mainHandler.removeCallbacksAndMessages(null)
+                    mainHandler.postDelayed({
+                        processTapAction(tapCount)
+                        tapCount = 0
+                    }, doubleTapDelay)
+                    lastTapTime = now
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    params.x = initialX + (event.rawX - initialTouchX).toInt()
-                    params.y = initialY + (event.rawY - initialTouchY).toInt()
-                    try { windowManager.updateViewLayout(v, params) } catch (e: Exception) { L.e(TAG, "Erro ao atualizar layout bubble: ${e.message}", e) }
+                    val dx = (event.rawX - initialTouchX).toInt()
+                    val dy = (event.rawY - initialTouchY).toInt()
+                    if (!isDragging && dx * dx + dy * dy >= 100) {
+                        isDragging = true
+                        mainHandler.removeCallbacksAndMessages(null)
+                        tapCount = 0
+                    }
+                    if (isDragging) {
+                        params.x = initialX + dx
+                        params.y = initialY + dy
+                        try { windowManager.updateViewLayout(v, params) } catch (e: Exception) { L.e(TAG, "Erro ao atualizar layout bubble: ${e.message}", e) }
+                    }
                     true
                 }
                 MotionEvent.ACTION_UP -> {
@@ -180,15 +281,6 @@ class FloatingBubbleService : Service() {
                         .putInt("bubble_x", params.x)
                         .putInt("bubble_y", params.y)
                         .apply()
-                    val dx = (event.rawX - initialTouchX).toInt()
-                    val dy = (event.rawY - initialTouchY).toInt()
-                    if (dx * dx + dy * dy < 100) {
-                        val intent = Intent(this, MainActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                                    Intent.FLAG_ACTIVITY_SINGLE_TOP
-                        }
-                        startActivity(intent)
-                    }
                     true
                 }
                 else -> false

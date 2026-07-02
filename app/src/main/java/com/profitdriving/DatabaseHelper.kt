@@ -164,6 +164,16 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 L.w("DB", "v24 migration: ${e.message}")
             }
         }
+        if (oldVersion < 25) {
+            try {
+                db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_KM_STATE INTEGER")
+                db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_HOUR_STATE INTEGER")
+                db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_MIN_STATE INTEGER")
+                db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_RATING_STATE INTEGER")
+            } catch (e: Exception) {
+                L.w("DB", "v25 migration: ${e.message}")
+            }
+        }
     }
 
     private fun rebuildFuelRefuelsTable(db: SQLiteDatabase) {
@@ -279,6 +289,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 if (record.cardHash != null) {
                     put(COL_CARD_HASH, record.cardHash)
                 }
+                if (record.kmState != null) put(COL_KM_STATE, record.kmState)
+                if (record.hourState != null) put(COL_HOUR_STATE, record.hourState)
+                if (record.minState != null) put(COL_MIN_STATE, record.minState)
+                if (record.ratingState != null) put(COL_RATING_STATE, record.ratingState)
             }
             db.insert(TABLE_NAME, null, cv)
         } finally {
@@ -365,7 +379,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     pickupAddress = it.getSafeString(COL_PICKUP_ADDRESS),
                     dropoffAddress = it.getSafeString(COL_DROPOFF_ADDRESS),
                     costPerKmAtTime = it.getSafeDouble(COL_COST_PER_KM_AT_TIME),
-                    cardHash = it.getSafeString(COL_CARD_HASH)
+                    cardHash = it.getSafeString(COL_CARD_HASH),
+                    kmState = it.getSafeInt(COL_KM_STATE),
+                    hourState = it.getSafeInt(COL_HOUR_STATE),
+                    minState = it.getSafeInt(COL_MIN_STATE),
+                    ratingState = it.getSafeInt(COL_RATING_STATE)
                 )
             }
         }
@@ -612,6 +630,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         } catch (e: Exception) { L.e("CorridaCerta", "Erro ao calcular custo/km atual: ${e.message}", e); null }
     }
 
+    fun getLastRide(): RideRecord? {
+        val records = getFiltered(null, 1)
+        return records.firstOrNull()
+    }
+
     fun getAll(): List<RideRecord> {
         return getFiltered(null, null)
     }
@@ -661,7 +684,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     pickupAddress = it.getSafeString(COL_PICKUP_ADDRESS),
                     dropoffAddress = it.getSafeString(COL_DROPOFF_ADDRESS),
                     costPerKmAtTime = it.getSafeDouble(COL_COST_PER_KM_AT_TIME),
-                    cardHash = it.getSafeString(COL_CARD_HASH)
+                    cardHash = it.getSafeString(COL_CARD_HASH),
+                    kmState = it.getSafeInt(COL_KM_STATE),
+                    hourState = it.getSafeInt(COL_HOUR_STATE),
+                    minState = it.getSafeInt(COL_MIN_STATE),
+                    ratingState = it.getSafeInt(COL_RATING_STATE)
                 ))
             }
         }
@@ -683,6 +710,67 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         cursor.use {
             return if (it.moveToFirst()) it.getInt(0) else 0
         }
+    }
+
+    private val STATS_SELECTION = "$COL_VALUE > 0 AND ($COL_DISTANCE_KM > 0 OR $COL_TIME_MIN > 0)"
+
+    fun getRideStats(sinceMs: Long? = null): RideStats? {
+        val conditions = mutableListOf(STATS_SELECTION)
+        if (sinceMs != null) conditions.add("$COL_TIMESTAMP >= ?")
+        val selection = conditions.joinToString(" AND ")
+        val args = if (sinceMs != null) arrayOf(sinceMs.toString()) else null
+        val sql = "SELECT COUNT(*), AVG($COL_VALUE), AVG($COL_DISTANCE_KM), " +
+                "AVG($COL_TIME_MIN), AVG($COL_PRICE_PER_KM), AVG($COL_PRICE_PER_HOUR), " +
+                "AVG($COL_RATING) FROM $TABLE_NAME WHERE $selection"
+        val cursor = readableDatabase.rawQuery(sql, args)
+        cursor.use {
+            if (it.moveToFirst() && it.getInt(0) > 0) {
+                return RideStats(
+                    count = it.getInt(0),
+                    avgValue = it.getDouble(1),
+                    avgDistance = it.getDouble(2),
+                    avgTimeMin = it.getDouble(3),
+                    avgPricePerKm = it.getDouble(4),
+                    avgPricePerHour = it.getDouble(5),
+                    avgRating = it.getDouble(6),
+                )
+            }
+        }
+        return null
+    }
+
+    fun getRideStatsTop(sinceMs: Long? = null, topFraction: Double = 0.25): RideStats? {
+        val conditions = mutableListOf("$COL_PRICE_PER_KM > 0")
+        if (sinceMs != null) conditions.add("$COL_TIMESTAMP >= ?")
+        val selection = conditions.joinToString(" AND ")
+        val args = if (sinceMs != null) arrayOf(sinceMs.toString()) else null
+
+        val countSql = "SELECT COUNT(*) FROM $TABLE_NAME WHERE $selection"
+        val cursor = readableDatabase.rawQuery(countSql, args)
+        val total = cursor.use { if (it.moveToFirst()) it.getInt(0) else 0 }
+        if (total < 5) return null
+        val limit = (total * topFraction).toInt().coerceAtLeast(1)
+
+        val sql = "SELECT COUNT(*), AVG($COL_VALUE), AVG($COL_DISTANCE_KM), " +
+                "AVG($COL_TIME_MIN), AVG($COL_PRICE_PER_KM), AVG($COL_PRICE_PER_HOUR), " +
+                "AVG($COL_RATING) FROM (" +
+                "SELECT * FROM $TABLE_NAME WHERE $selection " +
+                "ORDER BY $COL_PRICE_PER_KM DESC LIMIT $limit)"
+        val cursor2 = readableDatabase.rawQuery(sql, args)
+        cursor2.use {
+            if (it.moveToFirst() && it.getInt(0) > 0) {
+                return RideStats(
+                    count = it.getInt(0),
+                    avgValue = it.getDouble(1),
+                    avgDistance = it.getDouble(2),
+                    avgTimeMin = it.getDouble(3),
+                    avgPricePerKm = it.getDouble(4),
+                    avgPricePerHour = it.getDouble(5),
+                    avgRating = it.getDouble(6),
+                )
+            }
+        }
+        return null
     }
 
     fun deleteAll() = synchronized(dbLock) {
@@ -1161,6 +1249,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     dynamicBonus = it.getSafeDouble(COL_DYNAMIC_BONUS),
                     costPerKmAtTime = it.getSafeDouble(COL_COST_PER_KM_AT_TIME),
                     cardHash = it.getSafeString(COL_CARD_HASH),
+                    kmState = it.getSafeInt(COL_KM_STATE),
+                    hourState = it.getSafeInt(COL_HOUR_STATE),
+                    minState = it.getSafeInt(COL_MIN_STATE),
+                    ratingState = it.getSafeInt(COL_RATING_STATE),
                     pickupAddress = it.getSafeString(COL_PICKUP_ADDRESS),
                     dropoffAddress = it.getSafeString(COL_DROPOFF_ADDRESS)
                 ))
@@ -1353,7 +1445,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     companion object {
         private val dbLock = Any()
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 24
+        private const val DATABASE_VERSION = 25
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"
@@ -1388,6 +1480,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_DROPOFF_ADDRESS = "dropoff_address"
         private const val COL_COST_PER_KM_AT_TIME = "cost_per_km_at_time"
         private const val COL_CARD_HASH = "card_hash"
+        private const val COL_KM_STATE = "km_state"
+        private const val COL_HOUR_STATE = "hour_state"
+        private const val COL_MIN_STATE = "min_state"
+        private const val COL_RATING_STATE = "rating_state"
 
         // Raw card logs columns
         private const val TABLE_RAW_LOGS = "raw_card_logs"
@@ -1595,7 +1691,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_STOPS INTEGER,
                 $COL_HAS_MULTIPLE_STOPS INTEGER DEFAULT 0,
                 $COL_SCORE_PERCENT REAL,
-                $COL_COST_PER_KM_AT_TIME REAL
+                $COL_COST_PER_KM_AT_TIME REAL,
+                $COL_KM_STATE INTEGER,
+                $COL_HOUR_STATE INTEGER,
+                $COL_MIN_STATE INTEGER,
+                $COL_RATING_STATE INTEGER
             )
         """.trimIndent()
 
@@ -1648,7 +1748,11 @@ data class RideRecord(
     val pickupAddress: String? = null,
     val dropoffAddress: String? = null,
     val costPerKmAtTime: Double? = null,
-    val cardHash: String? = null
+    val cardHash: String? = null,
+    val kmState: Int? = null,
+    val hourState: Int? = null,
+    val minState: Int? = null,
+    val ratingState: Int? = null
 )
 
 data class RawCardLog(
@@ -1782,4 +1886,14 @@ data class Expense(
     val installmentCurrent: Int = 1,
     val dueDate: Long? = null,
     val lastPaymentDate: Long? = null
+)
+
+data class RideStats(
+    val count: Int,
+    val avgValue: Double,
+    val avgDistance: Double,
+    val avgTimeMin: Double,
+    val avgPricePerKm: Double,
+    val avgPricePerHour: Double,
+    val avgRating: Double,
 )

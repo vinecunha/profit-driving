@@ -21,7 +21,147 @@
             android:paddingTop="8dp"
             android:paddingBottom="24dp">
 
-            <!-- CARD 1: VALORES -->
+            <!-- PERFIL DE TRABALHO (standalone) -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0.5dp"
+                app:strokeColor="@color/border"
+                app:cardBackgroundColor="@color/bg_card">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="6dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="&#x1F9D1;&#x200D;&#x1F4BB;"
+                            android:textSize="@dimen/text_size_18"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/profile_work_title"
+                            android:textSize="@dimen/text_size_16"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/profile_work_subtitle"
+                        android:textSize="@dimen/text_size_12"
+                        android:textColor="@color/text_tertiary"
+                        android:layout_marginBottom="16dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/btnProfileBadDay"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:text="@string/profile_bad_day"
+                            android:textSize="@dimen/text_size_13"
+                            android:textColor="@color/text_secondary"
+                            android:gravity="center"
+                            android:background="@drawable/pill_unselected"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <TextView
+                            android:id="@+id/btnProfileNormal"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:layout_marginHorizontal="4dp"
+                            android:text="@string/profile_normal"
+                            android:textSize="@dimen/text_size_13"
+                            android:textColor="@color/text_secondary"
+                            android:gravity="center"
+                            android:background="@drawable/pill_unselected"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <TextView
+                            android:id="@+id/btnProfileDynamic"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:layout_marginHorizontal="4dp"
+                            android:text="@string/profile_dynamic"
+                            android:textSize="@dimen/text_size_13"
+                            android:textColor="@color/text_secondary"
+                            android:gravity="center"
+                            android:background="@drawable/pill_unselected"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <TextView
+                            android:id="@+id/btnProfileCustom"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:text="@string/profile_custom"
+                            android:textSize="@dimen/text_size_12"
+                            android:textColor="@color/text_secondary"
+                            android:gravity="center"
+                            android:background="@drawable/pill_unselected"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvProfileDesc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/profile_normal_desc"
+                        android:textSize="@dimen/text_size_12"
+                        android:textColor="@color/text_tertiary" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- SECTION: CRITÉRIOS DE DECISÃO -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="10dp"
+                android:text="@string/section_decision_criteria"
+                android:textAllCaps="true"
+                android:letterSpacing="0.08"
+                android:textSize="@dimen/text_size_11"
+                android:textStyle="bold"
+                android:textColor="@color/text_tertiary" />
+
+            <!-- CARD: VALORES -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -309,7 +449,7 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- CARD 2: QUALIDADE -->
+            <!-- CARD: QUALIDADE (nota do passageiro) -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -418,7 +558,7 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- CARD 3: IMPORTANCIA -->
+            <!-- CARD: IMPORTÂNCIA (pesos + patamares) -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -719,7 +859,20 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- CARD 4: APARENCIA -->
+            <!-- SECTION: CARD FLUTUANTE -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="10dp"
+                android:text="@string/section_floating_card"
+                android:textAllCaps="true"
+                android:letterSpacing="0.08"
+                android:textSize="@dimen/text_size_11"
+                android:textStyle="bold"
+                android:textColor="@color/text_tertiary" />
+
+            <!-- CARD: APARÊNCIA DO CARD FLUTUANTE -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -995,14 +1148,245 @@
 
                     </LinearLayout>
 
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- CARD: ANIMAÇÃO DO CARD -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0.5dp"
+                app:strokeColor="@color/border"
+                app:cardBackgroundColor="@color/bg_card">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="&#x1F4AB;"
+                            android:textSize="@dimen/text_size_18"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Animação do Card"
+                            android:textSize="@dimen/text_size_16"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                    </LinearLayout>
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Listagem"
-                        android:textSize="@dimen/text_size_13"
+                        android:text="Escolha como o card aparece na tela"
+                        android:textSize="@dimen/text_size_12"
+                        android:textColor="@color/text_tertiary"
+                        android:layout_marginBottom="16dp" />
+
+                    <Spinner
+                        android:id="@+id/spinnerCardAnimation"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_spinner"
+                        android:paddingHorizontal="12dp"
+                        android:gravity="center_vertical" />
+
+                    <TextView
+                        android:id="@+id/tvAnimationPreview"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="@dimen/text_size_12"
                         android:textColor="@color/text_secondary"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginBottom="8dp" />
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- SECTION: PREFERÊNCIAS GERAIS -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="10dp"
+                android:text="@string/section_general_prefs"
+                android:textAllCaps="true"
+                android:letterSpacing="0.08"
+                android:textSize="@dimen/text_size_11"
+                android:textStyle="bold"
+                android:textColor="@color/text_tertiary" />
+
+            <!-- CARD: TEMA -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0.5dp"
+                app:strokeColor="@color/border"
+                app:cardBackgroundColor="@color/bg_card">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="&#x1F319;"
+                            android:textSize="@dimen/text_size_18"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Tema"
+                            android:textSize="@dimen/text_size_16"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Escolha o tema do aplicativo"
+                        android:textSize="@dimen/text_size_12"
+                        android:textColor="@color/text_tertiary"
+                        android:layout_marginBottom="16dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/btnThemeSystem"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:gravity="center"
+                            android:text="Sistema"
+                            android:textSize="@dimen/text_size_12"
+                            android:textStyle="bold"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <TextView
+                            android:id="@+id/btnThemeLight"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:layout_marginHorizontal="4dp"
+                            android:gravity="center"
+                            android:text="Claro"
+                            android:textSize="@dimen/text_size_12"
+                            android:textStyle="bold"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <TextView
+                            android:id="@+id/btnThemeDark"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:gravity="center"
+                            android:text="Escuro"
+                            android:textSize="@dimen/text_size_12"
+                            android:textStyle="bold"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- CARD: LISTAGEM -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0.5dp"
+                app:strokeColor="@color/border"
+                app:cardBackgroundColor="@color/bg_card">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="&#x1F4CB;"
+                            android:textSize="@dimen/text_size_18"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Listagem"
+                            android:textSize="@dimen/text_size_16"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Quantos registros carregar por página no histórico"
+                        android:textSize="@dimen/text_size_12"
+                        android:textColor="@color/text_tertiary"
+                        android:layout_marginBottom="16dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -1022,7 +1406,20 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- CARD 5: TESTE RAPIDO -->
+            <!-- SECTION: TESTES E MANUTENÇÃO -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="10dp"
+                android:text="@string/section_testing_maintenance"
+                android:textAllCaps="true"
+                android:letterSpacing="0.08"
+                android:textSize="@dimen/text_size_11"
+                android:textStyle="bold"
+                android:textColor="@color/text_tertiary" />
+
+            <!-- CARD: TESTE RÁPIDO -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -1119,7 +1516,7 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- CARD 6: REPROCESSAR -->
+            <!-- CARD: REPROCESSAR -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -1181,107 +1578,6 @@
                         android:background="@drawable/pill_selected"
                         android:clickable="true"
                         android:focusable="true" />
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
-            <!-- CARD 7: TEMA -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:strokeWidth="0.5dp"
-                app:strokeColor="@color/border"
-                app:cardBackgroundColor="@color/bg_card">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="&#x1F319;"
-                            android:textSize="@dimen/text_size_18"
-                            android:layout_marginEnd="8dp" />
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Tema"
-                            android:textSize="@dimen/text_size_16"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_primary" />
-
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Escolha o tema do aplicativo"
-                        android:textSize="@dimen/text_size_12"
-                        android:textColor="@color/text_tertiary"
-                        android:layout_marginBottom="16dp" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center">
-
-                        <TextView
-                            android:id="@+id/btnThemeSystem"
-                            android:layout_width="0dp"
-                            android:layout_height="44dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="4dp"
-                            android:gravity="center"
-                            android:text="Sistema"
-                            android:textSize="@dimen/text_size_12"
-                            android:textStyle="bold"
-                            android:clickable="true"
-                            android:focusable="true" />
-
-                        <TextView
-                            android:id="@+id/btnThemeLight"
-                            android:layout_width="0dp"
-                            android:layout_height="44dp"
-                            android:layout_weight="1"
-                            android:layout_marginHorizontal="4dp"
-                            android:gravity="center"
-                            android:text="Claro"
-                            android:textSize="@dimen/text_size_12"
-                            android:textStyle="bold"
-                            android:clickable="true"
-                            android:focusable="true" />
-
-                        <TextView
-                            android:id="@+id/btnThemeDark"
-                            android:layout_width="0dp"
-                            android:layout_height="44dp"
-                            android:layout_weight="1"
-                            android:layout_marginStart="4dp"
-                            android:gravity="center"
-                            android:text="Escuro"
-                            android:textSize="@dimen/text_size_12"
-                            android:textStyle="bold"
-                            android:clickable="true"
-                            android:focusable="true" />
-
-                    </LinearLayout>
 
                 </LinearLayout>
 

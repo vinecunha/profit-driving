@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+
+
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
@@ -48,11 +50,7 @@ abstract class BaseActivity : AppCompatActivity() {
             layoutLogo?.visibility = View.GONE
             btnBack?.visibility = if (showBack) View.VISIBLE else View.GONE
             btnBack?.setOnClickListener {
-                (backListener ?: {
-                    startActivity(Intent(this, MainActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    })
-                }).invoke()
+                (backListener ?: { finish() }).invoke()
             }
         }
 
@@ -182,6 +180,12 @@ abstract class BaseActivity : AppCompatActivity() {
             }
         }
     }
+
+    protected fun spFromRes(dimenRes: Int): Float =
+        resources.getDimension(dimenRes) / resources.displayMetrics.scaledDensity
+
+    protected fun dimenPx(dimenRes: Int): Float =
+        resources.getDimensionPixelSize(dimenRes).toFloat()
 
     protected fun ctxColor(id: Int) = ContextCompat.getColor(this, id)
 

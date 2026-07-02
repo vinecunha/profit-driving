@@ -127,7 +127,9 @@ data class AnalysisResultV2(
     val totalCost: Double = 0.0,
     val profitMargin: Double = 0.0,
     val previousPeriodEarnings: Double = 0.0,
-    val previousPeriodRides: Int = 0
+    val previousPeriodRides: Int = 0,
+    val floorSimulation: FloorSimulation? = null,
+    val breakevenAnalysis: BreakevenAnalysisResult? = null
 )
 
 object AnalysisHelperV2 {
@@ -329,6 +331,20 @@ object AnalysisHelperV2 {
         val totalCost = totalKm * costPerKm
         val profitMargin = if (totalEarnings > 0) ((totalEarnings - totalCost) / totalEarnings) * 100 else 0.0
 
+        val shiftDuration = if (offered.isNotEmpty())
+            (offered.maxOf { it.timestamp } - offered.minOf { it.timestamp }) / 60_000L
+        else 0L
+
+        val floorSimulation = calculateFloorSimulation(
+            rides = rides,
+            costPerKm = costPerKm,
+        )
+
+        val breakevenAnalysis = calculateBreakevenAnalysis(
+            acceptedRides = accepted,
+            costPerKm = costPerKm,
+        )
+
         return AnalysisResultV2(
             offeredCount = offeredCount,
             acceptedCount = acceptedCount,
@@ -357,7 +373,9 @@ object AnalysisHelperV2 {
             weekdayRanking = weekdayRanking,
             totalCostPerKm = costPerKm,
             totalCost = totalCost,
-            profitMargin = profitMargin
+            profitMargin = profitMargin,
+            floorSimulation = floorSimulation,
+            breakevenAnalysis = breakevenAnalysis
         )
     }
 
@@ -720,7 +738,7 @@ object AnalysisHelperV2 {
     private fun hasDynamicBonus(ride: RideRecord): Boolean =
         ride.dynamicBonus != null && ride.dynamicBonus > 0
 
-    private fun getHourOfDay(timestamp: Long): Int =
+    fun getHourOfDay(timestamp: Long): Int =
         Calendar.getInstance().apply { timeInMillis = timestamp }.get(Calendar.HOUR_OF_DAY)
 
     fun extractCity(address: String?): String? {
@@ -744,6 +762,167 @@ object AnalysisHelperV2 {
 
     fun hoursMinutes(totalMin: Int): String =
         if (totalMin > 0) "${totalMin / 60}h${totalMin % 60}min" else "0min"
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Floor Simulation: Accept Threshold Simulator
+// ═══════════════════════════════════════════════════════════════════
+
+data class Scenario(
+    val thresholdPerKm: Double,
+    val acceptedCount: Int,
+    val avgPricePerKm: Double,
+    val effectivePerHour: Double,
+    val netGainVsActual: Double,
+    val avgPricePerHour: Double,
+)
+
+data class FloorSimulation(
+    val scenarios: List<Scenario>,
+    val recommendedThreshold: Double,
+    val breakEvenKm: Double,
+    val totalRides: Int,
+)
+
+fun calculateFloorSimulation(
+    rides: List<RideRecord>,
+    costPerKm: Double,
+): FloorSimulation? {
+
+    if (rides.isEmpty()) return null
+
+    val pricesPerKm = rides.mapNotNull { it.pricePerKm }.sorted()
+    if (pricesPerKm.isEmpty()) return null
+
+    val p25 = pricesPerKm[(pricesPerKm.size * 0.25).toInt().coerceIn(0, pricesPerKm.size - 1)]
+    val p50 = pricesPerKm[(pricesPerKm.size * 0.50).toInt().coerceIn(0, pricesPerKm.size - 1)]
+    val p75 = pricesPerKm[(pricesPerKm.size * 0.75).toInt().coerceIn(0, pricesPerKm.size - 1)]
+
+    val thresholds = listOf(
+        costPerKm,
+        (costPerKm + p25) / 2,
+        p25,
+        (p25 + p50) / 2,
+        p50,
+        (p50 + p75) / 2,
+        p75
+    ).distinct().sorted()
+
+    val totalMinutes = rides.sumOf { it.timeMin ?: 0 }
+    val totalHours = totalMinutes / 60.0
+    val rejectedTime = rides.filter { it.pricePerKm != null && it.pricePerKm!! < thresholds.first() }
+        .sumOf { it.timeMin ?: 0 } / 60.0
+    val totalShiftHours = totalHours + rejectedTime
+
+    val scenarios = thresholds.map { threshold ->
+        val accepted = rides.filter { r ->
+            val ppk = r.pricePerKm ?: 0.0
+            ppk >= threshold
+        }
+        val earnings = accepted.sumOf { it.value ?: 0.0 }
+        val km = accepted.sumOf { it.distanceKm ?: 0.0 }
+        val avgPricePerKm = if (km > 0) earnings / km else 0.0
+        val effectivePerHour = if (totalShiftHours > 0) earnings / totalShiftHours else 0.0
+        val netGainVsActual = avgPricePerKm - pricesPerKm.average()
+
+        Scenario(
+            thresholdPerKm = threshold,
+            acceptedCount = accepted.size,
+            avgPricePerKm = avgPricePerKm,
+            effectivePerHour = effectivePerHour,
+            netGainVsActual = netGainVsActual,
+            avgPricePerHour = if (totalShiftHours > 0) earnings / totalShiftHours else 0.0,
+        )
+    }
+
+    val best = scenarios.maxByOrNull { it.thresholdPerKm }
+    val recommended = best?.thresholdPerKm ?: p75
+
+    return FloorSimulation(
+        scenarios = scenarios,
+        recommendedThreshold = recommended,
+        breakEvenKm = costPerKm,
+        totalRides = rides.size
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Breakeven Analysis: Ride-level Profit/Loss
+// ═══════════════════════════════════════════════════════════════════
+
+data class BreakevenRide(
+    val earnings: Double,
+    val distanceKm: Double,
+    val pricePerKm: Double,
+    val costPerKm: Double,
+    val marginPerKm: Double,
+    val netResult: Double,
+    val origin: String,
+    val hour: Int,
+)
+
+data class BreakevenAnalysisResult(
+    val costPerKm: Double,
+    val aboveBreakeven: List<BreakevenRide>,
+    val belowBreakeven: List<BreakevenRide>,
+    val totalNetProfit: Double,
+    val totalNetLoss: Double,
+    val netBalance: Double,
+    val avgMarginAbove: Double,
+    val avgMarginBelow: Double,
+    val worstHour: Int,
+    val bestHour: Int,
+    val pctAbove: Double,
+)
+
+fun calculateBreakevenAnalysis(
+    acceptedRides: List<RideRecord>,
+    costPerKm: Double,
+): BreakevenAnalysisResult {
+
+    if (acceptedRides.isEmpty() || costPerKm <= 0) return BreakevenAnalysisResult(
+        costPerKm, emptyList(), emptyList(), 0.0, 0.0, 0.0, 0.0, 0.0, -1, -1, 0.0
+    )
+
+    val rides = acceptedRides.map { r ->
+        val ppk = r.pricePerKm ?: run {
+            val d = r.distanceKm ?: 0.0
+            val v = r.value ?: 0.0
+            if (d > 0) v / d else 0.0
+        }
+        val value = r.value ?: 0.0
+        val dist = r.distanceKm ?: 0.0
+        val margin = ppk - costPerKm
+        BreakevenRide(
+            earnings = value,
+            distanceKm = dist,
+            pricePerKm = ppk,
+            costPerKm = costPerKm,
+            marginPerKm = margin,
+            netResult = value - (dist * costPerKm),
+            origin = r.pickupAddress ?: "",
+            hour = AnalysisHelperV2.getHourOfDay(r.timestamp),
+        )
+    }
+
+    val above = rides.filter { it.marginPerKm >= 0 }
+    val below = rides.filter { it.marginPerKm < 0 }
+
+    return BreakevenAnalysisResult(
+        costPerKm = costPerKm,
+        aboveBreakeven = above.sortedByDescending { it.marginPerKm },
+        belowBreakeven = below.sortedBy { it.marginPerKm },
+        totalNetProfit = above.sumOf { it.netResult },
+        totalNetLoss = below.sumOf { -it.netResult },
+        netBalance = rides.sumOf { it.netResult },
+        avgMarginAbove = if (above.isEmpty()) 0.0 else above.sumOf { it.marginPerKm } / above.size,
+        avgMarginBelow = if (below.isEmpty()) 0.0 else below.sumOf { it.marginPerKm } / below.size,
+        worstHour = below.groupBy { it.hour }.maxByOrNull { it.value.size }?.key ?: -1,
+        bestHour = above.groupBy { it.hour }
+            .maxByOrNull { (_, v) -> v.sumOf { r -> r.marginPerKm } / v.size }
+            ?.key ?: -1,
+        pctAbove = if (rides.isEmpty()) 0.0 else above.size.toDouble() / rides.size * 100,
+    )
 }
 
 data class DriverInputData(

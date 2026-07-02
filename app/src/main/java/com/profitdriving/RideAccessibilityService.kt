@@ -611,7 +611,11 @@ class RideAccessibilityService : AccessibilityService() {
             priorityBonus = ride.priorityBonus,
             dynamicBonus = ride.dynamicBonus,
             pickupAddress = ride.pickupAddress,
-            dropoffAddress = ride.dropoffAddress
+            dropoffAddress = ride.dropoffAddress,
+            kmState = result.params[0].state.ordinal,
+            hourState = result.params[1].state.ordinal,
+            minState = result.params[2].state.ordinal,
+            ratingState = result.params[3].state.ordinal
         ))
         L.d(TAG, "Ride inserido com id=$lastInsertedId")
 

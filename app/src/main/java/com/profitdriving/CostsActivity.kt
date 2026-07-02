@@ -116,7 +116,7 @@ class CostsActivity : BaseActivity() {
 
     private fun setupExpenseButtons() {
         findViewById<TextView>(R.id.btnAddPerKm).setOnClickListener {
-            AddExpenseDialog(this, onSave = { expense ->
+            AddExpenseDialog(this, type = CostType.PER_KM, onSave = { expense ->
                 showSavingFeedback {
                     db.insertExpenseItem(expense)
                     loadData()
@@ -124,7 +124,7 @@ class CostsActivity : BaseActivity() {
             }).show()
         }
         findViewById<TextView>(R.id.btnAddFixed).setOnClickListener {
-            AddExpenseDialog(this, onSave = { expense ->
+            AddExpenseDialog(this, type = CostType.FIXED, onSave = { expense ->
                 showSavingFeedback {
                     db.insertExpenseItem(expense)
                     loadData()
@@ -132,7 +132,7 @@ class CostsActivity : BaseActivity() {
             }).show()
         }
         findViewById<TextView>(R.id.btnAddEvent).setOnClickListener {
-            AddExpenseDialog(this, onSave = { expense ->
+            AddExpenseDialog(this, type = CostType.EVENT, onSave = { expense ->
                 showSavingFeedback {
                     db.insertExpenseItem(expense)
                     loadData()
@@ -600,7 +600,7 @@ class CostsActivity : BaseActivity() {
         findViewById<TextView>(R.id.tvCostPerHour).text =
             "Custo/hora: ${currencyFormat.format(summary.costPerHour)}"
         findViewById<TextView>(R.id.tvCostPerMinute).text =
-            "Custo/min: ${currencyFormat.format(summary.costPerMinute)}"
+            "Custo/minuto: ${currencyFormat.format(summary.costPerMinute)}"
 
         updateSimulator()
     }

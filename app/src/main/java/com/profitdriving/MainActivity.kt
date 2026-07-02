@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.view.View
 import android.view.ViewGroup
+import android.widget.DatePicker
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -287,7 +288,6 @@ class MainActivity : BaseActivity() {
             } else {
                 recyclerView.visibility = View.VISIBLE
                 emptyState.visibility = View.GONE
-                val prefs = SecurePreferences.get(this@MainActivity)
                 if (reset || adapter == null) {
                     val costSummary = withContext(Dispatchers.IO) {
                         CostCalculator.calculateCostSummary(
@@ -296,14 +296,6 @@ class MainActivity : BaseActivity() {
                     }
                     adapter = HistoryAdapter(
                         records,
-                        minKm = prefs.getFloat(SettingsActivity.KEY_MIN_KM, 0f),
-                        idealKm = prefs.getFloat(SettingsActivity.KEY_IDEAL_KM, 0f),
-                        minHour = prefs.getFloat(SettingsActivity.KEY_MIN_HOUR, 0f),
-                        idealHour = prefs.getFloat(SettingsActivity.KEY_IDEAL_HOUR, 0f),
-                        minMinute = prefs.getFloat(SettingsActivity.KEY_MIN_MINUTE, 0f),
-                        idealMinute = prefs.getFloat(SettingsActivity.KEY_IDEAL_MINUTE, 0f),
-                        minRating = prefs.getFloat(SettingsActivity.KEY_MIN_RATING, 0f),
-                        idealRating = prefs.getFloat(SettingsActivity.KEY_IDEAL_RATING, 0f),
                         costPerKm = costSummary.totalCostPerKm,
                         onDeleteRide = { ride ->
                             AlertDialog.Builder(this@MainActivity)
@@ -463,12 +455,27 @@ class MainActivity : BaseActivity() {
         val startMonth = cal.get(Calendar.MONTH)
         val startDay = cal.get(Calendar.DAY_OF_MONTH)
 
-        android.app.DatePickerDialog(this, { _, year, month, day ->
+        fun buildPicker(title: String, onDateSet: (Int, Int, Int) -> Unit) {
+            val datePicker = DatePicker(this).apply {
+                init(startYear, startMonth, startDay, null)
+                maxDate = System.currentTimeMillis()
+            }
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(title)
+                .setView(datePicker)
+                .setPositiveButton("OK") { _, _ ->
+                    onDateSet(datePicker.year, datePicker.month, datePicker.dayOfMonth)
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
+        }
+
+        buildPicker("Data inicial") { year, month, day ->
             cal.set(year, month, day, 0, 0, 0)
             cal.set(Calendar.MILLISECOND, 0)
             val startTime = cal.timeInMillis
 
-            android.app.DatePickerDialog(this, { _, y, m, d ->
+            buildPicker("Data final") { y, m, d ->
                 cal.set(y, m, d, 23, 59, 59)
                 cal.set(Calendar.MILLISECOND, 999)
                 val endTime = cal.timeInMillis
@@ -479,14 +486,8 @@ class MainActivity : BaseActivity() {
                 selectedPeriodFilter = "custom"
                 setupPeriodFilter()
                 loadFilteredHistory()
-            }, startYear, startMonth, startDay).apply {
-                setTitle("Data final")
-                datePicker.maxDate = System.currentTimeMillis()
-            }.show()
-        }, startYear, startMonth, startDay).apply {
-            setTitle("Data inicial")
-            datePicker.maxDate = System.currentTimeMillis()
-        }.show()
+            }
+        }
     }
  
     private fun setupTypeFilter() {
@@ -645,14 +646,6 @@ class MainActivity : BaseActivity() {
 
 class HistoryAdapter(
     records: List<RideRecord>,
-    private val minKm: Float,
-    private val idealKm: Float,
-    private val minHour: Float,
-    private val idealHour: Float,
-    private val minMinute: Float,
-    private val idealMinute: Float,
-    private val minRating: Float,
-    private val idealRating: Float,
     private val costPerKm: Double = 0.0,
     private val onDeleteRide: ((RideRecord) -> Unit)? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -733,15 +726,6 @@ class HistoryAdapter(
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_ride_card, parent, false)
         return ViewHolder(view)
-    }
-
-    private fun evaluateState(value: Double?, min: Float, ideal: Float): Int {
-        if (value == null) return 3
-        return when {
-            value >= ideal -> 0
-            value >= min   -> 1
-            else           -> 2
-        }
     }
 
     private fun getBadgeTextAndColor(state: Int): Pair<String, Int> {
@@ -836,10 +820,10 @@ class HistoryAdapter(
         else null
         vh.tvPricePerMin.text = FormatUtils.decimal(pricePerMin)
 
-        val kmState = evaluateState(r.pricePerKm, minKm, idealKm)
-        val hourState = evaluateState(r.pricePerHour, minHour, idealHour)
-        val minState = evaluateState(pricePerMin, minMinute, idealMinute)
-        val ratingState = evaluateState(r.rating, minRating, idealRating)
+        val kmState = r.kmState ?: 3
+        val hourState = r.hourState ?: 3
+        val minState = r.minState ?: 3
+        val ratingState = r.ratingState ?: 3
 
         fun setBadge(badge: TextView, state: Int) {
             val radius = TypedValue.applyDimension(

@@ -78,6 +78,14 @@ class PreferenceManager(context: Context) {
         return remaining.toInt().coerceAtLeast(0)
     }
 
+    fun getCardAnimation(): String {
+        return prefs.getString(KEY_CARD_ANIMATION, AnimationConstants.ANIMATION_FADE_SLIDE) ?: AnimationConstants.ANIMATION_FADE_SLIDE
+    }
+
+    fun setCardAnimation(animation: String) {
+        prefs.edit().putString(KEY_CARD_ANIMATION, animation).apply()
+    }
+
     companion object {
         private const val PREF_NAME = "profit_driving_prefs"
         private const val PREF_ONBOARDING_DONE = "onboarding_complete"
@@ -87,5 +95,6 @@ class PreferenceManager(context: Context) {
         private const val PREF_SUBSCRIPTION_DEBUG = "subscription_debug"
         private const val PREF_SUBSCRIPTION_EXPIRY = "subscription_expiry"
         private const val PREF_SUBSCRIPTION_PLAN = "subscription_plan"
+        private const val KEY_CARD_ANIMATION = "card_animation"
     }
 }

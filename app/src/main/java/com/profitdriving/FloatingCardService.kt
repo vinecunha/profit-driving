@@ -23,6 +23,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.WindowManager.BadTokenException
+import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
@@ -65,6 +66,31 @@ class FloatingCardService : Service() {
                 stopSelf()
                 return START_NOT_STICKY
             }
+        }
+
+        val action = intent.getStringExtra("ACTION")
+        if (action == "SHOW_LAST_RIDE") {
+            val value = intent.getDoubleExtra("value", 0.0).let { if (it <= 0) null else it }
+            val distanceKm = intent.getDoubleExtra("distanceKm", 0.0).let { if (it <= 0) null else it }
+            val timeMin = intent.getIntExtra("timeMin", -1).let { if (it < 0) null else it }
+            val rating = intent.getDoubleExtra("rating", -1.0).let { if (it < 0) null else it }
+            val appName = intent.getStringExtra("appName") ?: ""
+            val serviceType = intent.getStringExtra("serviceType")
+            val pickupAddress = intent.getStringExtra("pickupAddress")
+            val dropoffAddress = intent.getStringExtra("dropoffAddress")
+
+            val ride = RideData(
+                value = value,
+                distanceKm = distanceKm,
+                timeMin = timeMin,
+                rating = rating,
+                appName = appName,
+                serviceType = serviceType,
+                pickupAddress = pickupAddress,
+                dropoffAddress = dropoffAddress
+            )
+            showOverlay(ride, false)
+            return START_STICKY
         }
 
         val isDemo = intent.getBooleanExtra("isDemo", false)
@@ -393,12 +419,51 @@ class FloatingCardService : Service() {
             }
         }
 
+        val animation = PreferenceManager(this).getCardAnimation()
+
+        when (animation) {
+            AnimationConstants.ANIMATION_FADE,
+            AnimationConstants.ANIMATION_FADE_SLIDE -> view.alpha = 0f
+            AnimationConstants.ANIMATION_SLIDE_RIGHT -> view.translationX = 200f
+            AnimationConstants.ANIMATION_SLIDE_LEFT -> view.translationX = -200f
+            AnimationConstants.ANIMATION_FADE_SLIDE -> view.translationY = 80f
+            AnimationConstants.ANIMATION_NONE -> {}
+        }
+
         try {
             if (!::windowManager.isInitialized) {
                 windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
             }
             windowManager.addView(view, params)
             overlayView = view
+
+            when (animation) {
+                AnimationConstants.ANIMATION_NONE -> {}
+                AnimationConstants.ANIMATION_FADE -> {
+                    view.animate()
+                        .alpha(1f)
+                        .setDuration(350)
+                        .setInterpolator(DecelerateInterpolator())
+                        .start()
+                }
+                AnimationConstants.ANIMATION_SLIDE_RIGHT,
+                AnimationConstants.ANIMATION_SLIDE_LEFT -> {
+                    view.animate()
+                        .translationX(0f)
+                        .setDuration(400)
+                        .setInterpolator(DecelerateInterpolator())
+                        .start()
+                }
+                AnimationConstants.ANIMATION_FADE_SLIDE -> {
+                    view.animate()
+                        .alpha(1f)
+                        .translationY(0f)
+                        .setDuration(350)
+                        .setInterpolator(DecelerateInterpolator())
+                        .start()
+                }
+            }
+
             L.d(TAG, "Card exibido com sucesso: isDemo=$isDemo decisao=${DecisionEngine.decisionText(result.decision)}")
         } catch (e: WindowManager.BadTokenException) {
             L.e(TAG, "BadTokenException ao adicionar overlay: ${e.message}")
@@ -426,13 +491,52 @@ class FloatingCardService : Service() {
     private fun dismiss() {
         handler.removeCallbacks(dismissRunnable)
         overlayView?.let { view ->
-            try {
-                windowManager.removeView(view)
-            } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay view no dismiss: ${e.message}", e) }
+            val animation = PreferenceManager(this).getCardAnimation()
+            when (animation) {
+                AnimationConstants.ANIMATION_NONE -> {
+                    try { windowManager.removeView(view) } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay view no dismiss: ${e.message}", e) }
+                    overlayView = null
+                    currentCardRideHash = null
+                }
+                AnimationConstants.ANIMATION_FADE,
+                AnimationConstants.ANIMATION_FADE_SLIDE -> {
+                    view.animate()
+                        .alpha(0f)
+                        .setDuration(200)
+                        .withEndAction {
+                            try { windowManager.removeView(view) } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay view no dismiss: ${e.message}", e) }
+                            overlayView = null
+                            currentCardRideHash = null
+                        }
+                        .start()
+                }
+                AnimationConstants.ANIMATION_SLIDE_RIGHT -> {
+                    view.animate()
+                        .translationX(200f)
+                        .setDuration(250)
+                        .withEndAction {
+                            try { windowManager.removeView(view) } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay view no dismiss: ${e.message}", e) }
+                            overlayView = null
+                            currentCardRideHash = null
+                        }
+                        .start()
+                }
+                AnimationConstants.ANIMATION_SLIDE_LEFT -> {
+                    view.animate()
+                        .translationX(-200f)
+                        .setDuration(250)
+                        .withEndAction {
+                            try { windowManager.removeView(view) } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay view no dismiss: ${e.message}", e) }
+                            overlayView = null
+                            currentCardRideHash = null
+                        }
+                        .start()
+                }
+            }
+        } ?: run {
+            overlayView = null
+            currentCardRideHash = null
         }
-        overlayView = null
-        currentCardRideHash = null
-        // Não chamar stopSelf() imediatamente - deixar o serviço vivo
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

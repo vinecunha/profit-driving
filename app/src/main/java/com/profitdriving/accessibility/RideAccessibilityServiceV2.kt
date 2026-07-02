@@ -59,6 +59,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
+        instance = this
         FloatingBubbleService.start(this)
         L.d(TAG, "RideAccessibilityServiceV2 conectado — bolha iniciada")
     }
@@ -132,6 +133,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     }
 
     override fun onDestroy() {
+        instance = null
         FloatingBubbleService.stop(this)
         scope.cancel()
         super.onDestroy()
@@ -370,7 +372,11 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                 dynamicBonus = ride.dynamicBonus,
                 pickupAddress = ride.pickupAddress,
                 dropoffAddress = ride.dropoffAddress,
-                cardHash = cardHash.ifEmpty { null }
+                cardHash = cardHash.ifEmpty { null },
+                kmState = result.params[0].state.ordinal,
+                hourState = result.params[1].state.ordinal,
+                minState = result.params[2].state.ordinal,
+                ratingState = result.params[3].state.ordinal
             ))
             L.d(TAG, "Ride inserido com id=$lastInsertedId")
         }
@@ -479,7 +485,25 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         } catch (_: Exception) {}
     }
 
+    fun triggerReScan() {
+        pendingJob?.cancel()
+        pendingJob = scope.launch(Dispatchers.IO) {
+            delay(300)
+            val root = findUberWindow() ?: return@launch
+            val pkg = root.packageName?.toString() ?: ""
+            try {
+                detectRideCard(root, pkg)
+            } finally {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    @Suppress("DEPRECATION")
+                    root.recycle()
+                }
+            }
+        }
+    }
+
     companion object {
         private const val TAG = "RideAccessibilityV2"
+        var instance: RideAccessibilityServiceV2? = null
     }
 }

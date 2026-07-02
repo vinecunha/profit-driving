@@ -18,3 +18,27 @@ object Constants {
     const val CACHE_EXPIRY_HOURS = 1
     const val SNACKBAR_DURATION_LONG = 3500
 }
+
+object AnimationConstants {
+    const val ANIMATION_NONE = "none"
+    const val ANIMATION_FADE = "fade"
+    const val ANIMATION_SLIDE_RIGHT = "slide_right"
+    const val ANIMATION_SLIDE_LEFT = "slide_left"
+    const val ANIMATION_FADE_SLIDE = "fade_slide"
+
+    fun getAnimationNames(): List<String> = listOf(
+        ANIMATION_NONE,
+        ANIMATION_FADE,
+        ANIMATION_SLIDE_RIGHT,
+        ANIMATION_SLIDE_LEFT,
+        ANIMATION_FADE_SLIDE
+    )
+
+    fun getAnimationLabels(): Map<String, String> = mapOf(
+        ANIMATION_NONE to "Nenhuma",
+        ANIMATION_FADE to "Fade In",
+        ANIMATION_SLIDE_RIGHT to "Deslizar da Direita",
+        ANIMATION_SLIDE_LEFT to "Deslizar da Esquerda",
+        ANIMATION_FADE_SLIDE to "Fade + Slide (Recomendado)"
+    )
+}

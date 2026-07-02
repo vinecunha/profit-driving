@@ -253,6 +253,7 @@ class AnalysisActivity : BaseActivity() {
 
         section = buildExpandableSection("\uD83D\uDCB0", "Financeiro", cardsContainer)
         buildResumoFinanceiro(r, section)
+        buildBreakevenAnalysis(r, section)
         buildComparativoPeriodo(r, section)
         buildBonusImpact(r, section)
 
@@ -267,6 +268,7 @@ class AnalysisActivity : BaseActivity() {
 
         section = buildExpandableSection("\uD83D\uDE80", "Otimiza\u00E7\u00E3o", cardsContainer)
         buildDailyProjection(r, section)
+        buildFloorSimulation(r, section)
         buildInsights(r, section)
     }
 
@@ -1188,6 +1190,338 @@ class AnalysisActivity : BaseActivity() {
         })
 
         container.addView(row)
+    }
+
+    // ─── CARD: Simulador de Floor de Aceitação ───
+    private fun buildFloorSimulation(r: AnalysisResultV2, container: LinearLayout) {
+        val sim = r.floorSimulation ?: return
+        if (sim.scenarios.isEmpty()) return
+
+        val rec = sim.scenarios.firstOrNull { it.thresholdPerKm == sim.recommendedThreshold }
+
+        val card = createCard("Simulador de aceitação")
+
+        // 1. Header: Question + Status
+        val q1 = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = VERTICAL
+        }
+        q1.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            text = "Qual piso de aceitação faz sentido pra você?"
+            textSize = spFromRes(R.dimen.text_size_12)
+            setTextColor(ctxColor(R.color.text_primary))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        })
+        val statusText = when {
+            sim.totalRides < 20 -> "Muito poucas corridas (${sim.totalRides}) — análise inviável"
+            sim.totalRides < 50 -> "Poucas corridas (${sim.totalRides}) — simulação pode ser imprecisa"
+            else -> "Corridas suficientes para uma análise (${sim.totalRides})"
+        }
+        q1.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            text = statusText
+            textSize = spFromRes(R.dimen.text_size_11)
+            setTextColor(ctxColor(R.color.text_tertiary))
+        })
+        card.addView(q1)
+
+        // 2. Section label
+        card.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            text = "Comparativo por faixa de aceitação"
+            textSize = spFromRes(R.dimen.text_size_11)
+            setTextColor(ctxColor(R.color.text_tertiary))
+        })
+
+        addDivider(card)
+
+        // 3. Highlight: cenário recomendado
+        if (rec != null) {
+            val highlight = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                orientation = VERTICAL
+                setPadding(
+                    dimenPx(R.dimen.card_padding).toInt() / 3,
+                    dimenPx(R.dimen.card_padding).toInt() / 3,
+                    dimenPx(R.dimen.card_padding).toInt() / 3,
+                    dimenPx(R.dimen.card_padding).toInt() / 3
+                )
+                val bg = GradientDrawable().apply {
+                    setColor(ctxColor(R.color.success_bg))
+                    cornerRadius = resources.getDimension(R.dimen.badge_corner_radius)
+                    setStroke((2 * resources.displayMetrics.density).toInt(), ctxColor(R.color.success))
+                }
+                background = bg
+            }
+
+            highlight.addView(TextView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                text = "Cenário recomendado: R\$ ${FormatUtils.decimal(sim.recommendedThreshold)}/km"
+                textSize = spFromRes(R.dimen.text_size_13)
+                setTextColor(ctxColor(R.color.success_text))
+                setTypeface(null, android.graphics.Typeface.BOLD)
+            })
+
+            val metricsRow = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                orientation = HORIZONTAL
+            }
+            val metrics = listOf(
+                "${rec.acceptedCount} corridas" to ctxColor(R.color.success_text),
+                "R\$ ${FormatUtils.decimal(rec.avgPricePerKm)}/km" to ctxColor(R.color.success_text),
+                "R\$ ${FormatUtils.decimal(rec.effectivePerHour)}/h" to ctxColor(R.color.success_text)
+            )
+            metrics.forEachIndexed { idx, (label, color) ->
+                metricsRow.addView(TextView(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
+                    text = label
+                    textSize = spFromRes(R.dimen.text_size_11)
+                    setTextColor(color)
+                    if (idx > 0) gravity = Gravity.END
+                })
+            }
+            highlight.addView(metricsRow)
+
+            val delta = rec.netGainVsActual
+            val deltaText = formatDelta(delta)
+            highlight.addView(TextView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                text = "$deltaText vs hoje (média geral)"
+                textSize = spFromRes(R.dimen.text_size_10)
+                setTextColor(getDeltaColor(delta))
+            })
+
+            card.addView(highlight)
+        }
+
+        addDivider(card)
+
+        // 4. Tabela comparativa
+        val density = resources.displayMetrics.density
+        val rowPadH = dimenPx(R.dimen.card_padding).toInt() / 4
+        val rowPadV = dimenPx(R.dimen.card_padding).toInt() / 3
+
+        val weights = listOf(0.18f, 0.15f, 0.22f, 0.20f, 0.25f)
+        val headers = listOf("Cenário", "Corridas", "Média R$/km", "Lucro Líq./h", "vs atual")
+
+        val headerRow = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = HORIZONTAL
+            setPadding(rowPadH, rowPadV, rowPadH, rowPadV)
+            val bg = GradientDrawable().apply {
+                setColor(ctxColor(R.color.bg_surface))
+                cornerRadius = 6 * density
+            }
+            background = bg
+        }
+        headers.forEachIndexed { i, label ->
+            headerRow.addView(TextView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, weights[i])
+                text = label
+                textSize = spFromRes(R.dimen.text_size_10)
+                setTextColor(ctxColor(R.color.text_secondary))
+                if (i > 0) gravity = Gravity.END
+            })
+        }
+        card.addView(headerRow)
+
+        for (s in sim.scenarios) {
+            val isRecommended = s.thresholdPerKm == sim.recommendedThreshold
+            val isBelowBreakeven = s.thresholdPerKm < sim.breakEvenKm
+            val rowColor = when {
+                isRecommended   -> ctxColor(R.color.success)
+                isBelowBreakeven -> ctxColor(R.color.error)
+                else            -> ctxColor(R.color.text_primary)
+            }
+            val deltaText2 = formatDelta(s.netGainVsActual)
+            val deltaColor = getDeltaColor(s.netGainVsActual)
+
+            val row = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                orientation = HORIZONTAL
+                setPadding(rowPadH, rowPadV, rowPadH, rowPadV)
+                val bg = GradientDrawable().apply {
+                    setColor(if (isRecommended) ctxColor(R.color.success_bg)
+                             else if (isBelowBreakeven) ctxColor(R.color.error_bg)
+                             else android.graphics.Color.TRANSPARENT)
+                    cornerRadius = 6 * density
+                }
+                background = bg
+            }
+            listOf(
+                "R\$ ${FormatUtils.decimal(s.thresholdPerKm)}" to rowColor,
+                "${s.acceptedCount}"                            to rowColor,
+                "R\$ ${FormatUtils.decimal(s.avgPricePerKm)}"  to rowColor,
+                "R\$ ${FormatUtils.decimal(s.effectivePerHour)}" to rowColor,
+                deltaText2                                      to deltaColor,
+            ).forEachIndexed { i, (text, color) ->
+                row.addView(TextView(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, weights[i])
+                    this.text = text
+                    textSize = spFromRes(R.dimen.text_size_11)
+                    setTextColor(color)
+                    if (isRecommended) setTypeface(null, android.graphics.Typeface.BOLD)
+                    if (i > 0) gravity = Gravity.END
+                })
+            }
+            card.addView(row)
+        }
+
+        // 5. Legend
+        addDivider(card)
+
+        fun addLegendItem(colorRes: Int, label: String) {
+            val row = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                orientation = HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, 2, 0, 2)
+            }
+            val sq = View(this).apply {
+                layoutParams = LinearLayout.LayoutParams((4 * density).toInt(), (4 * density).toInt())
+                    .apply { rightMargin = 6 }
+                val bg = GradientDrawable().apply {
+                    setColor(ctxColor(colorRes))
+                    cornerRadius = 2 * density
+                }
+                background = bg
+            }
+            row.addView(sq)
+            row.addView(TextView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT)
+                text = label
+                textSize = spFromRes(R.dimen.text_size_10)
+                setTextColor(ctxColor(R.color.text_secondary))
+            })
+            card.addView(row)
+        }
+
+        addLegendItem(R.color.success, "Melhor opção para seu histórico")
+        addLegendItem(R.color.error, "Abaixo do custo fixo — prejuízo")
+        addLegendItem(R.color.text_secondary, "Opção intermediária")
+
+        // 6. Footer
+        addDivider(card)
+
+        addText(card,
+            "Custo do veículo: R\$ ${FormatUtils.decimal(sim.breakEvenKm)}/km",
+            spFromRes(R.dimen.text_size_11), ctxColor(R.color.text_secondary))
+
+        addText(card,
+            "O R\$/h considera o turno completo com corridas recusadas como tempo ocioso.",
+            spFromRes(R.dimen.text_size_10), ctxColor(R.color.text_tertiary))
+
+        addText(card,
+            "Recomendação: R\$ ${FormatUtils.decimal(sim.recommendedThreshold)}/km",
+            spFromRes(R.dimen.text_size_11), ctxColor(R.color.text_primary), bold = true)
+
+        addDivider(card)
+
+        val inter = sim.scenarios
+            .filter { it.thresholdPerKm != sim.recommendedThreshold && it.thresholdPerKm >= sim.breakEvenKm }
+            .maxByOrNull { it.effectivePerHour }
+
+        val recCount = rec?.acceptedCount ?: 0
+        val interCount = inter?.acceptedCount ?: 0
+
+        addText(card,
+            "O que isso significa? Na sua coleção de ${sim.totalRides} corridas, você deveria aceitar as $recCount que estão em verde — são a melhor opção para seu histórico — ou ter aceitado pelo menos as $interCount que estão na intermediária.",
+            spFromRes(R.dimen.text_size_11), ctxColor(R.color.text_secondary))
+
+        container.addView(card)
+    }
+
+    private fun formatDelta(value: Double): String {
+        return if (value >= 0) "+R\$ ${FormatUtils.decimal(value)}"
+        else "-R\$ ${FormatUtils.decimal(-value)}"
+    }
+
+    private fun getDeltaColor(value: Double): Int {
+        return when {
+            value > 0 -> ctxColor(R.color.success)
+            value < 0 -> ctxColor(R.color.error)
+            else -> ctxColor(R.color.text_tertiary)
+        }
+    }
+
+    // ─── CARD: Breakeven Dinâmico por Corrida ───
+    private fun buildBreakevenAnalysis(r: AnalysisResultV2, container: LinearLayout) {
+        val be = r.breakevenAnalysis ?: return
+        if (be.aboveBreakeven.isEmpty() && be.belowBreakeven.isEmpty()) return
+
+        val card = createCard("Breakeven por corrida")
+
+        addInfoRow(card, "Custo do veículo",
+            "R\$ ${FormatUtils.decimal(be.costPerKm)}/km",
+            ctxColor(R.color.text_secondary))
+
+        addInfoRow(card,
+            "Corridas acima do custo",
+            "${be.aboveBreakeven.size} (${"%.0f".format(be.pctAbove)}%)",
+            ctxColor(R.color.success))
+
+        addInfoRow(card,
+            "Corridas abaixo do custo",
+            "${be.belowBreakeven.size}",
+            if (be.belowBreakeven.isEmpty()) ctxColor(R.color.text_tertiary) else ctxColor(R.color.error))
+
+        addDivider(card)
+
+        addInfoRow(card, "Lucro líquido (corridas boas)",
+            "+R\$ ${FormatUtils.decimal(be.totalNetProfit)}",
+            ctxColor(R.color.success), bold = true)
+
+        if (be.totalNetLoss > 0) {
+            addInfoRow(card, "Prejuízo acumulado (corridas ruins)",
+                "-R\$ ${FormatUtils.decimal(be.totalNetLoss)}",
+                ctxColor(R.color.error), bold = true)
+        }
+
+        addInfoRow(card, "Saldo real do período",
+            "${if (be.netBalance >= 0) "+" else ""}R\$ ${FormatUtils.decimal(be.netBalance)}",
+            if (be.netBalance >= 0) ctxColor(R.color.success) else ctxColor(R.color.error),
+            bold = true)
+
+        if (be.belowBreakeven.isNotEmpty()) {
+            addDivider(card)
+            addText(card, "Corridas que custaram mais do que renderam:",
+                spFromRes(R.dimen.text_size_12), ctxColor(R.color.text_primary), bold = true)
+
+            for (ride in be.belowBreakeven.take(5)) {
+                val label = buildString {
+                    append("R\$ ${FormatUtils.decimal(ride.pricePerKm)}/km")
+                    if (ride.origin.isNotBlank()) append(" · ${ride.origin}")
+                    if (ride.hour >= 0) append(" · ${ride.hour}h")
+                }
+                addInfoRow(card, label,
+                    "-R\$ ${FormatUtils.decimal(-ride.netResult)}",
+                    ctxColor(R.color.error))
+            }
+
+            if (be.belowBreakeven.size > 5) {
+                addText(card, "+ ${be.belowBreakeven.size - 5} corridas não exibidas",
+                    spFromRes(R.dimen.text_size_10), ctxColor(R.color.text_tertiary))
+            }
+
+            if (be.worstHour >= 0) {
+                addText(card, "Horário com mais corridas no prejuízo: ${be.worstHour}h",
+                    spFromRes(R.dimen.text_size_11), ctxColor(R.color.warning))
+            }
+        }
+
+        if (be.bestHour >= 0) {
+            addText(card,
+                "Melhor horário: ${be.bestHour}h (margem média +R\$ ${FormatUtils.decimal(be.avgMarginAbove)}/km)",
+                spFromRes(R.dimen.text_size_11), ctxColor(R.color.success))
+        }
+
+        addDivider(card)
+        addText(card,
+            "Custo/km vem dos seus custos cadastrados (fixos + por km + por evento).",
+            spFromRes(R.dimen.text_size_10), ctxColor(R.color.text_tertiary))
+
+        container.addView(card)
     }
 
     private fun getDayName(dayOfWeek: Int): String = when (dayOfWeek) {

@@ -10,15 +10,30 @@
   Não toque em nenhum arquivo .kt/.java.
 
   Novos drawables necessários (criar se não existirem):
-    - bg_ride_card_top_dark   → shape retangular, fillColor="#0F0F0F", cornerRadii apenas nos cantos superiores (topLeftRadius="20dp", topRightRadius="20dp")
-    - bg_decision_accept      → shape retangular, fillColor="#22C55E", cornerRadius="20dp"
-    - bg_decision_decline     → shape retangular, fillColor="#EF4444", cornerRadius="20dp"
-    - bg_metric_cell          → shape retangular, fillColor="@color/bg_surface", cornerRadius="10dp"
-    - bg_bonus_pill_dark      → shape retangular, fillColor="#26200A", strokeColor="#614A10", strokeWidth="1dp", cornerRadius="20dp"
-    - bg_score_pill           → shape retangular, fillColor="@color/bg_surface", cornerRadius="20dp"
+    - bg_ride_card_top_dark   → shape retangular, fillColor="@color/card_header_dark", cornerRadii apenas nos cantos superiores (topLeftRadius="@dimen/inner_corner_radius", topRightRadius="@dimen/inner_corner_radius") — usa o mesmo raio do CardView para casar visualmente
+    - bg_decision_accept      → shape retangular, fillColor="@color/success", cornerRadius="@dimen/pill_corner_radius"
+    - bg_decision_decline     → shape retangular, fillColor="@color/error", cornerRadius="@dimen/pill_corner_radius"
+    - bg_metric_cell          → shape retangular, fillColor="@color/bg_surface", cornerRadius="@dimen/badge_corner_radius"
+    - bg_bonus_pill_dark      → shape retangular, fillColor="#26200A", strokeColor="#614A10", strokeWidth="1dp", cornerRadius="@dimen/pill_corner_radius"
+    - bg_score_pill           → shape retangular, fillColor="@color/bg_surface", cornerRadius="@dimen/pill_corner_radius"
+
+  Ajustes de "tom moderno/profissional" aplicados neste redesign, usando os
+  tokens já existentes em values/ (nada de hex ou dp soltos novos):
+    - Card todo arredondado com @dimen/card_corner_radius (em vez de cantos
+      retos) — elimina a dissonância entre o card e o header arredondado só
+      no topo. Elevação volta a usar @dimen/card_elevation (token padrão).
+    - Padding de header e corpo usando @dimen/card_padding (token padrão do
+      design system) ao invés de valores soltos (18, 14, 16dp variados).
+    - Labels secundários (EMBARQUE, DESTINO, Total, R$/KM, R$/H, R$/MIN)
+      deixam de ser bold + letterSpacing alto — ficam regular/medium e mais
+      discretos, para que só números e badges de decisão chamem atenção.
+    - Textos de métrica (R$/KM, R$/H, R$/MIN) trocados por @string/metric_km,
+      @string/metric_hour, @string/metric_min — já existiam em strings.xml e
+      estavam hardcoded por engano.
 
   Cores já existentes usadas: @color/bg_card, @color/text_primary, @color/text_secondary,
-  @color/text_tertiary, @color/text_inverse, @color/warning, @color/bg_surface.
+  @color/text_tertiary, @color/text_inverse, @color/text_on_dark, @color/warning,
+  @color/bg_surface, @color/card_header_dark, @color/success, @color/error.
 -->
 
 <androidx.cardview.widget.CardView
@@ -28,8 +43,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
-    app:cardCornerRadius="0dp"
-    app:cardElevation="4dp"
+    app:cardCornerRadius="@dimen/card_corner_radius"
+    app:cardElevation="@dimen/card_elevation"
     app:cardBackgroundColor="@color/bg_card">
 
     <LinearLayout
@@ -45,10 +60,10 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@drawable/bg_ride_card_top_dark"
-            android:paddingStart="18dp"
-            android:paddingEnd="18dp"
-            android:paddingTop="16dp"
-            android:paddingBottom="16dp">
+            android:paddingStart="@dimen/card_padding"
+            android:paddingEnd="@dimen/card_padding"
+            android:paddingTop="@dimen/card_padding"
+            android:paddingBottom="@dimen/card_padding">
 
             <!-- Linha 1: badge serviço + badge decisão -->
             <LinearLayout
@@ -177,7 +192,7 @@
                         android:textStyle="bold"
                         android:textColor="@color/text_on_dark"
                         android:alpha="0.8"
-                        android:letterSpacing="0.08"
+                        android:letterSpacing="0.04"
                         android:visibility="gone" />
 
                     <!-- Valor do lucro -->
@@ -279,9 +294,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="14dp"
-            android:paddingTop="14dp"
-            android:paddingBottom="14dp">
+            android:paddingHorizontal="@dimen/card_padding"
+            android:paddingTop="@dimen/card_padding"
+            android:paddingBottom="@dimen/card_padding">
 
             <!-- Métricas: R$/km · R$/h · R$/min -->
             <LinearLayout
@@ -300,16 +315,16 @@
                     android:gravity="center"
                     android:paddingVertical="10dp"
                     android:background="@drawable/bg_metric_cell"
-                    android:layout_marginEnd="5dp">
+                    android:layout_marginEnd="4dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="R$/KM"
+                        android:text="@string/metric_km"
                         android:textSize="@dimen/text_size_9"
-                        android:textStyle="bold"
+                        android:textStyle="normal"
                         android:textColor="@color/text_secondary"
-                        android:letterSpacing="0.07" />
+                        android:letterSpacing="0.04" />
 
                     <TextView
                         android:id="@+id/tvPricePerKm"
@@ -342,16 +357,16 @@
                     android:gravity="center"
                     android:paddingVertical="10dp"
                     android:background="@drawable/bg_metric_cell"
-                    android:layout_marginHorizontal="5dp">
+                    android:layout_marginHorizontal="4dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="R$/H"
+                        android:text="@string/metric_hour"
                         android:textSize="@dimen/text_size_9"
-                        android:textStyle="bold"
+                        android:textStyle="normal"
                         android:textColor="@color/text_secondary"
-                        android:letterSpacing="0.07" />
+                        android:letterSpacing="0.04" />
 
                     <TextView
                         android:id="@+id/tvPricePerHour"
@@ -384,16 +399,16 @@
                     android:gravity="center"
                     android:paddingVertical="10dp"
                     android:background="@drawable/bg_metric_cell"
-                    android:layout_marginStart="5dp">
+                    android:layout_marginStart="4dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="R$/MIN"
+                        android:text="@string/metric_min"
                         android:textSize="@dimen/text_size_9"
-                        android:textStyle="bold"
+                        android:textStyle="normal"
                         android:textColor="@color/text_secondary"
-                        android:letterSpacing="0.07" />
+                        android:letterSpacing="0.04" />
 
                     <TextView
                         android:id="@+id/tvPricePerMin"
@@ -423,8 +438,8 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginTop="14dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
                 android:background="@color/bg_surface" />
 
             <!-- ─── ROTA com linha conectora ─── -->
@@ -456,6 +471,7 @@
                             android:layout_width="10dp"
                             android:layout_height="10dp"
                             android:src="@drawable/ic_pickup"
+                            android:tint="@color/success"
                             android:contentDescription="Embarque" />
 
                         <!-- Linha conectora entre os dois pontos -->
@@ -465,7 +481,7 @@
                             android:layout_weight="1"
                             android:layout_marginTop="3dp"
                             android:minHeight="20dp"
-                            android:background="@color/bg_surface" />
+                            android:background="@drawable/bg_route_line_gradient" />
 
                     </LinearLayout>
 
@@ -482,10 +498,10 @@
                             android:layout_height="wrap_content"
                             android:text="EMBARQUE"
                             android:textSize="@dimen/text_size_9"
-                            android:textStyle="bold"
+                            android:textStyle="normal"
                             android:textColor="@color/text_secondary"
-                            android:letterSpacing="0.07"
-                            android:layout_marginBottom="1dp" />
+                            android:letterSpacing="0.04"
+                            android:layout_marginBottom="2dp" />
 
                         <TextView
                             android:id="@+id/tvPickupAddress"
@@ -554,6 +570,7 @@
                             android:layout_width="10dp"
                             android:layout_height="10dp"
                             android:src="@drawable/ic_dropoff"
+                            android:tint="@color/error"
                             android:contentDescription="Destino" />
 
                     </LinearLayout>
@@ -570,10 +587,10 @@
                             android:layout_height="wrap_content"
                             android:text="DESTINO"
                             android:textSize="@dimen/text_size_9"
-                            android:textStyle="bold"
+                            android:textStyle="normal"
                             android:textColor="@color/text_secondary"
-                            android:letterSpacing="0.07"
-                            android:layout_marginBottom="1dp" />
+                            android:letterSpacing="0.04"
+                            android:layout_marginBottom="2dp" />
 
                         <TextView
                             android:id="@+id/tvDropoffAddress"
@@ -630,7 +647,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="6dp">
+                android:layout_marginTop="8dp">
 
                 <ImageView
                     android:id="@+id/ivStops"
@@ -656,8 +673,8 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="10dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="12dp"
                 android:background="@color/bg_surface" />
 
             <!-- ─── Linha de total (km · tempo · score) ─── -->
@@ -704,7 +721,7 @@
                 android:orientation="vertical"
                 android:visibility="gone"
                 android:padding="12dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="12dp"
                 android:background="@drawable/bg_expandable_rounded"
                 android:gravity="center">
 
@@ -724,7 +741,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="10dp">
+                android:layout_marginTop="12dp">
 
                 <TextView
                     android:id="@+id/tvStatus"

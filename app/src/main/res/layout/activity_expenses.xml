@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -16,65 +18,75 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="12dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="12dp">
+            android:paddingHorizontal="@dimen/card_padding"
+            android:paddingTop="@dimen/card_padding"
+            android:paddingBottom="@dimen/card_padding">
 
-            <!-- Summary Card -->
-            <LinearLayout
+            <!-- HERO — Custo total/km -->
+            <androidx.cardview.widget.CardView
                 android:id="@+id/summaryCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@color/bg_card"
-                android:padding="16dp"
-                android:gravity="center"
-                android:layout_marginBottom="12dp">
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="@dimen/card_corner_radius"
+                app:cardElevation="@dimen/card_elevation"
+                app:cardBackgroundColor="@color/card_header_dark">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="\uD83D\uDCCA RESUMO"
-                    android:textSize="@dimen/text_size_11"
-                    android:textColor="@color/text_tertiary"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
+                    android:orientation="vertical"
+                    android:padding="@dimen/card_padding">
 
-                <TextView
-                    android:id="@+id/tvTotalCostPerKm"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Custo total/km: --"
-                    android:textSize="@dimen/text_size_24"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_inverse"
-                    android:layout_marginBottom="4dp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CUSTO REAL POR KM"
+                        android:textSize="@dimen/text_size_10"
+                        android:textStyle="normal"
+                        android:textColor="@color/overlay_text_secondary"
+                        android:letterSpacing="0.12"
+                        android:layout_marginBottom="8dp" />
 
-                <TextView
-                    android:id="@+id/tvFixedMonthlyCost"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Custo fixo mensal: --"
-                    android:textSize="@dimen/text_size_13"
-                    android:textColor="@color/text_tertiary" />
+                    <TextView
+                        android:id="@+id/tvTotalCostPerKm"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="R$ --/km"
+                        android:textSize="@dimen/text_size_28"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_on_dark"
+                        android:letterSpacing="-0.02"
+                        android:layout_marginBottom="8dp" />
 
-            </LinearLayout>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/overlay_border"
+                        android:layout_marginBottom="8dp" />
 
-            <!-- Empty State -->
+                    <TextView
+                        android:id="@+id/tvFixedMonthlyCost"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Custo fixo mensal: --"
+                        android:textSize="@dimen/text_size_12"
+                        android:textColor="@color/overlay_text_secondary"
+                        android:letterSpacing="0.01" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- ESTADO VAZIO -->
             <LinearLayout
                 android:id="@+id/emptyState"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
                 android:orientation="vertical"
-                android:padding="32dp"
+                android:gravity="center"
+                android:paddingVertical="40dp"
                 android:visibility="gone">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="@dimen/text_size_48"
-                    android:text="\uD83D\uDCB0" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -83,200 +95,295 @@
                     android:textSize="@dimen/text_size_16"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
-                    android:layout_marginTop="12dp" />
+                    android:layout_marginBottom="8dp" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Adicione seus custos para\ncalcular o custo por km real"
+                    android:text="Adicione seus custos para calcular\no custo por km real"
                     android:textSize="@dimen/text_size_13"
                     android:textColor="@color/text_tertiary"
                     android:gravity="center"
-                    android:layout_marginTop="6dp" />
+                    android:lineSpacingExtra="3dp" />
 
             </LinearLayout>
 
-            <!-- Expensive Content (visible when there are expenses) -->
+            <!-- CONTEÚDO DE DESPESAS -->
             <LinearLayout
                 android:id="@+id/expensesContent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- CUSTOS POR KM -->
-                <LinearLayout
+                <!-- Label de seção -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="CATEGORIAS DE CUSTO"
+                    android:textSize="@dimen/text_size_10"
+                    android:textStyle="normal"
+                    android:textColor="@color/text_tertiary"
+                    android:letterSpacing="0.12"
+                    android:layout_marginBottom="12dp" />
+
+                <!-- Custos por KM -->
+                <androidx.cardview.widget.CardView
                     android:id="@+id/perKmSection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@color/bg_card"
-                    android:layout_marginBottom="8dp">
+                    android:layout_marginBottom="12dp"
+                    app:cardCornerRadius="@dimen/card_corner_radius"
+                    app:cardElevation="@dimen/card_elevation"
+                    app:cardBackgroundColor="@color/bg_card">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:paddingHorizontal="14dp"
-                        android:paddingVertical="10dp">
+                        android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="0dp"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="CUSTOS POR KM"
-                            android:textSize="@dimen/text_size_11"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_primary" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingHorizontal="@dimen/card_padding"
+                            android:paddingVertical="14dp">
 
-                        <TextView
-                            android:id="@+id/btnAddPerKm"
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:gravity="center"
-                            android:text="\u2795"
-                            android:textSize="@dimen/text_size_14"
-                            android:clickable="true"
-                            android:focusable="true" />
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Por km rodado"
+                                    android:textSize="@dimen/text_size_14"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/text_primary" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Combust\u00edvel, pneus, manuten\u00e7\u00e3o"
+                                    android:textSize="@dimen/text_size_11"
+                                    android:textColor="@color/text_tertiary"
+                                    android:layout_marginTop="2dp" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/btnAddPerKm"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="+ Adicionar"
+                                android:textSize="@dimen/text_size_11"
+                                android:textStyle="bold"
+                                android:textColor="@color/accent"
+                                android:paddingHorizontal="12dp"
+                                android:paddingVertical="6dp"
+                                android:background="@drawable/bg_btn_add_outline"
+                                android:clickable="true"
+                                android:focusable="true" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@color/border" />
+
+                        <LinearLayout
+                            android:id="@+id/perKmList"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:paddingVertical="4dp" />
 
                     </LinearLayout>
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/bg_surface" />
+                </androidx.cardview.widget.CardView>
 
-                    <LinearLayout
-                        android:id="@+id/perKmList"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical" />
-
-                </LinearLayout>
-
-                <!-- CUSTOS FIXOS -->
-                <LinearLayout
+                <!-- Custos Fixos -->
+                <androidx.cardview.widget.CardView
                     android:id="@+id/fixedSection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@color/bg_card"
-                    android:layout_marginBottom="8dp">
+                    android:layout_marginBottom="12dp"
+                    app:cardCornerRadius="@dimen/card_corner_radius"
+                    app:cardElevation="@dimen/card_elevation"
+                    app:cardBackgroundColor="@color/bg_card">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:paddingHorizontal="14dp"
-                        android:paddingVertical="10dp">
+                        android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="0dp"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="CUSTOS FIXOS"
-                            android:textSize="@dimen/text_size_11"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_primary" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingHorizontal="@dimen/card_padding"
+                            android:paddingVertical="14dp">
 
-                        <TextView
-                            android:id="@+id/btnAddFixed"
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:gravity="center"
-                            android:text="\u2795"
-                            android:textSize="@dimen/text_size_14"
-                            android:clickable="true"
-                            android:focusable="true" />
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Fixos mensais"
+                                    android:textSize="@dimen/text_size_14"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/text_primary" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Seguro, financiamento, IPVA"
+                                    android:textSize="@dimen/text_size_11"
+                                    android:textColor="@color/text_tertiary"
+                                    android:layout_marginTop="2dp" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/btnAddFixed"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="+ Adicionar"
+                                android:textSize="@dimen/text_size_11"
+                                android:textStyle="bold"
+                                android:textColor="@color/accent"
+                                android:paddingHorizontal="12dp"
+                                android:paddingVertical="6dp"
+                                android:background="@drawable/bg_btn_add_outline"
+                                android:clickable="true"
+                                android:focusable="true" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@color/border" />
+
+                        <LinearLayout
+                            android:id="@+id/fixedList"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:paddingVertical="4dp" />
 
                     </LinearLayout>
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/bg_surface" />
+                </androidx.cardview.widget.CardView>
 
-                    <LinearLayout
-                        android:id="@+id/fixedList"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical" />
-
-                </LinearLayout>
-
-                <!-- CUSTOS POR EVENTO -->
-                <LinearLayout
+                <!-- Custos por Evento -->
+                <androidx.cardview.widget.CardView
                     android:id="@+id/eventSection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@color/bg_card"
-                    android:layout_marginBottom="8dp">
+                    android:layout_marginBottom="24dp"
+                    app:cardCornerRadius="@dimen/card_corner_radius"
+                    app:cardElevation="@dimen/card_elevation"
+                    app:cardBackgroundColor="@color/bg_card">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:paddingHorizontal="14dp"
-                        android:paddingVertical="10dp">
+                        android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="0dp"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="CUSTOS POR EVENTO"
-                            android:textSize="@dimen/text_size_11"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_primary" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingHorizontal="@dimen/card_padding"
+                            android:paddingVertical="14dp">
 
-                        <TextView
-                            android:id="@+id/btnAddEvent"
-                            android:layout_width="28dp"
-                            android:layout_height="28dp"
-                            android:gravity="center"
-                            android:text="\u2795"
-                            android:textSize="@dimen/text_size_14"
-                            android:clickable="true"
-                            android:focusable="true" />
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Por evento"
+                                    android:textSize="@dimen/text_size_14"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/text_primary" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Revis\u00e3o, multa, lavagem"
+                                    android:textSize="@dimen/text_size_11"
+                                    android:textColor="@color/text_tertiary"
+                                    android:layout_marginTop="2dp" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:id="@+id/btnAddEvent"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="+ Adicionar"
+                                android:textSize="@dimen/text_size_11"
+                                android:textStyle="bold"
+                                android:textColor="@color/accent"
+                                android:paddingHorizontal="12dp"
+                                android:paddingVertical="6dp"
+                                android:background="@drawable/bg_btn_add_outline"
+                                android:clickable="true"
+                                android:focusable="true" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@color/border" />
+
+                        <LinearLayout
+                            android:id="@+id/eventList"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:paddingVertical="4dp" />
 
                     </LinearLayout>
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/bg_surface" />
-
-                    <LinearLayout
-                        android:id="@+id/eventList"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical" />
-
-                </LinearLayout>
+                </androidx.cardview.widget.CardView>
 
             </LinearLayout>
 
-            <!-- Add Expense Button -->
+            <!-- CTA principal -->
             <TextView
                 android:id="@+id/btnAddExpense"
                 android:layout_width="match_parent"
-                android:layout_height="46dp"
+                android:layout_height="48dp"
                 android:gravity="center"
-                android:text="\u2795 ADICIONAR DESPESA"
+                android:text="ADICIONAR DESPESA"
                 android:textSize="@dimen/text_size_13"
                 android:textStyle="bold"
                 android:textColor="@color/text_inverse"
+                android:letterSpacing="0.06"
                 android:background="@drawable/pill_selected"
                 android:clickable="true"
-                android:focusable="true"
-                android:layout_marginTop="4dp" />
+                android:focusable="true" />
 
         </LinearLayout>
 
     </ScrollView>
 
-<include layout="@layout/bottom_nav" />
+    <include layout="@layout/bottom_nav" />
 
 </LinearLayout>

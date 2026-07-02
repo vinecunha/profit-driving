@@ -100,4 +100,34 @@
     <string name="privacy_policy">POLÍTICA DE PRIVACIDADE</string>
     <string name="terms_of_use">TERMOS DE USO</string>
     <string name="copyright">© 2026 CorridaCerta</string>
+
+    <!-- Sections -->
+    <string name="section_decision_criteria">Critérios de Decisão</string>
+    <string name="section_floating_card">Card Flutuante</string>
+    <string name="section_general_prefs">Preferências Gerais</string>
+    <string name="section_testing_maintenance">Testes e Manutenção</string>
+
+    <!-- Work Profile -->
+    <string name="profile_work_title">Perfil de Trabalho</string>
+    <string name="profile_work_subtitle">Escolha o perfil para o momento atual</string>
+    <string name="profile_bad_day">Dia Ruim</string>
+    <string name="profile_normal">Normal</string>
+    <string name="profile_dynamic">Dinâmica</string>
+    <string name="profile_bad_day_desc">Aceite corridas abaixo da média para não ficar parado</string>
+    <string name="profile_normal_desc">Baseado na sua média dos últimos meses</string>
+    <string name="profile_dynamic_desc">Baseado nas suas melhores corridas</string>
+    <string name="profile_custom">Personalizado</string>
+    <string name="profile_custom_desc">Personalizado — Valores definidos manualmente</string>
+    <string name="profile_applied_stats">Valores calculados com seus dados reais</string>
+    <string name="profile_applied_default">Poucos dados — usando valores padrão</string>
+
+    <!-- Animation -->
+    <string name="animation_label">Animação do Card</string>
+    <string name="animation_summary">Escolha como o card aparece na tela</string>
+    <string name="animation_preview">Preview</string>
+    <string name="animation_none">Nenhuma</string>
+    <string name="animation_fade">Fade In</string>
+    <string name="animation_slide_right">Deslizar da Direita</string>
+    <string name="animation_slide_left">Deslizar da Esquerda</string>
+    <string name="animation_fade_slide">Fade + Slide (Recomendado)</string>
 </resources>
