@@ -224,7 +224,6 @@ class MyDayRideAdapter(
                 btn1.text = labels[0]
                 btn1.visibility = View.VISIBLE
                 divider1.visibility = View.VISIBLE
-                btn1.setOnClickListener { actions[0].invoke() }
                 offset = 1
             } else {
                 btn1.visibility = View.GONE
@@ -233,19 +232,32 @@ class MyDayRideAdapter(
 
             btn2.text = labels[offset]
             btn2.visibility = View.VISIBLE
-            btn2.setOnClickListener { actions[offset].invoke() }
             btn3.text = labels[offset + 1]
             btn3.visibility = View.VISIBLE
-            btn3.setOnClickListener { actions[offset + 1].invoke() }
             btn4.text = labels[offset + 2]
             btn4.visibility = View.VISIBLE
-            btn4.setOnClickListener { actions[offset + 2].invoke() }
 
-            AlertDialog.Builder(context)
+            val dialog = AlertDialog.Builder(context)
                 .setTitle("A\u00E7\u00F5es")
                 .setView(view)
                 .setNegativeButton("Cancelar", null)
                 .show()
+            btn1.setOnClickListener {
+                dialog.dismiss()
+                actions[0].invoke()
+            }
+            btn2.setOnClickListener {
+                dialog.dismiss()
+                actions[offset].invoke()
+            }
+            btn3.setOnClickListener {
+                dialog.dismiss()
+                actions[offset + 1].invoke()
+            }
+            btn4.setOnClickListener {
+                dialog.dismiss()
+                actions[offset + 2].invoke()
+            }
         }
 
         holder.root.setOnClickListener {

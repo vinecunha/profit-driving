@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import com.profitdriving.CardHashGenerator
 import com.profitdriving.DatabaseHelper
 import com.profitdriving.DecisionEngine
+import com.profitdriving.EventAlertManager
 import com.profitdriving.FloatingBubbleService
 import com.profitdriving.FloatingCardService
 import com.profitdriving.L
@@ -48,6 +49,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     private var uberWindowWasVisible = false
     private var lastSavedValue: Double? = null
     private var currentRawLogId: Long = -1L
+    private val eventAlertManager by lazy { EventAlertManager(this) }
 
     private val parsers: List<RideDataParser> = listOf(
         ReservationDetailParser(),
@@ -379,6 +381,10 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                 ratingState = result.params[3].state.ordinal
             ))
             L.d(TAG, "Ride inserido com id=$lastInsertedId")
+            eventAlertManager.check(
+                rawPickup = ride.pickupAddress,
+                rawDropoff = ride.dropoffAddress,
+            )
         }
 
         lastSaveTime = System.currentTimeMillis()

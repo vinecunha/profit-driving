@@ -152,16 +152,31 @@ class App99CardParser : RideDataParser {
         var pickupAddress: String? = null
         var dropoffAddress: String? = null
 
-        val pickupMatch = PICKUP_ADDRESS_REGEX.find(text)
-        if (pickupMatch != null) {
-            pickupAddress = cleanupAddress(pickupMatch.groupValues[1].trim())
-            L.d(TAG, "Endereço de embarque encontrado: $pickupAddress")
+        // 1. Tentar novo formato (sem CEP/UF) — tempo/dist sem "de distância" ou "Viagem de"
+        val newMatches = ADDRESS_TIME_DIST_NEW.findAll(text).toList()
+        if (newMatches.isNotEmpty()) {
+            pickupAddress = cleanupAddress(newMatches[0].groupValues[1].trim())
+            L.d(TAG, "Endereço de embarque (novo): $pickupAddress")
+            if (newMatches.size > 1) {
+                dropoffAddress = cleanupAddress(newMatches[1].groupValues[1].trim())
+                L.d(TAG, "Endereço de destino (novo): $dropoffAddress")
+            }
         }
 
-        val dropoffMatch = DROPOFF_ADDRESS_REGEX.find(text)
-        if (dropoffMatch != null) {
-            dropoffAddress = cleanupAddress(dropoffMatch.groupValues[1].trim())
-            L.d(TAG, "Endereço de viagem encontrado: $dropoffAddress")
+        // 2. Fallback: formato antigo (com "de distância" e/ou CEP)
+        if (pickupAddress == null) {
+            val pickupMatch = PICKUP_ADDRESS_REGEX.find(text)
+            if (pickupMatch != null) {
+                pickupAddress = cleanupAddress(pickupMatch.groupValues[1].trim())
+                L.d(TAG, "Endereço de embarque (antigo): $pickupAddress")
+            }
+        }
+        if (dropoffAddress == null) {
+            val dropoffMatch = DROPOFF_ADDRESS_REGEX.find(text)
+            if (dropoffMatch != null) {
+                dropoffAddress = cleanupAddress(dropoffMatch.groupValues[1].trim())
+                L.d(TAG, "Endereço de viagem (antigo): $dropoffAddress")
+            }
         }
 
         return Pair(pickupAddress, dropoffAddress)
@@ -239,6 +254,11 @@ class App99CardParser : RideDataParser {
 
         private val DROPOFF_ADDRESS_REGEX = Regex(
             """Viagem\s+de\s+\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)\s+([A-Za-zÀ-Úà-ú0-9\s,.-]+?\d{5}-\d{3})""",
+            RegexOption.IGNORE_CASE
+        )
+
+        private val ADDRESS_TIME_DIST_NEW = Regex(
+            """\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)\s+([A-Za-zÀ-Úà-ú0-9\s,./°-]+?)(?=\s*\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)|\s*(?:Reservas|Aceitar|Informações|Selecionar|$))""",
             RegexOption.IGNORE_CASE
         )
     }

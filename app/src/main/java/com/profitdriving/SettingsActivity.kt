@@ -763,6 +763,37 @@ class SettingsActivity : BaseActivity() {
         return if (parsed != null && parsed >= min && parsed <= max) parsed else null
     }
 
+    private fun computeCostPerKm(): Double {
+        val db = DatabaseHelper(this)
+        val refuels = db.getRefuels()
+        val expenses = db.getAllExpenses()
+        val monthlyKm = db.getMonthlyKm()
+        return CostCalculator.calculateCostSummary(refuels, expenses, monthlyKm).totalCostPerKm
+    }
+
+    private fun showProfileWarning(costKm: Double) {
+        removeProfileWarning()
+        val d = resources.displayMetrics.density
+        val warningTv = TextView(this).apply {
+            tag = "profile_warning_badge"
+            text = "⚠️ Seu semáforo será configurado abaixo do custo/km do seu veículo que é de R\$ ${FormatUtils.decimal(costKm)}. Isso significa PREJUÍZO"
+            textSize = spFromRes(R.dimen.text_size_12)
+            setTextColor(android.graphics.Color.WHITE)
+            setBackgroundColor(0xFFE53935.toInt())
+            setPadding((12 * d).toInt(), (8 * d).toInt(), (12 * d).toInt(), (8 * d).toInt())
+            val lp = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            lp.topMargin = (6 * d).toInt()
+            layoutParams = lp
+        }
+        val parent = tvProfileDesc.parent as android.view.ViewGroup
+        parent.addView(warningTv, parent.indexOfChild(tvProfileDesc) + 1)
+    }
+
+    private fun removeProfileWarning() {
+        val parent = tvProfileDesc.parent as? android.view.ViewGroup ?: return
+        parent.findViewWithTag<android.view.View>("profile_warning_badge")?.let { parent.removeView(it) }
+    }
+
     private fun setupThemePills() {
         val btnSystem = findViewById<TextView>(R.id.btnThemeSystem)
         val btnLight = findViewById<TextView>(R.id.btnThemeLight)
@@ -860,6 +891,19 @@ class SettingsActivity : BaseActivity() {
                 etIdealRating.setText(lf(KEY_IDEAL_RATING, 4.9f))
             }
             isUpdatingFromProfile = false
+
+            val costKm = computeCostPerKm()
+            if (costKm > 0) {
+                val minKm = parseBr(etMinKm.text.toString()) ?: 0f
+                if (minKm < costKm) {
+                    showProfileWarning(costKm)
+                } else {
+                    removeProfileWarning()
+                }
+            } else {
+                removeProfileWarning()
+            }
+
             debouncedUpdatePreview()
             return
         }
@@ -891,6 +935,18 @@ class SettingsActivity : BaseActivity() {
         etMinRating.setText(FormatUtils.decimal(values.minRating))
         etIdealRating.setText(FormatUtils.decimal(values.idealRating))
         isUpdatingFromProfile = false
+
+        val costKm = computeCostPerKm()
+        if (costKm > 0) {
+            val minKm = parseBr(etMinKm.text.toString()) ?: 0f
+            if (minKm < costKm) {
+                showProfileWarning(costKm)
+            } else {
+                removeProfileWarning()
+            }
+        } else {
+            removeProfileWarning()
+        }
 
         debouncedUpdatePreview()
         Toast.makeText(this, toastMsg, Toast.LENGTH_SHORT).show()

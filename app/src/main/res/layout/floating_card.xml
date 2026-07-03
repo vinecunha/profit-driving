@@ -337,7 +337,7 @@
             android:id="@+id/tvStops"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text=" Várias paradas"
+            android:text=" Com paradas"
             android:textSize="@dimen/text_size_10"
             android:textColor="@color/highlight"
             android:layout_marginStart="4dp" />
@@ -368,6 +368,127 @@
             android:textStyle="bold"
             android:textColor="@color/highlight"
             android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <!-- Reputação de endereço (greenlist/blacklist) -->
+    <LinearLayout
+        android:id="@+id/llPickupReputation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="4dp"
+        android:visibility="gone">
+
+        <View
+            android:id="@+id/dotPickupReputation"
+            android:layout_width="6dp"
+            android:layout_height="6dp" />
+
+        <TextView
+            android:id="@+id/tvPickupReputation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_9"
+            android:textColor="@color/overlay_text_secondary"
+            android:layout_marginStart="4dp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/llDropoffReputation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="2dp"
+        android:visibility="gone">
+
+        <View
+            android:id="@+id/dotDropoffReputation"
+            android:layout_width="6dp"
+            android:layout_height="6dp" />
+
+        <TextView
+            android:id="@+id/tvDropoffReputation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_9"
+            android:textColor="@color/overlay_text_secondary"
+            android:layout_marginStart="4dp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+    </LinearLayout>
+
+    <!-- Painel de ação — long-press -->
+    <LinearLayout
+        android:id="@+id/llReputationActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/btnGreenPickup"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="✓ Emb."
+            android:textSize="@dimen/text_size_9"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingVertical="5dp"
+            android:layout_marginEnd="2dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/btnBlackPickup"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="✗ Emb."
+            android:textSize="@dimen/text_size_9"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingVertical="5dp"
+            android:layout_marginEnd="2dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/btnGreenDropoff"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="✓ Dest."
+            android:textSize="@dimen/text_size_9"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingVertical="5dp"
+            android:layout_marginStart="2dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/btnBlackDropoff"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="✗ Dest."
+            android:textSize="@dimen/text_size_9"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingVertical="5dp"
+            android:layout_marginStart="2dp"
+            android:clickable="true"
+            android:focusable="true" />
+
     </LinearLayout>
 
 </LinearLayout>

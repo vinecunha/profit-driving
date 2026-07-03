@@ -37,6 +37,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import android.widget.Switch
+import android.widget.Toast
 import android.view.MenuItem
 import com.google.android.material.navigation.NavigationView
 import androidx.drawerlayout.widget.DrawerLayout
@@ -311,6 +312,25 @@ class MainActivity : BaseActivity() {
                                 }
                                 .setNegativeButton("Cancelar", null)
                                 .show()
+                        },
+                        onAddToMyDay = { ride ->
+                            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(java.util.Date())
+                            val dailyRide = DailyRide(
+                                rideId = ride.id,
+                                date = today,
+                                originalValue = ride.value ?: 0.0,
+                                isCompleted = true
+                            )
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                db.insertDailyRide(dailyRide)
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "Corrida adicionada ao Meu Dia!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
                         }
                     )
                     recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
@@ -647,7 +667,8 @@ class MainActivity : BaseActivity() {
 class HistoryAdapter(
     records: List<RideRecord>,
     private val costPerKm: Double = 0.0,
-    private val onDeleteRide: ((RideRecord) -> Unit)? = null
+    private val onDeleteRide: ((RideRecord) -> Unit)? = null,
+    private val onAddToMyDay: ((RideRecord) -> Unit)? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private data class DisplayRide(
@@ -932,7 +953,7 @@ class HistoryAdapter(
         vh.tvProfitValue.visibility = View.VISIBLE
 
         if (r.hasMultipleStops) {
-            vh.tvStops.text = "V\u00E1rias paradas"
+            vh.tvStops.text = "Com paradas"
             vh.tvStops.visibility = View.VISIBLE
             vh.ivStops.visibility = View.VISIBLE
         } else {
@@ -998,11 +1019,13 @@ class HistoryAdapter(
             vh.ivCardMenu.setOnClickListener { menuView ->
                 val popup = android.widget.PopupMenu(menuView.context, menuView)
                 popup.menu.add(0, 1, 0, "Compartilhar")
-                popup.menu.add(0, 2, 0, "Excluir")
+                popup.menu.add(0, 2, 0, "Confirmar corrida")
+                popup.menu.add(0, 3, 0, "Excluir")
                 popup.setOnMenuItemClickListener { item ->
                     when (item.itemId) {
                         1 -> shareCardAsImage(menuView.context, vh.cardRoot)
-                        2 -> onDeleteRide?.invoke(r)
+                        2 -> onAddToMyDay?.invoke(r)
+                        3 -> onDeleteRide?.invoke(r)
                     }
                     true
                 }

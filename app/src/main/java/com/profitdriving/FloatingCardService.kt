@@ -47,6 +47,7 @@ class FloatingCardService : Service() {
     private var lastRideTime = 0L
     private var isProcessingCard = false
     private var currentCardRideHash: String? = null
+    private val reputationManager by lazy { AddressReputationManager(this) }
 
     override fun onCreate() {
         super.onCreate()
@@ -212,6 +213,35 @@ class FloatingCardService : Service() {
         val minuteRow    = view.findViewById<View>(R.id.minuteRow)
         val ratingRow    = view.findViewById<View>(R.id.ratingRow)
 
+        val llPickupReputation   = view.findViewById<android.view.ViewGroup>(R.id.llPickupReputation)
+        val dotPickupReputation  = view.findViewById<View>(R.id.dotPickupReputation)
+        val tvPickupReputation   = view.findViewById<TextView>(R.id.tvPickupReputation)
+
+        val llDropoffReputation  = view.findViewById<android.view.ViewGroup>(R.id.llDropoffReputation)
+        val dotDropoffReputation = view.findViewById<View>(R.id.dotDropoffReputation)
+        val tvDropoffReputation  = view.findViewById<TextView>(R.id.tvDropoffReputation)
+
+        val llReputationActions  = view.findViewById<android.view.ViewGroup>(R.id.llReputationActions)
+        val btnGreenPickup       = view.findViewById<TextView>(R.id.btnGreenPickup)
+        val btnBlackPickup       = view.findViewById<TextView>(R.id.btnBlackPickup)
+        val btnGreenDropoff      = view.findViewById<TextView>(R.id.btnGreenDropoff)
+        val btnBlackDropoff      = view.findViewById<TextView>(R.id.btnBlackDropoff)
+
+        val density = resources.displayMetrics.density
+        val cornerRadius = resources.getDimension(R.dimen.badge_corner_radius)
+
+        fun styleActionBtn(tv: TextView, bgColorRes: Int, textColorRes: Int) {
+            val gd = GradientDrawable()
+            gd.setColor(getColor(bgColorRes))
+            gd.cornerRadius = cornerRadius
+            tv.background = gd
+            tv.setTextColor(getColor(textColorRes))
+        }
+        styleActionBtn(btnGreenPickup,  R.color.success_bg,  R.color.success_text)
+        styleActionBtn(btnBlackPickup,  R.color.error_bg,    R.color.error_text)
+        styleActionBtn(btnGreenDropoff, R.color.success_bg,  R.color.success_text)
+        styleActionBtn(btnBlackDropoff, R.color.error_bg,    R.color.error_text)
+
         val pricePerKm   = ride.effectivePricePerKm
         val pricePerHour = ride.effectivePricePerHour
         val pricePerMinute = ride.effectivePricePerMinute
@@ -324,6 +354,121 @@ class FloatingCardService : Service() {
             llKnownDestination?.visibility = View.VISIBLE
         }
 
+        // ── Reputação de endereço (greenlist / blacklist) ──────────────
+        if (!isDemo) {
+            serviceScope.launch(Dispatchers.IO) {
+                val pickupRep  = reputationManager.getReputation(ride.pickupAddress)
+                val dropoffRep = reputationManager.getReputation(ride.dropoffAddress)
+
+                withContext(Dispatchers.Main) {
+                    if (pickupRep != AddressReputationManager.Reputation.NONE) {
+                        val (dotColor, label) = when (pickupRep) {
+                            AddressReputationManager.Reputation.GREEN ->
+                                Pair(R.color.overlay_success, "Embarque bom")
+                            AddressReputationManager.Reputation.BLACK ->
+                                Pair(R.color.overlay_error, "Embarque — evitar")
+                            else -> null
+                        } ?: return@withContext
+
+                        val gd = GradientDrawable()
+                        gd.shape = GradientDrawable.OVAL
+                        gd.setColor(getColor(dotColor))
+                        dotPickupReputation.background = gd
+
+                        tvPickupReputation.text = label
+                        tvPickupReputation.setTextColor(getColor(dotColor))
+                        llPickupReputation.visibility = View.VISIBLE
+                    }
+
+                    if (dropoffRep != AddressReputationManager.Reputation.NONE) {
+                        val (dotColor, label) = when (dropoffRep) {
+                            AddressReputationManager.Reputation.GREEN ->
+                                Pair(R.color.overlay_success, "Destino bom")
+                            AddressReputationManager.Reputation.BLACK ->
+                                Pair(R.color.overlay_error, "Destino — evitar")
+                            else -> null
+                        } ?: return@withContext
+
+                        val gd = GradientDrawable()
+                        gd.shape = GradientDrawable.OVAL
+                        gd.setColor(getColor(dotColor))
+                        dotDropoffReputation.background = gd
+
+                        tvDropoffReputation.text = label
+                        tvDropoffReputation.setTextColor(getColor(dotColor))
+                        llDropoffReputation.visibility = View.VISIBLE
+                    }
+
+                    if (ride.pickupAddress.isNullOrEmpty()) {
+                        btnGreenPickup.visibility  = View.GONE
+                        btnBlackPickup.visibility  = View.GONE
+                    }
+                    if (ride.dropoffAddress.isNullOrEmpty()) {
+                        btnGreenDropoff.visibility = View.GONE
+                        btnBlackDropoff.visibility = View.GONE
+                    }
+                }
+            }
+        }
+
+        // ── Botões de ação do painel de reputação ─────────────────────
+        fun saveReputation(
+            address: String?,
+            reputation: AddressReputationManager.Reputation,
+            reputationView: android.view.ViewGroup,
+            dotView: View,
+            tvView: TextView,
+        ) {
+            serviceScope.launch(Dispatchers.IO) {
+                reputationManager.setReputation(address, reputation)
+                withContext(Dispatchers.Main) {
+                    llReputationActions.visibility = View.GONE
+
+                    if (reputation != AddressReputationManager.Reputation.NONE) {
+                        val (dotColor, label) = when (reputation) {
+                            AddressReputationManager.Reputation.GREEN ->
+                                Pair(R.color.overlay_success,
+                                     if (address == ride.pickupAddress) "Embarque bom" else "Destino bom")
+                            AddressReputationManager.Reputation.BLACK ->
+                                Pair(R.color.overlay_error,
+                                     if (address == ride.pickupAddress) "Embarque — evitar" else "Destino — evitar")
+                            else -> return@withContext
+                        }
+                        val gd = GradientDrawable()
+                        gd.shape = GradientDrawable.OVAL
+                        gd.setColor(getColor(dotColor))
+                        dotView.background = gd
+                        tvView.text = label
+                        tvView.setTextColor(getColor(dotColor))
+                        reputationView.visibility = View.VISIBLE
+                    } else {
+                        reputationView.visibility = View.GONE
+                    }
+
+                    handler.removeCallbacks(dismissRunnable)
+                    val durationMs = prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 30) * 1000L
+                    handler.postDelayed(dismissRunnable, durationMs)
+                }
+            }
+        }
+
+        btnGreenPickup.setOnClickListener {
+            saveReputation(ride.pickupAddress, AddressReputationManager.Reputation.GREEN,
+                           llPickupReputation, dotPickupReputation, tvPickupReputation)
+        }
+        btnBlackPickup.setOnClickListener {
+            saveReputation(ride.pickupAddress, AddressReputationManager.Reputation.BLACK,
+                           llPickupReputation, dotPickupReputation, tvPickupReputation)
+        }
+        btnGreenDropoff.setOnClickListener {
+            saveReputation(ride.dropoffAddress, AddressReputationManager.Reputation.GREEN,
+                           llDropoffReputation, dotDropoffReputation, tvDropoffReputation)
+        }
+        btnBlackDropoff.setOnClickListener {
+            saveReputation(ride.dropoffAddress, AddressReputationManager.Reputation.BLACK,
+                           llDropoffReputation, dotDropoffReputation, tvDropoffReputation)
+        }
+
         // Congela o costPerKm no momento da criação do card
         serviceScope.launch {
             try {
@@ -409,12 +554,55 @@ class FloatingCardService : Service() {
             y = yOffset
         }
 
+        var longPressRunnable: Runnable? = null
+        var touchDownX = 0f
+        var touchDownY = 0f
+        val longPressThresholdMs = 500L
+        val touchSlopPx = 12f * resources.displayMetrics.density
+
         view.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    dismiss()
+                    touchDownX = event.rawX
+                    touchDownY = event.rawY
+
+                    if (llReputationActions.visibility == View.VISIBLE) {
+                        return@setOnTouchListener false
+                    }
+
+                    val runnable = Runnable {
+                        longPressRunnable = null
+                        handler.removeCallbacks(dismissRunnable)
+                        llReputationActions.visibility = View.VISIBLE
+                    }
+                    longPressRunnable = runnable
+                    handler.postDelayed(runnable, longPressThresholdMs)
                     true
                 }
+
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = Math.abs(event.rawX - touchDownX)
+                    val dy = Math.abs(event.rawY - touchDownY)
+                    if (dx > touchSlopPx || dy > touchSlopPx) {
+                        longPressRunnable?.let { handler.removeCallbacks(it) }
+                        longPressRunnable = null
+                    }
+                    false
+                }
+
+                MotionEvent.ACTION_UP -> {
+                    val pending = longPressRunnable
+                    if (pending != null) {
+                        handler.removeCallbacks(pending)
+                        longPressRunnable = null
+
+                        if (llReputationActions.visibility == View.GONE) {
+                            dismiss()
+                        }
+                    }
+                    true
+                }
+
                 else -> false
             }
         }

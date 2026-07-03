@@ -751,6 +751,8 @@ object AnalysisHelperV2 {
             val match = pattern.find(address)
             if (match != null) return match.groupValues[1].trim()
         }
+        val lastDash = address.lastIndexOf(" - ")
+        if (lastDash >= 0) return address.substring(lastDash + 3).trim()
         return null
     }
 
@@ -775,6 +777,8 @@ data class Scenario(
     val effectivePerHour: Double,
     val netGainVsActual: Double,
     val avgPricePerHour: Double,
+    val totalEarnings: Double = 0.0,
+    val totalKm: Double = 0.0,
 )
 
 data class FloorSimulation(
@@ -822,7 +826,8 @@ fun calculateFloorSimulation(
         val earnings = accepted.sumOf { it.value ?: 0.0 }
         val km = accepted.sumOf { it.distanceKm ?: 0.0 }
         val avgPricePerKm = if (km > 0) earnings / km else 0.0
-        val effectivePerHour = if (totalShiftHours > 0) earnings / totalShiftHours else 0.0
+        val netEarnings = earnings - km * costPerKm
+        val effectivePerHour = if (totalShiftHours > 0) netEarnings / totalShiftHours else 0.0
         val netGainVsActual = avgPricePerKm - pricesPerKm.average()
 
         Scenario(
@@ -832,6 +837,8 @@ fun calculateFloorSimulation(
             effectivePerHour = effectivePerHour,
             netGainVsActual = netGainVsActual,
             avgPricePerHour = if (totalShiftHours > 0) earnings / totalShiftHours else 0.0,
+            totalEarnings = earnings,
+            totalKm = km,
         )
     }
 

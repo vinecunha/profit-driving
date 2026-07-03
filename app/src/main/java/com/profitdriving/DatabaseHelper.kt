@@ -25,6 +25,15 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         db.execSQL(CREATE_RAW_LOGS_INDEX_HASH)
         db.execSQL(CREATE_RAW_LOGS_INDEX_STATUS)
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_dropoff_address ON $TABLE_NAME(dropoff_address)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_ride_records_timestamp ON $TABLE_NAME($COL_TIMESTAMP)")
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS address_reputation (
+                normalized_address TEXT PRIMARY KEY,
+                reputation         INTEGER NOT NULL DEFAULT 0,
+                updated_at         INTEGER NOT NULL
+            )
+        """)
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_addr_rep ON address_reputation(normalized_address)")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -172,6 +181,27 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COL_RATING_STATE INTEGER")
             } catch (e: Exception) {
                 L.w("DB", "v25 migration: ${e.message}")
+            }
+        }
+        if (oldVersion < 26) {
+            try {
+                db.execSQL("CREATE INDEX IF NOT EXISTS idx_ride_records_timestamp ON $TABLE_NAME($COL_TIMESTAMP)")
+            } catch (e: Exception) {
+                L.w("DB", "v26 migration: ${e.message}")
+            }
+        }
+        if (oldVersion < 27) {
+            try {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS address_reputation (
+                        normalized_address TEXT PRIMARY KEY,
+                        reputation         INTEGER NOT NULL DEFAULT 0,
+                        updated_at         INTEGER NOT NULL
+                    )
+                """)
+                db.execSQL("CREATE INDEX IF NOT EXISTS idx_addr_rep ON address_reputation(normalized_address)")
+            } catch (e: Exception) {
+                L.w("DB", "v27 migration: ${e.message}")
             }
         }
     }
@@ -1356,6 +1386,59 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         writableDatabase.delete(TABLE_DAILY_RIDES, "$COL_ID = ?", arrayOf(id.toString()))
     }
 
+    fun countAddressInLastHour(normalizedAddress: String, windowStartMs: Long): Int {
+        val pattern = "%$normalizedAddress%"
+        val sql = """
+            SELECT COUNT(*) FROM $TABLE_NAME
+            WHERE $COL_TIMESTAMP >= ?
+              AND (
+                LOWER($COL_PICKUP_ADDRESS) LIKE ?
+                OR
+                LOWER($COL_DROPOFF_ADDRESS) LIKE ?
+              )
+        """.trimIndent()
+
+        return try {
+            readableDatabase
+                .rawQuery(sql, arrayOf(windowStartMs.toString(), pattern, pattern))
+                .use { cursor ->
+                    if (cursor.moveToFirst()) cursor.getInt(0) else 0
+                }
+        } catch (e: Exception) {
+            L.e("DatabaseHelper", "countAddressInLastHour falhou", e)
+            0
+        }
+    }
+
+    fun getAddressReputation(normalizedAddress: String): Int {
+        return try {
+            readableDatabase.rawQuery(
+                "SELECT reputation FROM address_reputation WHERE normalized_address = ?",
+                arrayOf(normalizedAddress)
+            ).use { cursor ->
+                if (cursor.moveToFirst()) cursor.getInt(0) else 0
+            }
+        } catch (e: Exception) {
+            L.e("DatabaseHelper", "getAddressReputation falhou", e)
+            0
+        }
+    }
+
+    fun setAddressReputation(normalizedAddress: String, reputation: Int) {
+        try {
+            writableDatabase.execSQL(
+                """INSERT INTO address_reputation (normalized_address, reputation, updated_at)
+                   VALUES (?, ?, ?)
+                   ON CONFLICT(normalized_address)
+                   DO UPDATE SET reputation = excluded.reputation,
+                                 updated_at = excluded.updated_at""",
+                arrayOf(normalizedAddress, reputation, System.currentTimeMillis())
+            )
+        } catch (e: Exception) {
+            L.e("DatabaseHelper", "setAddressReputation falhou", e)
+        }
+    }
+
     fun getTodayRideRecords(date: String): List<RideRecord> {
         val todayStart = java.util.Calendar.getInstance().apply {
             set(java.util.Calendar.HOUR_OF_DAY, 0)
@@ -1445,7 +1528,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     companion object {
         private val dbLock = Any()
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 25
+        private const val DATABASE_VERSION = 27
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"

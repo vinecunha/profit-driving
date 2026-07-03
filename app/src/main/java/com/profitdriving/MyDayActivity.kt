@@ -945,34 +945,35 @@ class MyDayActivity : BaseActivity() {
                 availableAdapter.updateData(availableRidesList)
                 updateHistoryInfo()
                 applyFilters()
-                checkForEvent(record.pickupAddress, record.dropoffAddress)
+                // checkForEvent(record.pickupAddress, record.dropoffAddress)
             }
         }
     }
 
-    private fun checkForEvent(pickupAddress: String?, dropoffAddress: String?) {
-        val today = currentDateStr()
-        val ridesToday = allDailyRides.filter { it.date == today }
-
-        val pickupCount = ridesToday.count { ride ->
-            val record = allRideRecords[ride.rideId]
-            pickupAddress != null && record?.pickupAddress?.contains(pickupAddress.take(30)) == true
-        }
-        val dropoffCount = ridesToday.count { ride ->
-            val record = allRideRecords[ride.rideId]
-            dropoffAddress != null && record?.dropoffAddress?.contains(dropoffAddress.take(30)) == true
-        }
-
-        if (pickupCount >= 3) {
-            sendNotification("\uD83D\uDCCD Evento pr\u00F3ximo!",
-                "Voc\u00EA j\u00E1 pegou $pickupCount corridas saindo de $pickupAddress hoje. Pode ter um evento na regi\u00E3o!")
-        }
-
-        if (dropoffCount >= 3) {
-            sendNotification("\uD83C\uDFC1 Evento no destino!",
-                "Voc\u00EA j\u00E1 deixou $dropoffCount passageiros em $dropoffAddress hoje. Regi\u00E3o movimentada!")
-        }
-    }
+    // DEPRECATED — lógica migrada para EventAlertManager + RideAccessibilityServiceV2
+    // private fun checkForEvent(pickupAddress: String?, dropoffAddress: String?) {
+    //     val today = currentDateStr()
+    //     val ridesToday = allDailyRides.filter { it.date == today }
+    //
+    //     val pickupCount = ridesToday.count { ride ->
+    //         val record = allRideRecords[ride.rideId]
+    //         pickupAddress != null && record?.pickupAddress?.contains(pickupAddress.take(30)) == true
+    //     }
+    //     val dropoffCount = ridesToday.count { ride ->
+    //         val record = allRideRecords[ride.rideId]
+    //         dropoffAddress != null && record?.dropoffAddress?.contains(dropoffAddress.take(30)) == true
+    //     }
+    //
+    //     if (pickupCount >= 3) {
+    //         sendNotification("\uD83D\uDCCD Evento pr\u00F3ximo!",
+    //             "Voc\u00EA j\u00E1 pegou $pickupCount corridas saindo de $pickupAddress hoje. Pode ter um evento na regi\u00E3o!")
+    //     }
+    //
+    //     if (dropoffCount >= 3) {
+    //         sendNotification("\uD83C\uDFC1 Evento no destino!",
+    //             "Voc\u00EA j\u00E1 deixou $dropoffCount passageiros em $dropoffAddress hoje. Regi\u00E3o movimentada!")
+    //     }
+    // }
 
     private fun sendNotification(title: String, message: String) {
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
