@@ -19,7 +19,6 @@ import android.widget.RadioGroup
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.Spinner
-import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import android.widget.AdapterView
@@ -328,6 +327,7 @@ class SettingsActivity : BaseActivity() {
         setupThemePills()
         setupWorkProfileSelector()
         setupAnimationSelector()
+        setupEventNotificationsSettings()
     }
 
     private fun showReprocessDialog() {
@@ -1039,6 +1039,62 @@ class SettingsActivity : BaseActivity() {
                     .start()
             }
         }
+    }
+
+    private fun setupEventNotificationsSettings() {
+        val prefs = PreferenceManager(this)
+
+        val switchEnabled = findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.switchEventNotifications)
+        switchEnabled.isChecked = prefs.isEventNotificationsEnabled()
+        switchEnabled.setOnCheckedChangeListener { _, isChecked ->
+            prefs.setEventNotificationsEnabled(isChecked)
+            val statusText = if (isChecked) "Ativado" else "Desativado"
+            Toast.makeText(this, "Notificações de eventos: $statusText", Toast.LENGTH_SHORT).show()
+            if (!isChecked) {
+                EventAlertManager(this).resetCooldown()
+            }
+            updateEventNotificationsInfo()
+        }
+
+        val spinnerThreshold = findViewById<Spinner>(R.id.spinnerEventThreshold)
+        val thresholdOptions = listOf("2", "3", "4", "5", "6", "7", "8", "9", "10")
+        val thresholdAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, thresholdOptions)
+        thresholdAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerThreshold.adapter = thresholdAdapter
+
+        val currentThreshold = prefs.getEventNotificationsThreshold()
+        val currentIndex = thresholdOptions.indexOf(currentThreshold.toString())
+        spinnerThreshold.setSelection(if (currentIndex >= 0) currentIndex else 3)
+
+        spinnerThreshold.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val threshold = thresholdOptions[position].toInt()
+                prefs.setEventNotificationsThreshold(threshold)
+                Toast.makeText(this@SettingsActivity, "Limite: $threshold corridas", Toast.LENGTH_SHORT).show()
+                updateEventNotificationsInfo()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        updateEventNotificationsInfo()
+    }
+
+    private fun updateEventNotificationsInfo() {
+        val prefs = PreferenceManager(this)
+        val tvInfo = findViewById<TextView>(R.id.tvEventNotificationsInfo)
+        val currentThreshold = prefs.getEventNotificationsThreshold()
+        val enabled = prefs.isEventNotificationsEnabled()
+        tvInfo.text = """
+            ⚙️ Como funciona:
+
+            • O app detecta quando há muitas corridas na última hora
+            • Isso pode indicar um evento próximo (show, jogo, etc.)
+            • Você recebe uma notificação para ficar alerta
+
+            🔹 Limite atual: $currentThreshold corridas
+            🔹 Status: ${if (enabled) "✅ Ativado" else "❌ Desativado"}
+        """.trimIndent()
     }
 
     companion object {

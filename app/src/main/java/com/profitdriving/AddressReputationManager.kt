@@ -38,6 +38,6 @@ class AddressReputationManager(private val context: Context) {
         s = s.replace(Regex("\\s+"), " ")
              .replace(Regex("[,\\-]+\\s*$"), "")
              .trim()
-        return if (s.length < 6) null else s.take(30)
+        return if (s.length < 2) null else s.take(30)
     }
 }

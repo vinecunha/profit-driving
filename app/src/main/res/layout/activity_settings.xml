@@ -1224,6 +1224,121 @@
 
             </androidx.cardview.widget.CardView>
 
+            <!-- ============================================ -->
+            <!-- Notificações de Eventos Próximos             -->
+            <!-- ============================================ -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0.5dp"
+                app:strokeColor="@color/border"
+                app:cardBackgroundColor="@color/bg_card">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="6dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="&#x1F4E2;"
+                            android:textSize="@dimen/text_size_18"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Notificações de Eventos"
+                            android:textSize="@dimen/text_size_16"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Detecta eventos próximos (shows, jogos, etc.)"
+                        android:textSize="@dimen/text_size_12"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Switch: Ativar/Desativar -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Ativar notificações"
+                            android:textSize="@dimen/text_size_14"
+                            android:textColor="@color/text_primary" />
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchEventNotifications"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                    </LinearLayout>
+
+                    <!-- Spinner: Limite de corridas -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Limite de corridas"
+                            android:textSize="@dimen/text_size_14"
+                            android:textColor="@color/text_primary" />
+
+                        <Spinner
+                            android:id="@+id/spinnerEventThreshold"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:minWidth="80dp" />
+
+                    </LinearLayout>
+
+                    <!-- Texto informativo -->
+                    <TextView
+                        android:id="@+id/tvEventNotificationsInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/text_size_11"
+                        android:textColor="@color/text_secondary"
+                        android:lineSpacingExtra="2dp"
+                        android:background="@color/bg_surface"
+                        android:padding="12dp"
+                        android:layout_marginTop="4dp" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
             <!-- SECTION: PREFERÊNCIAS GERAIS -->
             <TextView
                 android:layout_width="wrap_content"

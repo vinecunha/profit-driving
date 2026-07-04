@@ -5,10 +5,14 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import com.profitdriving.L
 
 class EventAlertManager(private val context: Context) {
 
+    private val TAG = "EventAlertManager"
+
     private val db = DatabaseHelper(context)
+    private val prefs = PreferenceManager(context)
     private val notificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -18,7 +22,6 @@ class EventAlertManager(private val context: Context) {
         const val CHANNEL_ID  = "event_alerts"
         const val COOLDOWN_MS = 30 * 60 * 1000L
         const val WINDOW_MS   = 60 * 60 * 1000L
-        const val THRESHOLD   = 2
     }
 
     init {
@@ -26,6 +29,13 @@ class EventAlertManager(private val context: Context) {
     }
 
     fun check(rawPickup: String?, rawDropoff: String?) {
+        // Verificar se a feature está ativada
+        if (!prefs.isEventNotificationsEnabled()) {
+            L.d(TAG, "Notificações de eventos desabilitadas pelo usuário")
+            return
+        }
+
+        val threshold = prefs.getEventNotificationsThreshold()
         val now = System.currentTimeMillis()
         val windowStart = now - WINDOW_MS
 
@@ -39,11 +49,16 @@ class EventAlertManager(private val context: Context) {
             if (now - lastNotified < COOLDOWN_MS) return@forEach
 
             val count = db.countAddressInLastHour(normalized, windowStart)
-            if (count >= THRESHOLD) {
+            if (count >= threshold) {
                 notify(normalized, count, type)
                 cooldownMap[normalized] = now
             }
         }
+    }
+
+    fun resetCooldown() {
+        cooldownMap.clear()
+        L.d(TAG, "Cooldown resetado")
     }
 
     fun normalize(raw: String?): String? {

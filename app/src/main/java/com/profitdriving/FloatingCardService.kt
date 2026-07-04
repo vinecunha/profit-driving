@@ -95,6 +95,7 @@ class FloatingCardService : Service() {
         }
 
         val isDemo = intent.getBooleanExtra("isDemo", false)
+        val isReScan = intent.getBooleanExtra("reScan", false)
         val value = intent.getDoubleExtra("value", -1.0).let { if (it < 0) null else it }
         val distanceKm = intent.getDoubleExtra("distanceKm", -1.0).let { if (it < 0) null else it }
         val timeMin = intent.getIntExtra("timeMin", -1).let { if (it < 0) null else it }
@@ -109,8 +110,8 @@ class FloatingCardService : Service() {
 
         val ride = RideData(value, distanceKm, timeMin, rating, appName, serviceType = serviceType, priorityBonus = priorityBonus, dynamicBonus = dynamicBonus, pickupAddress = pickupAddress, dropoffAddress = dropoffAddress, hasMultipleStops = hasMultipleStops)
 
-        L.d(TAG, "Card: valor=$value km=$distanceKm tempo=$timeMin nota=$rating demo=$isDemo")
-        showOverlay(ride, isDemo)
+        L.d(TAG, "Card: valor=$value km=$distanceKm tempo=$timeMin nota=$rating demo=$isDemo reScan=$isReScan")
+        showOverlay(ride, isDemo, isReScan)
 
         return START_STICKY
     }
@@ -137,30 +138,37 @@ class FloatingCardService : Service() {
         .setOngoing(false)
         .build()
 
-    private fun showOverlay(ride: RideData, isDemo: Boolean = false) {
+    fun isCardVisible(): Boolean {
+        return overlayView != null && overlayView?.visibility == View.VISIBLE
+    }
+
+    private fun showOverlay(ride: RideData, isDemo: Boolean = false, isReScan: Boolean = false) {
         overlayView?.let { view ->
             try { windowManager.removeView(view) } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay existente: ${e.message}", e) }
             overlayView = null
         }
-        showCard(ride, isDemo)
+        showCard(ride, isDemo, isReScan)
     }
 
-    private fun showCard(ride: RideData, isDemo: Boolean) {
+    private fun showCard(ride: RideData, isDemo: Boolean, isReScan: Boolean = false) {
         val rideHash = "${ride.value}_${ride.distanceKm}_${ride.timeMin}_${ride.rating}"
 
-        // Debounce — mover para FORA do try para não travar isProcessingCard
-        val now = System.currentTimeMillis()
-        if (rideHash == lastRideHash && (now - lastRideTime) < 10000L) {
-            L.d(TAG, "Mesmo card detectado em menos de 10s — ignorando (já exibindo)")
-            return
-        }
-        if (overlayView != null && rideHash == lastRideHash) {
-            L.d(TAG, "Card já está visível, apenas resetando timer")
-            handler.postDelayed(dismissRunnable, prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 30) * 1000L)
-            return
+        if (!isReScan) {
+            val now = System.currentTimeMillis()
+            if (rideHash == lastRideHash && (now - lastRideTime) < 10000L) {
+                L.d(TAG, "Mesmo card detectado em menos de 10s — ignorando (já exibindo)")
+                return
+            }
+            if (overlayView != null && rideHash == lastRideHash) {
+                L.d(TAG, "Card já está visível, apenas resetando timer")
+                handler.postDelayed(dismissRunnable, prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 30) * 1000L)
+                return
+            }
+        } else {
+            L.d(TAG, "Re-scan: ignorando debounce, recriando card")
         }
         lastRideHash = rideHash
-        lastRideTime = now
+        lastRideTime = System.currentTimeMillis()
 
         // Evitar processamento paralelo do mesmo card
         if (isProcessingCard && currentCardRideHash == rideHash) {

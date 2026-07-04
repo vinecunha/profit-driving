@@ -1,6 +1,7 @@
 package com.profitdriving
 
 import androidx.appcompat.app.AlertDialog
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
 import java.util.Locale
 import com.profitdriving.FormatUtils
+import com.profitdriving.AddressReputationManager
 
 class MyDayRideAdapter(
     private var items: List<DailyRide>,
@@ -24,6 +26,7 @@ class MyDayRideAdapter(
 
     private val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     private var expandedPosition = -1
+    private var reputationManager: AddressReputationManager? = null
 
     fun updateData(newItems: List<DailyRide>, records: Map<Long, RideRecord>, cpk: Double) {
         items = newItems
@@ -218,6 +221,8 @@ class MyDayRideAdapter(
             val btn3 = view.findViewById<TextView>(R.id.btnAction3)
             val btn4 = view.findViewById<TextView>(R.id.btnAction4)
             val divider1 = view.findViewById<View>(R.id.divider1)
+            val btn6 = view.findViewById<TextView>(R.id.btnAction6)
+            val btn7 = view.findViewById<TextView>(R.id.btnAction7)
 
             var offset = 0
             if (!ride.cancelledWithFee) {
@@ -236,6 +241,11 @@ class MyDayRideAdapter(
             btn3.visibility = View.VISIBLE
             btn4.text = labels[offset + 2]
             btn4.visibility = View.VISIBLE
+
+            btn6.text = "\uD83D\uDCCD Embarque"
+            btn6.visibility = View.VISIBLE
+            btn7.text = "\uD83C\uDFF5\uFE0F Destino"
+            btn7.visibility = View.VISIBLE
 
             val dialog = AlertDialog.Builder(context)
                 .setTitle("A\u00E7\u00F5es")
@@ -258,6 +268,14 @@ class MyDayRideAdapter(
                 dialog.dismiss()
                 actions[offset + 2].invoke()
             }
+            btn6.setOnClickListener {
+                dialog.dismiss()
+                showAddressReputationDialog(context, "pickup", ride, rideRecords[ride.rideId])
+            }
+            btn7.setOnClickListener {
+                dialog.dismiss()
+                showAddressReputationDialog(context, "dropoff", ride, rideRecords[ride.rideId])
+            }
         }
 
         holder.root.setOnClickListener {
@@ -271,6 +289,35 @@ class MyDayRideAdapter(
                 notifyItemChanged(position)
             }
         }
+    }
+
+    private fun showAddressReputationDialog(context: Context, tag: String, ride: DailyRide, record: RideRecord?) {
+        if (record == null) return
+        val rm = reputationManager ?: AddressReputationManager(context).also { reputationManager = it }
+        val address = if (tag == "pickup") record.pickupAddress else record.dropoffAddress
+        val current = rm.getReputation(address)
+        val items = arrayOf("\u2705 Bom", "\u274C Evitar", "\uD83D\uDDD1\uFE0F Limpar")
+        val values = arrayOf(
+            AddressReputationManager.Reputation.GREEN,
+            AddressReputationManager.Reputation.BLACK,
+            AddressReputationManager.Reputation.NONE
+        )
+        val checkedItem = when (current) {
+            AddressReputationManager.Reputation.GREEN -> 0
+            AddressReputationManager.Reputation.BLACK -> 1
+            AddressReputationManager.Reputation.NONE -> 2
+        }
+        val holder = arrayOf(checkedItem)
+        AlertDialog.Builder(context)
+            .setTitle(if (tag == "pickup") "\uD83D\uDCCD Embarque" else "\uD83C\uDFF5\uFE0F Destino")
+            .setSingleChoiceItems(items, checkedItem) { _, which ->
+                holder[0] = which
+            }
+            .setPositiveButton("OK") { _, _ ->
+                rm.setReputation(address, values[holder[0]])
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

@@ -70,4 +70,40 @@
         android:clickable="true"
         android:focusable="true" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/border" />
+
+    <TextView
+        android:id="@+id/btnAction6"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        android:textSize="@dimen/text_size_14"
+        android:textColor="@color/text_primary"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:tag="pickup" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/border" />
+
+    <TextView
+        android:id="@+id/btnAction7"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        android:textSize="@dimen/text_size_14"
+        android:textColor="@color/text_primary"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:tag="dropoff" />
+
 </LinearLayout>

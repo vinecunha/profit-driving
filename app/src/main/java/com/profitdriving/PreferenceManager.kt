@@ -86,6 +86,24 @@ class PreferenceManager(context: Context) {
         prefs.edit().putString(KEY_CARD_ANIMATION, animation).apply()
     }
 
+    // ── Notificações de Eventos Próximos ──
+
+    fun isEventNotificationsEnabled(): Boolean {
+        return prefs.getBoolean(KEY_EVENT_NOTIFICATIONS_ENABLED, true)
+    }
+
+    fun setEventNotificationsEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_EVENT_NOTIFICATIONS_ENABLED, enabled).apply()
+    }
+
+    fun getEventNotificationsThreshold(): Int {
+        return prefs.getInt(KEY_EVENT_NOTIFICATIONS_THRESHOLD, 5)
+    }
+
+    fun setEventNotificationsThreshold(threshold: Int) {
+        prefs.edit().putInt(KEY_EVENT_NOTIFICATIONS_THRESHOLD, threshold).apply()
+    }
+
     companion object {
         private const val PREF_NAME = "profit_driving_prefs"
         private const val PREF_ONBOARDING_DONE = "onboarding_complete"
@@ -96,5 +114,7 @@ class PreferenceManager(context: Context) {
         private const val PREF_SUBSCRIPTION_EXPIRY = "subscription_expiry"
         private const val PREF_SUBSCRIPTION_PLAN = "subscription_plan"
         private const val KEY_CARD_ANIMATION = "card_animation"
+        private const val KEY_EVENT_NOTIFICATIONS_ENABLED = "event_notifications_enabled"
+        private const val KEY_EVENT_NOTIFICATIONS_THRESHOLD = "event_notifications_threshold"
     }
 }

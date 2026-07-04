@@ -49,6 +49,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     private var uberWindowWasVisible = false
     private var lastSavedValue: Double? = null
     private var currentRawLogId: Long = -1L
+    private var isReScanTriggered = false
     private val eventAlertManager by lazy { EventAlertManager(this) }
 
     private val parsers: List<RideDataParser> = listOf(
@@ -318,6 +319,25 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         lastSaveTime = now
         lastSavedValue = ride.value
 
+        if (isReScanTriggered) {
+            L.d(TAG, "Re-scan: forçando exibição do floating card")
+            isReScanTriggered = false
+            FloatingCardService.start(this, Intent().apply {
+                ride.value?.let { putExtra("value", it) }
+                ride.distanceKm?.let { putExtra("distanceKm", it) }
+                ride.timeMin?.let { putExtra("timeMin", it) }
+                ride.rating?.let { putExtra("rating", it) }
+                putExtra("appName", ride.appName)
+                ride.serviceType?.let { putExtra("serviceType", it) }
+                ride.priorityBonus?.let { putExtra("priorityBonus", it) }
+                ride.dynamicBonus?.let { putExtra("dynamicBonus", it) }
+                ride.pickupAddress?.let { putExtra("pickupAddress", it) }
+                ride.dropoffAddress?.let { putExtra("dropoffAddress", it) }
+                putExtra("hasMultipleStops", ride.hasMultipleStops)
+                putExtra("reScan", true)
+            })
+        }
+
         L.d(TAG, "Card detectado V2 em $pkg: valor=${ride.value} km=${ride.distanceKm} " +
                 "tempo=${ride.timeMin} nota=${ride.rating} " +
                 "R$/km=${ride.effectivePricePerKm} R$/h=${ride.effectivePricePerHour}")
@@ -492,6 +512,15 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     }
 
     fun triggerReScan() {
+        L.d(TAG, "triggerReScan() chamado via double-tap")
+        isReScanTriggered = true
+        scope.launch {
+            delay(5000L)
+            if (isReScanTriggered) {
+                L.d(TAG, "Re-scan timeout: resetando flag")
+                isReScanTriggered = false
+            }
+        }
         pendingJob?.cancel()
         pendingJob = scope.launch(Dispatchers.IO) {
             delay(300)

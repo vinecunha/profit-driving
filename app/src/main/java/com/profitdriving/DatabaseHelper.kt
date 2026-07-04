@@ -1386,6 +1386,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         writableDatabase.delete(TABLE_DAILY_RIDES, "$COL_ID = ?", arrayOf(id.toString()))
     }
 
+    fun deleteDailyRideByRideId(rideId: Long) = synchronized(dbLock) {
+        writableDatabase.delete(TABLE_DAILY_RIDES, "$COL_DR_RIDE_ID = ?", arrayOf(rideId.toString()))
+    }
+
     fun countAddressInLastHour(normalizedAddress: String, windowStartMs: Long): Int {
         val pattern = "%$normalizedAddress%"
         val sql = """
@@ -1427,11 +1431,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     fun setAddressReputation(normalizedAddress: String, reputation: Int) {
         try {
             writableDatabase.execSQL(
-                """INSERT INTO address_reputation (normalized_address, reputation, updated_at)
-                   VALUES (?, ?, ?)
-                   ON CONFLICT(normalized_address)
-                   DO UPDATE SET reputation = excluded.reputation,
-                                 updated_at = excluded.updated_at""",
+                "INSERT OR REPLACE INTO address_reputation (normalized_address, reputation, updated_at) VALUES (?, ?, ?)",
                 arrayOf(normalizedAddress, reputation, System.currentTimeMillis())
             )
         } catch (e: Exception) {

@@ -295,9 +295,14 @@ class MainActivity : BaseActivity() {
                             db.getRefuels(), db.getAllExpenses(), db.getMonthlyKm()
                         )
                     }
+                    val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(java.util.Date())
+                    val confirmedIds = withContext(Dispatchers.IO) {
+                        db.getDailyRidesByDate(today).map { it.rideId }.toSet()
+                    }
                     adapter = HistoryAdapter(
                         records,
                         costPerKm = costSummary.totalCostPerKm,
+                        confirmedRideIds = confirmedIds,
                         onDeleteRide = { ride ->
                             AlertDialog.Builder(this@MainActivity)
                                 .setTitle("Excluir corrida")
@@ -314,7 +319,6 @@ class MainActivity : BaseActivity() {
                                 .show()
                         },
                         onAddToMyDay = { ride ->
-                            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(java.util.Date())
                             val dailyRide = DailyRide(
                                 rideId = ride.id,
                                 date = today,
@@ -324,9 +328,23 @@ class MainActivity : BaseActivity() {
                             lifecycleScope.launch(Dispatchers.IO) {
                                 db.insertDailyRide(dailyRide)
                                 withContext(Dispatchers.Main) {
+                                    loadFilteredHistory()
                                     Toast.makeText(
                                         this@MainActivity,
                                         "Corrida adicionada ao Meu Dia!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        },
+                        onRemoveFromMyDay = { ride ->
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                db.deleteDailyRideByRideId(ride.id)
+                                withContext(Dispatchers.Main) {
+                                    loadFilteredHistory()
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "Corrida removida do Meu Dia!",
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
@@ -668,7 +686,9 @@ class HistoryAdapter(
     records: List<RideRecord>,
     private val costPerKm: Double = 0.0,
     private val onDeleteRide: ((RideRecord) -> Unit)? = null,
-    private val onAddToMyDay: ((RideRecord) -> Unit)? = null
+    private val onAddToMyDay: ((RideRecord) -> Unit)? = null,
+    private val onRemoveFromMyDay: ((RideRecord) -> Unit)? = null,
+    private val confirmedRideIds: Set<Long> = emptySet()
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private data class DisplayRide(
@@ -682,6 +702,7 @@ class HistoryAdapter(
     private var displayRecords: List<DisplayRide> = records.map { it.toDisplay() }
     private val dateFormat = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
     private val expandedItems = mutableSetOf<Int>()
+    private var reputationManager: AddressReputationManager? = null
 
     private fun RideRecord.toDisplay(): DisplayRide {
         return DisplayRide(
@@ -731,9 +752,11 @@ class HistoryAdapter(
         val tvPickupDistance: TextView = view.findViewById(R.id.tvPickupDistance)
         val tvPickupTime: TextView = view.findViewById(R.id.tvPickupTime)
         val tvPickupAddress: TextView = view.findViewById(R.id.tvPickupAddress)
+        val dotPickupReputation: View = view.findViewById(R.id.dotPickupReputation)
         val tvDropoffDistance: TextView = view.findViewById(R.id.tvDropoffDistance)
         val tvDropoffTime: TextView = view.findViewById(R.id.tvDropoffTime)
         val tvDropoffAddress: TextView = view.findViewById(R.id.tvDropoffAddress)
+        val dotDropoffReputation: View = view.findViewById(R.id.dotDropoffReputation)
         val tvDecisionBadge: TextView = view.findViewById(R.id.tvDecisionBadge)
         val ivStops: ImageView = view.findViewById(R.id.ivStops)
         val tvStops: TextView = view.findViewById(R.id.tvStops)
@@ -907,12 +930,44 @@ class HistoryAdapter(
         vh.tvPickupTime.text = if (pickupTime != null && pickupTime > 0) 
             FormatUtils.time(pickupTime) else ""
         vh.tvPickupAddress.text = display.maskedPickup
+        val rm = reputationManager ?: AddressReputationManager(vh.itemView.context).also { reputationManager = it }
+        val pkKey = rm.normalize(r.pickupAddress)
+        if (pkKey != null) {
+            when (rm.getReputation(r.pickupAddress)) {
+                AddressReputationManager.Reputation.GREEN -> {
+                    vh.dotPickupReputation.setBackgroundResource(R.drawable.dot_green)
+                    vh.dotPickupReputation.visibility = View.VISIBLE
+                }
+                AddressReputationManager.Reputation.BLACK -> {
+                    vh.dotPickupReputation.setBackgroundResource(R.drawable.dot_red)
+                    vh.dotPickupReputation.visibility = View.VISIBLE
+                }
+                AddressReputationManager.Reputation.NONE -> vh.dotPickupReputation.visibility = View.GONE
+            }
+        } else {
+            vh.dotPickupReputation.visibility = View.GONE
+        }
 
         vh.tvDropoffDistance.text = if (tripDist != null && tripDist > 0) 
             FormatUtils.distance(tripDist) else ""
         vh.tvDropoffTime.text = if (tripTime != null && tripTime > 0) 
             FormatUtils.time(tripTime) else ""
         vh.tvDropoffAddress.text = display.maskedDropoff
+        if (rm.normalize(r.dropoffAddress) != null) {
+            when (rm.getReputation(r.dropoffAddress)) {
+                AddressReputationManager.Reputation.GREEN -> {
+                    vh.dotDropoffReputation.setBackgroundResource(R.drawable.dot_green)
+                    vh.dotDropoffReputation.visibility = View.VISIBLE
+                }
+                AddressReputationManager.Reputation.BLACK -> {
+                    vh.dotDropoffReputation.setBackgroundResource(R.drawable.dot_red)
+                    vh.dotDropoffReputation.visibility = View.VISIBLE
+                }
+                AddressReputationManager.Reputation.NONE -> vh.dotDropoffReputation.visibility = View.GONE
+            }
+        } else {
+            vh.dotDropoffReputation.visibility = View.GONE
+        }
 
         val totalParts = mutableListOf<String>()
         if (totalDist > 0) {
@@ -1018,13 +1073,20 @@ class HistoryAdapter(
 
             vh.ivCardMenu.setOnClickListener { menuView ->
                 val popup = android.widget.PopupMenu(menuView.context, menuView)
+                val isConfirmed = r.id in confirmedRideIds
                 popup.menu.add(0, 1, 0, "Compartilhar")
-                popup.menu.add(0, 2, 0, "Confirmar corrida")
+                popup.menu.add(0, 2, 0, if (isConfirmed) "Remover do meu dia" else "Confirmar corrida")
                 popup.menu.add(0, 3, 0, "Excluir")
                 popup.setOnMenuItemClickListener { item ->
                     when (item.itemId) {
                         1 -> shareCardAsImage(menuView.context, vh.cardRoot)
-                        2 -> onAddToMyDay?.invoke(r)
+                        2 -> {
+                            if (isConfirmed) {
+                                onRemoveFromMyDay?.invoke(r)
+                            } else {
+                                onAddToMyDay?.invoke(r)
+                            }
+                        }
                         3 -> onDeleteRide?.invoke(r)
                     }
                     true
