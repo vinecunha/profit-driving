@@ -386,10 +386,10 @@ class CostsActivity : BaseActivity() {
     }
 
     private fun calculateRefuelConsumption(refuel: RefuelRecord): Double {
-        val sorted = allRefuels.sortedByDescending { it.timestamp }
-        val idx = sorted.indexOfFirst { it.id == refuel.id }
-        if (idx < 0 || idx >= sorted.size - 1) return 0.0
-        val next = sorted[idx + 1]
+        val sameType = allRefuels.filter { it.fuelType == refuel.fuelType }.sortedByDescending { it.timestamp }
+        val idx = sameType.indexOfFirst { it.id == refuel.id }
+        if (idx < 0 || idx >= sameType.size - 1) return 0.0
+        val next = sameType[idx + 1]
         val kmDiff = refuel.odometerKm - next.odometerKm
         return if (kmDiff > 0 && refuel.amount > 0) kmDiff / refuel.amount else 0.0
     }
