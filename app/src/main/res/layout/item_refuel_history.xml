@@ -36,9 +36,18 @@
         android:id="@+id/tvRefuelVolume"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="0.8"
+        android:layout_weight="0.7"
         android:textSize="@dimen/text_size_12"
         android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/tvRefuelLevel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.5"
+        android:textSize="@dimen/text_size_12"
         android:textColor="@color/text_primary"
         android:gravity="center" />
 
@@ -46,7 +55,7 @@
         android:id="@+id/tvRefuelPrice"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="0.9"
+        android:layout_weight="0.7"
         android:textSize="@dimen/text_size_12"
         android:textColor="@color/text_secondary"
         android:gravity="center" />
@@ -55,7 +64,7 @@
         android:id="@+id/tvRefuelConsumption"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="0.9"
+        android:layout_weight="0.7"
         android:textSize="@dimen/text_size_12"
         android:textStyle="bold"
         android:textColor="@color/text_primary"

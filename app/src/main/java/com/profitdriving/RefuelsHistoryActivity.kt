@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import com.profitdriving.PreferenceManager
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -103,6 +104,29 @@ class RefuelsHistoryActivity : BaseActivity() {
 
             row.findViewById<TextView>(R.id.tvRefuelVolume).text =
                 "${FormatUtils.decimal1(refuel.amount)} ${energyType.unit}"
+
+            // Nível de enchimento
+            val prefs = PreferenceManager(this)
+            val effectiveCapacity = if (refuel.fuelType == "gnv") {
+                getRealGnvCapacity(allRefuels, prefs)
+            } else {
+                getEffectiveCapacity(refuel.fuelType, prefs)
+            }
+            val fillLevel = refuel.fillLevel
+                ?: if (effectiveCapacity > 0) estimateFillLevelAfter(refuel, allRefuels, effectiveCapacity) else null
+
+            val tvLevel = row.findViewById<TextView>(R.id.tvRefuelLevel)
+            if (fillLevel != null) {
+                val level = fillLevel!!.toInt().coerceIn(0, 100)
+                tvLevel.text = "$level%"
+                tvLevel.setTextColor(when {
+                    level >= 95 -> ctxColor(R.color.success)
+                    level >= 40 -> ctxColor(R.color.warning)
+                    else -> ctxColor(R.color.error)
+                })
+            } else {
+                tvLevel.text = "--"
+            }
 
             row.findViewById<TextView>(R.id.tvRefuelPrice).text =
                 currencyFormat.format(refuel.totalValue)

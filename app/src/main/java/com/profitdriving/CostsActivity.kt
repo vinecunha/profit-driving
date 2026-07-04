@@ -8,8 +8,11 @@ import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.ImageButton
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.SwitchCompat
 import androidx.lifecycle.lifecycleScope
+import com.profitdriving.PreferenceManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -76,7 +79,104 @@ class CostsActivity : BaseActivity() {
             })
         }
 
+        setupVehicleSettings()
         setViewMode(ViewMode.MONTH)
+    }
+
+    private fun setupVehicleSettings() {
+        val prefs = PreferenceManager(this)
+
+        val etTank = findViewById<EditText>(R.id.etTankCapacity)
+        val etCylinder = findViewById<EditText>(R.id.etCylinderCapacity)
+        val etBattery = findViewById<EditText>(R.id.etBatteryCapacity)
+
+        val switchTank = findViewById<SwitchCompat>(R.id.switchTank)
+        val switchCylinder = findViewById<SwitchCompat>(R.id.switchCylinder)
+        val switchBattery = findViewById<SwitchCompat>(R.id.switchBattery)
+
+        val btnGnvHelp = findViewById<ImageButton>(R.id.btnGnvCapacityHelp)
+
+        // Load saved states
+        switchTank.isChecked = prefs.isTankEnabled()
+        switchCylinder.isChecked = prefs.isCylinderEnabled()
+        switchBattery.isChecked = prefs.isBatteryEnabled()
+
+        val tankCap = prefs.getTankCapacity()
+        etTank.setText(if (tankCap > 0) tankCap.toString() else "")
+
+        val cylinderCap = prefs.getCylinderCapacity()
+        etCylinder.setText(if (cylinderCap > 0) cylinderCap.toString() else "")
+
+        val batteryCap = prefs.getBatteryCapacity()
+        etBattery.setText(if (batteryCap > 0) batteryCap.toString() else "")
+
+        // Toggle wiring: enable/disable EditText + save
+        fun applyTankToggle(enabled: Boolean) {
+            etTank.isEnabled = enabled
+            etTank.alpha = if (enabled) 1f else 0.4f
+        }
+        fun applyCylinderToggle(enabled: Boolean) {
+            etCylinder.isEnabled = enabled
+            etCylinder.alpha = if (enabled) 1f else 0.4f
+            btnGnvHelp.visibility = if (enabled) View.VISIBLE else View.GONE
+        }
+        fun applyBatteryToggle(enabled: Boolean) {
+            etBattery.isEnabled = enabled
+            etBattery.alpha = if (enabled) 1f else 0.4f
+        }
+
+        applyTankToggle(switchTank.isChecked)
+        applyCylinderToggle(switchCylinder.isChecked)
+        applyBatteryToggle(switchBattery.isChecked)
+
+        // Also wire the cylinder toggle to show/hide the help icon
+        switchCylinder.setOnCheckedChangeListener { _, isChecked ->
+            prefs.setCylinderEnabled(isChecked)
+            applyCylinderToggle(isChecked)
+        }
+
+        switchTank.setOnCheckedChangeListener { _, isChecked ->
+            prefs.setTankEnabled(isChecked)
+            applyTankToggle(isChecked)
+        }
+
+        switchBattery.setOnCheckedChangeListener { _, isChecked ->
+            prefs.setBatteryEnabled(isChecked)
+            applyBatteryToggle(isChecked)
+        }
+
+        // Persist capacity values
+        etTank.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                prefs.setTankCapacity(s.toString().trim().toIntOrNull() ?: 0)
+            }
+        })
+        etCylinder.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                prefs.setCylinderCapacity(s.toString().trim().toIntOrNull() ?: 0)
+            }
+        })
+        etBattery.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val value = (s.toString().trim().toDoubleOrNull() ?: 0.0).toInt()
+                prefs.setBatteryCapacity(value)
+            }
+        })
+
+        // GNV help dialog
+        btnGnvHelp.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle(getString(R.string.gnv_capacity_help_title))
+                .setMessage(getString(R.string.gnv_capacity_help_text))
+                .setPositiveButton("OK", null)
+                .show()
+        }
     }
 
     override fun onResume() {
@@ -373,6 +473,29 @@ class CostsActivity : BaseActivity() {
             row.findViewById<TextView>(R.id.tvRefuelVolume).text =
                 "${FormatUtils.decimal1(refuel.amount)} ${energyType.unit}"
 
+            // Nível de enchimento
+            val prefs = PreferenceManager(this)
+            val effectiveCapacity = if (refuel.fuelType == "gnv") {
+                getRealGnvCapacity(allRefuels, prefs)
+            } else {
+                getEffectiveCapacity(refuel.fuelType, prefs)
+            }
+            val fillLevel = refuel.fillLevel
+                ?: if (effectiveCapacity > 0) estimateFillLevelAfter(refuel, allRefuels, effectiveCapacity) else null
+
+            val tvLevel = row.findViewById<TextView>(R.id.tvRefuelLevel)
+            if (fillLevel != null) {
+                val level = fillLevel!!.toInt().coerceIn(0, 100)
+                tvLevel.text = "$level%"
+                tvLevel.setTextColor(when {
+                    level >= 95 -> ctxColor(R.color.success)
+                    level >= 40 -> ctxColor(R.color.warning)
+                    else -> ctxColor(R.color.error)
+                })
+            } else {
+                tvLevel.text = "--"
+            }
+
             row.findViewById<TextView>(R.id.tvRefuelPrice).text =
                 currencyFormat.format(refuel.totalValue)
 
@@ -399,6 +522,7 @@ class CostsActivity : BaseActivity() {
         container.removeAllViews()
 
         val energyTypes = EnergyType.entries
+        val vehiclePrefs = PreferenceManager(this)
 
         for (type in energyTypes) {
             val stats = CostCalculator.calculateEnergyStats(allRefuels, type)
@@ -409,6 +533,7 @@ class CostsActivity : BaseActivity() {
             val tvIcon = card.findViewById<TextView>(R.id.tvEnergyIcon)
             val tvName = card.findViewById<TextView>(R.id.tvEnergyName)
             val tvConsumption = card.findViewById<TextView>(R.id.tvEnergyConsumption)
+            val tvAutonomy = card.findViewById<TextView>(R.id.tvEnergyAutonomy)
             val tvCost = card.findViewById<TextView>(R.id.tvEnergyCost)
             val tvTotal = card.findViewById<TextView>(R.id.tvEnergyTotal)
             val tvLastDate = card.findViewById<TextView>(R.id.tvEnergyLastDate)
@@ -416,11 +541,25 @@ class CostsActivity : BaseActivity() {
             tvIcon.text = type.icon
             tvName.text = type.display
 
-            val consumptionUnit = if (type.unit == "kWh") "km/kWh" else "km/L"
+            val consumptionUnit = if (type.unit == "kWh") "km/kWh" else "km/${type.unit}"
             tvConsumption.text = if (stats.avgConsumption > 0) {
                 "Consumo: ${FormatUtils.decimal1(stats.avgConsumption)} $consumptionUnit"
             } else {
                 "Consumo: -- $consumptionUnit"
+            }
+
+            // Autonomia baseada na capacidade do sistema ativo
+            val capacity = when (type) {
+                EnergyType.GNV -> if (vehiclePrefs.isCylinderEnabled()) vehiclePrefs.getCylinderCapacity() else 0
+                EnergyType.ELECTRIC_AC, EnergyType.ELECTRIC_DC -> if (vehiclePrefs.isBatteryEnabled()) vehiclePrefs.getBatteryCapacity() else 0
+                else -> if (vehiclePrefs.isTankEnabled()) vehiclePrefs.getTankCapacity() else 0
+            }
+            if (capacity > 0 && stats.avgConsumption > 0) {
+                val autonomy = capacity * stats.avgConsumption
+                tvAutonomy.text = "Autonomia: ~${String.format("%.0f", autonomy).replace(".", ",")} km  (${capacity} ${type.unit})"
+                tvAutonomy.visibility = View.VISIBLE
+            } else {
+                tvAutonomy.visibility = View.GONE
             }
 
             tvCost.text = if (stats.costPerKm > 0) {

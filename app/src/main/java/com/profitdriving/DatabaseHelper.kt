@@ -204,6 +204,17 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 L.w("DB", "v27 migration: ${e.message}")
             }
         }
+        if (oldVersion < 28) {
+            try {
+                db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN $COL_R_FILL_LEVEL REAL")
+            } catch (e: Exception) { L.w("DB", "v28 fill_level: ${e.message}") }
+            try {
+                db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN $COL_R_WAS_FULL INTEGER DEFAULT 0")
+            } catch (e: Exception) { L.w("DB", "v28 was_full: ${e.message}") }
+            try {
+                db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN $COL_R_TOTAL_CAPACITY REAL")
+            } catch (e: Exception) { L.w("DB", "v28 total_capacity: ${e.message}") }
+        }
     }
 
     private fun rebuildFuelRefuelsTable(db: SQLiteDatabase) {
@@ -846,6 +857,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             put(COL_R_PERCENTAGE_START, r.percentageStart)
             put(COL_R_PERCENTAGE_END, r.percentageEnd)
             put(COL_R_NOTES, r.notes)
+            r.fillLevel?.let { put(COL_R_FILL_LEVEL, it) }
+            put(COL_R_WAS_FULL, if (r.wasFull) 1 else 0)
+            r.totalCapacity?.let { put(COL_R_TOTAL_CAPACITY, it) }
         }
         db.insert(TABLE_FUEL_REFUELS, null, cv)
     }
@@ -871,7 +885,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     chargerType = it.getSafeString(COL_R_CHARGER_TYPE),
                     percentageStart = it.getSafeInt(COL_R_PERCENTAGE_START),
                     percentageEnd = it.getSafeInt(COL_R_PERCENTAGE_END),
-                    notes = it.getSafeString(COL_R_NOTES)
+                    notes = it.getSafeString(COL_R_NOTES),
+                    fillLevel = it.getSafeDouble(COL_R_FILL_LEVEL)?.toFloat(),
+                    wasFull = it.getSafe(COL_R_WAS_FULL, false),
+                    totalCapacity = it.getSafeDouble(COL_R_TOTAL_CAPACITY)
                 ))
             }
         }
@@ -907,7 +924,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                     chargerType = it.getSafeString(COL_R_CHARGER_TYPE),
                     percentageStart = it.getSafeInt(COL_R_PERCENTAGE_START),
                     percentageEnd = it.getSafeInt(COL_R_PERCENTAGE_END),
-                    notes = it.getSafeString(COL_R_NOTES)
+                    notes = it.getSafeString(COL_R_NOTES),
+                    fillLevel = it.getSafeDouble(COL_R_FILL_LEVEL)?.toFloat(),
+                    wasFull = it.getSafe(COL_R_WAS_FULL, false),
+                    totalCapacity = it.getSafeDouble(COL_R_TOTAL_CAPACITY)
                 )
             }
         }
@@ -1528,7 +1548,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     companion object {
         private val dbLock = Any()
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 27
+        private const val DATABASE_VERSION = 28
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"
@@ -1595,6 +1615,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_R_FULL_TANK = "is_full_tank"
         private const val COL_R_FUEL_TYPE = "fuel_type"
         private const val COL_R_NOTES = "notes"
+        private const val COL_R_FILL_LEVEL = "fill_level"
+        private const val COL_R_WAS_FULL = "was_full"
+        private const val COL_R_TOTAL_CAPACITY = "total_capacity"
 
         // Fixed expenses / unified expenses columns
         private const val COL_E_NAME = "name"
@@ -1659,7 +1682,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_R_TOTAL REAL NOT NULL,
                 $COL_R_FULL_TANK INTEGER DEFAULT 0,
                 $COL_R_FUEL_TYPE TEXT DEFAULT 'gasoline',
-                $COL_R_NOTES TEXT
+                $COL_R_NOTES TEXT,
+                $COL_R_FILL_LEVEL REAL,
+                $COL_R_WAS_FULL INTEGER DEFAULT 0,
+                $COL_R_TOTAL_CAPACITY REAL
             )
         """.trimIndent()
 
@@ -1874,12 +1900,116 @@ data class RefuelRecord(
     val chargerType: String? = null,
     val percentageStart: Int? = null,
     val percentageEnd: Int? = null,
-    val notes: String? = null
+    val notes: String? = null,
+    val fillLevel: Float? = null,
+    val wasFull: Boolean = false,
+    val totalCapacity: Double? = null
 ) {
     val energyType: EnergyType
         get() = EnergyType.fromString(fuelType)
     val fuelTypeEnum: FuelType
         get() = FuelType.fromEnergyType(energyType)
+}
+
+/** Calcula o nível real do tanque/cilindro/bateria APÓS o abastecimento atual,
+ *  considerando o nível anterior e o consumo estimado no período.
+ *  Retorna `null` quando não há dados suficientes para estimar. */
+fun estimateFillLevelAfter(
+    current: RefuelRecord,
+    allRefuels: List<RefuelRecord>,
+    totalCapacityInUnit: Double,  // capacidade total na unidade do combustível (L, m³, kWh)
+): Float? {
+    if (totalCapacityInUnit <= 0) return null
+    if (current.wasFull || current.isFullTank) return 100f
+
+    val sameType = allRefuels
+        .filter { it.fuelType == current.fuelType && it.id != current.id }
+        .sortedByDescending { it.timestamp }
+
+    val prev = sameType.firstOrNull { it.timestamp < current.timestamp }
+    if (prev == null || prev.odometerKm <= 0 || current.odometerKm <= prev.odometerKm) return null
+
+    val prevAmount = when {
+        prev.wasFull || prev.isFullTank -> totalCapacityInUnit
+        prev.fillLevel != null -> (prev.fillLevel!! / 100.0 * totalCapacityInUnit)
+        else -> return null
+    }
+
+    val kmSincePrev = current.odometerKm - prev.odometerKm
+    val prevPrev = sameType.firstOrNull { it.timestamp < prev.timestamp }
+
+    // Taxa de consumo do período anterior (prev → prevPrev), evita circularidade
+    var consumptionRate: Double? = null
+    if (prevPrev != null && prev.amount > 0) {
+        val prevKmRange = prev.odometerKm - prevPrev.odometerKm
+        if (prevKmRange > 0) {
+            consumptionRate = prevKmRange / prev.amount
+        }
+    }
+
+    // Fallback: média de consumo de todos os ciclos completos (full tank → full tank)
+    if (consumptionRate == null) {
+        val fullCycles = sameType
+            .filter { (it.wasFull || it.isFullTank) && it.amount > 0 && it.odometerKm > 0 }
+            .sortedByDescending { it.timestamp }
+        val rates = mutableListOf<Double>()
+        for (i in 0 until fullCycles.size - 1) {
+            val kmDiff = fullCycles[i].odometerKm - fullCycles[i + 1].odometerKm
+            if (kmDiff > 0) {
+                rates.add(kmDiff / fullCycles[i + 1].amount)
+            }
+        }
+        if (rates.isNotEmpty()) {
+            consumptionRate = rates.average()
+        }
+    }
+
+    if (consumptionRate != null && consumptionRate > 0) {
+        val fuelConsumed = kmSincePrev / consumptionRate
+        val remainingBefore = Math.max(0.0, prevAmount - fuelConsumed)
+        val levelAfter = Math.min(100.0, (remainingBefore + current.amount) / totalCapacityInUnit * 100)
+        return levelAfter.toFloat()
+    }
+
+    return null
+}
+
+/** Retorna a capacidade total na unidade do combustível. */
+fun getEffectiveCapacity(
+    fuelType: String,
+    prefs: PreferenceManager,
+): Double {
+    val pressure = 200  // bar — referência comum
+    return when (fuelType) {
+        "gnv" -> {
+            val cylinderL = prefs.getCylinderCapacity()
+            if (prefs.isCylinderEnabled() && cylinderL > 0)
+                cylinderL * pressure / 1000.0 else 0.0
+        }
+        "ELECTRIC_AC", "ELECTRIC_DC", "HYBRID_CHARGE" -> {
+            val batteryKwh = prefs.getBatteryCapacity()
+            if (prefs.isBatteryEnabled() && batteryKwh > 0) batteryKwh.toDouble() else 0.0
+        }
+        else -> {  // gasolina, ethanol, diesel
+            val tankL = prefs.getTankCapacity()
+            if (prefs.isTankEnabled() && tankL > 0) tankL.toDouble() else 0.0
+        }
+    }
+}
+
+/**
+ * Retorna a capacidade real do cilindro GNV em m³, baseada no maior
+ * abastecimento completo já registrado no histórico.
+ * Fallback: getEffectiveCapacity("gnv", prefs) — valor nominal.
+ */
+fun getRealGnvCapacity(
+    allRefuels: List<RefuelRecord>,
+    prefs: PreferenceManager,
+): Double {
+    val maxFull = allRefuels
+        .filter { it.fuelType == "gnv" && (it.wasFull || it.isFullTank) && it.amount > 0.0 }
+        .maxOfOrNull { it.amount }
+    return maxFull ?: getEffectiveCapacity("gnv", prefs)
 }
 
 data class FixedExpense(

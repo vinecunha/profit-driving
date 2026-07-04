@@ -231,7 +231,7 @@
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.8"
+                    android:layout_weight="0.7"
                     android:text="Volume"
                     android:textSize="@dimen/text_size_11"
                     android:textColor="@color/text_secondary"
@@ -241,7 +241,17 @@
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.9"
+                    android:layout_weight="0.5"
+                    android:text="N\u00edvel"
+                    android:textSize="@dimen/text_size_11"
+                    android:textColor="@color/text_secondary"
+                    android:textStyle="bold"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.7"
                     android:text="Pre\u00e7o"
                     android:textSize="@dimen/text_size_11"
                     android:textColor="@color/text_secondary"
@@ -251,7 +261,7 @@
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.9"
+                    android:layout_weight="0.7"
                     android:text="Consumo"
                     android:textSize="@dimen/text_size_11"
                     android:textColor="@color/text_secondary"
@@ -494,6 +504,162 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0.5dp"
+                android:background="@color/border"
+                android:layout_marginVertical="12dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/vehicle_capacities_title"
+                android:textSize="@dimen/text_size_13"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="10dp" />
+
+            <!-- Tanque (gasolina/etanol/diesel) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchTank"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/vehicle_toggle_tank"
+                    android:textSize="@dimen/text_size_13"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginStart="4dp" />
+
+                <EditText
+                    android:id="@+id/etTankCapacity"
+                    android:layout_width="70dp"
+                    android:layout_height="36dp"
+                    android:inputType="number"
+                    android:hint="0"
+                    android:gravity="center"
+                    android:textSize="@dimen/text_size_14"
+                    android:textColor="@color/text_primary"
+                    android:background="@drawable/pill_unselected"
+                    android:paddingHorizontal="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="L"
+                    android:textSize="@dimen/text_size_13"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginStart="6dp" />
+
+            </LinearLayout>
+
+            <!-- Cilindro (GNV) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchCylinder"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/vehicle_toggle_cylinder"
+                    android:textSize="@dimen/text_size_13"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginStart="4dp" />
+
+                <ImageButton
+                    android:id="@+id/btnGnvCapacityHelp"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_help"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/gnv_capacity_help_title"
+                    android:scaleType="centerInside"
+                    android:layout_marginEnd="4dp" />
+
+                <EditText
+                    android:id="@+id/etCylinderCapacity"
+                    android:layout_width="70dp"
+                    android:layout_height="36dp"
+                    android:inputType="number"
+                    android:hint="0"
+                    android:gravity="center"
+                    android:textSize="@dimen/text_size_14"
+                    android:textColor="@color/text_primary"
+                    android:background="@drawable/pill_unselected"
+                    android:paddingHorizontal="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="L"
+                    android:textSize="@dimen/text_size_13"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginStart="6dp" />
+
+            </LinearLayout>
+
+            <!-- Bateria (elétrico) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchBattery"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/vehicle_toggle_battery"
+                    android:textSize="@dimen/text_size_13"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginStart="4dp" />
+
+                <EditText
+                    android:id="@+id/etBatteryCapacity"
+                    android:layout_width="70dp"
+                    android:layout_height="36dp"
+                    android:inputType="numberDecimal"
+                    android:hint="0"
+                    android:gravity="center"
+                    android:textSize="@dimen/text_size_14"
+                    android:textColor="@color/text_primary"
+                    android:background="@drawable/pill_unselected"
+                    android:paddingHorizontal="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="kWh"
+                    android:textSize="@dimen/text_size_13"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginStart="6dp" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

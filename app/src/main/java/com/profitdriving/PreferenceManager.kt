@@ -104,6 +104,66 @@ class PreferenceManager(context: Context) {
         prefs.edit().putInt(KEY_EVENT_NOTIFICATIONS_THRESHOLD, threshold).apply()
     }
 
+    // ── Capacidade do Veículo ──
+
+    fun getTankCapacity(): Int {
+        return prefs.getInt(KEY_TANK_CAPACITY, 0)
+    }
+
+    fun setTankCapacity(capacity: Int) {
+        prefs.edit().putInt(KEY_TANK_CAPACITY, capacity).apply()
+    }
+
+    fun getCylinderCapacity(): Int {
+        return prefs.getInt(KEY_CYLINDER_CAPACITY, 0)
+    }
+
+    fun setCylinderCapacity(capacity: Int) {
+        prefs.edit().putInt(KEY_CYLINDER_CAPACITY, capacity).apply()
+    }
+
+    fun getCylinderPressure(): Int {
+        return prefs.getInt(KEY_CYLINDER_PRESSURE, 200)
+    }
+
+    fun setCylinderPressure(pressure: Int) {
+        prefs.edit().putInt(KEY_CYLINDER_PRESSURE, pressure).apply()
+    }
+
+    // ── Configuração dos Sistemas do Veículo ──
+
+    fun isTankEnabled(): Boolean {
+        return prefs.getBoolean(KEY_TANK_ENABLED, true)
+    }
+
+    fun setTankEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_TANK_ENABLED, enabled).apply()
+    }
+
+    fun isCylinderEnabled(): Boolean {
+        return prefs.getBoolean(KEY_CYLINDER_ENABLED, false)
+    }
+
+    fun setCylinderEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_CYLINDER_ENABLED, enabled).apply()
+    }
+
+    fun isBatteryEnabled(): Boolean {
+        return prefs.getBoolean(KEY_BATTERY_ENABLED, false)
+    }
+
+    fun setBatteryEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_BATTERY_ENABLED, enabled).apply()
+    }
+
+    fun getBatteryCapacity(): Int {
+        return prefs.getInt(KEY_BATTERY_CAPACITY, 0)
+    }
+
+    fun setBatteryCapacity(capacity: Int) {
+        prefs.edit().putInt(KEY_BATTERY_CAPACITY, capacity).apply()
+    }
+
     companion object {
         private const val PREF_NAME = "profit_driving_prefs"
         private const val PREF_ONBOARDING_DONE = "onboarding_complete"
@@ -116,5 +176,12 @@ class PreferenceManager(context: Context) {
         private const val KEY_CARD_ANIMATION = "card_animation"
         private const val KEY_EVENT_NOTIFICATIONS_ENABLED = "event_notifications_enabled"
         private const val KEY_EVENT_NOTIFICATIONS_THRESHOLD = "event_notifications_threshold"
+        private const val KEY_TANK_CAPACITY = "tank_capacity"
+        private const val KEY_CYLINDER_CAPACITY = "cylinder_capacity"
+        private const val KEY_CYLINDER_PRESSURE = "cylinder_pressure"
+        private const val KEY_TANK_ENABLED = "tank_enabled"
+        private const val KEY_CYLINDER_ENABLED = "cylinder_enabled"
+        private const val KEY_BATTERY_ENABLED = "battery_enabled"
+        private const val KEY_BATTERY_CAPACITY = "battery_capacity"
     }
 }

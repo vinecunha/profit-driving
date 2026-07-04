@@ -9,6 +9,7 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import com.profitdriving.FormatUtils
+import com.profitdriving.PreferenceManager
 
 class AddRefuelDialog(
     private val context: Context,
@@ -165,7 +166,18 @@ class AddRefuelDialog(
             val energyType = EnergyType.fromString(selectedFuel)
             val amount = total / price
 
-            onSave(RefuelRecord(
+            // Calcula nível de enchimento considerando o nível anterior
+            val prefs = PreferenceManager(context)
+            val allRefuels = DatabaseHelper(context).getRefuels()
+            val effectiveCapacity = if (selectedFuel == "gnv") {
+                getRealGnvCapacity(allRefuels, prefs)
+            } else {
+                getEffectiveCapacity(selectedFuel, prefs)
+            }
+
+            // Cria um registro temporário para o cálculo (id = refuel?.id para exclusão na filtragem)
+            val currentForCalc = RefuelRecord(
+                id = refuel?.id ?: Long.MAX_VALUE,
                 timestamp = System.currentTimeMillis(),
                 odometerKm = odometer,
                 amount = amount,
@@ -177,6 +189,25 @@ class AddRefuelDialog(
                 chargerType = if (energyType.isElectric) selectedCharger else null,
                 percentageStart = if (energyType.isElectric) pctStart else null,
                 percentageEnd = if (energyType.isElectric) pctEnd else null
+            )
+            val fillLevel = estimateFillLevelAfter(currentForCalc, allRefuels, effectiveCapacity)
+            val wasFull = fillLevel?.let { it >= 95f } ?: false
+
+            onSave(RefuelRecord(
+                timestamp = System.currentTimeMillis(),
+                odometerKm = odometer,
+                amount = amount,
+                unitType = energyType.unit,
+                pricePerUnit = price,
+                totalValue = total,
+                isFullTank = isFullTank,
+                fuelType = selectedFuel,
+                chargerType = if (energyType.isElectric) selectedCharger else null,
+                percentageStart = if (energyType.isElectric) pctStart else null,
+                percentageEnd = if (energyType.isElectric) pctEnd else null,
+                fillLevel = fillLevel,
+                wasFull = wasFull,
+                totalCapacity = if (effectiveCapacity > 0) effectiveCapacity else null
             ))
             dialog.dismiss()
         }
