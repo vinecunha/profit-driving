@@ -939,15 +939,15 @@ fun calculateFloorSimulation(
         var totalAccepted = 0
 
         for (day in daysInfo) {
+            // Simula aceitar corridas na ordem em que aparecem (por timestamp)
             val eligible = day.offered
                 .filter { (it.pricePerKm ?: 0.0) >= threshold }
-                .sortedByDescending { it.pricePerKm }
+                .sortedBy { it.timestamp }
 
             if (eligible.isEmpty()) continue
 
             val maxPerDay = (day.onlineMinutes / day.avgRideTimeMin).toInt().coerceIn(1, 50)
-            val realisticCount = eligible.size.coerceAtMost(maxPerDay)
-            val selected = eligible.take(realisticCount)
+            val selected = eligible.take(maxPerDay)
 
             totalAccepted += selected.size
             totalEarnings += selected.sumOf { it.value ?: 0.0 }
