@@ -65,13 +65,25 @@
             android:paddingTop="@dimen/card_padding"
             android:paddingBottom="@dimen/card_padding">
 
-            <!-- Linha 1: badge serviço + badge decisão -->
+            <!-- Linha 1: badge app + badge serviço + badge decisão -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:layout_marginBottom="14dp">
+
+                <!-- Badge do app (Uber / 99) — fora do badge de tipo, à esquerda -->
+                <TextView
+                    android:id="@+id/tvAppBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:textSize="@dimen/text_size_8"
+                    android:textStyle="bold"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="1dp"
+                    android:visibility="gone" />
 
                 <!-- Badge de serviço -->
                 <LinearLayout

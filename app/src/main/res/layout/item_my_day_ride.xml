@@ -62,6 +62,17 @@
                     android:textSize="@dimen/text_size_14"
                     android:textColor="@color/text_secondary" />
 
+                <TextView
+                    android:id="@+id/tvAppBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:textSize="@dimen/text_size_8"
+                    android:textStyle="bold"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="2dp"
+                    android:visibility="gone" />
+
             </LinearLayout>
 
             <TextView

@@ -9,8 +9,9 @@ data class RawCardData(
     val serviceNode: String?,
     val bonusNodes: List<String>,
     val acceptNode: String?,
-    val rawTexts: List<String>
+    val rawTexts: List<String>,
+    val validCropCount: Int = 0
 ) {
     val fullText: String
-        get() = rawTexts.joinToString(" ")
+        get() = rawTexts.joinToString("\n")
 }

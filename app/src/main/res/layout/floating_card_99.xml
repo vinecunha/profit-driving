@@ -1,0 +1,574 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cardRoot"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="10dp"
+    android:clickable="true"
+    android:focusable="true"
+    >
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvApp"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/overlay_text_primary"
+            android:textSize="@dimen/text_size_16"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp" />
+
+        <TextView
+            android:id="@+id/tvServiceType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/highlight"
+            android:textSize="@dimen/text_size_11"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <!-- ================================================ -->
+    <!-- BLOCO EXCLUSIVO 99 — não existe nos layouts Uber  -->
+    <!-- ================================================ -->
+    <LinearLayout
+        android:id="@+id/ll99Block"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="4dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvDynamicMultiplier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_11"
+            android:textStyle="bold"
+            android:textColor="@color/highlight"
+            android:layout_gravity="center_horizontal"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvBaseRate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_9"
+            android:textColor="@color/overlay_warning"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="2dp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/llNegotiateOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="4dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvNegOpt1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textSize="@dimen/text_size_9"
+                android:textStyle="bold"
+                android:textColor="@color/overlay_text_primary"
+                android:paddingVertical="4dp"
+                android:layout_marginEnd="2dp" />
+
+            <TextView
+                android:id="@+id/tvNegOpt2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textSize="@dimen/text_size_9"
+                android:textStyle="bold"
+                android:textColor="@color/overlay_text_primary"
+                android:paddingVertical="4dp"
+                android:layout_marginHorizontal="2dp" />
+
+            <TextView
+                android:id="@+id/tvNegOpt3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:textSize="@dimen/text_size_9"
+                android:textStyle="bold"
+                android:textColor="@color/overlay_text_primary"
+                android:paddingVertical="4dp"
+                android:layout_marginStart="2dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvBonus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/highlight"
+        android:textSize="@dimen/text_size_12"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp">
+
+        <TextView
+            android:id="@+id/tvPriorityBonus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/highlight"
+            android:textSize="@dimen/text_size_12"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvDynamicBonus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/highlight"
+            android:textSize="@dimen/text_size_12"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/kmRow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="2dp">
+
+        <TextView
+            android:id="@+id/tvKmLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="R$/km"
+            android:textColor="@color/overlay_text_secondary"
+            android:textSize="@dimen/text_size_13" />
+
+        <TextView
+            android:id="@+id/tvKm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/overlay_text_primary"
+            android:textSize="@dimen/text_size_16"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp" />
+
+        <View
+            android:id="@+id/dotKm"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginStart="8dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/hourRow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvHourLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="R$/h"
+            android:textColor="@color/overlay_text_secondary"
+            android:textSize="@dimen/text_size_13" />
+
+        <TextView
+            android:id="@+id/tvHour"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/overlay_text_primary"
+            android:textSize="@dimen/text_size_16"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp" />
+
+        <View
+            android:id="@+id/dotHour"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginStart="8dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/minuteRow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvMinuteLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="R$/min"
+            android:textColor="@color/overlay_text_secondary"
+            android:textSize="@dimen/text_size_13" />
+
+        <TextView
+            android:id="@+id/tvMinute"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/overlay_text_primary"
+            android:textSize="@dimen/text_size_16"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp" />
+
+        <View
+            android:id="@+id/dotMinute"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginStart="8dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ratingRow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvRatingLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nota"
+            android:textColor="@color/overlay_text_secondary"
+            android:textSize="@dimen/text_size_13" />
+
+        <TextView
+            android:id="@+id/tvRating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/overlay_text_primary"
+            android:textSize="@dimen/text_size_16"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp" />
+
+        <View
+            android:id="@+id/dotRating"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginStart="8dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="2dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="start"
+            android:layout_marginEnd="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🛣️"
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="@dimen/text_size_10" />
+
+            <TextView
+                android:id="@+id/tvDistance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="@dimen/text_size_10"
+                android:layout_marginStart="3dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginEnd="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⏱"
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="@dimen/text_size_10" />
+
+            <TextView
+                android:id="@+id/tvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/overlay_text_secondary"
+                android:textSize="@dimen/text_size_10"
+                android:layout_marginStart="3dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvDecision"
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:gravity="center"
+        android:textSize="@dimen/text_size_9"
+        android:textStyle="bold"
+        android:textColor="@color/overlay_text_primary"
+        android:layout_marginTop="6dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvScore"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_size_6"
+        android:textColor="@color/overlay_text_secondary"
+        android:gravity="center"
+        android:layout_marginTop="6dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="2dp">
+
+        <TextView
+            android:id="@+id/tvProfitLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_10"
+            android:textColor="@color/overlay_text_secondary"
+            android:layout_marginEnd="4dp"
+            android:singleLine="true"
+            android:ellipsize="start"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvProfit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_10"
+            android:textStyle="bold"
+            android:textColor="@color/overlay_success"
+            android:gravity="center"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutStops"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="4dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/ivStops"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:src="@drawable/ic_multiple_stops"
+            android:tint="@color/highlight" />
+
+        <TextView
+            android:id="@+id/tvStops"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" Com paradas"
+            android:textSize="@dimen/text_size_10"
+            android:textColor="@color/highlight"
+            android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/llKnownDestination"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/ivKnownDestination"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:src="@drawable/ic_favorite"
+            android:tint="@color/highlight" />
+
+        <TextView
+            android:id="@+id/tvKnownDestination"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" Destino conhecido · 0x"
+            android:textSize="@dimen/text_size_10"
+            android:textStyle="bold"
+            android:textColor="@color/highlight"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <!-- Reputação de endereço (greenlist/blacklist) -->
+    <LinearLayout
+        android:id="@+id/llPickupReputation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="4dp"
+        android:visibility="gone">
+
+        <View
+            android:id="@+id/dotPickupReputation"
+            android:layout_width="6dp"
+            android:layout_height="6dp" />
+
+        <TextView
+            android:id="@+id/tvPickupReputation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_9"
+            android:textColor="@color/overlay_text_secondary"
+            android:layout_marginStart="4dp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/llDropoffReputation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="2dp"
+        android:visibility="gone">
+
+        <View
+            android:id="@+id/dotDropoffReputation"
+            android:layout_width="6dp"
+            android:layout_height="6dp" />
+
+        <TextView
+            android:id="@+id/tvDropoffReputation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_9"
+            android:textColor="@color/overlay_text_secondary"
+            android:layout_marginStart="4dp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+    </LinearLayout>
+
+    <!-- Painel de ação — long-press -->
+    <LinearLayout
+        android:id="@+id/llReputationActions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/btnGreenPickup"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="✓ Emb."
+            android:textSize="@dimen/text_size_9"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingVertical="5dp"
+            android:layout_marginEnd="2dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/btnBlackPickup"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="✗ Emb."
+            android:textSize="@dimen/text_size_9"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingVertical="5dp"
+            android:layout_marginEnd="2dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/btnGreenDropoff"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="✓ Dest."
+            android:textSize="@dimen/text_size_9"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingVertical="5dp"
+            android:layout_marginStart="2dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/btnBlackDropoff"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="✗ Dest."
+            android:textSize="@dimen/text_size_9"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingVertical="5dp"
+            android:layout_marginStart="2dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+</LinearLayout>

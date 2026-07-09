@@ -164,6 +164,14 @@ class PreferenceManager(context: Context) {
         prefs.edit().putInt(KEY_BATTERY_CAPACITY, capacity).apply()
     }
 
+    fun getDailyTarget(): Double {
+        return prefs.getFloat(KEY_DAILY_TARGET, 200f).toDouble()
+    }
+
+    fun setDailyTarget(target: Double) {
+        prefs.edit().putFloat(KEY_DAILY_TARGET, target.toFloat()).apply()
+    }
+
     companion object {
         private const val PREF_NAME = "profit_driving_prefs"
         private const val PREF_ONBOARDING_DONE = "onboarding_complete"
@@ -183,5 +191,6 @@ class PreferenceManager(context: Context) {
         private const val KEY_CYLINDER_ENABLED = "cylinder_enabled"
         private const val KEY_BATTERY_ENABLED = "battery_enabled"
         private const val KEY_BATTERY_CAPACITY = "battery_capacity"
+        private const val KEY_DAILY_TARGET = "daily_target"
     }
 }

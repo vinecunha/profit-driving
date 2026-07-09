@@ -161,27 +161,27 @@ class FloatingCardService : Service() {
             }
             if (overlayView != null && rideHash == lastRideHash) {
                 L.d(TAG, "Card já está visível, apenas resetando timer")
-                handler.postDelayed(dismissRunnable, prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 30) * 1000L)
-                return
-            }
-        } else {
-            L.d(TAG, "Re-scan: ignorando debounce, recriando card")
-        }
-        lastRideHash = rideHash
-        lastRideTime = System.currentTimeMillis()
-
-        // Evitar processamento paralelo do mesmo card
-        if (isProcessingCard && currentCardRideHash == rideHash) {
-            L.d(TAG, "Card já está sendo processado, ignorando")
+handler.postDelayed(dismissRunnable, prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 15) * 1000L)
             return
         }
+    } else {
+        L.d(TAG, "Re-scan: ignorando debounce, recriando card")
+    }
+    lastRideHash = rideHash
+    lastRideTime = System.currentTimeMillis()
 
-        isProcessingCard = true
-        currentCardRideHash = rideHash
+    // Evitar processamento paralelo do mesmo card
+    if (isProcessingCard && currentCardRideHash == rideHash) {
+        L.d(TAG, "Card já está sendo processado, ignorando")
+        return
+    }
 
-        try {
-            L.d(TAG, "=== showCard INICIADO ===")
-            L.d(TAG, "isDemo=$isDemo value=${ride.value} km=${ride.distanceKm} time=${ride.timeMin} rating=${ride.rating}")
+    isProcessingCard = true
+    currentCardRideHash = rideHash
+
+    try {
+        L.d(TAG, "=== showCard INICIADO ===")
+        L.d(TAG, "isDemo=$isDemo value=${ride.value} km=${ride.distanceKm} time=${ride.timeMin} rating=${ride.rating}")
 
             // Cancelar qualquer dismiss pendente antes de processar novo card
             handler.removeCallbacks(dismissRunnable)
@@ -192,12 +192,17 @@ class FloatingCardService : Service() {
         }
         val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val cardLayout = prefs.getString(SettingsActivity.KEY_CARD_LAYOUT, "column")
-        val layoutRes = if (cardLayout == "row") R.layout.floating_card_row else R.layout.floating_card
+        val layoutRes = when {
+            ride.appName == "99" && cardLayout == "row" -> R.layout.floating_card_row_99
+            ride.appName == "99"                        -> R.layout.floating_card_99
+            cardLayout == "row"                         -> R.layout.floating_card_row
+            else                                        -> R.layout.floating_card
+        }
         val view = inflater.inflate(layoutRes, null)
 
         val cardRoot     = view.findViewById<View>(R.id.cardRoot)
         val bg = GradientDrawable()
-        bg.setColor(AppColors.textPrimary)
+        bg.setColor(AppColors.overlayBg)
         bg.cornerRadius = 14f * resources.displayMetrics.density
         cardRoot.background = bg
 
@@ -235,6 +240,15 @@ class FloatingCardService : Service() {
         val btnGreenDropoff      = view.findViewById<TextView>(R.id.btnGreenDropoff)
         val btnBlackDropoff      = view.findViewById<TextView>(R.id.btnBlackDropoff)
 
+        // IDs exclusivos da 99 — null em layouts Uber, sem crash
+        val ll99Block           = view.findViewById<View?>(R.id.ll99Block)
+        val tvDynamicMultiplier = view.findViewById<TextView?>(R.id.tvDynamicMultiplier)
+        val tvBaseRate          = view.findViewById<TextView?>(R.id.tvBaseRate)
+        val llNegotiateOptions  = view.findViewById<View?>(R.id.llNegotiateOptions)
+        val tvNegOpt1           = view.findViewById<TextView?>(R.id.tvNegOpt1)
+        val tvNegOpt2           = view.findViewById<TextView?>(R.id.tvNegOpt2)
+        val tvNegOpt3           = view.findViewById<TextView?>(R.id.tvNegOpt3)
+
         val density = resources.displayMetrics.density
         val cornerRadius = resources.getDimension(R.dimen.badge_corner_radius)
 
@@ -249,6 +263,19 @@ class FloatingCardService : Service() {
         styleActionBtn(btnBlackPickup,  R.color.error_bg,    R.color.error_text)
         styleActionBtn(btnGreenDropoff, R.color.success_bg,  R.color.success_text)
         styleActionBtn(btnBlackDropoff, R.color.error_bg,    R.color.error_text)
+
+        val negCorner = resources.getDimension(R.dimen.badge_corner_radius)
+        fun styleNegBtn(tv: TextView?) {
+            tv ?: return
+            val gd = GradientDrawable()
+            gd.setColor(getColor(R.color.overlay_btn_action))
+            gd.cornerRadius = negCorner
+            gd.setStroke(1, getColor(R.color.overlay_border))
+            tv.background = gd
+        }
+        styleNegBtn(tvNegOpt1)
+        styleNegBtn(tvNegOpt2)
+        styleNegBtn(tvNegOpt3)
 
         val pricePerKm   = ride.effectivePricePerKm
         val pricePerHour = ride.effectivePricePerHour
@@ -273,6 +300,37 @@ class FloatingCardService : Service() {
             ?.let { "\uD83D\uDD25 R$ ${FormatUtils.decimal(it)}" } ?: ""
         tvDynamicBonus.visibility =
             if (ride.dynamicBonus != null) View.VISIBLE else View.GONE
+
+        // ── Bloco exclusivo da 99 ──────────────────────────────────────
+        if (ride.appName == "99") {
+            ll99Block?.visibility = View.VISIBLE
+
+            val multiplier = ride.dynamicMultiplier
+            if (multiplier != null) {
+                tvDynamicMultiplier?.text = "⚡ ${FormatUtils.decimal(multiplier)}x"
+                tvDynamicMultiplier?.visibility = View.VISIBLE
+            } else {
+                tvDynamicMultiplier?.visibility = View.GONE
+            }
+
+            val base = ride.baseRate
+            if (base != null) {
+                tvBaseRate?.text = "R\$ ${FormatUtils.decimal(base)} tarifa base incl."
+                tvBaseRate?.visibility = View.VISIBLE
+            } else {
+                tvBaseRate?.visibility = View.GONE
+            }
+
+            val opts = ride.negotiateOptions
+            if (ride.isNegotiate && opts != null && opts.size >= 2) {
+                tvNegOpt1?.text = opts.getOrNull(0)?.let { "R\$ ${FormatUtils.decimal(it)}" } ?: ""
+                tvNegOpt2?.text = opts.getOrNull(1)?.let { "R\$ ${FormatUtils.decimal(it)}" } ?: ""
+                tvNegOpt3?.text = opts.getOrNull(2)?.let { "R\$ ${FormatUtils.decimal(it)}" } ?: ""
+                llNegotiateOptions?.visibility = View.VISIBLE
+            } else {
+                llNegotiateOptions?.visibility = View.GONE
+            }
+        }
 
         tvKm.text = if (pricePerKm != null)
             FormatUtils.decimal(pricePerKm)
@@ -454,7 +512,7 @@ class FloatingCardService : Service() {
                     }
 
                     handler.removeCallbacks(dismissRunnable)
-                    val durationMs = prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 30) * 1000L
+                    val durationMs = prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 15) * 1000L
                     handler.postDelayed(dismissRunnable, durationMs)
                 }
             }
@@ -509,26 +567,27 @@ class FloatingCardService : Service() {
             } catch (e: Exception) { L.e(TAG, "Erro ao calcular lucro estimado: ${e.message}", e) }
         }
 
-        @Suppress("DEPRECATION")
-        val displayMetrics = DisplayMetrics()
-        @Suppress("DEPRECATION")
-        windowManager.defaultDisplay.getMetrics(displayMetrics)
-
         val cardPosition = prefs.getString(
             SettingsActivity.KEY_CARD_POSITION, "left"
         )
         val cardYPercent = prefs.getInt(
             SettingsActivity.KEY_CARD_Y_PERCENT, 30)
 
-        val screenWidth  = displayMetrics.widthPixels
-        val screenHeight = displayMetrics.heightPixels
-        val yOffset      = (screenHeight * cardYPercent / 100.0).toInt()
-        val cardWidthPx  = (220 * resources.displayMetrics.density).toInt()
-        val xOffset      = when (cardPosition) {
-            "right" -> screenWidth - cardWidthPx - 16
-            "center" -> (screenWidth - cardWidthPx) / 2
-            else -> 16
+        val bounds = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            windowManager.currentWindowMetrics.bounds
+        } else {
+            @Suppress("DEPRECATION")
+            val dm = DisplayMetrics().also { windowManager.defaultDisplay.getMetrics(it) }
+            android.graphics.Rect(0, 0, dm.widthPixels, dm.heightPixels)
         }
+        val screenWidth  = bounds.width()
+        val screenHeight = bounds.height()
+        val yOffset      = ((screenHeight * cardYPercent / 100.0).toInt())
+            .coerceIn(0, screenHeight - 200)
+        val displayDensity = resources.displayMetrics.density
+        val minCardPx  = (220 * displayDensity).toInt()
+        val maxCardPx  = (320 * displayDensity).toInt()
+        val cardWidthPx = (screenWidth * 0.28).toInt().coerceIn(minCardPx, maxCardPx)
 
         val type: Int = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -541,8 +600,7 @@ class FloatingCardService : Service() {
             WindowManager.LayoutParams.WRAP_CONTENT,
             type,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT
         ).apply {
             when (cardPosition) {
@@ -551,7 +609,7 @@ class FloatingCardService : Service() {
                     x = 16
                 }
                 "center" -> {
-                    gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP  // MUDE AQUI
+                    gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP
                     x = 0
                 }
                 else -> {
@@ -617,21 +675,21 @@ class FloatingCardService : Service() {
 
         val animation = PreferenceManager(this).getCardAnimation()
 
-        when (animation) {
-            AnimationConstants.ANIMATION_FADE,
-            AnimationConstants.ANIMATION_FADE_SLIDE -> view.alpha = 0f
-            AnimationConstants.ANIMATION_SLIDE_RIGHT -> view.translationX = 200f
-            AnimationConstants.ANIMATION_SLIDE_LEFT -> view.translationX = -200f
-            AnimationConstants.ANIMATION_FADE_SLIDE -> view.translationY = 80f
-            AnimationConstants.ANIMATION_NONE -> {}
-        }
-
         try {
             if (!::windowManager.isInitialized) {
                 windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
             }
             windowManager.addView(view, params)
             overlayView = view
+
+            when (animation) {
+                AnimationConstants.ANIMATION_FADE,
+                AnimationConstants.ANIMATION_FADE_SLIDE -> view.alpha = 0f
+                AnimationConstants.ANIMATION_SLIDE_RIGHT -> view.translationX = 200f
+                AnimationConstants.ANIMATION_SLIDE_LEFT -> view.translationX = -200f
+                AnimationConstants.ANIMATION_FADE_SLIDE -> view.translationY = 80f
+                AnimationConstants.ANIMATION_NONE -> {}
+            }
 
             when (animation) {
                 AnimationConstants.ANIMATION_NONE -> {}
@@ -673,7 +731,7 @@ class FloatingCardService : Service() {
 
         handler.removeCallbacks(dismissRunnable)
         if (!isDemo) {
-            val durationMs = prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 30) * 1000L
+            val durationMs = prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 15) * 1000L
             handler.postDelayed(dismissRunnable, durationMs)
         }
 
@@ -759,7 +817,7 @@ class FloatingCardService : Service() {
             DecisionEngine.Decision.RECUSAR -> AppColors.error
         }
         val gd = GradientDrawable()
-        gd.setColor(AppColors.textPrimary)
+        gd.setColor(AppColors.overlayBg)
         gd.cornerRadius = 14f * resources.displayMetrics.density
         gd.setStroke(3.dpToPx(), borderColor)
         view.background = gd
@@ -777,6 +835,10 @@ class FloatingCardService : Service() {
             } else {
                 context.startService(intent)
             }
+        }
+
+        fun stop(context: Context) {
+            context.stopService(Intent(context, FloatingCardService::class.java))
         }
     }
 }

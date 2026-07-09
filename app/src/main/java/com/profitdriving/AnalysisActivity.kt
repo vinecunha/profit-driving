@@ -1,6 +1,7 @@
 package com.profitdriving
 
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -23,6 +24,7 @@ class AnalysisActivity : BaseActivity() {
 
     private lateinit var db: DatabaseHelper
     private lateinit var cardsContainer: LinearLayout
+    private lateinit var serviceTypeContainer: LinearLayout
     private lateinit var skeletonContainer: LinearLayout
     private lateinit var scrollView: View
     private lateinit var btnModeDay: TextView
@@ -32,6 +34,20 @@ class AnalysisActivity : BaseActivity() {
     private lateinit var btnNextPeriod: TextView
     private lateinit var btnToday: TextView
     private lateinit var tvPeriodTitle: TextView
+    private lateinit var btnTabGeral: LinearLayout
+    private lateinit var btnTabServico: LinearLayout
+    private lateinit var tabGeralLine: View
+    private lateinit var tabServicoLine: View
+    private lateinit var tabGeralText: TextView
+    private lateinit var tabServicoText: TextView
+    private var ridesByApp: Map<String, List<RideRecord>> = emptyMap()
+    private var currentServiceTypeTab = 0 // 0=Geral, 1=Por Tipo
+    private var currentResult: AnalysisResultV2? = null
+    private var currentAppFilter = "all" // "all", "Uber", "99"
+    private lateinit var btnFilterAll: TextView
+    private lateinit var btnFilterUber: TextView
+    private lateinit var btnFilter99: TextView
+    private lateinit var filterContainer: android.widget.LinearLayout
 
     private var currentMode = ViewMode.DAY
     private var referenceCalendar = Calendar.getInstance()
@@ -52,6 +68,7 @@ class AnalysisActivity : BaseActivity() {
         setupToolbar(title = "An\u00E1lise", showBack = true)
 
         cardsContainer = findViewById(R.id.cardsContainer)
+        serviceTypeContainer = findViewById(R.id.serviceTypeContainer)
         skeletonContainer = findViewById(R.id.skeletonContainer)
         scrollView = findViewById(R.id.scrollView)
         db = DatabaseHelper(this)
@@ -64,22 +81,50 @@ class AnalysisActivity : BaseActivity() {
         btnToday = findViewById(R.id.btnToday)
         tvPeriodTitle = findViewById(R.id.tvPeriodTitle)
 
+        btnTabGeral = findViewById(R.id.btnTabGeral)
+        btnTabServico = findViewById(R.id.btnTabServico)
+        tabGeralLine = findViewById(R.id.tabGeralLine)
+        tabServicoLine = findViewById(R.id.tabServicoLine)
+        tabGeralText = findViewById(R.id.tabGeralText)
+        tabServicoText = findViewById(R.id.tabServicoText)
+        btnFilterAll = findViewById(R.id.btnFilterAll)
+        btnFilterUber = findViewById(R.id.btnFilterUber)
+        btnFilter99 = findViewById(R.id.btnFilter99)
+        filterContainer = findViewById(R.id.filterContainer)
+
         setupPeriodNavigation()
+        setupTabs()
+        setupAppFilter()
         setViewMode(ViewMode.DAY)
     }
 
     private fun loadDataForCurrentPeriod() {
         showSkeleton()
         val (periodStart, periodEnd) = getPeriodTimestamps()
+        val (prevStart, prevEnd) = getPreviousPeriodTimestamps()
 
         lifecycleScope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    val records = db.getFiltered(periodStart)
+                    val allRecords = db.getFiltered(periodStart, null, 0, periodEnd)
                         .let { CardHashGenerator.recoverRidesFromRawLogs(it, db) }
+                    val records = if (currentAppFilter == "all") allRecords
+                        else allRecords.filter { it.appName.equals(currentAppFilter, ignoreCase = true) }
                     val dailyRides = db.getDailyRidesByDateRange(periodStart, periodEnd)
                     val costPerKm = CostSummaryCache.getCurrentSummary(this@AnalysisActivity).totalCostPerKm
-                    AnalysisHelperV2.calculate(records, dailyRides, costPerKm)
+                    val analysisResult = AnalysisHelperV2.calculate(records, dailyRides, costPerKm)
+
+                    val prevDaily = db.getDailyRidesByDateRange(prevStart, prevEnd)
+                    val prevEarnings = prevDaily.filter { it.isCompleted }.sumOf { it.finalValue }
+                    val prevRides = prevDaily.count { it.isCompleted }
+
+                    val dailyTarget = PreferenceManager(this@AnalysisActivity).getDailyTarget()
+                    ridesByApp = records.groupBy { it.appName.ifEmpty { "Uber" } }
+                    analysisResult.copy(
+                        dailyProjection = analysisResult.dailyProjection.copy(targetDay = dailyTarget),
+                        previousPeriodEarnings = prevEarnings,
+                        previousPeriodRides = prevRides
+                    )
                 }
                 hideSkeleton()
                 buildCards(result)
@@ -116,6 +161,58 @@ class AnalysisActivity : BaseActivity() {
         btnPrevPeriod.setOnClickListener { navigatePeriod(-1) }
         btnNextPeriod.setOnClickListener { navigatePeriod(1) }
         btnToday.setOnClickListener { goToToday() }
+    }
+
+    private fun setupAppFilter() {
+        val prefs = SecurePreferences.get(this)
+        val uberOn = prefs.getBoolean(SettingsActivity.KEY_READ_UBER, true)
+        val ninetyNineOn = prefs.getBoolean(SettingsActivity.KEY_READ_APP99, true) && Build.VERSION.SDK_INT >= 34
+        if (!uberOn || !ninetyNineOn) {
+            filterContainer.visibility = View.GONE
+        } else {
+            filterContainer.visibility = View.VISIBLE
+            btnFilterAll.setOnClickListener { setAppFilter("all") }
+            btnFilterUber.setOnClickListener { setAppFilter("Uber") }
+            btnFilter99.setOnClickListener { setAppFilter("99") }
+        }
+    }
+
+    private fun setAppFilter(filter: String) {
+        currentAppFilter = filter
+        btnFilterAll.setBackgroundResource(if (filter == "all") R.drawable.pill_selected else R.drawable.pill_unselected)
+        btnFilterUber.setBackgroundResource(if (filter == "Uber") R.drawable.pill_selected else R.drawable.pill_unselected)
+        btnFilter99.setBackgroundResource(if (filter == "99") R.drawable.pill_selected else R.drawable.pill_unselected)
+        btnFilterAll.setTextColor(if (filter == "all") ctxColor(R.color.text_inverse) else ctxColor(R.color.text_secondary))
+        btnFilterUber.setTextColor(if (filter == "Uber") ctxColor(R.color.text_inverse) else ctxColor(R.color.text_secondary))
+        btnFilter99.setTextColor(if (filter == "99") ctxColor(R.color.text_inverse) else ctxColor(R.color.text_secondary))
+        loadDataForCurrentPeriod()
+    }
+
+    private fun setupTabs() {
+        btnTabGeral.setOnClickListener { setServiceTypeTab(0) }
+        btnTabServico.setOnClickListener { setServiceTypeTab(1) }
+    }
+
+    private fun setServiceTypeTab(tab: Int) {
+        currentServiceTypeTab = tab
+        val accent = ctxColor(R.color.accent)
+        val border = ctxColor(R.color.border)
+        val primary = ctxColor(R.color.text_primary)
+        val secondary = ctxColor(R.color.text_secondary)
+
+        tabGeralLine.setBackgroundColor(if (tab == 0) accent else border)
+        tabServicoLine.setBackgroundColor(if (tab == 1) accent else border)
+        tabGeralText.setTextColor(if (tab == 0) primary else secondary)
+        tabServicoText.setTextColor(if (tab == 1) primary else secondary)
+        tabGeralText.setTypeface(null, if (tab == 0) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
+        tabServicoText.setTypeface(null, if (tab == 1) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
+        updateCardVisibility()
+    }
+
+    private fun updateCardVisibility() {
+        val showGeral = currentServiceTypeTab == 0
+        cardsContainer.visibility = if (showGeral) View.VISIBLE else View.GONE
+        serviceTypeContainer.visibility = if (showGeral) View.GONE else View.VISIBLE
     }
 
     private fun setViewMode(mode: ViewMode) {
@@ -242,8 +339,16 @@ class AnalysisActivity : BaseActivity() {
         }
     }
 
+    private fun getPreviousPeriodTimestamps(): Pair<Long, Long> {
+        val (start, end) = getPeriodTimestamps()
+        val duration = end - start + 1
+        return Pair(start - duration, end - duration)
+    }
+
     private fun buildCards(r: AnalysisResultV2) {
+        currentResult = r
         cardsContainer.removeAllViews()
+        serviceTypeContainer.removeAllViews()
         cardIndex = 0
 
         var section = buildExpandableSection("\uD83D\uDCCA", "Vis\u00E3o Geral", cardsContainer)
@@ -261,16 +366,24 @@ class AnalysisActivity : BaseActivity() {
         section = buildExpandableSection("\u23F0", "Desempenho", cardsContainer)
         buildMelhorHorario(r, section)
         buildDinamicaHorario(r, section)
+        buildScoreTrend(r, section)
         buildCidades(r, section)
         buildBairros(r, section)
         buildHourlyForecast(r, section)
         buildDynamicTrend(r, section)
         buildWeekdayRanking(r, section)
 
+        section = buildExpandableSection("\uD83D\uDCAF", "Corridas", cardsContainer)
+        buildMultipleStopsImpact(r, section)
+        buildRejectionPatterns(r, section)
+
         section = buildExpandableSection("\uD83D\uDE80", "Otimiza\u00E7\u00E3o", cardsContainer)
         buildDailyProjection(r, section)
         buildFloorSimulation(r, section)
         buildInsights(r, section)
+
+        buildServiceTypeCards(r)
+        updateCardVisibility()
     }
 
     private fun addSpacer() {
@@ -516,6 +629,20 @@ class AnalysisActivity : BaseActivity() {
         addText(card, "R\$/km m\u00E9dio: R\$ ${FormatUtils.decimal(r.avgPricePerKm)}", 12f, ctxColor(R.color.text_secondary))
         addText(card, "R\$/h m\u00E9dio: R\$ ${FormatUtils.decimal(r.avgPricePerHour)}", 12f, ctxColor(R.color.text_secondary))
         addText(card, "Nota m\u00E9dia: ${"%.2f".format(r.avgRating)}", 12f, ctxColor(R.color.text_secondary))
+
+        if (ridesByApp.size > 1) {
+            addDivider(card)
+            addText(card, "\uD83D\uDCF1 Por aplicativo", 13f, ctxColor(R.color.text_primary), true)
+            for ((app, rides) in ridesByApp) {
+                val count = rides.size
+                val totalEarnings = rides.sumOf { it.value ?: 0.0 }
+                val color = when {
+                    app.equals("99", ignoreCase = true) -> ctxColor(R.color.app_99)
+                    else -> ctxColor(R.color.text_secondary)
+                }
+                addText(card, "$app: $count corridas | R\$ ${FormatUtils.decimal(totalEarnings)}", 12f, color)
+            }
+        }
 
         container.addView(card)
     }
@@ -874,12 +1001,37 @@ class AnalysisActivity : BaseActivity() {
         val card = createCard("\uD83C\uDFAF Proje\u00E7\u00E3o do dia")
 
         addText(card, "\uD83D\uDCB0 Ganho atual: R\$ ${FormatUtils.decimal(p.currentEarnings)} (${p.completedRides} corridas)")
-        addText(card, "\u23F1\uFE0F Horas trabalhadas: ${"%.1f".format(p.hoursWorked)}h")
+        val timeRange = if (p.firstRideTime.isNotEmpty() && p.lastRideTime.isNotEmpty()) {
+            " (${p.firstRideTime} \u00E0s ${p.lastRideTime})"
+        } else ""
+        addText(card, "\u23F1\uFE0F Horas trabalhadas: ${"%.1f".format(p.hoursWorked)}h$timeRange")
         addText(card, "\uD83D\uDCC8 Ganho m\u00E9dio/h: R\$ ${FormatUtils.decimal(p.avgPerHour)}")
 
         addDivider(card)
 
-        addText(card, "\uD83C\uDFAF Meta do dia: R\$ ${FormatUtils.decimal(p.targetDay)}")
+        val targetRow = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 4, 0, 4)
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { showTargetDialog(card, r) }
+        }
+        targetRow.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
+            text = "\uD83C\uDFAF Meta do dia"
+            textSize = 13f
+            setTextColor(ctxColor(R.color.text_secondary))
+        })
+        targetRow.addView(TextView(this).apply {
+            text = "R\$ ${FormatUtils.decimal(p.targetDay)}  \u270F\uFE0F"
+            textSize = 13f
+            setTextColor(ctxColor(R.color.accent))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        })
+        card.addView(targetRow)
+
         addText(card, "\uD83D\uDCCA Proje\u00E7\u00E3o (${"%.0f".format(p.targetHours)}h): R\$ ${FormatUtils.decimal(p.projectedWithTargetHours)}")
 
         val remainingColor = if (p.remaining <= 0) GREEN else ORANGE
@@ -891,6 +1043,28 @@ class AnalysisActivity : BaseActivity() {
         addText(card, remainingText, 12f, remainingColor, true)
 
         container.addView(card)
+    }
+
+    private fun showTargetDialog(card: LinearLayout, r: AnalysisResultV2) {
+        val currentTarget = r.dailyProjection.targetDay.toInt()
+        val input = android.widget.EditText(this).apply {
+            setText(currentTarget.toString())
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+            setSelection(length())
+        }
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Definir meta do dia")
+            .setMessage("Quanto voc\u00EA quer ganhar hoje?")
+            .setView(input)
+            .setPositiveButton("Salvar") { _, _ ->
+                val value = input.text.toString().toDoubleOrNull()
+                if (value != null && value > 0) {
+                    PreferenceManager(this).setDailyTarget(value)
+                    loadDataForCurrentPeriod()
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     // ─── CARD 12: Dias Mais Lucrativos ───
@@ -958,6 +1132,367 @@ class AnalysisActivity : BaseActivity() {
         }
 
         container.addView(card)
+    }
+
+    // ─── CARD: Tendência de Score ───
+    private fun buildScoreTrend(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
+        if (r.scoreTrend.size < 2) return
+        val card = createCard("📈 Tendência do Score")
+
+        addText(card, "Evolução diária do score médio das corridas aceitas", 12f, ctxColor(R.color.text_secondary))
+
+        addDivider(card)
+
+        val maxFrac = r.scoreTrend.maxOfOrNull { it.barFraction }?.coerceAtLeast(0.01f) ?: 1f
+        for (d in r.scoreTrend) {
+            val label = "${d.dayLabel} (${d.rideCount})"
+            val value = "${"%.0f".format(d.avgScore)}%"
+            addBarSimple(card, label, value, d.barFraction / maxFrac,
+                if (d.avgScore >= 80) GREEN else if (d.avgScore >= 50) ORANGE else RED)
+        }
+
+        addDivider(card)
+        val totalAverage = r.scoreTrend.map { it.avgScore }.average()
+        val trend = if (r.scoreTrend.size >= 2) {
+            val first = r.scoreTrend.first().avgScore
+            val last = r.scoreTrend.last().avgScore
+            last - first
+        } else 0.0
+        addText(card, "Média do período: ${"%.0f".format(totalAverage)}% | Tendência: ${if (trend >= 0) "+" else ""}${"%.0f".format(trend)}%",
+            12f, if (trend >= 0) GREEN else RED, true)
+
+        container.addView(card)
+    }
+
+    private fun buildMultipleStopsImpact(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
+        val m = r.multipleStopsImpact ?: return
+        val card = createCard("🔄 Impacto de paradas múltiplas")
+
+        addText(card, "Comparativo entre corridas com e sem paradas", 12f, ctxColor(R.color.text_secondary))
+
+        addDivider(card)
+
+        addText(card, "✅ Sem paradas (${m.withoutStops.count} corridas)", 13f, GREEN, true)
+        addInfoRow(card, "Valor médio", "R$ ${FormatUtils.decimal(m.withoutStops.avgValue)}", ctxColor(R.color.text_primary))
+        addInfoRow(card, "R$/km médio", "R$ ${FormatUtils.decimal(m.withoutStops.avgPricePerKm)}", ctxColor(R.color.text_primary))
+        addInfoRow(card, "R$/h médio", "R$ ${FormatUtils.decimal(m.withoutStops.avgPricePerHour)}", ctxColor(R.color.text_secondary))
+        addInfoRow(card, "Km médio", "${FormatUtils.decimal1(m.withoutStops.avgDistance)} km", ctxColor(R.color.text_secondary))
+        addInfoRow(card, "Tempo médio", "${m.withoutStops.avgTime} min", ctxColor(R.color.text_secondary))
+
+        addDivider(card)
+
+        addText(card, "🔄 Com paradas (${m.withStops.count} corridas)", 13f, ORANGE, true)
+        addInfoRow(card, "Valor médio", "R$ ${FormatUtils.decimal(m.withStops.avgValue)}", ctxColor(R.color.text_primary))
+        addInfoRow(card, "R$/km médio", "R$ ${FormatUtils.decimal(m.withStops.avgPricePerKm)}", ctxColor(R.color.text_primary))
+        addInfoRow(card, "R$/h médio", "R$ ${FormatUtils.decimal(m.withStops.avgPricePerHour)}", ctxColor(R.color.text_secondary))
+        addInfoRow(card, "Km médio", "${FormatUtils.decimal1(m.withStops.avgDistance)} km", ctxColor(R.color.text_secondary))
+        addInfoRow(card, "Tempo médio", "${m.withStops.avgTime} min", ctxColor(R.color.text_secondary))
+
+        addDivider(card)
+
+        val diffPpk = m.withStops.avgPricePerKm - m.withoutStops.avgPricePerKm
+        val diffPph = m.withStops.avgPricePerHour - m.withoutStops.avgPricePerHour
+        addText(card, "Diferença R$/km: ${if (diffPpk >= 0) "+" else ""}R$ ${FormatUtils.decimal(diffPpk)}",
+            12f, if (diffPpk >= 0) GREEN else RED)
+        addText(card, "Diferença R$/h: ${if (diffPph >= 0) "+" else ""}R$ ${FormatUtils.decimal(diffPph)}",
+            12f, if (diffPph >= 0) GREEN else RED)
+
+        container.addView(card)
+    }
+
+    private fun buildRejectionPatterns(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
+        val p = r.rejectionPatterns ?: return
+        if (p.totalLost == 0) return
+        val card = createCard("❌ Padrões de rejeição")
+
+        addText(card, "${p.totalLost} corridas não aceitas | R$ ${FormatUtils.decimal(p.totalLostValue)} perdidos",
+            12f, ctxColor(R.color.text_primary), true)
+
+        addDivider(card)
+
+        addText(card, "Por faixa de valor", 13f, ctxColor(R.color.text_primary), true)
+        for (v in p.byValue) {
+            addBarSimple(card, v.label, "${v.count} (${"%.0f".format(v.percentOfTotal)}%)",
+                (v.percentOfTotal / 100).toFloat(), BLUE)
+        }
+
+        addDivider(card)
+
+        addText(card, "Por distância", 13f, ctxColor(R.color.text_primary), true)
+        for (d in p.byDistance) {
+            addBarSimple(card, d.label, "${d.count} (${"%.0f".format(d.percentOfTotal)}%)",
+                (d.percentOfTotal / 100).toFloat(), ORANGE)
+        }
+
+        addDivider(card)
+
+        addText(card, "Por período", 13f, ctxColor(R.color.text_primary), true)
+        for (h in p.byHour) {
+            addBarSimple(card, h.label, "${h.count} (${"%.0f".format(h.percentOfTotal)}%)",
+                (h.percentOfTotal / 100).toFloat(), if (h.label == "Noite") GREEN else ctxColor(R.color.text_secondary))
+        }
+
+        addDivider(card)
+        addText(card, "💡 Você recusou ${"%.0f".format(p.byValue.firstOrNull()?.percentOfTotal ?: 0.0)}% das corridas na faixa de menor valor. Reveja seu floor de aceitação.",
+            11f, ctxColor(R.color.text_tertiary))
+
+        container.addView(card)
+    }
+
+    // ─── SERVICE TYPE COLORS ───
+    private fun serviceTypeColor(type: String): Int {
+        return when {
+            type.contains("UberX", ignoreCase = true) -> ctxColor(R.color.service_uberx)
+            type.contains("Comfort", ignoreCase = true) || type.contains("Confort", ignoreCase = true) -> ctxColor(R.color.service_comfort)
+            type.contains("Black", ignoreCase = true) || type.contains("VIP", ignoreCase = true) || type.contains("Top", ignoreCase = true) -> ctxColor(R.color.service_black)
+            type.contains("Moto", ignoreCase = true) -> ctxColor(R.color.service_moto)
+            type.contains("Entrega", ignoreCase = true) || type.contains("Flash", ignoreCase = true) || type.contains("Envios", ignoreCase = true) -> ctxColor(R.color.service_entrega)
+            type.contains("Pop", ignoreCase = true) || type.contains("Juntos", ignoreCase = true) -> ctxColor(R.color.service_pop)
+            else -> ctxColor(R.color.service_outros)
+        }
+    }
+
+    private fun serviceTypeIcon(type: String): String {
+        return when {
+            type.contains("UberX", ignoreCase = true) -> "\uD83D\uDE97"
+            type.contains("Comfort", ignoreCase = true) || type.contains("Confort", ignoreCase = true) -> "\uD83D\uDE98"
+            type.contains("Black", ignoreCase = true) || type.contains("VIP", ignoreCase = true) -> "\uD83D\uDE94"
+            type.contains("Moto", ignoreCase = true) -> "\uD83C\uDFCD\uFE0F"
+            type.contains("Entrega", ignoreCase = true) || type.contains("Flash", ignoreCase = true) -> "\uD83D\uDCE6"
+            type.contains("Pop", ignoreCase = true) -> "\uD83D\uDE95"
+            else -> "\uD83D\uDE97"
+        }
+    }
+
+    // ─── SERVICE TYPE CARDS ───
+    private fun buildServiceTypeCards(r: AnalysisResultV2) {
+        if (r.serviceTypes.isEmpty()) {
+            serviceTypeContainer.addView(TextView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                    .apply { setMargins(0, 24, 0, 0) }
+                text = "Nenhum dado de tipo de serviço disponível"
+                textSize = 14f
+                setTextColor(ctxColor(R.color.text_tertiary))
+                gravity = Gravity.CENTER
+            })
+            return
+        }
+
+        val sorted = r.serviceTypes.sortedByDescending { it.totalEarnings }
+
+        val section = buildExpandableSection("\uD83D\uDE97", "Comparativo por Tipo de Serviço", serviceTypeContainer)
+        buildServiceTypeDistribution(sorted, section)
+        buildServiceTypeComparison(sorted, r, section)
+
+        for (st in sorted) {
+            val card = createServiceTypeCard(st, r)
+            serviceTypeContainer.addView(card)
+        }
+    }
+
+    private fun buildServiceTypeDistribution(list: List<ServiceTypeStats>, container: LinearLayout) {
+        val total = list.sumOf { it.totalEarnings }.coerceAtLeast(0.01)
+        val card = createCard("\uD83D\uDCC8 Distribui\u00E7\u00E3o do faturamento")
+
+        val barHeight = 24
+        val density = resources.displayMetrics.density
+        val barContainer = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, barHeight * density.toInt())
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val radiusPx = 6 * density
+        for ((i, st) in list.withIndex()) {
+            val fraction = (st.totalEarnings / total).toFloat().coerceIn(0.01f, 1f)
+            val color = serviceTypeColor(st.serviceType)
+            barContainer.addView(View(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0, barHeight * density.toInt(), fraction).apply {
+                    if (i > 0) setMargins(2, 0, 0, 0)
+                }
+                val g = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(color)
+                    cornerRadius = radiusPx
+                }
+                background = g
+            })
+        }
+
+        card.addView(barContainer)
+
+        // Legend
+        for (st in list) {
+            val color = serviceTypeColor(st.serviceType)
+            val icon = serviceTypeIcon(st.serviceType)
+            val row = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                orientation = HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, 2, 0, 2)
+            }
+            row.addView(View(this).apply {
+                layoutParams = LinearLayout.LayoutParams(10, 10).apply { rightMargin = 6 }
+                val dotBg = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(color)
+                    cornerRadius = 2 * density
+                }
+                background = dotBg
+            })
+            row.addView(TextView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
+                text = "$icon ${st.serviceType}"
+                textSize = 11f
+                setTextColor(ctxColor(R.color.text_secondary))
+            })
+            row.addView(TextView(this).apply {
+                text = "R\$ ${FormatUtils.decimal(st.totalEarnings)} (${"%.0f".format(st.earningsPercentOfTotal)}%)"
+                textSize = 11f
+                setTextColor(ctxColor(R.color.text_primary))
+            })
+            card.addView(row)
+        }
+
+        container.addView(card)
+        container.addView(View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 12)
+        })
+    }
+
+    private fun buildServiceTypeComparison(list: List<ServiceTypeStats>, r: AnalysisResultV2, container: LinearLayout) {
+        if (list.size < 2) return
+        val card = createCard("\uD83D\uDCCA Comparativo entre tipos")
+        val maxEarnings = list.first().totalEarnings.coerceAtLeast(0.01)
+
+        for (st in list) {
+            val color = serviceTypeColor(st.serviceType)
+            val icon = serviceTypeIcon(st.serviceType)
+            val label = "$icon ${st.serviceType}"
+            val fraction = (st.totalEarnings / maxEarnings).toFloat()
+            val valueText = "R\$ ${FormatUtils.decimal(st.totalEarnings)} (${"%.0f".format(st.earningsPercentOfTotal)}%)"
+            addBarSimple(card, label, valueText, fraction, color)
+        }
+
+        container.addView(card)
+        container.addView(View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 16)
+        })
+    }
+
+    private fun createServiceTypeCard(st: ServiceTypeStats, r: AnalysisResultV2): LinearLayout {
+        val color = serviceTypeColor(st.serviceType)
+        val icon = serviceTypeIcon(st.serviceType)
+        val density = resources.displayMetrics.density
+
+        val card = LinearLayout(this).apply {
+            contentDescription = "Card de ${st.serviceType}"
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                .apply { setMargins(0, 0, 0, 12) }
+            orientation = VERTICAL
+            setPadding(0, 0, 0, 0)
+            setBackgroundResource(R.drawable.card_bg)
+            elevation = 2 * density
+            clipToOutline = true
+        }
+
+        // Header with service type color bar and name
+        card.addView(LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(16, 14, 16, 14)
+            setBackgroundColor(color)
+
+            addView(TextView(this@AnalysisActivity).apply {
+                text = "$icon ${st.serviceType}"
+                textSize = 16f
+                setTextColor(if (color == ctxColor(R.color.service_black) || color == ctxColor(R.color.service_uberx)) ctxColor(R.color.text_inverse) else ctxColor(R.color.text_primary))
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
+            })
+
+            addView(TextView(this@AnalysisActivity).apply {
+                text = "${st.acceptedCount}/${st.offeredCount}"
+                textSize = 13f
+                setTextColor(if (color == ctxColor(R.color.service_black) || color == ctxColor(R.color.service_uberx)) ctxColor(R.color.text_inverse) else ctxColor(R.color.text_primary))
+            })
+        })
+
+        // Body
+        val body = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = VERTICAL
+            setPadding(16, 12, 16, 16)
+        }
+        card.addView(body)
+
+        // Earnings row
+        addInfoRowService(body, "\uD83D\uDCB0 Faturamento", "R\$ ${FormatUtils.decimal(st.totalEarnings)}",
+            ctxColor(R.color.text_primary), true)
+
+        addInfoRowService(body, "\uD83D\uDCCA Aceitação", "${"%.1f".format(st.acceptanceRate)}%",
+            if (st.acceptanceRate >= 70) ctxColor(R.color.success) else if (st.acceptanceRate >= 40) ctxColor(R.color.warning) else ctxColor(R.color.error))
+
+        addInfoRowService(body, "\uD83D\uDCC8 R\$/km", "R\$ ${FormatUtils.decimal(st.avgPricePerKm)}",
+            ctxColor(R.color.text_primary))
+
+        addInfoRowService(body, "\u23F0 R\$/h", "R\$ ${FormatUtils.decimal(st.avgPricePerHour)}",
+            ctxColor(R.color.text_secondary))
+
+        // Comparison with overall average
+        val diffPpk = st.avgPricePerKm - r.avgPricePerKm
+        val diffPpkPct = if (r.avgPricePerKm > 0) (diffPpk / r.avgPricePerKm * 100) else 0.0
+        val arrowPpk = if (diffPpk >= 0) "\u2191" else "\u2193"
+        val diffColorPpk = if (diffPpk >= 0) ctxColor(R.color.success) else ctxColor(R.color.error)
+        addInfoRowService(body, "vs. m\u00E9dia (R\$/km)", "$arrowPpk ${"%.1f".format(diffPpkPct)}%",
+            diffColorPpk)
+
+        addDivider(body)
+
+        // Dynamic & Priority
+        addInfoRowService(body, "\u26A1 Din\u00E2mica", "${"%.0f".format(st.dynamicPercent)}%",
+            if (st.dynamicPercent >= 30) ctxColor(R.color.success) else ctxColor(R.color.text_secondary))
+        addInfoRowService(body, "\u2B06 Prioridade", "${"%.0f".format(st.priorityPercent)}%",
+            if (st.priorityPercent >= 30) ctxColor(R.color.success) else ctxColor(R.color.text_secondary))
+
+        addDivider(body)
+
+        // Score
+        addInfoRowService(body, "\u2B50 Score bom", "${"%.0f".format(st.goodPercent)}%",
+            if (st.goodPercent >= 60) ctxColor(R.color.success) else ctxColor(R.color.warning))
+
+        // Lost count
+        if (st.lostCount > 0) {
+            addInfoRowService(body, "\u274C Perdidas", "${st.lostCount} (m\u00E9dia R\$ ${FormatUtils.decimal(st.avgLostValue)})",
+                ctxColor(R.color.error))
+        }
+
+        // Best hour
+        addInfoRowService(body, "\uD83C\uDFC6 Melhor hor\u00E1rio", st.bestHour,
+            ctxColor(R.color.text_primary), true)
+
+        return card
+    }
+
+    private fun addInfoRowService(container: LinearLayout, label: String, value: String, color: Int, bold: Boolean = false) {
+        val row = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 3, 0, 3)
+        }
+        row.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
+            text = label
+            textSize = 12f
+            setTextColor(ctxColor(R.color.text_secondary))
+        })
+        row.addView(TextView(this).apply {
+            text = value
+            textSize = 12f
+            setTextColor(color)
+            if (bold) setTypeface(null, android.graphics.Typeface.BOLD)
+        })
+        container.addView(row)
     }
 
     // ─── CARD: Resumo Financeiro ───
@@ -1208,8 +1743,8 @@ class AnalysisActivity : BaseActivity() {
             spFromRes(R.dimen.text_size_14), ctxColor(R.color.text_primary), bold = true)
 
         addText(card,
-            "Com base nas suas ${sim.totalRides} corridas recebidas",
-            spFromRes(R.dimen.text_size_11), ctxColor(R.color.text_secondary))
+            "Baseado em ${sim.totalRides} corridas recebidas, respeitando janela de hor\u00E1rio de cada dia",
+            spFromRes(R.dimen.text_size_10), ctxColor(R.color.text_secondary))
 
         addDivider(card)
 
@@ -1217,11 +1752,11 @@ class AnalysisActivity : BaseActivity() {
         if (rec != null) {
             val highlight = createHighlightCard(
                 icon = "✅",
-                title = "Melhor para você: aceitar acima de R$ ${FormatUtils.decimal(rec.thresholdPerKm)}/km",
+                title = "Melhor para voc\u00EA: aceitar acima de R\$ ${FormatUtils.decimal(rec.thresholdPerKm)}/km",
                 metrics = listOf(
-                    Triple("📊", "${rec.acceptedCount}", "corridas"),
-                    Triple("💰", "R$ ${FormatUtils.decimal(rec.avgPricePerKm)}", "média/km"),
-                    Triple("⏱️", "${formatNetValue(rec.effectivePerHour)}/h", "líquido/hora")
+                    Triple("\uD83D\uDCCA", "${rec.acceptedCount} de ${sim.totalRides}", "corridas vi\u00E1veis"),
+                    Triple("\uD83D\uDCB0", "R\$ ${FormatUtils.decimal(rec.totalEarnings)}", "faturamento"),
+                    Triple("\u23F1\uFE0F", "${formatNetValue(rec.effectivePerHour)}/h", "l\u00EDquido/hora")
                 ),
                 delta = rec.netGainVsActual
             )
@@ -1235,7 +1770,7 @@ class AnalysisActivity : BaseActivity() {
         val rowPadV2 = dimenPx(R.dimen.card_padding).toInt() / 3
 
         val weights = listOf(0.18f, 0.15f, 0.20f, 0.20f, 0.27f)
-        val headers = listOf("Só aceito\nacima de", "Teria que\naceitar", "Ganho médio\npor km", "Ganho\npor hora", "Diferença")
+        val headers = listOf("S\u00F3 aceito\nacima de", "Corridas\nvi\u00E1veis", "Ganho m\u00E9dio\npor km", "Ganho\npor hora", "Diferen\u00E7a")
 
         val headerRow = LinearLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
@@ -1299,15 +1834,23 @@ class AnalysisActivity : BaseActivity() {
         // 4. Legenda explicativa
         addDivider(card)
 
-        addText(card, "📌 Como ler esta tabela:",
+        addText(card, "\uD83D\uDCA1 Como funciona:",
+            spFromRes(R.dimen.text_size_11), ctxColor(R.color.text_secondary), bold = true)
+
+        addText(card, "Em cada dia, o simulador calcula quantas corridas cabem na sua janela de trabalho (primeira \u00E0 \u00FAltima oferta do dia, desconsiderando pausas). Depois, para cada cen\u00E1rio, seleciona as melhores corridas (maior R\$/km) que voc\u00EA conseguiria fazer dentro desse tempo.",
+            spFromRes(R.dimen.text_size_10), ctxColor(R.color.text_tertiary))
+
+        addDivider(card)
+
+        addText(card, "\uD83D\uDCCB Entendendo a tabela:",
             spFromRes(R.dimen.text_size_11), ctxColor(R.color.text_secondary), bold = true)
 
         val legendTerms = listOf(
-            "🔹 \"Só aceito acima de\" → O valor mínimo que você decide aceitar por km",
-            "🔹 \"Teria que aceitar\" → Quantas corridas você aceitaria com esse filtro",
-            "🔹 \"Ganho médio por km\" → A média real do que você ganharia por km",
-            "🔹 \"Ganho por hora\" → Quanto sobraria por hora trabalhada",
-            "🔹 \"Diferença\" → Quanto você ganharia a mais ou a menos por dia"
+            "\uD83D\uDD39 \"S\u00F3 aceito acima de\" \u2192 O valor m\u00EDnimo que voc\u00EA decide aceitar por km",
+            "\uD83D\uDD39 \"Corridas vi\u00E1veis\" \u2192 Quantas corridas acima desse valor caberiam no seu hor\u00E1rio (respeitando o tempo m\u00E9dio de cada uma)",
+            "\uD83D\uDD39 \"Ganho m\u00E9dio por km\" \u2192 A m\u00E9dia real do que voc\u00EA ganharia por km nessas corridas",
+            "\uD83D\uDD39 \"Ganho por hora\" \u2192 Quanto sobraria por hora trabalhada j\u00E1 descontando o custo do carro",
+            "\uD83D\uDD39 \"Diferen\u00E7a\" \u2192 Quanto voc\u00EA ganharia a mais ou a menos comparado \u00E0 m\u00E9dia geral"
         )
         for (item in legendTerms) {
             addText(card, item, spFromRes(R.dimen.text_size_10), ctxColor(R.color.text_tertiary))
@@ -1677,4 +2220,5 @@ class AnalysisActivity : BaseActivity() {
         Calendar.SUNDAY -> "Domingo"
         else -> "?"
     }
+
 }

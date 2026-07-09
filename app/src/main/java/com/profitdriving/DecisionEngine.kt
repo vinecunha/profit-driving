@@ -4,26 +4,20 @@ import android.content.SharedPreferences
 
 object DecisionEngine {
 
-    const val MULTIPLIER_OK       = 1.0
-    const val MULTIPLIER_ANALISAR = 0.5
-    const val MULTIPLIER_NOK      = 0.0
-    const val MULTIPLIER_AUSENTE  = 0.7
-
     data class ParamScore(
         val name: String,
-        val weight: Int,
+        val rank: Int,
         val state: ParamState,
+        val score: Double,
         val value: Double?,
         val min: Double,
         val ideal: Double
     ) {
-        val points: Double get() = weight * when (state) {
-            ParamState.OK       -> MULTIPLIER_OK
-            ParamState.ANALISAR -> MULTIPLIER_ANALISAR
-            ParamState.NOK      -> MULTIPLIER_NOK
-            ParamState.AUSENTE  -> MULTIPLIER_AUSENTE
+        private val rankWeight: Double get() = when (rank) {
+            1 -> 4.0; 2 -> 3.0; 3 -> 2.0; 4 -> 1.0; else -> 0.0
         }
-        val maxPoints: Double get() = weight * MULTIPLIER_OK
+        val points: Double get() = score * rankWeight
+        val maxPoints: Double get() = 10.0 * rankWeight
     }
 
     enum class ParamState { OK, ANALISAR, NOK, AUSENTE }
@@ -43,10 +37,8 @@ object DecisionEngine {
     fun getDynamicThresholds(prefs: SharedPreferences, costPerKm: Double): DynamicThresholds {
         val userMinKm = prefs.getFloat(SettingsActivity.KEY_MIN_KM, 0f).toDouble()
         val userIdealKm = prefs.getFloat(SettingsActivity.KEY_IDEAL_KM, 0f).toDouble()
-
         val minKm = if (userMinKm > 0) userMinKm else costPerKm * 1.15
         val idealKm = if (userIdealKm > 0) userIdealKm else costPerKm * 1.50
-
         return DynamicThresholds(minKm, idealKm)
     }
 
@@ -66,19 +58,19 @@ object DecisionEngine {
         val minRating  = prefs.getFloat(SettingsActivity.KEY_MIN_RATING, 4.85f).toDouble()
         val idealRating= prefs.getFloat(SettingsActivity.KEY_IDEAL_RATING, 4.93f).toDouble()
 
-        val weightKm     = prefs.getInt(SettingsActivity.KEY_WEIGHT_KM, 5)
-        val weightHour   = prefs.getInt(SettingsActivity.KEY_WEIGHT_HOUR, 4)
-        val weightMin    = prefs.getInt(SettingsActivity.KEY_WEIGHT_MIN, 3)
-        val weightRating = prefs.getInt(SettingsActivity.KEY_WEIGHT_RATING, 2)
+        val rankKm     = prefs.getInt(SettingsActivity.KEY_RANK_KM, 1)
+        val rankHour   = prefs.getInt(SettingsActivity.KEY_RANK_HOUR, 2)
+        val rankMin    = prefs.getInt(SettingsActivity.KEY_RANK_MIN, 3)
+        val rankRating = prefs.getInt(SettingsActivity.KEY_RANK_RATING, 4)
 
         val thresholdAceitar  = prefs.getInt(SettingsActivity.KEY_THRESHOLD_ACEITAR, 80)
         val thresholdAnalisar = prefs.getInt(SettingsActivity.KEY_THRESHOLD_ANALISAR, 50)
 
         val params = listOf(
-            ParamScore("R$/km",   weightKm,     evaluateState(kmValue,     minKm,   idealKm),   kmValue,     minKm,   idealKm),
-            ParamScore("R$/h",    weightHour,   evaluateState(hourValue,   minHour, idealHour),  hourValue,   minHour, idealHour),
-            ParamScore("R$/min",  weightMin,    evaluateState(minValue,    minMin,  idealMin),   minValue,    minMin,  idealMin),
-            ParamScore("Nota",    weightRating, evaluateState(ratingValue, minRating, idealRating), ratingValue, minRating, idealRating)
+            ParamScore("R$/km",   rankKm,     evaluateState(kmValue,     minKm,   idealKm),   scoreForValue(kmValue,     minKm,   idealKm),   kmValue,     minKm,   idealKm),
+            ParamScore("R$/h",    rankHour,   evaluateState(hourValue,   minHour, idealHour),  scoreForValue(hourValue,   minHour, idealHour),  hourValue,   minHour, idealHour),
+            ParamScore("R$/min",  rankMin,    evaluateState(minValue,    minMin,  idealMin),   scoreForValue(minValue,    minMin,  idealMin),   minValue,    minMin,  idealMin),
+            ParamScore("Nota",    rankRating, evaluateState(ratingValue, minRating, idealRating), scoreForValue(ratingValue, minRating, idealRating), ratingValue, minRating, idealRating)
         )
 
         val totalPoints  = params.sumOf { it.points }
@@ -92,6 +84,15 @@ object DecisionEngine {
         }
 
         return DecisionResult(decision, scorePercent, totalPoints, maxPoints, params)
+    }
+
+    private fun scoreForValue(value: Double?, min: Double, ideal: Double): Double {
+        if (value == null) return 0.0
+        if (value >= ideal) return 10.0
+        if (value <= min) return 0.0
+        val range = ideal - min
+        if (range <= 0.0) return if (value >= min) 10.0 else 0.0
+        return ((value - min) / range) * 10.0
     }
 
     private fun evaluateState(value: Double?, min: Double, ideal: Double): ParamState {
@@ -111,15 +112,15 @@ object DecisionEngine {
     }
 
     fun decisionColor(decision: Decision): Int = when (decision) {
-        Decision.ACEITAR  -> AppColors.success  // success
-        Decision.ANALISAR -> AppColors.warning  // warning
-        Decision.RECUSAR  -> AppColors.error  // error
+        Decision.ACEITAR  -> AppColors.success
+        Decision.ANALISAR -> AppColors.warning
+        Decision.RECUSAR  -> AppColors.error
     }
 
     fun overlayDecisionColor(decision: Decision): Int = when (decision) {
-        Decision.ACEITAR  -> AppColors.metricGood  // overlay_success
-        Decision.ANALISAR -> AppColors.overlayWarning  // overlay_warning
-        Decision.RECUSAR  -> AppColors.metricBad  // overlay_error
+        Decision.ACEITAR  -> AppColors.metricGood
+        Decision.ANALISAR -> AppColors.overlayWarning
+        Decision.RECUSAR  -> AppColors.metricBad
     }
 
     fun decisionText(decision: Decision): String = when (decision) {

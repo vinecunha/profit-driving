@@ -140,4 +140,11 @@
     <string name="gnv_capacity_hint">Capacidade do cilindro em L</string>
     <string name="gnv_capacity_help_title">&#x1F4CF; Capacidade do GNV (Litros)</string>
     <string name="gnv_capacity_help_text">A capacidade do cilindro GNV é medida em litros (L) e está gravada na etiqueta do cilindro, no certificado de instalação ou no documento do veículo.\n\n⚠️ Atenção: A bomba do posto mede em m³ (metros cúbicos). O app usa LITROS para calcular seu consumo real.\n\n📌 Como encontrar:\n• Etiqueta do cilindro (gravada no corpo do cilindro)\n• Certificado de Instalação GNV (campo \"Capacidade\")\n• Vistoria GNV (campo \"Capacidade (L)\")\n\n💡 Dica: A capacidade é sempre em litros de água. Se seu veículo tiver 2 cilindros, some a capacidade de ambos.\n\nExemplo: 2 cilindros de 23L cada → 46L</string>
+
+    <!-- Data Export/Import -->
+    <string name="section_data">DADOS</string>
+    <string name="data_title">Exportar / Importar Dados</string>
+    <string name="data_subtitle">Exporte seu banco de dados para fazer backup ou migrar para outro aparelho</string>
+    <string name="action_export">&#x1F4E4; Exportar</string>
+    <string name="action_import">&#x1F4E5; Importar</string>
 </resources>

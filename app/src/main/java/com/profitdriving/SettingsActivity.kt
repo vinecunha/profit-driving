@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 import com.profitdriving.SecurePreferences
 import android.os.Build
 import android.os.Bundle
+import android.net.Uri
 import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
@@ -22,6 +23,8 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import android.widget.AdapterView
+import androidx.core.content.ContextCompat
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import com.profitdriving.accessibility.extractor.RawCardData
 import com.profitdriving.parser.App99CardParser
@@ -65,14 +68,19 @@ class SettingsActivity : BaseActivity() {
     private lateinit var btnShowHour: TextView
     private lateinit var btnShowMinute: TextView
     private lateinit var btnShowRating: TextView
-    private lateinit var seekWeightKm: SeekBar
-    private lateinit var tvWeightKmStars: TextView
-    private lateinit var seekWeightHour: SeekBar
-    private lateinit var tvWeightHourStars: TextView
-    private lateinit var seekWeightMin: SeekBar
-    private lateinit var tvWeightMinStars: TextView
-    private lateinit var seekWeightRating: SeekBar
-    private lateinit var tvWeightRatingStars: TextView
+    private lateinit var tvRankKm: TextView
+    private lateinit var btnRankKmUp: TextView
+    private lateinit var btnRankKmDown: TextView
+    private lateinit var tvRankHour: TextView
+    private lateinit var btnRankHourUp: TextView
+    private lateinit var btnRankHourDown: TextView
+    private lateinit var tvRankMin: TextView
+    private lateinit var btnRankMinUp: TextView
+    private lateinit var btnRankMinDown: TextView
+    private lateinit var tvRankRating: TextView
+    private lateinit var btnRankRatingUp: TextView
+    private lateinit var btnRankRatingDown: TextView
+    private lateinit var rankContainer: android.widget.LinearLayout
     private lateinit var seekThresholdAceitar: SeekBar
     private lateinit var tvThresholdAceitarLabel: TextView
     private var debounceJob: Job? = null
@@ -103,6 +111,44 @@ class SettingsActivity : BaseActivity() {
     private var activeProfile = WorkProfile.NORMAL
     private var isUpdatingFromProfile = false
 
+    private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri: Uri? ->
+        if (uri == null) return@registerForActivityResult
+        val exporter = DataExporter(this)
+        val result = exporter.export(uri)
+        Toast.makeText(this, if (result.success) result.message else "Falha: ${result.message}", Toast.LENGTH_LONG).show()
+    }
+
+    private val importLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri == null) return@registerForActivityResult
+        val takeFlags = android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+        contentResolver.takePersistableUriPermission(uri, takeFlags)
+
+        AlertDialog.Builder(this)
+            .setTitle("Importar Dados")
+            .setMessage("Deseja limpar os dados existentes antes de importar? Isso removerá todos os registros atuais do banco de dados.\n\nRecomendado apenas em instalação limpa (primeiro uso no aparelho).")
+            .setPositiveButton("Importar (manter existentes)") { _, _ ->
+                doImport(uri, clearExisting = false)
+            }
+            .setNeutralButton("Importar (substituir tudo)") { _, _ ->
+                AlertDialog.Builder(this)
+                    .setTitle("Confirmação")
+                    .setMessage("Tem certeza? TODOS os dados atuais serão apagados antes da importação. Essa ação NÃO pode ser desfeita.")
+                    .setPositiveButton("Sim, substituir") { _, _ ->
+                        doImport(uri, clearExisting = true)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun doImport(uri: Uri, clearExisting: Boolean) {
+        val exporter = DataExporter(this)
+        val result = exporter.import(uri, clearExisting)
+        Toast.makeText(this, if (result.success) result.message else "Falha: ${result.message}", Toast.LENGTH_LONG).show()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
@@ -110,6 +156,8 @@ class SettingsActivity : BaseActivity() {
         setupToolbar(title = "Par\u00e2metros", showBack = true, actionText = "\uD83D\uDCBE Salvar", actionListener = { saveValues() })
 
         prefs = SecurePreferences.get(this)
+
+        migrateWeightsToRanks()
 
         etMinKm = findViewById(R.id.etMinKm)
         etIdealKm = findViewById(R.id.etIdealKm)
@@ -132,14 +180,19 @@ class SettingsActivity : BaseActivity() {
         btnShowHour = findViewById(R.id.btnShowHour)
         btnShowMinute = findViewById(R.id.btnShowMinute)
         btnShowRating = findViewById(R.id.btnShowRating)
-        seekWeightKm = findViewById(R.id.seekWeightKm)
-        tvWeightKmStars = findViewById(R.id.tvWeightKmStars)
-        seekWeightHour = findViewById(R.id.seekWeightHour)
-        tvWeightHourStars = findViewById(R.id.tvWeightHourStars)
-        seekWeightMin = findViewById(R.id.seekWeightMin)
-        tvWeightMinStars = findViewById(R.id.tvWeightMinStars)
-        seekWeightRating = findViewById(R.id.seekWeightRating)
-        tvWeightRatingStars = findViewById(R.id.tvWeightRatingStars)
+        tvRankKm = findViewById(R.id.tvRankKm)
+        btnRankKmUp = findViewById(R.id.btnRankKmUp)
+        btnRankKmDown = findViewById(R.id.btnRankKmDown)
+        tvRankHour = findViewById(R.id.tvRankHour)
+        btnRankHourUp = findViewById(R.id.btnRankHourUp)
+        btnRankHourDown = findViewById(R.id.btnRankHourDown)
+        tvRankMin = findViewById(R.id.tvRankMin)
+        btnRankMinUp = findViewById(R.id.btnRankMinUp)
+        btnRankMinDown = findViewById(R.id.btnRankMinDown)
+        tvRankRating = findViewById(R.id.tvRankRating)
+        btnRankRatingUp = findViewById(R.id.btnRankRatingUp)
+        btnRankRatingDown = findViewById(R.id.btnRankRatingDown)
+        rankContainer = findViewById(R.id.rankContainer)
         seekThresholdAceitar = findViewById(R.id.seekThresholdAceitar)
         tvThresholdAceitarLabel = findViewById(R.id.tvThresholdAceitarLabel)
         seekThresholdAnalisar = findViewById(R.id.seekThresholdAnalisar)
@@ -243,21 +296,10 @@ class SettingsActivity : BaseActivity() {
             override fun onStopTrackingTouch(sb: SeekBar?) {}
         })
 
-        fun weightListener(seek: SeekBar, stars: TextView) {
-            seek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-                    val w = progress + 1
-                    stars.text = "\u2605".repeat(w) + "\u2606".repeat(5 - w)
-                    debouncedUpdatePreview()
-                }
-                override fun onStartTrackingTouch(sb: SeekBar?) {}
-                override fun onStopTrackingTouch(sb: SeekBar?) {}
-            })
-        }
-        weightListener(seekWeightKm, tvWeightKmStars)
-        weightListener(seekWeightHour, tvWeightHourStars)
-        weightListener(seekWeightMin, tvWeightMinStars)
-        weightListener(seekWeightRating, tvWeightRatingStars)
+        setupRankRow(tvRankKm, btnRankKmUp, btnRankKmDown, KEY_RANK_KM)
+        setupRankRow(tvRankHour, btnRankHourUp, btnRankHourDown, KEY_RANK_HOUR)
+        setupRankRow(tvRankMin, btnRankMinUp, btnRankMinDown, KEY_RANK_MIN)
+        setupRankRow(tvRankRating, btnRankRatingUp, btnRankRatingDown, KEY_RANK_RATING)
 
         seekThresholdAceitar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -328,6 +370,8 @@ class SettingsActivity : BaseActivity() {
         setupWorkProfileSelector()
         setupAnimationSelector()
         setupEventNotificationsSettings()
+        setupAppReadingSettings()
+        setupDataExportImport()
     }
 
     private fun showReprocessDialog() {
@@ -565,15 +609,7 @@ class SettingsActivity : BaseActivity() {
         applyMetric(btnShowMinute, showMinute)
         applyMetric(btnShowRating, showRating)
 
-        fun loadWeight(seek: SeekBar, stars: TextView, key: String, def: Int) {
-            val w = prefs.getInt(key, def)
-            seek.progress = w - 1
-            stars.text = "\u2605".repeat(w) + "\u2606".repeat(5 - w)
-        }
-        loadWeight(seekWeightKm, tvWeightKmStars, KEY_WEIGHT_KM, 5)
-        loadWeight(seekWeightHour, tvWeightHourStars, KEY_WEIGHT_HOUR, 4)
-        loadWeight(seekWeightMin, tvWeightMinStars, KEY_WEIGHT_MIN, 3)
-        loadWeight(seekWeightRating, tvWeightRatingStars, KEY_WEIGHT_RATING, 2)
+        loadRanks()
 
         val ta = prefs.getInt(KEY_THRESHOLD_ACEITAR, 80)
         seekThresholdAceitar.progress = ta - 50
@@ -585,7 +621,7 @@ class SettingsActivity : BaseActivity() {
         val pageSize = prefs.getInt(KEY_PAGE_SIZE, 100)
         selectPageSize(pageSize)
 
-        cardDurationSeconds = prefs.getInt(KEY_CARD_DURATION, 30)
+        cardDurationSeconds = prefs.getInt(KEY_CARD_DURATION, 15)
         seekCardDuration.progress = (cardDurationSeconds - 5) / 5
         tvCardDurationLabel.text = "Dura\u00e7\u00e3o do card: ${cardDurationSeconds}s"
 
@@ -650,10 +686,10 @@ class SettingsActivity : BaseActivity() {
             putBoolean(KEY_SHOW_HOUR, btnShowHour.isSelected)
             putBoolean(KEY_SHOW_MINUTE, btnShowMinute.isSelected)
             putBoolean(KEY_SHOW_RATING, btnShowRating.isSelected)
-            putInt(KEY_WEIGHT_KM, seekWeightKm.progress + 1)
-            putInt(KEY_WEIGHT_HOUR, seekWeightHour.progress + 1)
-            putInt(KEY_WEIGHT_MIN, seekWeightMin.progress + 1)
-            putInt(KEY_WEIGHT_RATING, seekWeightRating.progress + 1)
+            putInt(KEY_RANK_KM, getRank(KEY_RANK_KM))
+            putInt(KEY_RANK_HOUR, getRank(KEY_RANK_HOUR))
+            putInt(KEY_RANK_MIN, getRank(KEY_RANK_MIN))
+            putInt(KEY_RANK_RATING, getRank(KEY_RANK_RATING))
             putInt(KEY_THRESHOLD_ACEITAR, seekThresholdAceitar.progress + 50)
             putInt(KEY_THRESHOLD_ANALISAR, seekThresholdAnalisar.progress + 20)
             putInt(KEY_PAGE_SIZE, selectedPageSize)
@@ -702,10 +738,10 @@ class SettingsActivity : BaseActivity() {
             putFloat(KEY_IDEAL_MINUTE, parseBr(etIdealMinute.text.toString()) ?: 1.0f)
             putFloat(KEY_MIN_RATING, parseBr(etMinRating.text.toString()) ?: 4.85f)
             putFloat(KEY_IDEAL_RATING, parseBr(etIdealRating.text.toString()) ?: 4.93f)
-            putInt(KEY_WEIGHT_KM, seekWeightKm.progress + 1)
-            putInt(KEY_WEIGHT_HOUR, seekWeightHour.progress + 1)
-            putInt(KEY_WEIGHT_MIN, seekWeightMin.progress + 1)
-            putInt(KEY_WEIGHT_RATING, seekWeightRating.progress + 1)
+            putInt(KEY_RANK_KM, getRank(KEY_RANK_KM))
+            putInt(KEY_RANK_HOUR, getRank(KEY_RANK_HOUR))
+            putInt(KEY_RANK_MIN, getRank(KEY_RANK_MIN))
+            putInt(KEY_RANK_RATING, getRank(KEY_RANK_RATING))
             putInt(KEY_THRESHOLD_ACEITAR, seekThresholdAceitar.progress + 50)
             putInt(KEY_THRESHOLD_ANALISAR, seekThresholdAnalisar.progress + 20)
             apply()
@@ -724,14 +760,18 @@ class SettingsActivity : BaseActivity() {
         val minState = result.params[2].state
         val ratingState = result.params[3].state
 
-        pvKm.text = "R$/km: 3,20 \u2014 ${semaphoreEmoji(kmState)} ${stateLabel(kmState)}"
-        pvKm.setTextColor(DecisionEngine.stateColor(kmState))
-        pvHour.text = "R$/h: 45,00 \u2014 ${semaphoreEmoji(hourState)} ${stateLabel(hourState)}"
-        pvHour.setTextColor(DecisionEngine.stateColor(hourState))
-        pvMin.text = "R$/min: 0,75 \u2014 ${semaphoreEmoji(minState)} ${stateLabel(minState)}"
-        pvMin.setTextColor(DecisionEngine.stateColor(minState))
-        pvRating.text = "Nota: 4,70 \u2014 ${semaphoreEmoji(ratingState)} ${stateLabel(ratingState)}"
-        pvRating.setTextColor(DecisionEngine.stateColor(ratingState))
+        for (i in 0..3) {
+            val p = result.params[i]
+            val tv = when (i) { 0 -> pvKm; 1 -> pvHour; 2 -> pvMin; else -> pvRating }
+            val label = when (i) {
+                0 -> "R$/km: 3,20"
+                1 -> "R$/h: 45,00"
+                2 -> "R$/min: 0,75"
+                else -> "Nota: 4,70"
+            }
+            tv.text = "$label → ${"%.1f".format(p.score)}/10 (${p.rank}º · +${"%.0f".format(p.points)} pts)"
+            tv.setTextColor(DecisionEngine.stateColor(p.state))
+        }
 
         pvDecision.text = "${decisionEmoji(result.decision)} ${DecisionEngine.decisionText(result.decision)}"
         pvDecision.setTextColor(DecisionEngine.decisionColor(result.decision))
@@ -1097,6 +1137,131 @@ class SettingsActivity : BaseActivity() {
         """.trimIndent()
     }
 
+    private fun setupAppReadingSettings() {
+        val prefs = SecurePreferences.get(this)
+
+        val switchUber = findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.switchReadUber)
+        switchUber.isChecked = prefs.getBoolean(KEY_READ_UBER, true)
+        switchUber.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean(KEY_READ_UBER, isChecked).apply()
+            Toast.makeText(this, "Leitura Uber: ${if (isChecked) "Ativada" else "Desativada"}", Toast.LENGTH_SHORT).show()
+        }
+
+        val switchApp99 = findViewById<androidx.appcompat.widget.SwitchCompat>(R.id.switchReadApp99)
+        val tv99Subtitle = findViewById<TextView>(R.id.tvReadApp99Subtitle)
+        val apiOk = Build.VERSION.SDK_INT >= 34
+        if (!apiOk) {
+            switchApp99.isChecked = false
+            switchApp99.isEnabled = false
+            tv99Subtitle.text = "Indisponível (requer Android 14+)"
+            tv99Subtitle.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray))
+            prefs.edit().putBoolean(KEY_READ_APP99, false).apply()
+        } else {
+            switchApp99.isChecked = prefs.getBoolean(KEY_READ_APP99, true)
+            switchApp99.isEnabled = true
+            switchApp99.setOnCheckedChangeListener { _, isChecked ->
+                prefs.edit().putBoolean(KEY_READ_APP99, isChecked).apply()
+                Toast.makeText(this, "Leitura 99: ${if (isChecked) "Ativada" else "Desativada"}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun setupDataExportImport() {
+        findViewById<TextView>(R.id.btnExportData).setOnClickListener {
+            exportLauncher.launch("profit_driving_backup.json")
+        }
+        findViewById<TextView>(R.id.btnImportData).setOnClickListener {
+            importLauncher.launch(arrayOf("application/json", "*/*"))
+        }
+    }
+
+    private fun migrateWeightsToRanks() {
+        if (!prefs.contains(KEY_RANK_KM) && prefs.contains(KEY_WEIGHT_KM)) {
+            val metrics = listOf(
+                KEY_RANK_KM to prefs.getInt(KEY_WEIGHT_KM, 5),
+                KEY_RANK_HOUR to prefs.getInt(KEY_WEIGHT_HOUR, 4),
+                KEY_RANK_MIN to prefs.getInt(KEY_WEIGHT_MIN, 3),
+                KEY_RANK_RATING to prefs.getInt(KEY_WEIGHT_RATING, 2)
+            )
+            val sorted = metrics.sortedByDescending { it.second }
+            prefs.edit().apply {
+                sorted.forEachIndexed { i, (key, _) -> putInt(key, i + 1) }
+                apply()
+            }
+        }
+        val rankKeys = listOf(KEY_RANK_KM, KEY_RANK_HOUR, KEY_RANK_MIN, KEY_RANK_RATING)
+        for (rk in rankKeys) {
+            if (!prefs.contains(rk)) {
+                val defRank = when (rk) {
+                    KEY_RANK_KM -> 1; KEY_RANK_HOUR -> 2; KEY_RANK_MIN -> 3; else -> 4
+                }
+                prefs.edit().putInt(rk, defRank).apply()
+            }
+        }
+    }
+
+    private fun getRank(key: String): Int {
+        val tv = when (key) {
+            KEY_RANK_KM -> tvRankKm; KEY_RANK_HOUR -> tvRankHour
+            KEY_RANK_MIN -> tvRankMin; else -> tvRankRating
+        }
+        return tv.text.toString().replace("[^0-9]".toRegex(), "").toIntOrNull() ?: 1
+    }
+
+    private fun loadRanks() {
+        val rankKeys = listOf(KEY_RANK_KM, KEY_RANK_HOUR, KEY_RANK_MIN, KEY_RANK_RATING)
+        val views = listOf(tvRankKm, tvRankHour, tvRankMin, tvRankRating)
+        val upBts = listOf(btnRankKmUp, btnRankHourUp, btnRankMinUp, btnRankRatingUp)
+        val dnBts = listOf(btnRankKmDown, btnRankHourDown, btnRankMinDown, btnRankRatingDown)
+        val tags = listOf("km", "hour", "min", "rating")
+
+        for (i in 0..3) {
+            val r = prefs.getInt(rankKeys[i], i + 1)
+            views[i].text = "${r}º"
+            upBts[i].isEnabled = r > 1
+            dnBts[i].isEnabled = r < 4
+        }
+
+        // Reorder rows by rank (1º first, 4º last)
+        val children = (0 until rankContainer.childCount).map { rankContainer.getChildAt(it) }
+        val sorted = children.sortedBy { child ->
+            val tag = child.tag?.toString() ?: ""
+            val idx = tags.indexOf(tag)
+            if (idx < 0) 99 else prefs.getInt(rankKeys[idx], idx + 1)
+        }
+        for (pos in sorted.indices) {
+            if (rankContainer.getChildAt(pos) !== sorted[pos]) {
+                rankContainer.removeView(sorted[pos])
+                rankContainer.addView(sorted[pos], pos)
+            }
+        }
+    }
+
+    private fun setupRankRow(
+        tvRank: TextView, btnUp: TextView, btnDown: TextView, key: String
+    ) {
+        btnUp.setOnClickListener {
+            val current = prefs.getInt(key, 1)
+            if (current > 1) swapRanks(key, current, current - 1)
+        }
+        btnDown.setOnClickListener {
+            val current = prefs.getInt(key, 1)
+            if (current < 4) swapRanks(key, current, current + 1)
+        }
+    }
+
+    private fun swapRanks(changedKey: String, oldRank: Int, newRank: Int) {
+        val rankKeys = listOf(KEY_RANK_KM, KEY_RANK_HOUR, KEY_RANK_MIN, KEY_RANK_RATING)
+        val swappedKey = rankKeys.firstOrNull { prefs.getInt(it, 0) == newRank } ?: return
+        prefs.edit().apply {
+            putInt(changedKey, newRank)
+            putInt(swappedKey, oldRank)
+            apply()
+        }
+        loadRanks()
+        debouncedUpdatePreview()
+    }
+
     companion object {
         const val PREF_NAME = "profit_driving_prefs"
         const val KEY_MIN_KM = "min_km"
@@ -1137,6 +1302,11 @@ class SettingsActivity : BaseActivity() {
         const val KEY_WEIGHT_MIN    = "weight_min"
         const val KEY_WEIGHT_RATING = "weight_rating"
 
+        const val KEY_RANK_KM     = "rank_km"
+        const val KEY_RANK_HOUR   = "rank_hour"
+        const val KEY_RANK_MIN    = "rank_min"
+        const val KEY_RANK_RATING = "rank_rating"
+
         const val KEY_THRESHOLD_ACEITAR  = "threshold_aceitar"
         const val KEY_THRESHOLD_ANALISAR = "threshold_analisar"
         const val KEY_PAGE_SIZE = "page_size"
@@ -1146,5 +1316,8 @@ class SettingsActivity : BaseActivity() {
         const val DEFAULT_CARD_LAYOUT = "column"
         const val DEFAULT_CARD_POSITION = "left"
         const val DEFAULT_CARD_Y_PERCENT = 30
+
+        const val KEY_READ_UBER = "read_uber"
+        const val KEY_READ_APP99 = "read_app99"
     }
 }

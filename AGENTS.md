@@ -30,16 +30,63 @@
 - **DatabaseHelper.kt** — Added `getLastRide(): RideRecord?` method
 - **FloatingCardService.kt** — Added `SHOW_LAST_RIDE` action handler
 
+### OCR para 99: ML Kit → Tesseract (tess-two)
+- **build.gradle** — Substituiu `com.google.mlkit:text-recognition:16.0.0` por `com.rmtheis:tess-two:9.1.0`
+- **RideAccessibilityServiceV2.kt** —
+  - Removeu todos imports de ML Kit (`TextRecognition`, `InputImage`, `Tasks`, etc.)
+  - `captureAndProcess99Card()`: callback-based, screenshot → Tesseract → texto → `App99Extractor.createFromTexts()`
+  - `captureScreen()`: novo método simplificado para Uber (screenshot + save, sem OCR)
+  - SDK guard: `Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE` → early return
+- **App99Extractor.kt** — `extractWithOCR()` usando `TessBaseAPI` do tess-two, init com "por", extrai texto; `createFromTexts()` faz parsing do texto OCR
+- **Build compila** `compileDebugKotlin` → **SUCCESS**
+
+### Badge System: Círculos por App (Uber/99)
+- **Removido** `badge_app.xml` (rounded rect com `@color/primary`)
+- **Criado** `bg_99_circle.xml` — círculo amarelo (#FFDD00) para badge 99
+- **Criado** `bg_uber_circle.xml` — círculo preto (#000000) para badge Uber
+- **colors.xml** — Adicionado `app_99_text` (#000000) e `app_uber_text` (#FFFFFF)
+- **item_ride_card.xml** — Removeu `android:background` e `android:textColor` (agora dinâmico via código)
+- **item_my_day_ride.xml** — Mesma limpeza
+- **MainActivity.kt** (HistoryAdapter) — `setBackgroundColor()` → `setBackgroundResource()` + `setTextColor()`
+- **MyDayRideAdapter.kt** — Mesma mudança
+
+### 99 Icon: Cor e Paths
+- **ic_99.xml** — Fundo alterado de #FF6600 (laranja) para #FFDD00 (amarelo); "99" alterado de stroke branco para fill preto com paths simplificados
+- **colors.xml** — `app_99` atualizado de #FF6600 para #FFDD00
+
+### App Reading Toggles (Settings)
+- **SettingsActivity.kt** — Card "Leitura de Apps" com toggles Uber/99; toggle 99 disabled em API < 34
+- **activity_settings.xml** — Card com ImageView logos + SwitchCompat
+- **ic_99.xml** / **ic_uber.xml** — SVGs para os logos nos toggles
+- **RideAccessibilityServiceV2.kt** — `isAppReadingEnabled()` check antes de processar cada app
+
+### Database CREATE_TABLE Missing Columns
+- **DatabaseHelper.kt** — `CREATE_TABLE` estava faltando `pickup_address`, `dropoff_address`, `card_hash` (adicionados via migrações v12/v19, mas nunca incorporados ao schema inicial). Causava crash em instalação limpa: `no such column: dropoff_address` ao criar índice `idx_dropoff_address` em `onCreate()`.
+
+### DataExporter Import Fix (code 0 sqlite_ok)
+- **DataExporter.kt** — Fixed 3 runtime errors in `import()`:
+  1. **PRAGMAs via `execSQL`** → `rawQuery().close()` — `PRAGMA journal_mode = WAL` returns data (the journal string), `execSQL` calls `executeUpdateDelete()` which throws SQLiteException code 0. Changed all 3 PRAGMAs (`busy_timeout`, `journal_mode`, `foreign_keys`) to `rawQuery().close()`.
+  2. **Nullable values in `ContentValues.put(key, nullable)`** — All import methods (`importRides`, `importRefuels`, `importExpenses`, etc.) now use `cv.put(key, o.optXxx("k", default))` with non-null typed defaults (e.g. `o.optDouble("d", 0.0)` instead of `putOpt(o.optDoubleOrNull("d"))`). Avoids `Hashtable.put(Object, Object)` fallback on older ContentValues typed methods.
+  3. **Removed undefined `TABLE_RIDES_COLS` constants** — My previous edit referenced `TABLE_RIDES_COLS.size` etc. which don't exist; replaced with `ContentValues()` default constructor.
+- **Removed unused `ContentValues.putOpt` extension function** — All import functions now use explicit typed `put` calls.
+
 ## Key Files Modified
 - `app/src/main/res/values/themes.xml`
 - `app/src/main/res/layout/dialog_actions.xml`
 - `app/src/main/res/layout/item_ride_card.xml`
+- `app/src/main/res/layout/item_my_day_ride.xml`
 - `app/src/main/res/layout/activity_monthly_stats.xml`
 - `app/src/main/res/layout/activity_expenses.xml`
+- `app/src/main/res/layout/activity_settings.xml`
 - `app/src/main/res/values/strings.xml`
+- `app/src/main/res/values/colors.xml`
 - `app/src/main/res/drawable/bg_hero_card_dark.xml`
 - `app/src/main/res/drawable/bg_table_header.xml`
 - `app/src/main/res/drawable/bg_btn_add_outline.xml`
+- `app/src/main/res/drawable/bg_99_circle.xml` (new)
+- `app/src/main/res/drawable/bg_uber_circle.xml` (new)
+- `app/src/main/res/drawable/ic_99.xml` (rewritten)
+- `app/src/main/res/drawable/ic_uber.xml` (new)
 - `app/src/main/java/com/profitdriving/MyDayRideAdapter.kt`
 - `app/src/main/java/com/profitdriving/AddExpenseDialog.kt`
 - `app/src/main/java/com/profitdriving/ExpensesActivity.kt`
@@ -50,31 +97,12 @@
 - `app/src/main/java/com/profitdriving/DatabaseHelper.kt`
 - `app/src/main/java/com/profitdriving/PreferencesManager.kt`
 - `app/src/main/java/com/profitdriving/AnimationConstants.kt`
+- `app/src/main/java/com/profitdriving/MainActivity.kt`
+- `app/src/main/java/com/profitdriving/CaptureManager.kt`
 - `app/src/main/java/com/profitdriving/accessibility/RideAccessibilityServiceV2.kt`
+- `app/src/main/java/com/profitdriving/accessibility/extractor/App99Extractor.kt`
+- `app/src/main/java/com/profitdriving/accessibility/extractor/UberCardExtractor.kt`
+- `app/src/main/java/com/profitdriving/accessibility/extractor/CardType.kt`
+- `app/src/main/java/com/profitdriving/parser/App99CardParser.kt`
 - `app/src/main/java/com/profitdriving/models/WorkProfile.kt`
 - `app/src/main/java/com/profitdriving/WorkProfileCalculator.kt`
-
-## Completed Work
-- [x] ... (previous items)
-
-### Redesign Monthly Stats Screen
-- **activity_monthly_stats.xml** — Complete redesign with CardView cards, section labels (ANÁLISE MENSAL, DADOS BRUTOS), hero card for goal suggestion, table with header, design tokens (`card_padding`, `card_corner_radius`, `card_elevation`, `overlay_text_secondary`, etc.)
-- **bg_hero_card_dark.xml** — Drawable for hero card dark background
-- **bg_table_header.xml** — Drawable for table header background
-
-### Redesign Expenses Screen
-- **activity_expenses.xml** — Redesigned with hero card (fixed `tvTotalCostPerKm` contrast bug), CardView sections with subtitle + outline "+ Adicionar" buttons, section label, consistent design tokens
-- **bg_btn_add_outline.xml** — Drawable for outlined add button (transparent fill, border stroke, badge_corner_radius)
-
-### Modernized Floor Simulation Card
-- **AnalysisHelper.kt** — Replaced `FloorSimulationResult`/`FloorScenario` with `FloorSimulation`/`Scenario`; added `totalRides` field; rewrote `calculateFloorSimulation()` with percentile-based thresholds (P25, P50, P75, break-even, midpoints)
-- **AnalysisActivity.kt** — Rewrote `buildFloorSimulation()` with new layout: question header + status text, section label, highlight card with 3-metric row + delta, table with row backgrounds (success_bg/error_bg/transparent), legend with square icons, detailed footer; added `formatDelta()` and `getDeltaColor()` helper methods
-
-### Perfis de Trabalho (Dia Ruim / Normal / Dinâmica)
-- **models/WorkProfile.kt** — `enum class WorkProfile` with `BAD_DAY`, `NORMAL`, `DYNAMIC` entries and `prefKey`
-- **DatabaseHelper.kt** — Added `RideStats` data class, `getRideStats(sinceMs)` and `getRideStatsTop(sinceMs, topFraction)` methods (SQL aggregate queries)
-- **WorkProfileCalculator.kt** — `object` following `CostCalculator` pattern; `calculate(profile, db)` returns `ProfileValues` with min/ideal for km, hour, minute, rating; Bad Day = ~60-80% of avg with floor, Normal = avg × 1.3, Dynamic = top 25% rides × 0.85/1.0; fallbacks for <10 rides
-- **strings.xml** — Added 10 `profile_*` strings
-- **activity_settings.xml** — Added Card 0 with 3 pill buttons + description text, reusing existing CardView/pill pattern
-- **SettingsActivity.kt** — `setupWorkProfileSelector()` + `selectWorkProfile()` using same pill-toggle pattern as layout/position selectors; preenche campos via `WorkProfileCalculator` + `FormatUtils.decimal()`; mostra Toast com origem (dados reais vs padrão); não salva automaticamente; persiste `KEY_ACTIVE_PROFILE` em `saveValues()`/`loadValues()`
-

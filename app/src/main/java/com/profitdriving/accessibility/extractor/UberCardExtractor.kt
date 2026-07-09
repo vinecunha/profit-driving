@@ -1,18 +1,44 @@
 package com.profitdriving.accessibility.extractor
 
+import android.content.Context
+import android.graphics.Bitmap
 import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
 import com.profitdriving.L
+import com.googlecode.tesseract.android.TessBaseAPI
+import java.io.File
+import java.io.FileOutputStream
 import java.util.Locale
 
 object UberCardExtractor {
 
     private const val TAG = "UberCardExtractor"
 
-    fun extract(root: AccessibilityNodeInfo, pkg: String): RawCardData {
+    fun extract(root: AccessibilityNodeInfo, pkg: String): RawCardData? {
+        if (!pkg.contains("ubercab")) {
+            L.d(TAG, "Pacote não é Uber ($pkg), abortando")
+            return null
+        }
+
         val allTexts = mutableListOf<String>()
         collectTexts(root, allTexts)
         L.d(TAG, "Textos coletados (${allTexts.size}): ${allTexts.take(10)}")
+
+        // Se a árvore está completamente vazia (sem filhos, sem texto),
+        // não faz sentido gastar tempo com fallback/advanced techniques
+        if (allTexts.isEmpty() && root.childCount == 0) {
+            L.d(TAG, "Árvore vazia (childCount=0) — pulando fallback/advanced techniques")
+        } else {
+            // Fallback: se não encontrou textos via recursão, tentar busca por texto
+            if (allTexts.isEmpty()) {
+                tryFallbackByText(root, allTexts)
+            }
+
+            // Técnicas avançadas de acessibilidade para WebView
+            if (allTexts.isEmpty()) {
+                tryAdvancedAccessibility(root, allTexts)
+            }
+        }
 
         val cardType = detectCardType(allTexts, pkg)
         L.d(TAG, "CardType detectado: $cardType")
@@ -38,11 +64,138 @@ object UberCardExtractor {
         )
     }
 
-    private fun detectCardType(texts: List<String>, pkg: String): CardType {
-        if (pkg.contains("app99") || pkg.contains("taxis99")) {
-            return CardType.APP_99
+    private fun tryFallbackByText(root: AccessibilityNodeInfo, texts: MutableList<String>) {
+        L.d(TAG, "Nenhum texto via recursão — tentando findAccessibilityNodeInfosByText")
+        try {
+            val nodesWithR = root.findAccessibilityNodeInfosByText("R")
+            L.d(TAG, "findAccessibilityNodeInfosByText(\"R\") retornou ${nodesWithR?.size} nós")
+            nodesWithR?.forEach { node ->
+                if (node.text?.toString()?.isNotBlank() == true) {
+                    texts.add(node.text.toString())
+                }
+                if (node.contentDescription?.toString()?.isNotBlank() == true) {
+                    texts.add(node.contentDescription.toString())
+                }
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    @Suppress("DEPRECATION")
+                    node.recycle()
+                }
+            }
+            L.d(TAG, "Fallback coletou ${texts.size} textos adicionais")
+        } catch (e: Exception) {
+            L.e(TAG, "Fallback findAccessibilityNodeInfosByText falhou", e)
+        }
+    }
+
+    private fun tryAdvancedAccessibility(root: AccessibilityNodeInfo, texts: MutableList<String>) {
+        L.d(TAG, "Tentando técnicas avançadas de acessibilidade para WebView...")
+
+        // 1. Refresh root e re-coleta
+        root.refresh()
+        collectTexts(root, texts)
+        if (texts.isNotEmpty()) {
+            L.d(TAG, "Após refresh root: ${texts.size} textos")
+            return
         }
 
+        // 2. Tenta refresh em cada nó durante a travessia
+        collectTextsRefresh(root, texts)
+        if (texts.isNotEmpty()) {
+            L.d(TAG, "Após refresh por nó: ${texts.size} textos")
+            return
+        }
+
+        // 3. Busca nó WebView explicitamente e tenta extrair conteúdo
+        val wv = findWebViewNode(root)
+        if (wv != null) {
+            L.d(TAG, "Nó WebView encontrado — tentando extrair conteúdo...")
+            collectTexts(wv, texts)
+            if (texts.isEmpty()) {
+                collectTextsRefresh(wv, texts)
+            }
+            if (texts.isEmpty()) {
+                collectExtrasFromTree(wv, texts)
+            }
+            if (texts.isNotEmpty()) {
+                L.d(TAG, "WebView rendeu ${texts.size} textos")
+                return
+            }
+        }
+
+        // 4. Tenta coletar extras de toda a árvore
+        collectExtrasFromTree(root, texts)
+        if (texts.isNotEmpty()) {
+            L.d(TAG, "Extras renderam ${texts.size} textos")
+        }
+    }
+
+    private fun findWebViewNode(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+        val cn = node.className?.toString() ?: ""
+        if (cn.contains("WebView", ignoreCase = true) ||
+            cn.contains("chromium", ignoreCase = true) ||
+            cn.contains("WebContents", ignoreCase = true)) {
+            return node
+        }
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            val result = findWebViewNode(child)
+            if (result != null) {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    @Suppress("DEPRECATION")
+                    child.recycle()
+                }
+                return result
+            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                @Suppress("DEPRECATION")
+                child.recycle()
+            }
+        }
+        return null
+    }
+
+    private fun collectTextsRefresh(node: AccessibilityNodeInfo, list: MutableList<String>) {
+        node.refresh()
+        if (node.text?.toString()?.isNotBlank() == true) {
+            list.add(node.text.toString())
+        } else if (node.contentDescription?.toString()?.isNotBlank() == true) {
+            list.add(node.contentDescription.toString())
+        }
+        for (i in 0 until node.childCount) {
+            node.getChild(i)?.let { child ->
+                collectTextsRefresh(child, list)
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    @Suppress("DEPRECATION")
+                    child.recycle()
+                }
+            }
+        }
+    }
+
+    private fun collectExtrasFromTree(node: AccessibilityNodeInfo, list: MutableList<String>) {
+        try {
+            val extras = node.extras
+            if (extras != null && !extras.isEmpty()) {
+                for (key in extras.keySet()) {
+                    val value = extras.get(key)?.toString()
+                    if (value != null && value.isNotBlank() && value.length > 2) {
+                        list.add(value)
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+        for (i in 0 until node.childCount) {
+            node.getChild(i)?.let { child ->
+                collectExtrasFromTree(child, list)
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    @Suppress("DEPRECATION")
+                    child.recycle()
+                }
+            }
+        }
+    }
+
+    private fun detectCardType(texts: List<String>, pkg: String): CardType {
         val full = texts.joinToString(" ").lowercase(Locale.ROOT)
 
         // EXCLUSIVO: tem "exclusivo" no texto E botão "aceitar"
@@ -96,13 +249,12 @@ object UberCardExtractor {
 
     private fun findTripNode(texts: List<String>, cardType: CardType): String? {
         return when (cardType) {
-            CardType.RADAR -> {
-                texts.firstOrNull { VIAGEM_PATTERN.containsMatchIn(it) }
-            }
-            CardType.EXCLUSIVE, CardType.UNKNOWN -> {
-                texts.firstOrNull { VIAGEM_PATTERN.containsMatchIn(it) }
-            }
-            CardType.APP_99 -> {
+            CardType.RADAR,
+            CardType.EXCLUSIVE,
+            CardType.UNKNOWN,
+            CardType.APP_99,
+            CardType.APP_99_NEGOTIATE,
+            CardType.APP_99_PRIORITY -> {
                 texts.firstOrNull { VIAGEM_PATTERN.containsMatchIn(it) }
             }
         }
@@ -162,6 +314,8 @@ object UberCardExtractor {
     private fun collectTexts(node: AccessibilityNodeInfo, list: MutableList<String>) {
         if (node.text?.toString()?.isNotBlank() == true) {
             list.add(node.text.toString())
+        } else if (node.contentDescription?.toString()?.isNotBlank() == true) {
+            list.add(node.contentDescription.toString())
         }
         for (i in 0 until node.childCount) {
             node.getChild(i)?.let { child ->
@@ -199,6 +353,132 @@ object UberCardExtractor {
         """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do(?!\s+para\s+prioridade)""",
         RegexOption.IGNORE_CASE
     )
+
+    fun extractWithOCR(context: Context, bitmap: Bitmap): RawCardData? {
+        try {
+            L.d(TAG, "🔍 [UberOCR] UberCardExtractor.extractWithOCR() INICIADO")
+            if (!ensureTessData(context)) return null
+
+            val fractions = OCREnhancer.getCropFractions(bitmap.height)
+            L.d(TAG, "📐 [UberOCR] Altura=${bitmap.height}, tentando crops: $fractions")
+
+            val api = TessBaseAPI()
+            val initOk = api.init(context.cacheDir.absolutePath, "por")
+            if (!initOk) {
+                L.e(TAG, "❌ [UberOCR] TessBaseAPI.init() falhou!")
+                api.end()
+                return null
+            }
+            OCREnhancer.configureTesseract(api)
+
+            var bestLines: List<String>? = null
+            var bestText = ""
+            var bestFraction = 0f
+
+            var validCropCount = 0
+
+            for (fraction in fractions) {
+                val cropped = OCREnhancer.cropToCardRegion(bitmap, fraction)
+                val enhanced = OCREnhancer.preprocessForOCR(cropped)
+                if (cropped !== bitmap) cropped.recycle()
+
+                val swBitmap = enhanced.copy(Bitmap.Config.ARGB_8888, false)
+                api.setImage(swBitmap)
+                val text = api.utF8Text
+                swBitmap.recycle()
+                if (enhanced !== cropped) enhanced.recycle()
+
+                if (text.isBlank()) {
+                    L.d(TAG, "📐 [UberOCR] Crop ${fraction}x: blank")
+                    continue
+                }
+
+                val lines = text.lines().map { it.trim() }.filter { it.isNotEmpty() }.toMutableList()
+                val filtered = OCREnhancer.filterCardLines(lines)
+
+                if (bestLines == null) {
+                    bestLines = filtered
+                    bestText = text
+                    bestFraction = fraction
+                }
+
+                if (OCREnhancer.hasCardData(filtered)) {
+                    L.d(TAG, "✅ [UberOCR] Crop ${fraction}x: ${lines.size}→${filtered.size} linhas, dados OK")
+                    validCropCount++
+                    if (filtered.size > (bestLines?.size ?: 0)) {
+                        bestLines = filtered
+                        bestText = text
+                        bestFraction = fraction
+                    }
+                } else {
+                    L.d(TAG, "📐 [UberOCR] Crop ${fraction}x: ${lines.size}→${filtered.size} linhas, dados insuficientes")
+                }
+            }
+
+            api.end()
+
+            if (bestLines == null || bestLines.isEmpty()) {
+                L.w(TAG, "❌ [UberOCR] Nenhum crop encontrou dados do card")
+                OCREnhancer.saveDiagnosticData(context, "Uber", bitmap, bestText, emptyList(), "no card data found")
+                return null
+            }
+
+            if (!OCREnhancer.hasCardData(bestLines)) {
+                L.w(TAG, "⚠️ [UberOCR] Crop ${bestFraction}x: apenas ${bestLines.size} linhas, dados podem estar incompletos")
+                OCREnhancer.saveDiagnosticData(context, "Uber", bitmap, bestText, bestLines, "insufficient card data")
+            } else {
+                L.d(TAG, "✅ [UberOCR] Melhor crop ${bestFraction}x: ${bestLines.size} linhas")
+            }
+
+            val fixed = OCREnhancer.fixOCRDistances(bestLines.toMutableList())
+            L.d(TAG, "📝 [UberOCR] ${fixed.size} linhas após correção de distâncias")
+
+            L.d(TAG, "📊 [UberOCR] $validCropCount/${fractions.size} crops com dados válidos")
+            return createFromTexts(fixed, validCropCount)
+        } catch (e: Exception) {
+            L.e(TAG, "❌ [UberOCR] extractWithOCR crashou: ${e.message}", e)
+            return null
+        }
+    }
+
+    fun createFromTexts(texts: List<String>, validCropCount: Int = 0): RawCardData {
+        val cardType = detectCardType(texts, "ubercab")
+        return RawCardData(
+            cardType = cardType,
+            valueNode = findValueNode(texts),
+            pickupNode = findPickupNode(texts),
+            tripNode = findTripNode(texts, cardType),
+            ratingNode = findRatingNode(texts),
+            serviceNode = findServiceNode(texts),
+            bonusNodes = findBonusNodes(texts),
+            acceptNode = findAcceptNode(texts),
+            rawTexts = texts,
+            validCropCount = validCropCount
+        )
+    }
+
+    private fun ensureTessData(context: Context): Boolean {
+        try {
+            val tessDir = File(context.cacheDir, "tessdata")
+            val traineddata = File(tessDir, "por.traineddata")
+            if (traineddata.exists()) {
+                L.d(TAG, "📁 [UberOCR] por.traineddata existe: ${traineddata.length()} bytes")
+                return true
+            }
+            L.d(TAG, "📁 [UberOCR] por.traineddata não encontrado — copiando de assets...")
+            tessDir.mkdirs()
+            context.assets.open("tessdata/por.traineddata").use { input ->
+                FileOutputStream(traineddata).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            L.d(TAG, "✅ [UberOCR] por.traineddata copiado de assets (${traineddata.length()} bytes)")
+            return true
+        } catch (e: Exception) {
+            L.e(TAG, "❌ [UberOCR] Falha ao extrair traineddata: ${e.message}")
+            return false
+        }
+    }
 
     private val SERVICE_TYPE_LIST = listOf(
         "uberx" to "UberX",

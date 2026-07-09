@@ -626,6 +626,10 @@ class MainActivity : BaseActivity() {
                     openPrivacyPolicy()
                     drawerLayout.closeDrawers()
                 }
+                R.id.nav_captures -> {
+                    startActivity(Intent(this, CaptureHistoryActivity::class.java))
+                    drawerLayout.closeDrawers()
+                }
             }
             true
         }
@@ -731,6 +735,7 @@ class HistoryAdapter(
         val layoutServiceBadge: View = view.findViewById(R.id.layoutServiceBadge)
         val ivServiceTypeIcon: ImageView = view.findViewById(R.id.tvServiceTypeIcon)
         val tvServiceType: TextView = view.findViewById(R.id.tvServiceType)
+        val tvAppBadge: TextView = view.findViewById(R.id.tvAppBadge)
         val tvPrice: TextView = view.findViewById(R.id.tvPrice)
         val tvRatingText: TextView = view.findViewById(R.id.tvRatingText)
         val tvPricePerKm: TextView = view.findViewById(R.id.tvPricePerKm)
@@ -788,6 +793,32 @@ class HistoryAdapter(
 
         val serviceType = r.serviceType ?: r.appName
         vh.tvServiceType.text = serviceType
+
+        // Badge do app (Uber / 99)
+        val appName = r.appName ?: "Uber"
+        when {
+            appName.equals("99", ignoreCase = true) -> {
+                vh.tvAppBadge.text = "99"
+                vh.tvAppBadge.setBackgroundResource(R.drawable.bg_99_circle)
+                vh.tvAppBadge.setTextColor(
+                    androidx.core.content.ContextCompat.getColor(
+                        vh.itemView.context, R.color.app_99_text
+                    )
+                )
+                vh.tvAppBadge.visibility = View.VISIBLE
+            }
+            appName.equals("Uber", ignoreCase = true) -> {
+                vh.tvAppBadge.text = "Uber"
+                vh.tvAppBadge.setBackgroundResource(R.drawable.bg_uber_circle)
+                vh.tvAppBadge.setTextColor(
+                    androidx.core.content.ContextCompat.getColor(
+                        vh.itemView.context, R.color.app_uber_text
+                    )
+                )
+                vh.tvAppBadge.visibility = View.VISIBLE
+            }
+            else -> vh.tvAppBadge.visibility = View.GONE
+        }
 
         val iconRes = when {
             r.serviceType == null -> R.drawable.ic_ride_generic

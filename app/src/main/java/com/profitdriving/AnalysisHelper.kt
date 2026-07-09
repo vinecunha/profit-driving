@@ -1,6 +1,7 @@
 package com.profitdriving
 
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 data class BonusImpact(
@@ -83,7 +84,9 @@ data class DailyProjection(
     val remaining: Double,
     val totalPauseHours: Double = 0.0,
     val idleTimePercent: Double = 0.0,
-    val estimatedActiveHours: Double = 0.0
+    val estimatedActiveHours: Double = 0.0,
+    val firstRideTime: String = "",
+    val lastRideTime: String = "",
 )
 
 data class WeekdayRankItem(
@@ -95,6 +98,64 @@ data class WeekdayRankItem(
     val avgPricePerKm: Double,
     val barFraction: Float,
     val position: Int
+)
+
+data class ScoreTrendDay(
+    val dayLabel: String,
+    val avgScore: Double,
+    val rideCount: Int,
+    val goodPercent: Double,
+    val barFraction: Float
+)
+
+data class StopStats(
+    val avgValue: Double,
+    val avgPricePerKm: Double,
+    val avgPricePerHour: Double,
+    val avgDistance: Double,
+    val avgTime: Int,
+    val count: Int
+)
+
+data class MultipleStopsImpact(
+    val withStops: StopStats,
+    val withoutStops: StopStats,
+    val totalWithStops: Int,
+    val totalWithoutStops: Int
+)
+
+data class RangeStat(
+    val label: String,
+    val count: Int,
+    val avgValue: Double,
+    val avgPricePerKm: Double,
+    val percentOfTotal: Double
+)
+
+data class RejectionPatterns(
+    val byValue: List<RangeStat>,
+    val byDistance: List<RangeStat>,
+    val byHour: List<RangeStat>,
+    val totalLost: Int,
+    val totalLostValue: Double
+)
+
+data class ServiceTypeStats(
+    val serviceType: String,
+    val offeredCount: Int,
+    val acceptedCount: Int,
+    val acceptanceRate: Double,
+    val totalEarnings: Double,
+    val avgPricePerKm: Double,
+    val avgPricePerHour: Double,
+    val avgRating: Double,
+    val goodPercent: Double,
+    val lostCount: Int,
+    val avgLostValue: Double,
+    val dynamicPercent: Double,
+    val priorityPercent: Double,
+    val bestHour: String,
+    val earningsPercentOfTotal: Double
 )
 
 data class AnalysisResultV2(
@@ -129,7 +190,11 @@ data class AnalysisResultV2(
     val previousPeriodEarnings: Double = 0.0,
     val previousPeriodRides: Int = 0,
     val floorSimulation: FloorSimulation? = null,
-    val breakevenAnalysis: BreakevenAnalysisResult? = null
+    val breakevenAnalysis: BreakevenAnalysisResult? = null,
+    val scoreTrend: List<ScoreTrendDay> = emptyList(),
+    val multipleStopsImpact: MultipleStopsImpact? = null,
+    val rejectionPatterns: RejectionPatterns? = null,
+    val serviceTypes: List<ServiceTypeStats> = emptyList()
 )
 
 object AnalysisHelperV2 {
@@ -345,6 +410,14 @@ object AnalysisHelperV2 {
             costPerKm = costPerKm,
         )
 
+        val scoreTrend = calculateScoreTrend(accepted, dailyRidesMap)
+
+        val multipleStopsImpact = calculateMultipleStopsImpact(accepted, dailyRidesMap)
+
+        val rejectionPatterns = calculateRejectionPatterns(offered, accepted)
+
+        val serviceTypes = calculateServiceTypeStats(offered, accepted, dailyRidesMap, totalEarnings)
+
         return AnalysisResultV2(
             offeredCount = offeredCount,
             acceptedCount = acceptedCount,
@@ -375,7 +448,11 @@ object AnalysisHelperV2 {
             totalCost = totalCost,
             profitMargin = profitMargin,
             floorSimulation = floorSimulation,
-            breakevenAnalysis = breakevenAnalysis
+            breakevenAnalysis = breakevenAnalysis,
+            scoreTrend = scoreTrend,
+            multipleStopsImpact = multipleStopsImpact,
+            rejectionPatterns = rejectionPatterns,
+            serviceTypes = serviceTypes
         )
     }
 
@@ -658,6 +735,10 @@ object AnalysisHelperV2 {
         val estimatedActiveHours = hoursWorked
         val idleTimePercent = if (hoursWorked > 0) (totalPauseHours / (hoursWorked + totalPauseHours)) * 100 else 0.0
 
+        val timeFormat = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+        val firstTime = firstRideTimestamp?.let { timeFormat.format(Date(it)) } ?: ""
+        val lastTime = lastRideTimestamp?.let { timeFormat.format(Date(it)) } ?: ""
+
         return DailyProjection(
             currentEarnings = currentEarnings,
             completedRides = completedRides,
@@ -669,7 +750,9 @@ object AnalysisHelperV2 {
             remaining = remaining,
             totalPauseHours = totalPauseHours,
             idleTimePercent = idleTimePercent,
-            estimatedActiveHours = estimatedActiveHours
+            estimatedActiveHours = estimatedActiveHours,
+            firstRideTime = firstTime,
+            lastRideTime = lastTime,
         )
     }
 
@@ -731,11 +814,11 @@ object AnalysisHelperV2 {
         return total
     }
 
-    private fun hasPriorityBonus(ride: RideRecord): Boolean =
+    internal fun hasPriorityBonus(ride: RideRecord): Boolean =
         (ride.priorityBonus != null && ride.priorityBonus > 0) ||
         (ride.bonusAmount != null && ride.bonusAmount > 0)
 
-    private fun hasDynamicBonus(ride: RideRecord): Boolean =
+    internal fun hasDynamicBonus(ride: RideRecord): Boolean =
         ride.dynamicBonus != null && ride.dynamicBonus > 0
 
     fun getHourOfDay(timestamp: Long): Int =
@@ -812,44 +895,92 @@ fun calculateFloorSimulation(
         p75
     ).distinct().sorted()
 
-    val totalMinutes = rides.sumOf { it.timeMin ?: 0 }
-    val totalHours = totalMinutes / 60.0
-    val rejectedTime = rides.filter { it.pricePerKm != null && it.pricePerKm!! < thresholds.first() }
-        .sumOf { it.timeMin ?: 0 } / 60.0
-    val totalShiftHours = totalHours + rejectedTime
+    // --- Time-aware realistic projection ---
+    val cal = Calendar.getInstance()
+
+    // Group offered rides by day
+    val byDay: Map<String, List<RideRecord>> = rides.groupBy { ride ->
+        cal.timeInMillis = ride.timestamp
+        "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.MONTH)}-${cal.get(Calendar.DAY_OF_MONTH)}"
+    }
+
+    // For each day, calculate online time (window minus pauses) and avg ride duration
+    data class DayInfo(
+        val key: String,
+        val offered: List<RideRecord>,
+        val onlineMinutes: Long,
+        val avgRideTimeMin: Double,
+    )
+
+    val daysInfo = byDay.map { (key, dayOffered) ->
+        val sorted = dayOffered.sortedBy { it.timestamp }
+
+        // Janela total (primeira à última oferta)
+        val windowMinutes = (sorted.last().timestamp - sorted.first().timestamp) / 60_000L
+
+        // Descontar pausas > 60 min entre ofertas consecutivas
+        var pauseMinutes = 0L
+        for (i in 1 until sorted.size) {
+            val gap = (sorted[i].timestamp - sorted[i - 1].timestamp) / 60_000L
+            if (gap > 60) pauseMinutes += gap
+        }
+        val onlineMinutes = (windowMinutes - pauseMinutes).coerceAtLeast(30L)
+
+        // Duração média das corridas deste dia
+        val times = sorted.mapNotNull { it.timeMin }.filter { it > 0 }
+        val avgTime = if (times.isNotEmpty()) times.average().coerceIn(10.0, 120.0) else 30.0
+
+        DayInfo(key, dayOffered, onlineMinutes, avgTime)
+    }
 
     val scenarios = thresholds.map { threshold ->
-        val accepted = rides.filter { r ->
-            val ppk = r.pricePerKm ?: 0.0
-            ppk >= threshold
+        var totalEarnings = 0.0
+        var totalKm = 0.0
+        var totalAccepted = 0
+
+        for (day in daysInfo) {
+            val eligible = day.offered
+                .filter { (it.pricePerKm ?: 0.0) >= threshold }
+                .sortedByDescending { it.pricePerKm }
+
+            if (eligible.isEmpty()) continue
+
+            val maxPerDay = (day.onlineMinutes / day.avgRideTimeMin).toInt().coerceIn(1, 50)
+            val realisticCount = eligible.size.coerceAtMost(maxPerDay)
+            val selected = eligible.take(realisticCount)
+
+            totalAccepted += selected.size
+            totalEarnings += selected.sumOf { it.value ?: 0.0 }
+            totalKm += selected.sumOf { it.distanceKm ?: 0.0 }
         }
-        val earnings = accepted.sumOf { it.value ?: 0.0 }
-        val km = accepted.sumOf { it.distanceKm ?: 0.0 }
-        val avgPricePerKm = if (km > 0) earnings / km else 0.0
-        val netEarnings = earnings - km * costPerKm
+
+        val avgPricePerKm = if (totalKm > 0) totalEarnings / totalKm else 0.0
+        val netEarnings = totalEarnings - totalKm * costPerKm
+        val totalShiftMinutes = daysInfo.sumOf { it.onlineMinutes }
+        val totalShiftHours = totalShiftMinutes / 60.0
         val effectivePerHour = if (totalShiftHours > 0) netEarnings / totalShiftHours else 0.0
         val netGainVsActual = avgPricePerKm - pricesPerKm.average()
 
         Scenario(
             thresholdPerKm = threshold,
-            acceptedCount = accepted.size,
+            acceptedCount = totalAccepted,
             avgPricePerKm = avgPricePerKm,
             effectivePerHour = effectivePerHour,
             netGainVsActual = netGainVsActual,
-            avgPricePerHour = if (totalShiftHours > 0) earnings / totalShiftHours else 0.0,
-            totalEarnings = earnings,
-            totalKm = km,
+            avgPricePerHour = if (totalShiftHours > 0) totalEarnings / totalShiftHours else 0.0,
+            totalEarnings = totalEarnings,
+            totalKm = totalKm,
         )
     }
 
-    val best = scenarios.maxByOrNull { it.thresholdPerKm }
+    val best = scenarios.maxByOrNull { it.effectivePerHour }
     val recommended = best?.thresholdPerKm ?: p75
 
     return FloorSimulation(
         scenarios = scenarios,
         recommendedThreshold = recommended,
         breakEvenKm = costPerKm,
-        totalRides = rides.size
+        totalRides = rides.size,
     )
 }
 
@@ -931,6 +1062,236 @@ fun calculateBreakevenAnalysis(
         pctAbove = if (rides.isEmpty()) 0.0 else above.size.toDouble() / rides.size * 100,
     )
 }
+
+fun calculateScoreTrend(
+    accepted: List<RideRecord>,
+    dailyRidesMap: Map<Long, DailyRide>
+): List<ScoreTrendDay> {
+    if (accepted.size < 3) return emptyList()
+
+    val byDay = accepted.groupBy {
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = it.timestamp
+        "${cal.get(Calendar.DAY_OF_MONTH).let { if (it < 10) "0$it" else "$it" }}/${(cal.get(Calendar.MONTH) + 1).let { if (it < 10) "0$it" else "$it" }}"
+    }
+
+    val maxScore = byDay.maxOfOrNull { (_, rides) ->
+        rides.mapNotNull { it.scorePercent }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+    }?.coerceAtLeast(0.01) ?: 1.0
+
+    return byDay.entries.map { (day, rides) ->
+        val scores = rides.mapNotNull { it.scorePercent }
+        val avgScore = if (scores.isNotEmpty()) scores.average() else 0.0
+        val goodCount = scores.count { it >= 80 }
+        ScoreTrendDay(
+            dayLabel = day,
+            avgScore = avgScore,
+            rideCount = rides.size,
+            goodPercent = if (scores.isNotEmpty()) goodCount.toDouble() / scores.size * 100 else 0.0,
+            barFraction = (avgScore / maxScore).toFloat()
+        )
+    }.sortedBy { it.dayLabel }
+}
+
+fun calculateMultipleStopsImpact(
+    accepted: List<RideRecord>,
+    dailyRidesMap: Map<Long, DailyRide>
+): MultipleStopsImpact? {
+    val withStops = accepted.filter { it.hasMultipleStops }
+    val withoutStops = accepted.filter { !it.hasMultipleStops }
+
+    if (withStops.isEmpty() || withoutStops.isEmpty()) return null
+
+    fun calcStats(rides: List<RideRecord>): StopStats {
+        val values = rides.mapNotNull { ride ->
+            val daily = dailyRidesMap[ride.id]
+            daily?.finalValue ?: ride.value
+        }
+        val distances = rides.mapNotNull { it.distanceKm }
+        val times = rides.mapNotNull { it.timeMin }
+        return StopStats(
+            avgValue = if (values.isNotEmpty()) values.average() else 0.0,
+            avgPricePerKm = rides.mapNotNull { ride ->
+                val daily = dailyRidesMap[ride.id]
+                val v = daily?.finalValue ?: ride.value ?: return@mapNotNull null
+                val d = ride.distanceKm ?: return@mapNotNull null
+                if (d > 0) v / d else null
+            }.takeIf { it.isNotEmpty() }?.average() ?: 0.0,
+            avgPricePerHour = rides.mapNotNull { ride ->
+                val daily = dailyRidesMap[ride.id]
+                val v = daily?.finalValue ?: ride.value ?: return@mapNotNull null
+                val t = ride.timeMin ?: return@mapNotNull null
+                if (t > 0) v / (t / 60.0) else null
+            }.takeIf { it.isNotEmpty() }?.average() ?: 0.0,
+            avgDistance = if (distances.isNotEmpty()) distances.average() else 0.0,
+            avgTime = if (times.isNotEmpty()) times.average().toInt() else 0,
+            count = rides.size
+        )
+    }
+
+    return MultipleStopsImpact(
+        withStops = calcStats(withStops),
+        withoutStops = calcStats(withoutStops),
+        totalWithStops = withStops.size,
+        totalWithoutStops = withoutStops.size
+    )
+}
+
+fun calculateRejectionPatterns(
+    offered: List<RideRecord>,
+    accepted: List<RideRecord>
+): RejectionPatterns {
+    val acceptedIds = accepted.map { it.id }.toSet()
+    val lost = offered.filter { it.id !in acceptedIds }
+    val totalLost = lost.size
+    val totalLostValue = lost.mapNotNull { it.value }.sum()
+
+    if (lost.isEmpty()) return RejectionPatterns(emptyList(), emptyList(), emptyList(), 0, 0.0)
+
+    fun calcRangeStats(
+        items: List<RideRecord>,
+        groupFn: (RideRecord) -> String,
+        sortKey: (Map.Entry<String, List<RideRecord>>) -> Int
+    ): List<RangeStat> {
+        val grouped = items.groupBy(groupFn)
+        return grouped.entries.sortedBy(sortKey).map { (label, rides) ->
+            RangeStat(
+                label = label,
+                count = rides.size,
+                avgValue = rides.mapNotNull { it.value }.takeIf { it.isNotEmpty() }?.average() ?: 0.0,
+                avgPricePerKm = rides.mapNotNull { it.pricePerKm }.takeIf { it.isNotEmpty() }?.average() ?: 0.0,
+                percentOfTotal = rides.size.toDouble() / totalLost * 100
+            )
+        }
+    }
+
+    val byValue = calcRangeStats(lost, { ride ->
+        val v = ride.value ?: 0.0
+        when {
+            v < 10 -> "< R\$10"
+            v < 20 -> "R\$10-20"
+            v < 30 -> "R\$20-30"
+            v < 50 -> "R\$30-50"
+            else -> "R\$50+"
+        }
+    }) { entry ->
+        val order = listOf("< R\$10", "R\$10-20", "R\$20-30", "R\$30-50", "R\$50+")
+        order.indexOf(entry.key).let { if (it < 0) Int.MAX_VALUE else it }
+    }
+
+    val byDistance = calcRangeStats(lost, { ride ->
+        val d = ride.distanceKm ?: 0.0
+        when {
+            d <= 0 -> "0 km"
+            d < 3 -> "< 3 km"
+            d < 8 -> "3-8 km"
+            d < 15 -> "8-15 km"
+            else -> "15+ km"
+        }
+    }) { entry ->
+        val order = listOf("0 km", "< 3 km", "3-8 km", "8-15 km", "15+ km")
+        order.indexOf(entry.key).let { if (it < 0) Int.MAX_VALUE else it }
+    }
+
+    val byHour = calcRangeStats(lost, { ride ->
+        val h = AnalysisHelperV2.getHourOfDay(ride.timestamp)
+        when (h) {
+            in 0..5 -> "Madrugada"
+            in 6..11 -> "Manhã"
+            in 12..17 -> "Tarde"
+            else -> "Noite"
+        }
+    }) { entry ->
+        val order = listOf("Madrugada", "Manhã", "Tarde", "Noite")
+        order.indexOf(entry.key).let { if (it < 0) Int.MAX_VALUE else it }
+    }
+
+    return RejectionPatterns(
+        byValue = byValue,
+        byDistance = byDistance,
+        byHour = byHour,
+        totalLost = totalLost,
+        totalLostValue = totalLostValue
+    )
+}
+
+fun AnalysisHelperV2.calculateServiceTypeStats(
+    offered: List<RideRecord>,
+    accepted: List<RideRecord>,
+    dailyRidesMap: Map<Long, DailyRide>,
+    totalEarnings: Double
+): List<ServiceTypeStats> {
+    val acceptedIds = accepted.map { it.id }.toSet()
+    val byType = offered.groupBy { if (it.serviceType.isNullOrBlank()) "UberX" else it.serviceType!! }
+        val typePriority = listOf("UberX", "Comfort", "Black", "Pop", "99Pop", "99Top", "99Black", "Moto", "Entrega", "Flash")
+
+        return byType.entries.sortedBy { (key, _) ->
+            val idx = typePriority.indexOf(key)
+            if (idx >= 0) idx else Int.MAX_VALUE
+        }.map { (type, rides) ->
+            val acceptedRides = rides.filter { it.id in acceptedIds }
+            val acceptedCount = acceptedRides.size
+            val offeredCount = rides.size
+            val acceptanceRate = if (offeredCount > 0) acceptedCount.toDouble() / offeredCount * 100 else 0.0
+
+            val totalEarningsType = acceptedRides.sumOf { ride ->
+                val daily = dailyRidesMap[ride.id]
+                daily?.finalValue ?: ride.value ?: 0.0
+            }
+
+            val avgPpk = acceptedRides.mapNotNull { ride ->
+                val daily = dailyRidesMap[ride.id]
+                val v = daily?.finalValue ?: ride.value ?: return@mapNotNull null
+                val d = ride.distanceKm ?: return@mapNotNull null
+                if (d > 0) v / d else null
+            }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+
+            val avgPph = acceptedRides.mapNotNull { ride ->
+                val daily = dailyRidesMap[ride.id]
+                val v = daily?.finalValue ?: ride.value ?: return@mapNotNull null
+                val t = ride.timeMin ?: return@mapNotNull null
+                if (t > 0) v / (t / 60.0) else null
+            }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+
+            val avgRating = acceptedRides.mapNotNull { it.rating }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+
+            val scored = rides.filter { it.scorePercent != null }
+            val goodCount = scored.count { it.scorePercent!! >= 80 }
+            val goodPct = if (scored.isNotEmpty()) goodCount.toDouble() / scored.size * 100 else 0.0
+
+            val lostRides = rides.filter { it.id !in acceptedIds }
+            val lostValue = lostRides.mapNotNull { it.value }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+
+            val dynCount = rides.count { AnalysisHelperV2.hasDynamicBonus(it) }
+            val dynPct = if (offeredCount > 0) dynCount.toDouble() / offeredCount * 100 else 0.0
+
+            val priCount = rides.count { AnalysisHelperV2.hasPriorityBonus(it) }
+            val priPct = if (offeredCount > 0) priCount.toDouble() / offeredCount * 100 else 0.0
+
+            val bestHour = acceptedRides.groupBy { AnalysisHelperV2.getHourOfDay(it.timestamp) }
+                .maxByOrNull { (_, list) -> list.size }?.key?.let { "$it:00" } ?: "-"
+
+            val earningsPct = if (totalEarnings > 0) totalEarningsType / totalEarnings * 100 else 0.0
+
+            ServiceTypeStats(
+                serviceType = type,
+                offeredCount = offeredCount,
+                acceptedCount = acceptedCount,
+                acceptanceRate = acceptanceRate,
+                totalEarnings = totalEarningsType,
+                avgPricePerKm = avgPpk,
+                avgPricePerHour = avgPph,
+                avgRating = avgRating,
+                goodPercent = goodPct,
+                lostCount = lostRides.size,
+                avgLostValue = lostValue,
+                dynamicPercent = dynPct,
+                priorityPercent = priPct,
+                bestHour = bestHour,
+                earningsPercentOfTotal = earningsPct
+            )
+        }
+    }
 
 data class DriverInputData(
     val totalKmPanel: Double,

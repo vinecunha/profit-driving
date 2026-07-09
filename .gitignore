@@ -14,3 +14,10 @@ local.properties
 *.aab
 *.jks
 *.keystore
+/app/src/main/java/com/profitdriving/EncryptionConfig.kt
+.kotlin/
+build.log
+logs_completos.txt
+por.traineddata
+ui_tablet_offer.xml
+window_dump.txt

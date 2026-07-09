@@ -543,7 +543,7 @@ class RideAccessibilityService : AccessibilityService() {
             val prefs = getSharedPreferences(SettingsActivity.PREF_NAME, 0)
             if (!prefs.getBoolean("use_v2_parser", false)) return
 
-            val raw = UberCardExtractor.extract(root, pkg)
+            val raw = UberCardExtractor.extract(root, pkg) ?: return
             val parser = selectParser(raw) ?: run {
                 L.d(TAG, "V2: nenhum parser disponível")
                 return

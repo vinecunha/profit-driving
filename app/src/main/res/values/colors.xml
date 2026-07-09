@@ -112,6 +112,20 @@
     <!-- TIPOS DE SERVIÇO                            -->
     <!-- ============================================ -->
     <color name="service_uberx">#1E293B</color>
+    <color name="service_comfort">#3B82F6</color>
+    <color name="service_black">#D4A017</color>
+    <color name="service_moto">#8B5CF6</color>
+    <color name="service_entrega">#CE2C48</color>
+    <color name="service_pop">#FC7E3B</color>
+    <color name="service_outros">#94A3B8</color>
+
+    <!-- ============================================ -->
+    <!-- CORES DE APP DE ORIGEM (Uber / 99)           -->
+    <!-- ============================================ -->
+    <color name="app_uber">#000000</color>
+    <color name="app_uber_text">#FFFFFF</color>
+    <color name="app_99">#FFDD00</color>
+    <color name="app_99_text">#000000</color>
 
     <!-- ============================================ -->
     <!-- COMPATIBILIDADE (nomes antigos)             -->

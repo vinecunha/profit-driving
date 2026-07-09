@@ -603,10 +603,16 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Quanto maior o peso, mais influente na decisão final"
+                        android:text="A 1ª prioridade contribui até 40 pts, a 2ª até 30, a 3ª até 20, a 4ª até 10"
                         android:textSize="@dimen/text_size_12"
                         android:textColor="@color/text_tertiary"
                         android:layout_marginBottom="16dp" />
+
+                    <LinearLayout
+                        android:id="@+id/rankContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
 
                     <!-- R$/km -->
                     <LinearLayout
@@ -614,31 +620,51 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="8dp"
+                        android:tag="km">
 
                         <TextView
-                            android:layout_width="60dp"
+                            android:id="@+id/tvRankKm"
+                            android:layout_width="36dp"
                             android:layout_height="wrap_content"
+                            android:text="1º"
+                            android:textSize="@dimen/text_size_16"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary"
+                            android:gravity="center" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="R$/km"
                             android:textSize="@dimen/text_size_14"
                             android:textColor="@color/text_primary" />
 
-                        <SeekBar
-                            android:id="@+id/seekWeightKm"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:max="4"
-                            android:progress="4" />
+                        <TextView
+                            android:id="@+id/btnRankKmUp"
+                            android:layout_width="40dp"
+                            android:layout_height="36dp"
+                            android:text="▲"
+                            android:textSize="16sp"
+                            android:gravity="center"
+                            android:background="?selectableItemBackground"
+                            android:textColor="@color/primary"
+                            android:clickable="true"
+                            android:focusable="true" />
 
                         <TextView
-                            android:id="@+id/tvWeightKmStars"
-                            android:layout_width="70dp"
-                            android:layout_height="wrap_content"
-                            android:text="Muito alta"
-                            android:textSize="@dimen/text_size_11"
-                            android:textColor="@color/success"
-                            android:gravity="end" />
+                            android:id="@+id/btnRankKmDown"
+                            android:layout_width="40dp"
+                            android:layout_height="36dp"
+                            android:text="▼"
+                            android:textSize="16sp"
+                            android:gravity="center"
+                            android:background="?selectableItemBackground"
+                            android:textColor="@color/primary"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:layout_marginEnd="4dp" />
 
                     </LinearLayout>
 
@@ -648,31 +674,51 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="8dp"
+                        android:tag="hour">
 
                         <TextView
-                            android:layout_width="60dp"
+                            android:id="@+id/tvRankHour"
+                            android:layout_width="36dp"
                             android:layout_height="wrap_content"
+                            android:text="2º"
+                            android:textSize="@dimen/text_size_16"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary"
+                            android:gravity="center" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="R$/h"
                             android:textSize="@dimen/text_size_14"
                             android:textColor="@color/text_primary" />
 
-                        <SeekBar
-                            android:id="@+id/seekWeightHour"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:max="4"
-                            android:progress="3" />
+                        <TextView
+                            android:id="@+id/btnRankHourUp"
+                            android:layout_width="40dp"
+                            android:layout_height="36dp"
+                            android:text="▲"
+                            android:textSize="16sp"
+                            android:gravity="center"
+                            android:background="?selectableItemBackground"
+                            android:textColor="@color/primary"
+                            android:clickable="true"
+                            android:focusable="true" />
 
                         <TextView
-                            android:id="@+id/tvWeightHourStars"
-                            android:layout_width="70dp"
-                            android:layout_height="wrap_content"
-                            android:text="Alta"
-                            android:textSize="@dimen/text_size_11"
-                            android:textColor="@color/success"
-                            android:gravity="end" />
+                            android:id="@+id/btnRankHourDown"
+                            android:layout_width="40dp"
+                            android:layout_height="36dp"
+                            android:text="▼"
+                            android:textSize="16sp"
+                            android:gravity="center"
+                            android:background="?selectableItemBackground"
+                            android:textColor="@color/primary"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:layout_marginEnd="4dp" />
 
                     </LinearLayout>
 
@@ -682,31 +728,51 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="8dp"
+                        android:tag="min">
 
                         <TextView
-                            android:layout_width="60dp"
+                            android:id="@+id/tvRankMin"
+                            android:layout_width="36dp"
                             android:layout_height="wrap_content"
+                            android:text="3º"
+                            android:textSize="@dimen/text_size_16"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary"
+                            android:gravity="center" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="R$/min"
                             android:textSize="@dimen/text_size_14"
                             android:textColor="@color/text_primary" />
 
-                        <SeekBar
-                            android:id="@+id/seekWeightMin"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:max="4"
-                            android:progress="2" />
+                        <TextView
+                            android:id="@+id/btnRankMinUp"
+                            android:layout_width="40dp"
+                            android:layout_height="36dp"
+                            android:text="▲"
+                            android:textSize="16sp"
+                            android:gravity="center"
+                            android:background="?selectableItemBackground"
+                            android:textColor="@color/primary"
+                            android:clickable="true"
+                            android:focusable="true" />
 
                         <TextView
-                            android:id="@+id/tvWeightMinStars"
-                            android:layout_width="70dp"
-                            android:layout_height="wrap_content"
-                            android:text="Média"
-                            android:textSize="@dimen/text_size_11"
-                            android:textColor="@color/warning"
-                            android:gravity="end" />
+                            android:id="@+id/btnRankMinDown"
+                            android:layout_width="40dp"
+                            android:layout_height="36dp"
+                            android:text="▼"
+                            android:textSize="16sp"
+                            android:gravity="center"
+                            android:background="?selectableItemBackground"
+                            android:textColor="@color/primary"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:layout_marginEnd="4dp" />
 
                     </LinearLayout>
 
@@ -716,31 +782,53 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="20dp">
+                        android:layout_marginBottom="8dp"
+                        android:tag="rating">
 
                         <TextView
-                            android:layout_width="60dp"
+                            android:id="@+id/tvRankRating"
+                            android:layout_width="36dp"
                             android:layout_height="wrap_content"
+                            android:text="4º"
+                            android:textSize="@dimen/text_size_16"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary"
+                            android:gravity="center" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="Nota"
                             android:textSize="@dimen/text_size_14"
                             android:textColor="@color/text_primary" />
 
-                        <SeekBar
-                            android:id="@+id/seekWeightRating"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:max="4"
-                            android:progress="1" />
+                        <TextView
+                            android:id="@+id/btnRankRatingUp"
+                            android:layout_width="40dp"
+                            android:layout_height="36dp"
+                            android:text="▲"
+                            android:textSize="16sp"
+                            android:gravity="center"
+                            android:background="?selectableItemBackground"
+                            android:textColor="@color/primary"
+                            android:clickable="true"
+                            android:focusable="true" />
 
                         <TextView
-                            android:id="@+id/tvWeightRatingStars"
-                            android:layout_width="70dp"
-                            android:layout_height="wrap_content"
-                            android:text="Baixa"
-                            android:textSize="@dimen/text_size_11"
-                            android:textColor="@color/text_tertiary"
-                            android:gravity="end" />
+                            android:id="@+id/btnRankRatingDown"
+                            android:layout_width="40dp"
+                            android:layout_height="36dp"
+                            android:text="▼"
+                            android:textSize="16sp"
+                            android:gravity="center"
+                            android:background="?selectableItemBackground"
+                            android:textColor="@color/primary"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:layout_marginEnd="4dp" />
+
+                    </LinearLayout>
 
                     </LinearLayout>
 
@@ -762,7 +850,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Cálculo realizado com a quantidade de estrelas selecionadas acima. Ex.: 5/15 pts = RUIM 33% "
+                        android:text="Score de 0 a 100 baseado na prioridade de cada métrica. Ex.: 45/100 pts = RUIM"
                         android:textSize="@dimen/text_size_12"
                         android:textColor="@color/text_tertiary"
                         android:layout_marginBottom="16dp" />
@@ -1514,6 +1602,255 @@
                         <TextView android:id="@+id/btnPage100" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:layout_marginHorizontal="3dp" android:text="100" android:textSize="@dimen/text_size_13" android:textColor="@color/text_inverse" android:gravity="center" android:background="@drawable/pill_selected" android:clickable="true" android:focusable="true" />
                         <TextView android:id="@+id/btnPage200" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:layout_marginHorizontal="3dp" android:text="200" android:textSize="@dimen/text_size_13" android:textColor="@color/text_secondary" android:gravity="center" android:background="@drawable/pill_unselected" android:clickable="true" android:focusable="true" />
                         <TextView android:id="@+id/btnPage500" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1" android:layout_marginStart="3dp" android:text="500" android:textSize="@dimen/text_size_13" android:textColor="@color/text_secondary" android:gravity="center" android:background="@drawable/pill_unselected" android:clickable="true" android:focusable="true" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- CARD: LEITURA DE APPS -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0.5dp"
+                app:strokeColor="@color/border"
+                app:cardBackgroundColor="@color/bg_card">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="6dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="&#x1F4F1;"
+                            android:textSize="@dimen/text_size_18"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Leitura de Apps"
+                            android:textSize="@dimen/text_size_16"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Habilite ou desabilite a leitura de cada app"
+                        android:textSize="@dimen/text_size_12"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Switch: Uber -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_uber"
+                            android:layout_marginEnd="10dp"
+                            android:importantForAccessibility="no" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Uber"
+                                android:textSize="@dimen/text_size_14"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Detecta cartões de corrida do Uber"
+                                android:textSize="@dimen/text_size_11"
+                                android:textColor="@color/text_tertiary" />
+
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchReadUber"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                    </LinearLayout>
+
+                    <!-- Switch: 99 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_99"
+                            android:layout_marginEnd="10dp"
+                            android:importantForAccessibility="no" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="99"
+                                android:textSize="@dimen/text_size_14"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/tvReadApp99Subtitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Detecta cartões de corrida do 99"
+                                android:textSize="@dimen/text_size_11"
+                                android:textColor="@color/text_tertiary" />
+
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/switchReadApp99"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- SECTION: DADOS -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="10dp"
+                android:text="@string/section_data"
+                android:textAllCaps="true"
+                android:letterSpacing="0.08"
+                android:textSize="@dimen/text_size_11"
+                android:textStyle="bold"
+                android:textColor="@color/text_tertiary" />
+
+            <!-- CARD: EXPORTAR / IMPORTAR -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0.5dp"
+                app:strokeColor="@color/border"
+                app:cardBackgroundColor="@color/bg_card">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="6dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="&#x1F4E5;"
+                            android:textSize="@dimen/text_size_18"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/data_title"
+                            android:textSize="@dimen/text_size_16"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/data_subtitle"
+                        android:textSize="@dimen/text_size_12"
+                        android:textColor="@color/text_tertiary"
+                        android:layout_marginBottom="16dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/btnExportData"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="4dp"
+                            android:gravity="center"
+                            android:text="@string/action_export"
+                            android:textSize="@dimen/text_size_13"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_inverse"
+                            android:background="@drawable/pill_selected"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <TextView
+                            android:id="@+id/btnImportData"
+                            android:layout_width="0dp"
+                            android:layout_height="44dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:gravity="center"
+                            android:text="@string/action_import"
+                            android:textSize="@dimen/text_size_13"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_inverse"
+                            android:background="@drawable/pill_selected"
+                            android:clickable="true"
+                            android:focusable="true" />
 
                     </LinearLayout>
 

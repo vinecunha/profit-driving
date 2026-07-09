@@ -7,32 +7,29 @@ import com.profitdriving.accessibility.extractor.RawCardData
 import com.profitdriving.accessibility.extractor.UberCardExtractor
 import java.util.Locale
 
-class ExclusiveCardParser : RideDataParser {
+class GenericRideCardParser : RideDataParser {
 
     override fun canParse(raw: RawCardData): Boolean {
-        if (raw.cardType == CardType.EXCLUSIVE) return true
-        if (raw.cardType == CardType.APP_99) return false
+        if (raw.cardType == CardType.APP_99 ||
+            raw.cardType == CardType.APP_99_NEGOTIATE ||
+            raw.cardType == CardType.APP_99_PRIORITY) return false
         val full = raw.rawTexts.joinToString(" ").lowercase(Locale.ROOT)
-        val hasSelecionar = full.contains("selecionar")
-        val hasExclusivo = full.contains("exclusivo")
         val hasMoney = full.contains("r$")
         val hasKm = full.contains("km")
         val hasMin = full.contains("min")
-        return (hasSelecionar || hasExclusivo) && hasMoney && hasKm && hasMin
+        return hasMoney && hasKm && hasMin
     }
 
     override fun parse(raw: RawCardData): RideData? {
-        L.d(TAG, "ExclusiveCardParser.parse() iniciado")
+        L.d(TAG, "GenericRideCardParser.parse() iniciado")
         val text = raw.fullText
 
         val value = extractValue(text)
         if (value == null || value <= 0) {
-            L.d(TAG, "Valor inválido — ExclusiveCardParser abortando")
+            L.d(TAG, "Valor inválido — GenericRideCardParser abortando")
             return null
         }
 
-        val pricePerKm = extractPricePerKm(text)
-        val pricePerHour = extractPricePerHour(text)
         val distance = extractDistance(text)
         val timeMin = extractTime(text)
         val rating = extractRating(text)
@@ -46,7 +43,7 @@ class ExclusiveCardParser : RideDataParser {
         val hasMultipleStops = extractStops(text)
         val (pickupAddress, dropoffAddress) = extractAddresses(text)
 
-        L.d(TAG, "ExclusiveCardParser parsed: value=$value km=$distance tempo=$timeMin nota=$rating")
+        L.d(TAG, "GenericRideCardParser parsed: value=$value km=$distance tempo=$timeMin nota=$rating")
 
         return RideData(
             value = value,
@@ -54,13 +51,13 @@ class ExclusiveCardParser : RideDataParser {
             timeMin = timeMin,
             rating = rating,
             appName = "Uber",
-            pricePerKm = pricePerKm ?: distance?.let { d ->
+            pricePerKm = distance?.let { d ->
                 if (d > 0) value / d else null
             },
-            pricePerHour = pricePerHour ?: timeMin?.let { t ->
+            pricePerHour = timeMin?.let { t ->
                 if (t > 0) value / (t / 60.0) else null
             },
-            detectedBy = "accessibility_exclusive",
+            detectedBy = "generic_ocr",
             pickupDistanceKm = pickupKm,
             pickupTimeMin = pickupTime,
             tripDistanceKm = tripKm,
@@ -71,7 +68,7 @@ class ExclusiveCardParser : RideDataParser {
             dynamicBonus = dynamicBonus,
             pickupAddress = pickupAddress,
             dropoffAddress = dropoffAddress,
-            exclusiveHash = "exclusive"
+            exclusiveHash = null
         )
     }
 
@@ -84,25 +81,11 @@ class ExclusiveCardParser : RideDataParser {
         return matches.max()
     }
 
-    private fun extractPricePerKm(text: String): Double? {
-        val m = KM_PER_REAL_REGEX.find(text)
-        if (m != null) return UberCardExtractor.parseBr(m.groupValues[1])
-        val m2 = KM_REAL_REGEX.find(text)
-        return m2?.let { UberCardExtractor.parseBr(it.groupValues[1]) }
-    }
-
-    private fun extractPricePerHour(text: String): Double? {
-        return HOUR_REAL_REGEX.find(text)?.let {
-            UberCardExtractor.parseBr(it.groupValues[1])
-        }
-    }
-
     private fun extractDistance(text: String): Double? {
         var total = 0.0
 
-        // 1. Novo formato: pickup = primeiro match, trip = segundo match
         val pickupMatches = PICKUP_REGEX.findAll(text).toList()
-        val tripMatches = VIAGEM_EXCLUSIVO_REGEX.findAll(text).toList()
+        val tripMatches = VIAGEM_REGEX.findAll(text).toList()
 
         if (pickupMatches.isNotEmpty()) {
             val v = UberCardExtractor.parseBr(pickupMatches[0].groupValues[2])
@@ -111,23 +94,9 @@ class ExclusiveCardParser : RideDataParser {
         if (tripMatches.size >= 2) {
             val v = UberCardExtractor.parseBr(tripMatches[1].groupValues[3])
             if (v != null && v > 0 && v < 200) total += v
-        } else if (tripMatches.size == 1 && (pickupMatches.isEmpty() || pickupMatches.size >= 2)) {
+        } else if (tripMatches.size == 1 && pickupMatches.isEmpty()) {
             val v = UberCardExtractor.parseBr(tripMatches[0].groupValues[3])
             if (v != null && v > 0 && v < 200) total += v
-        }
-
-        if (total == 0.0) {
-            // 2. Fallback: formato antigo
-            val exclusivoOld = VIAGEM_EXCLUSIVO_REGEX_OLD.findAll(text)
-                .mapNotNull { UberCardExtractor.parseBr(it.groupValues[3]) }
-                .filter { it > 0 && it < 200 }
-                .maxOrNull()
-            if (exclusivoOld != null) total += exclusivoOld
-            val pickupOld = PICKUP_REGEX_OLD.find(text)
-            if (pickupOld != null) {
-                val v = UberCardExtractor.parseBr(pickupOld.groupValues[2])
-                if (v != null && v > 0 && v < 50) total += v
-            }
         }
 
         if (total == 0.0) {
@@ -146,9 +115,8 @@ class ExclusiveCardParser : RideDataParser {
     private fun extractTime(text: String): Int? {
         var total = 0
 
-        // 1. Novo formato: pickup = primeiro match, trip = segundo match
         val pickupMatches = PICKUP_REGEX.findAll(text).toList()
-        val tripMatches = VIAGEM_EXCLUSIVO_REGEX.findAll(text).toList()
+        val tripMatches = VIAGEM_REGEX.findAll(text).toList()
 
         if (pickupMatches.isNotEmpty()) {
             val v = pickupMatches[0].groupValues[1].toIntOrNull()
@@ -159,31 +127,11 @@ class ExclusiveCardParser : RideDataParser {
             val hours = match.groupValues[1].toIntOrNull() ?: 0
             val minutes = match.groupValues[2].toIntOrNull() ?: 0
             total += hours * 60 + minutes
-        } else if (tripMatches.size == 1 && (pickupMatches.isEmpty() || pickupMatches.size >= 2)) {
+        } else if (tripMatches.size == 1 && pickupMatches.isEmpty()) {
             val match = tripMatches[0]
             val hours = match.groupValues[1].toIntOrNull() ?: 0
             val minutes = match.groupValues[2].toIntOrNull() ?: 0
             total += hours * 60 + minutes
-        }
-
-        if (total == 0) {
-            // 2. Fallback: formato antigo
-            val exclusivoOld = VIAGEM_EXCLUSIVO_REGEX_OLD.findAll(text)
-                .mapNotNull { match ->
-                    val hoursStr = match.groupValues[1]
-                    val minutesStr = match.groupValues[2]
-                    val hours = if (hoursStr.isNullOrEmpty()) 0 else hoursStr.toIntOrNull() ?: return@mapNotNull null
-                    val minutes = minutesStr.toIntOrNull() ?: return@mapNotNull null
-                    hours * 60 + minutes
-                }
-                .filter { it > 0 }
-                .maxOrNull()
-            if (exclusivoOld != null) total += exclusivoOld
-            val pickupOld = PICKUP_REGEX_OLD.find(text)
-            if (pickupOld != null) {
-                val v = pickupOld.groupValues[1].toIntOrNull()
-                if (v != null && v > 0) total += v
-            }
         }
 
         if (total == 0) {
@@ -200,40 +148,25 @@ class ExclusiveCardParser : RideDataParser {
     }
 
     private fun extractPickupDistance(text: String): Double? {
-        // 1. Novo formato: findAll, PRIMEIRO match = pickup
         val allMatches = PICKUP_REGEX.findAll(text).toList()
         if (allMatches.isNotEmpty()) {
             val v = UberCardExtractor.parseBr(allMatches[0].groupValues[2])
-            if (v != null && v > 0 && v < 50) return v
-        }
-        // 2. Fallback: formato antigo
-        val pickupOld = PICKUP_REGEX_OLD.find(text)
-        if (pickupOld != null) {
-            val v = UberCardExtractor.parseBr(pickupOld.groupValues[2])
             if (v != null && v > 0 && v < 50) return v
         }
         return null
     }
 
     private fun extractPickupTime(text: String): Int? {
-        // 1. Novo formato: findAll, PRIMEIRO match = pickup
         val allMatches = PICKUP_REGEX.findAll(text).toList()
         if (allMatches.isNotEmpty()) {
             val v = allMatches[0].groupValues[1].toIntOrNull()
-            if (v != null && v > 0) return v
-        }
-        // 2. Fallback: formato antigo
-        val pickupOld = PICKUP_REGEX_OLD.find(text)
-        if (pickupOld != null) {
-            val v = pickupOld.groupValues[1].toIntOrNull()
             if (v != null && v > 0) return v
         }
         return null
     }
 
     private fun extractTripDistance(text: String): Double? {
-        // 1. Novo formato: findAll, SEGUNDO match = trip
-        val allMatches = VIAGEM_EXCLUSIVO_REGEX.findAll(text).toList()
+        val allMatches = VIAGEM_REGEX.findAll(text).toList()
         if (allMatches.size >= 2) {
             val v = UberCardExtractor.parseBr(allMatches[1].groupValues[3])
             if (v != null && v > 0 && v < 200) return v
@@ -241,17 +174,11 @@ class ExclusiveCardParser : RideDataParser {
             val v = UberCardExtractor.parseBr(allMatches[0].groupValues[3])
             if (v != null && v > 0 && v < 200) return v
         }
-        // 2. Fallback: formato antigo
-        val exclusivoOld = VIAGEM_EXCLUSIVO_REGEX_OLD.findAll(text)
-            .mapNotNull { UberCardExtractor.parseBr(it.groupValues[3]) }
-            .filter { it > 0 && it < 200 }
-            .maxOrNull()
-        return exclusivoOld
+        return null
     }
 
     private fun extractTripTime(text: String): Int? {
-        // 1. Novo formato: findAll, SEGUNDO match = trip
-        val allMatches = VIAGEM_EXCLUSIVO_REGEX.findAll(text).toList()
+        val allMatches = VIAGEM_REGEX.findAll(text).toList()
         if (allMatches.size >= 2) {
             val match = allMatches[1]
             val hours = match.groupValues[1].toIntOrNull() ?: 0
@@ -265,16 +192,7 @@ class ExclusiveCardParser : RideDataParser {
             val total = hours * 60 + minutes
             if (total > 0) return total
         }
-        // 2. Fallback: formato antigo
-        val timesOld = VIAGEM_EXCLUSIVO_REGEX_OLD.findAll(text).mapNotNull { match ->
-            val hoursStr = match.groupValues[1]
-            val minutesStr = match.groupValues[2]
-            val hours = if (hoursStr.isNullOrEmpty()) 0 else hoursStr.toIntOrNull() ?: return@mapNotNull null
-            val minutes = minutesStr.toIntOrNull() ?: return@mapNotNull null
-            val total = hours * 60 + minutes
-            if (total > 0) total else null
-        }.toList()
-        return timesOld.maxOrNull()
+        return null
     }
 
     private fun extractRating(text: String): Double? {
@@ -319,46 +237,23 @@ class ExclusiveCardParser : RideDataParser {
         var pickupAddress: String? = null
         var dropoffAddress: String? = null
 
-        // 1. Novo formato (linhas separadas) — endereço na linha APÓS o par tempo-distância
-        // Ex: "7 min (2.2 km)\nRua, Bairro, Cidade"
         val lineMatches = ADDRESS_AFTER_TIME_DIST.findAll(text).toList()
         if (lineMatches.isNotEmpty()) {
             pickupAddress = cleanupAddress(lineMatches[0].groupValues[1].trim())
-            L.d(TAG, "Endereço de embarque (linha): $pickupAddress")
             if (lineMatches.size > 1) {
                 dropoffAddress = cleanupAddress(lineMatches.last().groupValues[1].trim())
-                L.d(TAG, "Endereço de destino (linha): $dropoffAddress")
             }
         }
 
-        // 2. Formato legado (sem CEP/UF) — endereço entre pares tempo-distância
         if (pickupAddress == null || dropoffAddress == null) {
             val legacyMatches = ADDRESS_TIME_DIST_NEW.findAll(text).toList()
             if (legacyMatches.isNotEmpty()) {
                 if (pickupAddress == null) {
                     pickupAddress = cleanupAddress(legacyMatches[0].groupValues[1].trim())
-                    L.d(TAG, "Endereço de embarque (legado): $pickupAddress")
                 }
                 if (dropoffAddress == null && legacyMatches.size > 1) {
                     dropoffAddress = cleanupAddress(legacyMatches[1].groupValues[1].trim())
-                    L.d(TAG, "Endereço de destino (legado): $dropoffAddress")
                 }
-            }
-        }
-
-        // 3. Fallback: formato antigo (com "de distância" e/ou CEP)
-        if (pickupAddress == null) {
-            val pickupMatchOld = PICKUP_ADDRESS_REGEX_OLD.find(text)
-            if (pickupMatchOld != null) {
-                pickupAddress = cleanupAddress(pickupMatchOld.groupValues[1].trim())
-                L.d(TAG, "Endereço de embarque (antigo): $pickupAddress")
-            }
-        }
-        if (dropoffAddress == null) {
-            val dropoffMatchOld = DROPOFF_ADDRESS_REGEX_OLD.find(text)
-            if (dropoffMatchOld != null) {
-                dropoffAddress = cleanupAddress(dropoffMatchOld.groupValues[1].trim())
-                L.d(TAG, "Endereço de destino (antigo): $dropoffAddress")
             }
         }
 
@@ -377,35 +272,20 @@ class ExclusiveCardParser : RideDataParser {
     }
 
     companion object {
-        private const val TAG = "ExclusiveCardParser"
+        private const val TAG = "GenericRideCardParser"
 
         private val VALUE_REGEX = Regex(
             """(?:^|\s)R\$\s*(\d+(?:[.,]\d+)?)(?=\s|$)""",
             RegexOption.IGNORE_CASE
         )
-        private val KM_PER_REAL_REGEX = Regex("""R\$(\d+[.,]\d+)\s*/\s*km""", RegexOption.IGNORE_CASE)
-        private val KM_REAL_REGEX = Regex("""R\$(\d+[.,]\d+)\s*por km""", RegexOption.IGNORE_CASE)
-        private val HOUR_REAL_REGEX = Regex("""R\$(\d+[.,]\d+)\s*/\s*h""", RegexOption.IGNORE_CASE)
 
-        // NOVO formato (sem "de distância" ou "Viagem de")
         private val PICKUP_REGEX = Regex(
             """(\d+)\s*min(?:uto)?s?\s*\(\s*(\d+[.,]\d+)\s*km\s*\)""",
             RegexOption.IGNORE_CASE
         )
 
-        private val VIAGEM_EXCLUSIVO_REGEX = Regex(
-            """(?:(\d+)\s*[Hh](?:ora(?:s)?)?\s*e\s*)?(\d+)\s*[Mm]in(?:uto)?s?\s*\((\d+[.,]\d+)\s*km\)(?!\s*de\s*dist[âa]ncia)""",
-            RegexOption.IGNORE_CASE
-        )
-
-        // Formato ANTIGO (com "de distância" e "Viagem de") - compatibilidade
-        private val PICKUP_REGEX_OLD = Regex(
-            """(\d+)\s*min(?:uto)?s?\s*\(\s*(\d+[.,]\d+)\s*km\s*\)\s*de\s*dist[âa]ncia""",
-            RegexOption.IGNORE_CASE
-        )
-
-        private val VIAGEM_EXCLUSIVO_REGEX_OLD = Regex(
-            """[Vv]iagem\s+de\s+(?:(\d+)\s*[Hh](?:ora(?:s)?)?\s*e\s*)?(\d+)\s*[Mm]in(?:uto)?s?\s*\((\d+[.,]\d+)\s*km\)(?!\s*de\s*dist[âa]ncia)""",
+        private val VIAGEM_REGEX = Regex(
+            """(?:(\d+)\s*[Hh](?:ora(?:s)?)?\s*e\s*)?(\d+)\s*[Mm]in(?:uto)?s?\s*\((\d+[.,]\d+)\s*km\)""",
             RegexOption.IGNORE_CASE
         )
 
@@ -417,12 +297,14 @@ class ExclusiveCardParser : RideDataParser {
             Regex("""dist[âa]ncia[:\s]*(\d+[.,]?\d*)\s*km""", RegexOption.IGNORE_CASE),
             Regex("""(\d+[.,]?\d*)\s*km\s*de\s*dist[âa]ncia""", RegexOption.IGNORE_CASE)
         )
+
         private val TIME_PATTERNS = listOf(
             Regex("""(\d+)\s*[Mm]in(?:uto)?s?"""),
             Regex("""(\d+)\s*[Hh](?:ora)?s?"""),
             Regex("""tempo[:\s]*(\d+)\s*min""", RegexOption.IGNORE_CASE),
             Regex("""duração[:\s]*(\d+)\s*min""", RegexOption.IGNORE_CASE)
         )
+
         private val RATING_STAR_REGEX = Regex("""(\d[.,]\d{1,2})\s*[★⭐*]""")
         private val RATING_COUNT_REGEX = Regex("""(\d[.,]\d{1,2})\s*\(\d+\)""")
         private val RATING_BULLET_REGEX = Regex("""(\d[.,]\d{1,2})\s*[·•]""")
@@ -466,28 +348,13 @@ class ExclusiveCardParser : RideDataParser {
             RegexOption.IGNORE_CASE
         )
 
-        // Formato linhas separadas — endereço na linha após par tempo-distância:
-        // "7 min (2.2 km)\nRua, Bairro, Cidade"
         private val ADDRESS_AFTER_TIME_DIST = Regex(
             """\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)\s*\n\s*([^\n]+)""",
             RegexOption.IGNORE_CASE
         )
 
-        // NOVO formato (sem CEP/UF) — captura endereço entre tempo/dist e próximo tempo/dist ou botões
         private val ADDRESS_TIME_DIST_NEW = Regex(
             """\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)\s+([A-Za-zÀ-Úà-ú0-9\s,./°-]+?)(?=\s*\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)|\s*(?:Reservas|Aceitar|Informações|Selecionar|$))""",
-            RegexOption.IGNORE_CASE
-        )
-
-        // Formato ANTIGO (com "de distância") — compatibilidade
-        private val PICKUP_ADDRESS_REGEX_OLD = Regex(
-            """\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)\s*de\s*dist[âa]ncia\s+([A-Za-zÀ-Úà-ú0-9\s,.-]+?)(?=\s*(?:\d+\s*min|Viagem|Aceitar|$))""",
-            RegexOption.IGNORE_CASE
-        )
-
-        // Formato ANTIGO (com "Viagem de" e CEP) — compatibilidade
-        private val DROPOFF_ADDRESS_REGEX_OLD = Regex(
-            """Viagem\s+de\s+\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)\s+([A-Za-zÀ-Úà-ú0-9\s,.-]+?\d{5}-\d{3})""",
             RegexOption.IGNORE_CASE
         )
     }

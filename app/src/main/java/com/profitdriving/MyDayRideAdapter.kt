@@ -52,6 +52,33 @@ class MyDayRideAdapter(
         holder.tvTime.text = if (record != null)
             dateFormat.format(java.util.Date(record.timestamp)) else "--:--"
         holder.tvService.text = record?.serviceType ?: "Corrida"
+
+        // Badge do app (Uber / 99)
+        val tvAppBadge = holder.itemView.findViewById<TextView>(R.id.tvAppBadge)
+        val appName = record?.appName ?: "Uber"
+        when {
+            appName.equals("99", ignoreCase = true) -> {
+                tvAppBadge.text = "99"
+                tvAppBadge.setBackgroundResource(R.drawable.bg_99_circle)
+                tvAppBadge.setTextColor(
+                    androidx.core.content.ContextCompat.getColor(
+                        holder.itemView.context, R.color.app_99_text
+                    )
+                )
+                tvAppBadge.visibility = View.VISIBLE
+            }
+            appName.equals("Uber", ignoreCase = true) -> {
+                tvAppBadge.text = "Uber"
+                tvAppBadge.setBackgroundResource(R.drawable.bg_uber_circle)
+                tvAppBadge.setTextColor(
+                    androidx.core.content.ContextCompat.getColor(
+                        holder.itemView.context, R.color.app_uber_text
+                    )
+                )
+                tvAppBadge.visibility = View.VISIBLE
+            }
+            else -> tvAppBadge.visibility = View.GONE
+        }
         val iconRes = when {
             record?.serviceType == null -> R.drawable.ic_ride_generic
             record?.serviceType?.contains("Moto", ignoreCase = true) == true -> R.drawable.ic_moto

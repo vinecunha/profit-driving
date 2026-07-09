@@ -11,6 +11,9 @@ import java.util.Locale
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     context.applicationContext, DATABASE_NAME, null, DATABASE_VERSION
 ) {
+    private var cachedCostPerKm: Double? = null
+    private var lastCostPerKmFetch = 0L
+    private val costPerKmTtl = 30_000L
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(CREATE_TABLE)
         db.execSQL(CREATE_FUEL_REFUELS)
@@ -34,6 +37,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             )
         """)
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_addr_rep ON address_reputation(normalized_address)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_daily_rides_date ON $TABLE_DAILY_RIDES($COL_DR_DATE)")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -214,6 +218,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             try {
                 db.execSQL("ALTER TABLE $TABLE_FUEL_REFUELS ADD COLUMN $COL_R_TOTAL_CAPACITY REAL")
             } catch (e: Exception) { L.w("DB", "v28 total_capacity: ${e.message}") }
+        }
+        if (oldVersion < 29) {
+            try { db.execSQL("CREATE INDEX IF NOT EXISTS idx_daily_rides_date ON $TABLE_DAILY_RIDES($COL_DR_DATE)") } catch (e: Exception) { L.w("DB", "v29 index: ${e.message}") }
         }
     }
 
@@ -496,18 +503,20 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         val validHashes = hashes.filter { it.isNotBlank() }.distinct()
         if (validHashes.isEmpty()) return emptyMap()
 
-        val placeholders = validHashes.joinToString(",") { "?" }
         val result = mutableMapOf<String, RawCardLog>()
-        val cursor = readableDatabase.rawQuery(
-            "SELECT * FROM $TABLE_RAW_LOGS WHERE $COL_RAW_CARD_HASH IN ($placeholders) ORDER BY $COL_RAW_TIMESTAMP DESC",
-            validHashes.toTypedArray()
-        )
-        cursor.use {
-            while (it.moveToNext()) {
-                val log = rawCardLogFromCursor(it)
-                val hash = log.cardHash ?: continue
-                if (hash !in result) {
-                    result[hash] = log
+        for (chunk in validHashes.chunked(500)) {
+            val placeholders = chunk.joinToString(",") { "?" }
+            val cursor = readableDatabase.rawQuery(
+                "SELECT * FROM $TABLE_RAW_LOGS WHERE $COL_RAW_CARD_HASH IN ($placeholders) ORDER BY $COL_RAW_TIMESTAMP DESC",
+                chunk.toTypedArray()
+            )
+            cursor.use {
+                while (it.moveToNext()) {
+                    val log = rawCardLogFromCursor(it)
+                    val hash = log.cardHash ?: continue
+                    if (hash !in result) {
+                        result[hash] = log
+                    }
                 }
             }
         }
@@ -663,12 +672,18 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     private fun calculateCurrentCostPerKm(): Double? {
-        return try {
+        val now = System.currentTimeMillis()
+        if (now - lastCostPerKmFetch < costPerKmTtl && cachedCostPerKm != null) {
+            return cachedCostPerKm
+        }
+        cachedCostPerKm = try {
             val refuels = getRefuels()
             val expenses = getAllExpenses()
             val monthlyKm = getMonthlyKm()
+            lastCostPerKmFetch = now
             CostCalculator.calculateCostSummary(refuels, expenses, monthlyKm).totalCostPerKm
         } catch (e: Exception) { L.e("CorridaCerta", "Erro ao calcular custo/km atual: ${e.message}", e); null }
+        return cachedCostPerKm
     }
 
     fun getLastRide(): RideRecord? {
@@ -1459,6 +1474,22 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         }
     }
 
+    fun getAllAddressReputations(): List<Pair<String, Int>> {
+        return try {
+            val list = mutableListOf<Pair<String, Int>>()
+            val cursor = readableDatabase.rawQuery("SELECT normalized_address, reputation FROM address_reputation", null)
+            cursor.use {
+                while (it.moveToNext()) {
+                    list.add(Pair(it.getString(0), it.getInt(1)))
+                }
+            }
+            list
+        } catch (e: Exception) {
+            L.e("DatabaseHelper", "getAllAddressReputations falhou", e)
+            emptyList()
+        }
+    }
+
     fun getTodayRideRecords(date: String): List<RideRecord> {
         val todayStart = java.util.Calendar.getInstance().apply {
             set(java.util.Calendar.HOUR_OF_DAY, 0)
@@ -1548,7 +1579,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     companion object {
         private val dbLock = Any()
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 28
+        private const val DATABASE_VERSION = 29
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"

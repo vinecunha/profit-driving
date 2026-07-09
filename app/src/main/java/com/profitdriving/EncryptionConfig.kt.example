@@ -1,0 +1,12 @@
+// === ATENÇÃO ===
+// Copie este arquivo para EncryptionConfig.kt (remova .example) e altere a senha.
+// EncryptionConfig.kt está em .gitignore e NUNCA será commitado no repositório.
+//
+// A senha é usada para criptografar/descriptografar arquivos de exportação (JSON).
+// Se você alterar a senha depois de exportar, não conseguirá importar o arquivo antigo.
+
+package com.profitdriving
+
+object EncryptionConfig {
+    const val EXPORT_PASSWORD = "profit-driving-secure-key-2024"
+}

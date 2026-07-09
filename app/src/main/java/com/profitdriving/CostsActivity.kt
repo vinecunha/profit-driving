@@ -407,13 +407,6 @@ class CostsActivity : BaseActivity() {
         return items.filter { it.timestamp in periodStart..periodEnd }
     }
 
-    private fun filterExpensesByPeriod(items: List<Expense>): List<Expense> {
-        val (periodStart, periodEnd) = getPeriodTimestamps()
-        return items.filter { e ->
-            e.createdAt == 0L || e.createdAt in periodStart..periodEnd
-        }
-    }
-
     private fun loadData() {
         lifecycleScope.launch {
             try {
@@ -421,7 +414,7 @@ class CostsActivity : BaseActivity() {
                     Triple(db.getRefuels(), db.getAllExpenses(), db.getMonthlyKm())
                 }
                 allRefuels = filterRefuelsByPeriod(loadedRefuels)
-                allExpenses = filterExpensesByPeriod(loadedExpenses)
+                allExpenses = loadedExpenses
                 monthlyKm = loadedMonthlyKm
 
                 etMonthlyKm.setText(loadedMonthlyKm.toString())

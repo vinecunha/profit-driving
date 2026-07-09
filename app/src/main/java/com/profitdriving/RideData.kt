@@ -19,7 +19,12 @@ data class RideData(
     val dynamicBonus: Double? = null,
     val pickupAddress: String? = null,
     val dropoffAddress: String? = null,
-    val exclusiveHash: String? = null
+    val exclusiveHash: String? = null,
+    // Campos exclusivos da 99 — null/false para corridas Uber
+    val dynamicMultiplier: Double? = null,      // ⚡1,7x — multiplicador dinâmico
+    val isNegotiate: Boolean = false,            // card do tipo "Negocia"
+    val negotiateOptions: List<Double>? = null,  // [17.76, 18.60, 19.45]
+    val baseRate: Double? = null,                // R$2,09 Tarifa base dinâmica incl.
 ) {
     val effectivePricePerKm: Double?
         get() = pricePerKm ?: if (value != null && distanceKm != null && distanceKm > 0)

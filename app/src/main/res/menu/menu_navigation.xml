@@ -22,4 +22,9 @@
         android:icon="@drawable/ic_privacy"
         android:title="Política de Privacidade" />
 
+    <item
+        android:id="@+id/nav_captures"
+        android:icon="@drawable/ic_photo_library"
+        android:title="Histórico de Capturas" />
+
 </menu>

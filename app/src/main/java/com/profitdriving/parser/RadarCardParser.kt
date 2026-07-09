@@ -11,6 +11,7 @@ class RadarCardParser : RideDataParser {
 
     override fun canParse(raw: RawCardData): Boolean {
         if (raw.cardType == CardType.RADAR) return true
+        if (raw.cardType == CardType.APP_99) return false
         val full = raw.rawTexts.joinToString(" ").lowercase(Locale.ROOT)
         val hasAccept = full.contains("aceitar") || full.contains("accept")
         val hasMoney = full.contains("r$")
@@ -74,7 +75,15 @@ class RadarCardParser : RideDataParser {
     }
 
     private fun extractValue(text: String): Double? {
-        val matches = VALUE_REGEX.findAll(text)
+        // Normaliza: "R$ 8 52" → "R$ 8.52" (OCR perdeu vírgula)
+        val normalized = text.replace(
+            Regex("""R\$\s*(\d{1,3})\s+(\d{2})(?!\s*\d)""", RegexOption.IGNORE_CASE)
+        ) { match ->
+            val reais = match.groupValues[1]
+            val centavos = match.groupValues[2]
+            "${'$'}$reais.$centavos"
+        }
+        val matches = VALUE_REGEX.findAll(normalized)
             .mapNotNull { UberCardExtractor.parseBr(it.groupValues[1]) }
             .filter { it > 1.0 }
             .toList()
@@ -314,18 +323,33 @@ class RadarCardParser : RideDataParser {
         var pickupAddress: String? = null
         var dropoffAddress: String? = null
 
-        // 1. Tentar novo formato (sem CEP/UF) — tempo/dist sem "de distância" ou "Viagem de"
-        val newMatches = ADDRESS_TIME_DIST_NEW.findAll(text).toList()
-        if (newMatches.isNotEmpty()) {
-            pickupAddress = cleanupAddress(newMatches[0].groupValues[1].trim())
-            L.d(TAG, "Endereço de embarque (novo): $pickupAddress")
-            if (newMatches.size > 1) {
-                dropoffAddress = cleanupAddress(newMatches[1].groupValues[1].trim())
-                L.d(TAG, "Endereço de destino (novo): $dropoffAddress")
+        // 1. Formato linhas separadas — endereço na linha APÓS o par tempo-distância
+        val lineMatches = ADDRESS_AFTER_TIME_DIST.findAll(text).toList()
+        if (lineMatches.isNotEmpty()) {
+            pickupAddress = cleanupAddress(lineMatches[0].groupValues[1].trim())
+            L.d(TAG, "Endereço de embarque (linha): $pickupAddress")
+            if (lineMatches.size > 1) {
+                dropoffAddress = cleanupAddress(lineMatches.last().groupValues[1].trim())
+                L.d(TAG, "Endereço de destino (linha): $dropoffAddress")
             }
         }
 
-        // 2. Fallback: formato antigo (com "de distância" e/ou CEP)
+        // 2. Formato legado (sem CEP/UF)
+        if (pickupAddress == null || dropoffAddress == null) {
+            val legacyMatches = ADDRESS_TIME_DIST_NEW.findAll(text).toList()
+            if (legacyMatches.isNotEmpty()) {
+                if (pickupAddress == null) {
+                    pickupAddress = cleanupAddress(legacyMatches[0].groupValues[1].trim())
+                    L.d(TAG, "Endereço de embarque (legado): $pickupAddress")
+                }
+                if (dropoffAddress == null && legacyMatches.size > 1) {
+                    dropoffAddress = cleanupAddress(legacyMatches[1].groupValues[1].trim())
+                    L.d(TAG, "Endereço de destino (legado): $dropoffAddress")
+                }
+            }
+        }
+
+        // 3. Fallback: formato antigo (com "de distância" e/ou CEP)
         if (pickupAddress == null) {
             val pickupMatchOld = PICKUP_ADDRESS_REGEX_OLD.find(text)
             if (pickupMatchOld != null) {
@@ -442,6 +466,13 @@ class RadarCardParser : RideDataParser {
 
         private val DYNAMIC_BONUS_REGEX = Regex(
             """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do(?!\s+para\s+prioridade)""",
+            RegexOption.IGNORE_CASE
+        )
+
+        // Formato linhas separadas — endereço na linha após par tempo-distância:
+        // "7 min (2.2 km)\nRua, Bairro, Cidade"
+        private val ADDRESS_AFTER_TIME_DIST = Regex(
+            """\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)\s*\n\s*([^\n]+)""",
             RegexOption.IGNORE_CASE
         )
 
