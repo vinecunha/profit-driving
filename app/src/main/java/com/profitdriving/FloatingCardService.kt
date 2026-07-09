@@ -144,6 +144,7 @@ class FloatingCardService : Service() {
 
     private fun showOverlay(ride: RideData, isDemo: Boolean = false, isReScan: Boolean = false) {
         overlayView?.let { view ->
+            view.animate().cancel()
             try { windowManager.removeView(view) } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay existente: ${e.message}", e) }
             overlayView = null
         }
@@ -160,10 +161,10 @@ class FloatingCardService : Service() {
                 return
             }
             if (overlayView != null && rideHash == lastRideHash) {
-                L.d(TAG, "Card já está visível, apenas resetando timer")
-handler.postDelayed(dismissRunnable, prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 15) * 1000L)
-            return
-        }
+                L.d(TAG, "Card j\u00E1 est\u00E1 vis\u00EDvel, apenas resetando timer")
+                handler.postDelayed(dismissRunnable, prefs.getInt(SettingsActivity.KEY_CARD_DURATION, 15) * 1000L)
+                return
+            }
     } else {
         L.d(TAG, "Re-scan: ignorando debounce, recriando card")
     }
@@ -744,52 +745,42 @@ handler.postDelayed(dismissRunnable, prefs.getInt(SettingsActivity.KEY_CARD_DURA
 
     private fun dismiss() {
         handler.removeCallbacks(dismissRunnable)
-        overlayView?.let { view ->
-            val animation = PreferenceManager(this).getCardAnimation()
-            when (animation) {
-                AnimationConstants.ANIMATION_NONE -> {
-                    try { windowManager.removeView(view) } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay view no dismiss: ${e.message}", e) }
-                    overlayView = null
-                    currentCardRideHash = null
-                }
-                AnimationConstants.ANIMATION_FADE,
-                AnimationConstants.ANIMATION_FADE_SLIDE -> {
-                    view.animate()
-                        .alpha(0f)
-                        .setDuration(200)
-                        .withEndAction {
-                            try { windowManager.removeView(view) } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay view no dismiss: ${e.message}", e) }
-                            overlayView = null
-                            currentCardRideHash = null
-                        }
-                        .start()
-                }
-                AnimationConstants.ANIMATION_SLIDE_RIGHT -> {
-                    view.animate()
-                        .translationX(200f)
-                        .setDuration(250)
-                        .withEndAction {
-                            try { windowManager.removeView(view) } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay view no dismiss: ${e.message}", e) }
-                            overlayView = null
-                            currentCardRideHash = null
-                        }
-                        .start()
-                }
-                AnimationConstants.ANIMATION_SLIDE_LEFT -> {
-                    view.animate()
-                        .translationX(-200f)
-                        .setDuration(250)
-                        .withEndAction {
-                            try { windowManager.removeView(view) } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay view no dismiss: ${e.message}", e) }
-                            overlayView = null
-                            currentCardRideHash = null
-                        }
-                        .start()
-                }
+        val currentView = overlayView ?: run { overlayView = null; currentCardRideHash = null; return }
+        val animation = PreferenceManager(this).getCardAnimation()
+        val removeAndReset = { view: View ->
+            view.animate().cancel()
+            try { windowManager.removeView(view) } catch (e: Exception) { L.e(TAG, "Erro ao remover overlay view no dismiss: ${e.message}", e) }
+            if (overlayView === view) {
+                overlayView = null
+                currentCardRideHash = null
             }
-        } ?: run {
-            overlayView = null
-            currentCardRideHash = null
+        }
+        when (animation) {
+            AnimationConstants.ANIMATION_NONE -> {
+                removeAndReset(currentView)
+            }
+            AnimationConstants.ANIMATION_FADE,
+            AnimationConstants.ANIMATION_FADE_SLIDE -> {
+                currentView.animate()
+                    .alpha(0f)
+                    .setDuration(200)
+                    .withEndAction { removeAndReset(currentView) }
+                    .start()
+            }
+            AnimationConstants.ANIMATION_SLIDE_RIGHT -> {
+                currentView.animate()
+                    .translationX(200f)
+                    .setDuration(250)
+                    .withEndAction { removeAndReset(currentView) }
+                    .start()
+            }
+            AnimationConstants.ANIMATION_SLIDE_LEFT -> {
+                currentView.animate()
+                    .translationX(-200f)
+                    .setDuration(250)
+                    .withEndAction { removeAndReset(currentView) }
+                    .start()
+            }
         }
     }
 

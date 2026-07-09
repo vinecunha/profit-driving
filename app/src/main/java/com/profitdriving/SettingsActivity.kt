@@ -1219,7 +1219,9 @@ class SettingsActivity : BaseActivity() {
             val r = prefs.getInt(rankKeys[i], i + 1)
             views[i].text = "${r}º"
             upBts[i].isEnabled = r > 1
+            upBts[i].alpha = if (r > 1) 1f else 0.3f
             dnBts[i].isEnabled = r < 4
+            dnBts[i].alpha = if (r < 4) 1f else 0.3f
         }
 
         // Reorder rows by rank (1º first, 4º last)
