@@ -676,21 +676,23 @@ class FloatingCardService : Service() {
 
         val animation = PreferenceManager(this).getCardAnimation()
 
+        when (animation) {
+            AnimationConstants.ANIMATION_FADE -> view.alpha = 0f
+            AnimationConstants.ANIMATION_FADE_SLIDE -> {
+                view.alpha = 0f
+                view.translationY = 80f
+            }
+            AnimationConstants.ANIMATION_SLIDE_RIGHT -> view.translationX = 200f
+            AnimationConstants.ANIMATION_SLIDE_LEFT -> view.translationX = -200f
+            AnimationConstants.ANIMATION_NONE -> {}
+        }
+
         try {
             if (!::windowManager.isInitialized) {
                 windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
             }
             windowManager.addView(view, params)
             overlayView = view
-
-            when (animation) {
-                AnimationConstants.ANIMATION_FADE,
-                AnimationConstants.ANIMATION_FADE_SLIDE -> view.alpha = 0f
-                AnimationConstants.ANIMATION_SLIDE_RIGHT -> view.translationX = 200f
-                AnimationConstants.ANIMATION_SLIDE_LEFT -> view.translationX = -200f
-                AnimationConstants.ANIMATION_FADE_SLIDE -> view.translationY = 80f
-                AnimationConstants.ANIMATION_NONE -> {}
-            }
 
             when (animation) {
                 AnimationConstants.ANIMATION_NONE -> {}

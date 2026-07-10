@@ -158,6 +158,13 @@ data class ServiceTypeStats(
     val earningsPercentOfTotal: Double
 )
 
+data class DriverRating(
+    val level: String,
+    val stars: Int,
+    val score: Int,
+    val description: String
+)
+
 data class AnalysisResultV2(
     val offeredCount: Int,
     val acceptedCount: Int,
@@ -194,7 +201,8 @@ data class AnalysisResultV2(
     val scoreTrend: List<ScoreTrendDay> = emptyList(),
     val multipleStopsImpact: MultipleStopsImpact? = null,
     val rejectionPatterns: RejectionPatterns? = null,
-    val serviceTypes: List<ServiceTypeStats> = emptyList()
+    val serviceTypes: List<ServiceTypeStats> = emptyList(),
+    val driverRating: DriverRating? = null
 )
 
 object AnalysisHelperV2 {
@@ -452,8 +460,57 @@ object AnalysisHelperV2 {
             scoreTrend = scoreTrend,
             multipleStopsImpact = multipleStopsImpact,
             rejectionPatterns = rejectionPatterns,
-            serviceTypes = serviceTypes
+            serviceTypes = serviceTypes,
+            driverRating = calculateDriverRating(avgPricePerKm, avgPricePerHour, profitMargin, acceptanceRate, goodPercent)
         )
+    }
+
+    fun calculateDriverRating(
+        avgPricePerKm: Double,
+        avgPricePerHour: Double,
+        profitMargin: Double,
+        acceptanceRate: Double,
+        goodPercent: Double
+    ): DriverRating {
+        fun scoreMetric(value: Double, thresholds: List<Pair<Double, Int>>): Int {
+            for ((threshold, score) in thresholds) {
+                if (value >= threshold) return score
+            }
+            return 10
+        }
+
+        val pricePerKmScore = scoreMetric(avgPricePerKm, listOf(
+            2.5 to 100, 2.0 to 80, 1.5 to 60, 1.2 to 40, 1.0 to 20
+        ))
+        val pricePerHourScore = scoreMetric(avgPricePerHour, listOf(
+            40.0 to 100, 30.0 to 80, 25.0 to 60, 20.0 to 40, 15.0 to 20
+        ))
+        val profitMarginScore = scoreMetric(profitMargin, listOf(
+            60.0 to 100, 45.0 to 80, 30.0 to 60, 15.0 to 40, 5.0 to 20
+        ))
+        val acceptanceScore = scoreMetric(acceptanceRate, listOf(
+            80.0 to 100, 65.0 to 80, 50.0 to 60, 35.0 to 40, 20.0 to 20
+        ))
+        val goodPctScore = scoreMetric(goodPercent, listOf(
+            70.0 to 100, 55.0 to 80, 40.0 to 60, 25.0 to 40, 10.0 to 20
+        ))
+
+        val overall = (pricePerKmScore + pricePerHourScore + profitMarginScore + acceptanceScore + goodPctScore) / 5
+
+        val (level, stars, description) = when {
+            overall >= 90 -> Triple("Lenda", 5,
+                "Voc\u00EA domina a sele\u00E7\u00E3o de corridas! Suas m\u00E9tricas est\u00E3o no topo. Continue assim para maximizar seus ganhos.")
+            overall >= 75 -> Triple("Profissional", 4,
+                "\u00D3timo desempenho! Voc\u00EA sabe escolher bem as corridas. Pequenos ajustes podem te levar ao pr\u00F3ximo n\u00EDvel.")
+            overall >= 50 -> Triple("Intermedi\u00E1rio", 3,
+                "Voc\u00EA est\u00E1 no caminho certo. Tente filtrar melhor as corridas de baixo valor e foque nos hor\u00E1rios de pico.")
+            overall >= 25 -> Triple("Aprendiz", 2,
+                "Voc\u00EA est\u00E1 come\u00E7ando a entender o mercado. Preste aten\u00E7\u00E3o no R\$/km e evite corridas muito longas por pouco valor.")
+            else -> Triple("Iniciante", 1,
+                "Momento de aprendizado. Estude os indicadores de R\$/km e R\$/h para melhorar sua rentabilidade.")
+        }
+
+        return DriverRating(level, stars, overall, description)
     }
 
     private fun getHourSlot(hour: Int): String {

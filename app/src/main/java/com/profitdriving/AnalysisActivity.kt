@@ -351,6 +351,8 @@ class AnalysisActivity : BaseActivity() {
         serviceTypeContainer.removeAllViews()
         cardIndex = 0
 
+        buildDriverRating(r)
+
         var section = buildExpandableSection("\uD83D\uDCCA", "Vis\u00E3o Geral", cardsContainer)
         buildVisaoGeral(r, section)
         buildScoreDistribution(r, section)
@@ -612,6 +614,112 @@ class AnalysisActivity : BaseActivity() {
 
         container.addView(sectionWrapper)
         return content
+    }
+
+    // ─── CARD: Classificação do Motorista ───
+    private fun buildDriverRating(r: AnalysisResultV2) {
+        val rating = r.driverRating ?: return
+        val density = resources.displayMetrics.density
+
+        val card = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                .apply { setMargins(0, 0, 0, 12) }
+            orientation = VERTICAL
+            setPadding(20, 20, 20, 20)
+            elevation = 4 * density
+            val bg = android.graphics.drawable.GradientDrawable().apply {
+                val bgColor = when {
+                    rating.score >= 90 -> ctxColor(R.color.success_bg)
+                    rating.score >= 75 -> ctxColor(R.color.primary_light)
+                    rating.score >= 50 -> ctxColor(R.color.accent_light)
+                    else -> ctxColor(R.color.bg_surface)
+                }
+                setColor(bgColor)
+                cornerRadius = 16 * density
+            }
+            background = bg
+        }
+
+        // Title
+        card.addView(TextView(this).apply {
+            text = "\uD83C\uDFC6  Classifica\u00E7\u00E3o do Motorista"
+            textSize = 14f
+            setTextColor(ctxColor(R.color.text_primary))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                .apply { bottomMargin = 12 }
+        })
+
+        // Stars row + score
+        val starRow = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+        val starStr = (1..5).joinToString("") { if (it <= rating.stars) "\u2605" else "\u2606" }
+        starRow.addView(TextView(this).apply {
+            text = starStr
+            textSize = 24f
+            setTextColor(ctxColor(R.color.highlight))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        })
+        starRow.addView(TextView(this).apply {
+            text = "  ${rating.score}/100"
+            textSize = 18f
+            setTextColor(ctxColor(R.color.text_secondary))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        })
+        card.addView(starRow)
+
+        // Level name
+        card.addView(TextView(this).apply {
+            text = rating.level
+            textSize = 22f
+            setTextColor(ctxColor(R.color.text_primary))
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                .apply { topMargin = 4; bottomMargin = 8 }
+        })
+
+        // Score bar
+        val barColor = when {
+            rating.score >= 90 -> ctxColor(R.color.success)
+            rating.score >= 75 -> ctxColor(R.color.primary)
+            rating.score >= 50 -> ctxColor(R.color.warning)
+            else -> ctxColor(R.color.error)
+        }
+        val barContainer = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, (10 * density).toInt())
+                .apply { bottomMargin = 12 }
+            orientation = HORIZONTAL
+            val bg = android.graphics.drawable.GradientDrawable().apply {
+                setColor(ctxColor(R.color.bg_surface))
+                cornerRadius = 6 * density
+            }
+            background = bg
+        }
+        barContainer.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(0, MATCH_PARENT, rating.score.toFloat())
+            val fg = android.graphics.drawable.GradientDrawable().apply {
+                setColor(barColor)
+                cornerRadius = 6 * density
+            }
+            background = fg
+        })
+        barContainer.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(0, MATCH_PARENT, (100 - rating.score).toFloat())
+        })
+        card.addView(barContainer)
+
+        // Description
+        card.addView(TextView(this).apply {
+            text = rating.description
+            textSize = 13f
+            setTextColor(ctxColor(R.color.text_secondary))
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+        })
+
+        cardsContainer.addView(card)
     }
 
     // ─── CARD 1: Visão Geral ───
@@ -1763,6 +1871,18 @@ class AnalysisActivity : BaseActivity() {
             card.addView(highlight)
             addDivider(card)
         }
+
+        // Congratulatory or tip message comparing user's actual avg to recommended
+        if (r.avgPricePerKm >= sim.recommendedThreshold) {
+            addText(card,
+                "\uD83C\uDF89 Parab\u00E9ns! Sua m\u00E9dia de R\$ ${FormatUtils.decimal(r.avgPricePerKm)}/km j\u00E1 est\u00E1 alinhada com a melhor estrat\u00E9gia. Continue selecionando bem as corridas!",
+                spFromRes(R.dimen.text_size_11), ctxColor(R.color.success_text), bold = false)
+        } else {
+            addText(card,
+                "\uD83D\uDCA1 Sua m\u00E9dia atual \u00E9 de R\$ ${FormatUtils.decimal(r.avgPricePerKm)}/km. Tente filtrar corridas abaixo de R\$ ${FormatUtils.decimal(sim.recommendedThreshold)}/km para melhorar seus ganhos.",
+                spFromRes(R.dimen.text_size_11), ctxColor(R.color.text_secondary), bold = false)
+        }
+        addDivider(card)
 
         // 3. Tabela comparativa
         val density2 = resources.displayMetrics.density

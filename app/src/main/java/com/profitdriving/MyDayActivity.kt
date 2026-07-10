@@ -877,8 +877,25 @@ class MyDayActivity : BaseActivity() {
             )
             allDailyRides[idx] = updated
             db.updateDailyRide(updated)
-            applyFilters()
+
+            // Targeted update — lets pulse animation play out
+            completedAdapter.notifyRideUpdated(ride.id)
+
+            val filteredCompleted = allDailyRides.filter { r ->
+                val rec = allRideRecords[r.rideId]
+                matchesFilters(rec, r.originalValue)
+            }
+            tvCompletedCount.text = "${filteredCompleted.size}"
+            emptyCompleted.visibility = if (filteredCompleted.isEmpty()) View.VISIBLE else View.GONE
+            rvCompleted.visibility = if (filteredCompleted.isEmpty()) View.GONE else View.VISIBLE
+            updateSummary(filteredCompleted)
+
             Toast.makeText(this, "Corrida marcada como realizada!", Toast.LENGTH_SHORT).show()
+
+            // Full refresh after animation finishes
+            rvCompleted.postDelayed({
+                if (::completedAdapter.isInitialized) applyFilters()
+            }, 900)
         }
     }
 

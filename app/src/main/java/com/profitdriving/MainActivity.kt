@@ -769,6 +769,7 @@ class HistoryAdapter(
         val tvProfitLabel: TextView = view.findViewById(R.id.tvProfitLabel)
         val tvProfitValue: TextView = view.findViewById(R.id.tvProfitValue)
         val ivCardMenu: ImageView = view.findViewById(R.id.ivCardMenu)
+        val viewConfirmedBar: View = view.findViewById(R.id.viewConfirmedBar)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -884,6 +885,10 @@ class HistoryAdapter(
         }
         vh.tvDecisionBadge.setTextColor(decisionTextColor)
         vh.tvDecisionBadge.visibility = if (r.scorePercent != null) View.VISIBLE else View.GONE
+
+        // Confirmação visual (barra verde)
+        val isConfirmed = r.id in confirmedRideIds
+        vh.viewConfirmedBar.visibility = if (isConfirmed) View.VISIBLE else View.GONE
 
         vh.tvPrice.text = FormatUtils.currency(r.value)
         vh.tvRatingText.text = FormatUtils.decimal(r.rating)
@@ -1098,6 +1103,11 @@ class HistoryAdapter(
                 vh.cardRoot.setBackgroundResource(R.drawable.card_bg_neutral)
                 vh.cardRoot.cardElevation = 0f
                 }
+            }
+
+            // Borda verde quando confirmado (sobrescreve a borda do status)
+            if (r.id in confirmedRideIds) {
+                vh.cardRoot.setBackgroundResource(R.drawable.card_bg_confirmed)
             }
 
             vh.tvTimestamp.text = dateFormat.format(java.util.Date(r.timestamp))

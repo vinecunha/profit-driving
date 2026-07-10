@@ -153,7 +153,7 @@ class CardClassificationEngine {
         val score = points.coerceAtMost(maxPoints)
         val tier = determineTier(score)
 
-        if (tier <= CardTier.BROKEN) {
+        if (tier.ordinal >= CardTier.BROKEN.ordinal) {
             L.w(TAG, "Card classificado como ${tier.displayName} (${score}%): ${missingFields.joinToString(", ")} ${suspiciousPatterns.joinToString("; ")}")
         }
 
@@ -178,6 +178,3 @@ class CardClassificationEngine {
     }
 }
 
-operator fun CardTier.compareTo(other: CardTier): Int {
-    return this.minScore.compareTo(other.minScore)
-}

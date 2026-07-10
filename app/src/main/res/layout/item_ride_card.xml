@@ -295,9 +295,16 @@
                 </LinearLayout>
 
             </LinearLayout>
-
         </LinearLayout>
         <!-- fim header escuro -->
+
+        <!-- Confirmation indicator bar -->
+        <View
+            android:id="@+id/viewConfirmedBar"
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:background="@color/success"
+            android:visibility="gone" />
 
         <!-- ═══════════════════════════════════════════════════════
              CORPO — métricas · rota · total

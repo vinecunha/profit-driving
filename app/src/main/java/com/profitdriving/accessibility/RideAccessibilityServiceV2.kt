@@ -31,6 +31,7 @@ import com.profitdriving.FloatingCardService
 import com.profitdriving.L
 import com.profitdriving.RideData
 import com.profitdriving.RideRecord
+import com.profitdriving.SecurePreferences
 import com.profitdriving.SettingsActivity
 import com.profitdriving.accessibility.extractor.App99Extractor
 import com.profitdriving.accessibility.extractor.RawCardData
@@ -398,7 +399,11 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     }
 
     private fun isAppReadingEnabled(app: String): Boolean {
-        val prefs = getSharedPreferences(SettingsActivity.PREF_NAME, 0)
+        val prefs = try {
+            SecurePreferences.get(this)
+        } catch (_: Exception) {
+            getSharedPreferences(SettingsActivity.PREF_NAME, 0)
+        }
         return when (app) {
             "uber" -> prefs.getBoolean(SettingsActivity.KEY_READ_UBER, true)
             "99" -> prefs.getBoolean(SettingsActivity.KEY_READ_APP99, true)
@@ -749,7 +754,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             }
             L.d(TAG, "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-            if (classification.tier <= CardTier.BROKEN) {
+            if (classification.tier.ordinal >= CardTier.BROKEN.ordinal) {
                 L.w(TAG, "⛔ Card descartado: ${classification.tier.displayName} (${classification.score}%)")
                 db.updateRawLogStatus(currentRawLogId, status = "failed", error = "${classification.tier.name} score=${classification.score}%")
                 return

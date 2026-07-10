@@ -36,6 +36,13 @@ class MyDayRideAdapter(
         notifyDataSetChanged()
     }
 
+    fun notifyRideUpdated(rideId: Long) {
+        val idx = items.indexOfFirst { it.id == rideId }
+        if (idx >= 0) {
+            notifyItemChanged(idx)
+        }
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_my_day_ride, parent, false)
@@ -105,6 +112,26 @@ class MyDayRideAdapter(
         holder.chkCompleted.setTextColor(
             if (ride.isCompleted) AppColors.success else AppColors.textSecondary
         )
+
+        // Green left-edge strip for confirmed rides
+        if (ride.isCompleted) {
+            val density = holder.itemView.resources.displayMetrics.density
+            val stripPx = (5 * density).toInt()
+            val cornerPx = holder.itemView.resources.getDimension(R.dimen.inner_corner_radius)
+            val green = android.graphics.drawable.GradientDrawable().apply {
+                setColor(androidx.core.content.ContextCompat.getColor(holder.itemView.context, R.color.success))
+                cornerRadius = cornerPx
+            }
+            val white = android.graphics.drawable.GradientDrawable().apply {
+                setColor(androidx.core.content.ContextCompat.getColor(holder.itemView.context, R.color.bg_surface))
+                cornerRadius = cornerPx
+            }
+            val layers = android.graphics.drawable.LayerDrawable(arrayOf(green, white))
+            layers.setLayerInset(1, stripPx, 0, 0, 0)
+            holder.root.background = layers
+        } else {
+            holder.root.setBackgroundResource(R.drawable.inner_card_bg)
+        }
 
         if (ride.tipAmount > 0 || ride.adjustmentDifference != 0.0) {
             val parts = mutableListOf<String>()
@@ -224,7 +251,22 @@ class MyDayRideAdapter(
         }
 
         // Single action button with dialog
-        holder.chkCompleted.setOnClickListener { onToggleCompleted(ride) }
+        holder.chkCompleted.setOnClickListener {
+            if (!ride.isCompleted) {
+                // Pulse animation on the checkbox
+                holder.chkCompleted.animate()
+                    .scaleX(1.35f).scaleY(1.35f)
+                    .setDuration(200)
+                    .withEndAction {
+                        holder.chkCompleted.animate()
+                            .scaleX(1f).scaleY(1f)
+                            .setDuration(150)
+                            .start()
+                    }
+                    .start()
+            }
+            onToggleCompleted(ride)
+        }
         holder.btnActions.setOnClickListener {
             val context = holder.itemView.context
             val actions = mutableListOf<() -> Unit>()
