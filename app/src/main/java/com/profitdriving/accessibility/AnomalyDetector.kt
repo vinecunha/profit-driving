@@ -10,6 +10,11 @@ import java.util.Locale
 
 class AnomalyDetector(private val context: Context) {
 
+    private val failureCount = mutableMapOf<String, Int>()
+    private val failureThreshold = 8
+    private val resetAfterMs = 300_000L
+    private var lastFailureReset = System.currentTimeMillis()
+
     data class AnomalyResult(
         val isAnomaly: Boolean,
         val severity: Severity,
@@ -58,14 +63,33 @@ class AnomalyDetector(private val context: Context) {
         )
     }
 
-    fun notify(result: AnomalyResult) {
+    fun recordFailure(pkg: String) {
+        val now = System.currentTimeMillis()
+        if (now - lastFailureReset > resetAfterMs) {
+            failureCount.clear()
+            lastFailureReset = now
+        }
+        val key = if (pkg.contains("ubercab")) "uber" else "app99"
+        val count = (failureCount[key] ?: 0) + 1
+        failureCount[key] = count
+        L.d(TAG, "Falha consecutiva #$count para $key")
+        if (count >= failureThreshold) {
+            notifyLayoutChange(key, count)
+            failureCount[key] = 0
+        }
+    }
+
+    fun recordSuccess(pkg: String) {
+        val key = if (pkg.contains("ubercab")) "uber" else "app99"
+        failureCount[key] = 0
+    }
+
+    private fun notifyLayoutChange(app: String, failures: Int) {
         try {
             createChannel()
-            val appLabel = if (result.pkg.contains("ubercab")) "Uber" else "99"
-            val title = "Layout alterado — $appLabel"
-            val message = "Campos não encontrados: ${result.missingFields.joinToString(", ")} " +
-                    "(${result.presentFields}/${result.totalFields} presentes)"
-
+            val title = "📍 Layout pode ter mudado — $app"
+            val message = "$failures cards consecutivos não foram reconhecidos. " +
+                    "O leitor pode estar desatualizado para o novo layout do $app."
             val notification = NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_menu_info_details)
                 .setContentTitle(title)
@@ -74,11 +98,10 @@ class AnomalyDetector(private val context: Context) {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .build()
-
             NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
-            L.w(TAG, "🔔 Anomalia notificada: $title — $message")
+            L.w(TAG, "🔔 Notificação de layout: $title")
         } catch (e: Exception) {
-            L.e(TAG, "Falha ao notificar anomalia: ${e.message}")
+            L.e(TAG, "Falha ao notificar: ${e.message}")
         }
     }
 

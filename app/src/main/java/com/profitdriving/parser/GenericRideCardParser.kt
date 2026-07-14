@@ -7,7 +7,6 @@ import com.profitdriving.accessibility.extractor.RawCardData
 import com.profitdriving.accessibility.extractor.UberCardExtractor
 import java.util.Locale
 
-// ─── Aliases para RideCardRegexes ───
 private val VALUE_REGEX get() = RideCardRegexes.value
 private val PICKUP_REGEX get() = RideCardRegexes.pickup
 private val VIAGEM_REGEX get() = RideCardRegexes.trip
@@ -33,7 +32,7 @@ class GenericRideCardParser : RideDataParser {
         val hasMoney = full.contains("r$")
         val hasKm = full.contains("km")
         val hasMin = full.contains("min")
-        return hasMoney && hasKm && hasMin
+        return hasMoney && (hasKm || hasMin)
     }
 
     override fun parse(raw: RawCardData): RideData? {
@@ -42,12 +41,20 @@ class GenericRideCardParser : RideDataParser {
 
         val value = extractValue(text)
         if (value == null || value <= 0) {
-            L.d(TAG, "Valor inválido — GenericRideCardParser abortando")
+            L.d(TAG, "Valor inválido — abortando")
             return null
         }
 
-        val distance = extractDistance(text)
-        val timeMin = extractTime(text)
+        var distance = extractDistance(text)
+        var timeMin = extractTime(text)
+
+        if (distance == null || timeMin == null) {
+            L.d(TAG, "Estrutura primária falhou (dist=$distance time=$timeMin), tentando fallback numérico")
+            val numeric = extractNumericFallback(text)
+            if (distance == null) distance = numeric.first
+            if (timeMin == null) timeMin = numeric.second
+        }
+
         val rating = extractRating(text)
         val pickupKm = extractPickupDistance(text)
         val pickupTime = extractPickupTime(text)
@@ -60,6 +67,11 @@ class GenericRideCardParser : RideDataParser {
         val (pickupAddress, dropoffAddress) = extractAddresses(text)
 
         L.d(TAG, "GenericRideCardParser parsed: value=$value km=$distance tempo=$timeMin nota=$rating")
+
+        if ((distance == null || distance <= 0) && (timeMin == null || timeMin <= 0)) {
+            L.d(TAG, "Sem distância nem tempo — ride inválido")
+            return null
+        }
 
         return RideData(
             value = value,
@@ -86,6 +98,45 @@ class GenericRideCardParser : RideDataParser {
             dropoffAddress = dropoffAddress,
             exclusiveHash = null
         )
+    }
+
+    private fun extractNumericFallback(text: String): Pair<Double?, Int?> {
+        val distCandidates = mutableListOf<Double>()
+        for (pat in DISTANCE_PATTERNS) {
+            for (m in pat.findAll(text)) {
+                val v = UberCardExtractor.parseBr(m.groupValues[1])
+                if (v != null && v > 0 && v < 200) distCandidates.add(v)
+            }
+        }
+        if (distCandidates.isEmpty()) {
+            val raw = Regex("""(\d+[.,]\d+)\s*km""", RegexOption.IGNORE_CASE).findAll(text)
+                .mapNotNull { UberCardExtractor.parseBr(it.groupValues[1]) }
+                .filter { it > 0 && it < 200 }
+                .toList()
+            distCandidates.addAll(raw)
+        }
+        val bestDist = distCandidates.maxOrNull()
+
+        val timeCandidates = mutableListOf<Int>()
+        for (pat in TIME_PATTERNS) {
+            for (m in pat.findAll(text)) {
+                val v = m.groupValues[1].toIntOrNull()
+                if (v != null && v > 0 && v < 600) timeCandidates.add(v)
+            }
+        }
+        if (timeCandidates.isEmpty()) {
+            val rawMin = Regex("""(\d+)\s*min(?:uto)?s?""", RegexOption.IGNORE_CASE).findAll(text)
+                .mapNotNull { it.groupValues[1].toIntOrNull() }
+                .filter { it > 0 && it < 600 }
+                .toList()
+            timeCandidates.addAll(rawMin)
+        }
+        val bestTime = timeCandidates.maxOrNull()
+
+        if (bestDist == null && bestTime == null) return Pair(null, null)
+
+        L.d(TAG, "Fallback numérico: dist=$bestDist (de $distCandidates) time=$bestTime (de $timeCandidates)")
+        return Pair(bestDist, bestTime)
     }
 
     private fun extractValue(text: String): Double? {

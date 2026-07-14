@@ -63,6 +63,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     private var currentRawLogId: Long = -1L
     private var isReScanTriggered = false
     private val eventAlertManager by lazy { EventAlertManager(this) }
+    private val anomalyDetector = AnomalyDetector(this)
 
     private val parsers: List<RideDataParser> = listOf(
         ReservationDetailParser(),
@@ -591,10 +592,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                 L.d(TAG, "Nenhum parser disponível para este card")
                 db.updateRawLogStatus(currentRawLogId, status = "failed", error = "no parser available")
 
-                val anomaly = AnomalyDetector(this).analyze(raw, pkg)
-                if (anomaly.isAnomaly) {
-                    AnomalyDetector(this).notify(anomaly)
-                }
+                anomalyDetector.recordFailure(pkg)
 
                 return
             }
@@ -604,6 +602,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             if (ride == null || ride.value == null || ride.value <= 0) {
                 L.d(TAG, "Parser retornou RideData inválido — ignorando")
                 db.updateRawLogStatus(currentRawLogId, status = "failed", error = "invalid ride data")
+                anomalyDetector.recordFailure(pkg)
                 return
             }
 
@@ -625,6 +624,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             if (classification.tier.ordinal >= CardTier.BROKEN.ordinal) {
                 L.w(TAG, "⛔ Card descartado: ${classification.tier.displayName} (${classification.score}%)")
                 db.updateRawLogStatus(currentRawLogId, status = "failed", error = "${classification.tier.name} score=${classification.score}%")
+                anomalyDetector.recordFailure(pkg)
                 return
             }
 
@@ -642,6 +642,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             if (!isValidRide(ride)) {
                 L.w(TAG, "⛔ Card inválido ignorado: value=${ride.value} km=${ride.distanceKm} time=${ride.timeMin}min")
                 db.updateRawLogStatus(currentRawLogId, status = "failed", error = "invalid ride (no value or no distance/time)")
+                anomalyDetector.recordFailure(pkg)
                 return
             }
 
@@ -661,6 +662,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             saveOrUpdateRide(ride, cardHash, db)
             db.updateRawLogRideData(currentRawLogId, ride)
             db.updateRawLogStatus(currentRawLogId, rideId = lastInsertedId.takeIf { it >= 0 }, status = "success")
+            anomalyDetector.recordSuccess(pkg)
 
             cardVisible = true
             lastHash = hash
