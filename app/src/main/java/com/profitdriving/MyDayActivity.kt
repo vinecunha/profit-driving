@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.profitdriving.predictor.EarningsPredictor
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -63,6 +64,7 @@ class MyDayActivity : BaseActivity() {
     private lateinit var tvProfitPercent: TextView
     private lateinit var tvRevenuePerKm: TextView
     private lateinit var tvRevenuePerHour: TextView
+    private lateinit var tvPrediction: TextView
     private lateinit var tvPeriodBadge: TextView
 
     // Cost breakdown views
@@ -200,6 +202,7 @@ class MyDayActivity : BaseActivity() {
         tvProfitPercent = findViewById(R.id.tvProfitPercent)
         tvRevenuePerKm = findViewById(R.id.tvRevenuePerKm)
         tvRevenuePerHour = findViewById(R.id.tvRevenuePerHour)
+        tvPrediction = findViewById(R.id.tvPrediction)
         tvPeriodBadge = findViewById(R.id.tvPeriodBadge)
 
         btnToggleCostDetails = findViewById(R.id.btnToggleCostDetails)
@@ -798,6 +801,18 @@ class MyDayActivity : BaseActivity() {
 
         tvRevenuePerKm.text = "R\$/km: ${FormatUtils.decimal(revenuePerKm)}"
         tvRevenuePerHour.text = "R\$/h: ${FormatUtils.decimal(revenuePerHour)}"
+
+        try {
+            val pred = EarningsPredictor(db).predictTodayEarnings()
+            if (pred.predictedEarnings > 0) {
+                tvPrediction.text = "Previsão IA: R$ ${FormatUtils.decimal(pred.predictedEarnings)}"
+                tvPrediction.visibility = View.VISIBLE
+            } else {
+                tvPrediction.visibility = View.GONE
+            }
+        } catch (_: Exception) {
+            tvPrediction.visibility = View.GONE
+        }
 
         updateCostBreakdown(totalKm)
     }

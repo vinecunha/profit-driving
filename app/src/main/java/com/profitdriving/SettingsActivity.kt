@@ -28,7 +28,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import com.profitdriving.accessibility.extractor.RawCardData
 import com.profitdriving.parser.App99CardParser
-import com.profitdriving.parser.DiscoveryCardParser
+import com.profitdriving.parser.GenericRideCardParser
 import com.profitdriving.parser.ExclusiveCardParser
 import com.profitdriving.parser.RadarCardParser
 import com.profitdriving.parser.ReservationDetailParser
@@ -372,38 +372,52 @@ class SettingsActivity : BaseActivity() {
         setupEventNotificationsSettings()
         setupAppReadingSettings()
         setupDataExportImport()
+        setupBackupEntry()
+        setupSupportEntry()
     }
 
     private fun showReprocessDialog() {
         val db = DatabaseHelper(this)
         val failedCount = db.getFailedRawCards().size
         val pendingCount = db.getPendingRawCards().size
+        val successCount = db.getSuccessfulRawCards().size
         val totalCount = failedCount + pendingCount
 
-        if (totalCount == 0) {
+        val parsers: List<RideDataParser> = listOf(
+            ReservationDetailParser(),
+            RadarCardParser(),
+            ExclusiveCardParser(),
+            App99CardParser(),
+            GenericRideCardParser()
+        )
+
+        if (totalCount == 0 && successCount == 0) {
             AlertDialog.Builder(this)
                 .setTitle("Reprocessar Cards")
-                .setMessage("Nenhum card com falha encontrado.")
+                .setMessage("Nenhum card encontrado para reprocessar.")
                 .setPositiveButton("OK", null)
                 .show()
             return
         }
 
+        val message = buildString {
+            if (totalCount > 0) {
+                append("$failedCount failed, $pendingCount pending. Reprocessar com parsers atualizados?")
+            }
+            if (successCount > 0) {
+                if (totalCount > 0) appendLine()
+                append("$successCount cards já processados — também podem ser corrigidos com os novos parsers.")
+            }
+        }
+
         AlertDialog.Builder(this)
             .setTitle("Reprocessar Cards")
-            .setMessage("$failedCount cards com status 'failed' e $pendingCount com status 'pending'. Tentar reprocessar com parsers atualizados?")
+            .setMessage(message)
             .setPositiveButton("Reprocessar") { _, _ ->
-                val parsers: List<RideDataParser> = listOf(
-                    ReservationDetailParser(),
-                    RadarCardParser(),
-                    ExclusiveCardParser(),
-                    App99CardParser(),
-                    DiscoveryCardParser()
-                )
                 val reprocessor = RawCardReprocessor(this, parsers)
-                reprocessor.reprocessInBackground(limit = 50) { count ->
+                reprocessor.reprocessInBackground(limit = 50, includeSuccessful = successCount > 0) { count ->
                     runOnUiThread {
-                        Toast.makeText(this, "$count card(s) reprocessados com sucesso!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "$count card(s) atualizados!", Toast.LENGTH_SHORT).show()
                     }
                 }
                 Toast.makeText(this, "Reprocessamento iniciado em background!", Toast.LENGTH_SHORT).show()
@@ -1173,6 +1187,28 @@ class SettingsActivity : BaseActivity() {
         findViewById<TextView>(R.id.btnImportData).setOnClickListener {
             importLauncher.launch(arrayOf("application/json", "*/*"))
         }
+    }
+
+    private fun setupBackupEntry() {
+        findViewById<LinearLayout>(R.id.llBackup).setOnClickListener {
+            startActivity(Intent(this, com.profitdriving.backup.BackupActivity::class.java))
+        }
+    }
+
+    private fun setupSupportEntry() {
+        findViewById<LinearLayout>(R.id.llSupport).setOnClickListener {
+            startActivity(Intent(this, com.profitdriving.support.SupportActivity::class.java))
+        }
+        try {
+            val pendingCount = com.profitdriving.support.SupportManager(this).getPendingReports().size
+            val tvBadge = findViewById<TextView>(R.id.tvSupportBadge)
+            if (pendingCount > 0) {
+                tvBadge.text = pendingCount.toString()
+                tvBadge.visibility = View.VISIBLE
+            } else {
+                tvBadge.visibility = View.GONE
+            }
+        } catch (_: Exception) { }
     }
 
     private fun migrateWeightsToRanks() {

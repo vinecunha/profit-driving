@@ -16,6 +16,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+import com.profitdriving.predictor.EarningsPredictor
+import com.profitdriving.predictor.DemandForecast
+import com.profitdriving.predictor.MarketTrendPredictor
+import com.profitdriving.predictor.CostPredictor
+import com.profitdriving.predictor.OfferAnalyzer
+
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -371,6 +377,9 @@ class AnalysisActivity : BaseActivity() {
         buildScoreTrend(r, section)
         buildCidades(r, section)
         buildBairros(r, section)
+        buildDestinationHotspots(r, section)
+        buildDestinationsToAvoid(r, section)
+        buildHourlyDestinationsCard(r, section)
         buildHourlyForecast(r, section)
         buildDynamicTrend(r, section)
         buildWeekdayRanking(r, section)
@@ -383,6 +392,14 @@ class AnalysisActivity : BaseActivity() {
         buildDailyProjection(r, section)
         buildFloorSimulation(r, section)
         buildInsights(r, section)
+
+        section = buildExpandableSection("\uD83E\uDD16", "Previs\u00F5es IA", cardsContainer)
+        buildEarningsPrediction(section)
+        buildEarningsBestHours(section)
+        buildHotspotPrediction(section)
+        buildTrendPrediction(section)
+        buildCostPrediction(section)
+        buildHourlyAvgTable(section)
 
         buildServiceTypeCards(r)
         updateCardVisibility()
@@ -976,6 +993,165 @@ class AnalysisActivity : BaseActivity() {
                 text = "R\$ ${FormatUtils.decimal(n.avgPricePerKm)} | ${"%.0f".format(n.dynamicPercentage)}%"
                 textSize = 11f
                 setTextColor(ctxColor(R.color.text_secondary))
+            })
+
+            card.addView(row)
+        }
+
+        container.addView(card)
+    }
+
+    // ─── CARD: Hotspots por Destino ───
+    private fun buildDestinationHotspots(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
+        val hotspots = r.destinationHotspots.take(6)
+        if (hotspots.isEmpty()) return
+        val card = createCard("\uD83D\uDCCD Hotspots por Destino")
+
+        card.addView(TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { setMargins(0, 0, 0, 8) }
+            text = "\uD83D\uDD25 Quente = R\$/km alto + din\u00E2mica | \u26A0\uFE0F Evitar = R\$/km baixo"
+            textSize = 10f
+            setTextColor(ctxColor(R.color.text_tertiary))
+        })
+
+        for (h in hotspots) {
+            val row = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                orientation = VERTICAL
+                setPadding(0, 6, 0, 6)
+            }
+
+            val header = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                orientation = HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            header.addView(TextView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
+                text = h.destination
+                textSize = 13f
+                setTextColor(ctxColor(R.color.text_primary))
+                setTypeface(null, android.graphics.Typeface.BOLD)
+            })
+            header.addView(TextView(this).apply {
+                text = h.recommendation
+                textSize = 11f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+            })
+            row.addView(header)
+
+            addText(row, buildString {
+                append("${h.rideCount} corridas")
+                append("  |  R\$/km: R\$ ${FormatUtils.decimal(h.avgPricePerKm)}")
+                append("  |  Din\u00E2mica: ${"%.0f".format(h.dynamicPercent)}%")
+                append("  |  M\u00E9dia: R\$ ${FormatUtils.decimal(h.avgValue)}")
+            }, 11f, ctxColor(R.color.text_secondary))
+
+            if (h != hotspots.last()) {
+                row.addView(View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, 1).apply { setMargins(0, 4, 0, 4) }
+                    setBackgroundColor(ctxColor(R.color.bg_surface))
+                })
+            }
+
+            card.addView(row)
+        }
+
+        container.addView(card)
+    }
+
+    // ─── CARD: Destinos para Evitar ───
+    private fun buildDestinationsToAvoid(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
+        val avoid = r.destinationHotspots
+            .filter { it.recommendation.contains("Evitar") }
+            .sortedBy { it.avgPricePerKm }
+            .take(5)
+        if (avoid.isEmpty()) return
+        val card = createCard("\u26A0\uFE0F Destinos para Evitar")
+
+        for (h in avoid) {
+            val row = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                orientation = HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, 6, 0, 6)
+            }
+            row.addView(TextView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
+                text = h.destination
+                textSize = 12f
+                setTextColor(ctxColor(R.color.error))
+                setTypeface(null, android.graphics.Typeface.BOLD)
+            })
+            row.addView(TextView(this).apply {
+                text = "R\$ ${FormatUtils.decimal(h.avgPricePerKm)}/km | ${h.rideCount} corridas"
+                textSize = 11f
+                setTextColor(ctxColor(R.color.text_secondary))
+            })
+            card.addView(row)
+
+            addText(card, buildString {
+                append("M\u00E9dia: R\$ ${FormatUtils.decimal(h.avgValue)}")
+                append("  |  Din\u00E2mica: ${"%.0f".format(h.dynamicPercent)}%")
+                append("  |  Rating: ${FormatUtils.decimal(h.avgRating)}")
+            }, 10f, ctxColor(R.color.text_tertiary))
+        }
+
+        container.addView(card)
+    }
+
+    // ─── CARD: Destinos por Horário ───
+    private fun buildHourlyDestinationsCard(r: AnalysisResultV2, container: LinearLayout = cardsContainer) {
+        val hourly = r.hourlyDestinations.filter { it.rideCount > 0 }
+        if (hourly.isEmpty()) return
+        val card = createCard("\uD83D\uDD52 Destinos mais frequentes por hor\u00E1rio")
+
+        val slots = listOf(
+            6..9 to "06h-10h", 10..13 to "10h-14h",
+            14..17 to "14h-18h", 18..21 to "18h-22h",
+            22..23 to "22h-00h", 0..5 to "00h-06h"
+        )
+
+        for ((range, label) in slots) {
+            val hourData = hourly.filter { it.hour in range }
+            if (hourData.isEmpty()) continue
+
+            val best = hourData.maxByOrNull { it.rideCount } ?: continue
+            val barColor = when {
+                best.avgPricePerKm >= 1.8 -> ctxColor(R.color.success)
+                best.avgPricePerKm >= 1.2 -> ctxColor(R.color.warning)
+                else -> ctxColor(R.color.error)
+            }
+
+            val row = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                orientation = HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, 5, 0, 5)
+            }
+
+            row.addView(TextView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(64.dpToPx(), WRAP_CONTENT)
+                text = label
+                textSize = 11f
+                setTextColor(ctxColor(R.color.text_secondary))
+                setTypeface(null, android.graphics.Typeface.BOLD)
+            })
+
+            row.addView(TextView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f)
+                text = best.destination
+                textSize = 12f
+                setTextColor(ctxColor(R.color.text_primary))
+                maxLines = 1
+                ellipsize = android.text.TextUtils.TruncateAt.END
+            })
+
+            row.addView(TextView(this).apply {
+                text = "${best.rideCount} \u2022 R\$ ${FormatUtils.decimal(best.avgPricePerKm)}"
+                textSize = 11f
+                setTextColor(barColor)
+                setTypeface(null, android.graphics.Typeface.BOLD)
             })
 
             card.addView(row)
@@ -2339,6 +2515,171 @@ class AnalysisActivity : BaseActivity() {
         Calendar.SATURDAY -> "S\u00E1bado"
         Calendar.SUNDAY -> "Domingo"
         else -> "?"
+    }
+
+    // ─── Previsões IA ───
+
+    private fun buildEarningsPrediction(section: LinearLayout) {
+        val p = EarningsPredictor(db).predictTodayEarnings()
+        if (p.predictedEarnings <= 0) return
+        val card = createCard("\uD83D\uDCB0 Previs\u00E3o de Ganhos (IA)")
+        addText(card, "\uD83D\uDCC8 Previs\u00E3o do dia: R\$ ${FormatUtils.decimal(p.predictedEarnings)}", 15f, ctxColor(R.color.accent), bold = true)
+        addText(card, "Faixa esperada: R\$ ${FormatUtils.decimal(p.minEarnings)} \u2013 R\$ ${FormatUtils.decimal(p.maxEarnings)}", 12f, ctxColor(R.color.text_secondary))
+        addText(card, "Confian\u00E7a: ${"%.0f".format(p.confidence * 100)}%", 12f, ctxColor(R.color.text_tertiary))
+        if (p.factors.isNotEmpty()) {
+            addDivider(card)
+            for (factor in p.factors) addText(card, "\u2022 $factor", 11f, ctxColor(R.color.text_tertiary))
+        }
+        section.addView(card)
+    }
+
+    private fun buildEarningsBestHours(section: LinearLayout) {
+        val hours = EarningsPredictor(db).predictBestHours()
+        if (hours.isEmpty()) return
+        val card = createCard("\u23F0 Melhores Hor\u00E1rios (IA)")
+        val best = hours.sortedByDescending { it.predictedPph }.take(3)
+        for (h in best) {
+            val icon = when {
+                h.predictedPph > 40 -> "\uD83D\uDFE2"
+                h.predictedPph > 25 -> "\uD83D\uDFE1"
+                else -> "\uD83D\uDD34"
+            }
+            addText(card, "$icon ${h.hour}h \u2014 R\$ ${FormatUtils.decimal(h.predictedPph)}/h (R\$ ${FormatUtils.decimal(h.predictedPpk)}/km)", 12f)
+        }
+        section.addView(card)
+    }
+
+    private fun buildHotspotPrediction(section: LinearLayout) {
+        val hotspots = DemandForecast(db).predictBestNeighborhoods()
+        if (hotspots.isEmpty()) return
+        val card = createCard("\uD83D\uDCCD Hotspots (IA)")
+        for (hs in hotspots) {
+            val confidenceBar = "\u2588".repeat((hs.confidence * 10).toInt().coerceIn(1, 10))
+            addText(card, "\u2022 ${hs.neighborhood} \u2014 ~${hs.predictedOffers} corridas $confidenceBar", 12f)
+        }
+        section.addView(card)
+    }
+
+    private fun buildTrendPrediction(section: LinearLayout) {
+        val apps = listOf("Uber", "99")
+        if (apps.isEmpty()) return
+        val card = createCard("\uD83D\uDCC8 Tend\u00EAncia de Mercado (IA)")
+        for (app in apps) {
+            val trend = MarketTrendPredictor(db).predictTrend(app)
+            if (trend.currentAvg <= 0) continue
+            val directionIcon = when (trend.trendDirection) {
+                "up" -> "\u2197\uFE0F"
+                "down" -> "\u2198\uFE0F"
+                else -> "\u27A1\uFE0F"
+            }
+            addText(card, "$app: R\$ ${FormatUtils.decimal(trend.currentAvg)}/km $directionIcon", 13f, ctxColor(R.color.text_primary), bold = true)
+            addText(card, "  Tend\u00EAncia: ${trend.trendDirection} (${"%.2f".format(trend.trendMagnitude)}/dia)  Conf: ${"%.0f".format(trend.confidence * 100)}%", 11f, ctxColor(R.color.text_tertiary))
+            if (trend.forecast7Days.size >= 7) {
+                val lastVal = trend.forecast7Days.last()
+                addText(card, "  Previs\u00E3o 7 dias: R\$ ${FormatUtils.decimal(trend.forecast7Days.first())} \u2192 R\$ ${FormatUtils.decimal(lastVal)}", 11f, ctxColor(R.color.text_secondary))
+            }
+        }
+        section.addView(card)
+    }
+
+    private fun buildCostPrediction(section: LinearLayout) {
+        val cost = CostPredictor(db).predictNextMonthCosts()
+        if (cost.predictedTotalCostPerKm <= 0) return
+        val card = createCard("\u26A1 Previs\u00E3o de Custos (IA)")
+        addText(card, "Custo combust\u00EDvel/m\u00EAs: R\$ ${FormatUtils.decimal(cost.predictedFuelCost)}", 12f)
+        addText(card, "Custo fixo/m\u00EAs: R\$ ${FormatUtils.decimal(cost.predictedFixedCost)}", 12f)
+        addDivider(card)
+        addText(card, "Custo total/km: R\$ ${FormatUtils.decimal(cost.predictedTotalCostPerKm)}", 13f, ctxColor(R.color.warning), bold = true)
+        addText(card, "Confian\u00E7a: ${"%.0f".format(cost.confidence * 100)}%", 11f, ctxColor(R.color.text_tertiary))
+        if (cost.factors.isNotEmpty()) {
+            for (factor in cost.factors) addText(card, "\u2022 $factor", 11f, ctxColor(R.color.text_tertiary))
+        }
+        section.addView(card)
+    }
+
+    private fun buildHourlyAvgTable(section: LinearLayout) {
+        val apps = listOf("Uber", "99")
+        val analyzer = OfferAnalyzer(db)
+        val allSlots = apps.mapNotNull { app ->
+            val slots = analyzer.getHourSlotAverages(app)
+            if (slots.any { it.avgPpk > 0 }) app to slots else null
+        }
+        if (allSlots.isEmpty()) return
+
+        val card = createCard("\uD83D\uDCCA R\$/km por Hor\u00E1rio (72h)")
+        val density = resources.displayMetrics.density
+
+        val table = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = VERTICAL
+            setPadding(0, 4, 0, 0)
+        }
+
+        val headerRow = LinearLayout(this).apply {
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            orientation = HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            addView(TextView(this@AnalysisActivity).apply {
+                layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.3f)
+                text = "Horário"
+                textSize = 10f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(ctxColor(R.color.text_secondary))
+            })
+            for ((app, _) in allSlots) {
+                addView(TextView(this@AnalysisActivity).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.35f / allSlots.size)
+                    text = app
+                    textSize = 10f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(ctxColor(R.color.text_secondary))
+                    gravity = Gravity.CENTER_HORIZONTAL
+                })
+            }
+        }
+        table.addView(headerRow)
+
+        val firstSlots = allSlots.firstOrNull()?.second ?: return
+        for (slot in firstSlots) {
+            if (slot.avgPpk <= 0 && allSlots.all { (_, s) -> s.none { it.startHour == slot.startHour && it.avgPpk > 0 } }) continue
+            val row = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+                orientation = HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, 3, 0, 3)
+
+                addView(TextView(this@AnalysisActivity).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.3f)
+                    text = slot.label
+                    textSize = 10f
+                    setTextColor(ctxColor(R.color.text_primary))
+                })
+
+                for ((_, slots) in allSlots) {
+                    val match = slots.find { it.startHour == slot.startHour }
+                    val ppk = match?.avgPpk ?: 0.0
+                    val count = match?.count ?: 0
+                    val color = when {
+                        ppk <= 0 -> ctxColor(R.color.text_tertiary)
+                        ppk > allSlots.flatMap { (_, s) -> s.map { it.avgPpk } }.average() -> ctxColor(R.color.success)
+                        else -> ctxColor(R.color.text_primary)
+                    }
+                    addView(TextView(this@AnalysisActivity).apply {
+                        layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 0.35f / allSlots.size)
+                        text = if (ppk > 0) "R\$${"%.2f".format(ppk)}" else "-"
+                        textSize = 10f
+                        setTextColor(color)
+                        gravity = Gravity.CENTER_HORIZONTAL
+                    })
+                }
+            }
+            table.addView(row)
+        }
+
+        card.addView(table)
+        addDivider(card)
+        addText(card, "Média das últimas 72h por app + horário. Base para comparação no card flutuante.", 9f, ctxColor(R.color.text_tertiary))
+        section.addView(card)
     }
 
 }

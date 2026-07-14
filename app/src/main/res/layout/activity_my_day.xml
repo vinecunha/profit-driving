@@ -380,6 +380,23 @@
                         android:textSize="@dimen/text_size_11"
                         android:textColor="@color/text_tertiary" />
 
+                    <View
+                        android:layout_width="4dp"
+                        android:layout_height="4dp"
+                        android:background="@color/border"
+                        android:layout_marginHorizontal="6dp"
+                        android:layout_gravity="center" />
+
+                    <TextView
+                        android:id="@+id/tvPrediction"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="@dimen/text_size_11"
+                        android:textColor="@color/accent"
+                        android:visibility="gone"
+                        android:maxLines="1" />
+
                 </LinearLayout>
 
                 <!-- Botão expandir custos -->

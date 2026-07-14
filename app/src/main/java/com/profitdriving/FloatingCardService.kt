@@ -26,7 +26,10 @@ import android.view.WindowManager.BadTokenException
 import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NotificationCompat
+import com.profitdriving.predictor.OfferAnalyzer
+import com.profitdriving.predictor.OfferClassification
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -396,6 +399,70 @@ class FloatingCardService : Service() {
             layoutStops.visibility = View.GONE
         }
 
+        // ── Análise IA (comparação com histórico) ──────────────
+        val llAI = view.findViewById<View>(R.id.llAI)
+        val tvAIComparison = view.findViewById<TextView>(R.id.tvAIComparison)
+        val tvAIPotential = view.findViewById<TextView>(R.id.tvAIPotential)
+        val tvInfoIcon = view.findViewById<TextView>(R.id.tvInfoIcon)
+        val vAIDivider = view.findViewById<View>(R.id.vAIDivider)
+        if (!isDemo) {
+            serviceScope.launch(Dispatchers.IO) {
+                try {
+                    val db = DatabaseHelper(this@FloatingCardService)
+                    val analysis = OfferAnalyzer(db).analyze(ride)
+
+                    withContext(Dispatchers.Main) {
+                        if (analysis != null) {
+                            val shouldShow = analysis.classification != OfferClassification.AVERAGE
+                            if (shouldShow) {
+                                val (emoji, sign) = when (analysis.classification) {
+                                    OfferClassification.EXCELLENT -> "⭐" to "+"
+                                    OfferClassification.GOOD -> "📈" to "+"
+                                    OfferClassification.BELOW_AVERAGE -> "⚠️" to ""
+                                    OfferClassification.POOR -> "❌" to ""
+                                    else -> "" to ""
+                                }
+                                val diff = kotlin.math.abs(analysis.diffPercent)
+                                val isBetter = analysis.diffPercent >= 0
+                                tvAIComparison.text = "$emoji ${sign}${"%.0f".format(diff)}% ${if (isBetter) "melhor" else "pior"} que sua média"
+                                tvAIComparison.setTextColor(
+                                    if (isBetter) getColor(R.color.overlay_success)
+                                    else getColor(R.color.overlay_error)
+                                )
+
+                                if (isBetter && analysis.potentialExtra > 0) {
+                                    tvAIPotential.text = "💰 Potencial extra: R$ ${"%.2f".format(analysis.potentialExtra)}"
+                                    tvAIPotential.visibility = View.VISIBLE
+                                } else if (!isBetter) {
+                                    tvAIPotential.text = "💡 Espere oferta melhor"
+                                    tvAIPotential.visibility = View.VISIBLE
+                                } else {
+                                    tvAIPotential.visibility = View.GONE
+                                }
+
+                                val analysisCopy = analysis
+                                tvInfoIcon.setOnClickListener {
+                                    handler.removeCallbacks(dismissRunnable)
+                                    showAIExplanation(analysisCopy, ride)
+                                }
+
+                                llAI.visibility = View.VISIBLE
+                                vAIDivider.visibility = View.VISIBLE
+                            } else {
+                                llAI.visibility = View.GONE
+                                vAIDivider.visibility = View.GONE
+                            }
+                        } else {
+                            llAI.visibility = View.GONE
+                            vAIDivider.visibility = View.GONE
+                        }
+                    }
+                } catch (e: Exception) {
+                    L.e(TAG, "Erro na análise IA: ${e.message}")
+                }
+            }
+        }
+
         val tvKnownDestination = view.findViewById<TextView>(R.id.tvKnownDestination)
         val ivKnownDestination = view.findViewById<ImageView>(R.id.ivKnownDestination)
         val llKnownDestination = if (cardLayout != "row") view.findViewById<View>(R.id.llKnownDestination) else null
@@ -627,7 +694,7 @@ class FloatingCardService : Service() {
         val longPressThresholdMs = 500L
         val touchSlopPx = 12f * resources.displayMetrics.density
 
-        view.setOnTouchListener { _, event ->
+        view.setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     touchDownX = event.rawX
@@ -635,6 +702,19 @@ class FloatingCardService : Service() {
 
                     if (llReputationActions.visibility == View.VISIBLE) {
                         return@setOnTouchListener false
+                    }
+
+                    if (tvInfoIcon.visibility == View.VISIBLE) {
+                        val iconHit = intArrayOf(0, 0)
+                        tvInfoIcon.getLocationOnScreen(iconHit)
+                        val iconLeft = iconHit[0]
+                        val iconTop = iconHit[1]
+                        val iconRight = iconLeft + tvInfoIcon.width
+                        val iconBottom = iconTop + tvInfoIcon.height
+                        if (event.rawX >= iconLeft && event.rawX <= iconRight &&
+                            event.rawY >= iconTop && event.rawY <= iconBottom) {
+                            return@setOnTouchListener false
+                        }
                     }
 
                     val runnable = Runnable {
@@ -801,6 +881,36 @@ class FloatingCardService : Service() {
         handler.removeCallbacksAndMessages(null)
         dismiss()
         super.onDestroy()
+    }
+
+    private fun showAIExplanation(analysis: com.profitdriving.predictor.OfferAnalysis, ride: RideData) {
+        try {
+            val direction = if (analysis.diffPercent >= 0) "melhor" else "pior"
+            val diffAbs = kotlin.math.abs(analysis.diffPercent)
+            AlertDialog.Builder(this)
+                .setTitle("📊 Como calculamos?")
+                .setMessage(buildString {
+                    appendLine("Comparação com a média das suas últimas 72h:\n")
+                    appendLine("• Mesmo app: ${analysis.app}")
+                    appendLine("• Mesmo horário: ±2h (${analysis.hourSlot})")
+                    appendLine("• ${analysis.historicalRidesCount} corridas analisadas\n")
+                    appendLine("Sua média: R$ ${"%.2f".format(analysis.historicalAvg)}/km")
+                    appendLine("Oferta atual: R$ ${"%.2f".format(analysis.currentPpk)}/km")
+                    appendLine()
+                    if (direction == "melhor") {
+                        appendLine("✅ ${"%.0f".format(diffAbs)}% $direction")
+                        if (analysis.potentialExtra > 0) {
+                            appendLine("💰 Potencial extra: R$ ${"%.2f".format(analysis.potentialExtra)}")
+                        }
+                    } else {
+                        appendLine("⚠️ ${"%.0f".format(diffAbs)}% $direction")
+                    }
+                    appendLine()
+                    appendLine("🔒 Dados anônimos — apenas suas corridas")
+                })
+                .setPositiveButton("Entendi", null)
+                .show()
+        } catch (_: Exception) { }
     }
 
     private fun applyDecisionBorder(view: View, decision: DecisionEngine.Decision) {

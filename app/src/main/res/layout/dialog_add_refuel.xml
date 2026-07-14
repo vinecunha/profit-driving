@@ -314,50 +314,7 @@
 
         </LinearLayout>
 
-        <!-- Full tank toggle -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Completo?"
-                android:textSize="@dimen/text_size_14"
-                android:textColor="@color/text_primary"
-                android:layout_marginEnd="12dp" />
-
-            <TextView
-                android:id="@+id/btnFullTankYes"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:paddingHorizontal="14dp"
-                android:text="✅ SIM"
-                android:textSize="@dimen/text_size_12"
-                android:textColor="@color/text_inverse"
-                android:gravity="center"
-                android:background="@drawable/pill_selected"
-                android:clickable="true"
-                android:focusable="true"
-                android:layout_marginEnd="6dp" />
-
-            <TextView
-                android:id="@+id/btnFullTankNo"
-                android:layout_width="wrap_content"
-                android:layout_height="32dp"
-                android:paddingHorizontal="14dp"
-                android:text="❌ NÃO"
-                android:textSize="@dimen/text_size_12"
-                android:textColor="@color/text_primary"
-                android:gravity="center"
-                android:background="@drawable/pill_unselected"
-                android:clickable="true"
-                android:focusable="true" />
-
-        </LinearLayout>
 
         <TextView
             android:id="@+id/btnConfirmRefuel"

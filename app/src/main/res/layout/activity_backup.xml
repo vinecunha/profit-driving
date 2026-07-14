@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_screen">
+
+    <include layout="@layout/toolbar_default" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:background="@drawable/card_bg"
+        android:layout_margin="12dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tvTotalBackups"
+                android:text="0"
+                android:textSize="@dimen/text_size_18"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                android:text="Backups"
+                android:textSize="@dimen/text_size_11"
+                android:textColor="@color/text_tertiary" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tvTotalSize"
+                android:text="0 MB"
+                android:textSize="@dimen/text_size_18"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                android:text="Tamanho total"
+                android:textSize="@dimen/text_size_11"
+                android:textColor="@color/text_tertiary" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tvLastBackup"
+                android:text="Nunca"
+                android:textSize="@dimen/text_size_14"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                android:text="Último backup"
+                android:textSize="@dimen/text_size_11"
+                android:textColor="@color/text_tertiary" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp">
+
+        <Button
+            android:id="@+id/btnCreateBackup"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="Criar Backup"
+            android:textSize="@dimen/text_size_13"
+            android:background="@drawable/pill_selected"
+            android:textColor="@color/text_inverse"
+            android:layout_marginEnd="6dp" />
+
+        <LinearLayout
+            android:id="@+id/llSettings"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingHorizontal="16dp"
+            android:background="@drawable/pill_unselected"
+            android:layout_marginStart="6dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:text="Config"
+                android:textSize="@dimen/text_size_13" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="8dp"
+        android:gravity="center">
+
+        <TextView
+            android:text="Próximo: "
+            android:textSize="@dimen/text_size_11"
+            android:textColor="@color/text_tertiary" />
+
+        <TextView
+            android:id="@+id/tvNextBackup"
+            android:text="indefinido"
+            android:textSize="@dimen/text_size_11"
+            android:textColor="@color/accent"
+            android:textStyle="bold" />
+
+        <TextView
+            android:text="  |  "
+            android:textSize="@dimen/text_size_11"
+            android:textColor="@color/text_tertiary" />
+
+        <TextView
+            android:text="Frequência: "
+            android:textSize="@dimen/text_size_11"
+            android:textColor="@color/text_tertiary" />
+
+        <TextView
+            android:id="@+id/tvFrequency"
+            android:text="DAILY"
+            android:textSize="@dimen/text_size_11"
+            android:textColor="@color/accent"
+            android:textStyle="bold" />
+
+        <TextView
+            android:text="  |  "
+            android:textSize="@dimen/text_size_11"
+            android:textColor="@color/text_tertiary" />
+
+        <TextView
+            android:text="Máx: "
+            android:textSize="@dimen/text_size_11"
+            android:textColor="@color/text_tertiary" />
+
+        <TextView
+            android:id="@+id/tvMaxBackups"
+            android:text="10"
+            android:textSize="@dimen/text_size_11"
+            android:textColor="@color/accent"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvBackups"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="12dp"
+        android:paddingTop="8dp"
+        android:clipToPadding="false" />
+
+    <TextView
+        android:id="@+id/tvEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Nenhum backup encontrado"
+        android:textSize="@dimen/text_size_14"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone" />
+
+</LinearLayout>

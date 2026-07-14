@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/card_bg"
+    android:layout_marginBottom="8dp"
+    android:padding="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvBackupName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Backup_2024-07-10"
+            android:textSize="@dimen/text_size_14"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:id="@+id/tvBackupSize"
+            android:text="1.2 MB"
+            android:textSize="@dimen/text_size_11"
+            android:textColor="@color/text_tertiary" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp">
+
+        <TextView
+            android:id="@+id/tvBackupDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="10/07/2024 14:32"
+            android:textSize="@dimen/text_size_11"
+            android:textColor="@color/text_secondary" />
+
+        <TextView
+            android:id="@+id/tvBackupRides"
+            android:text="45 corridas"
+            android:textSize="@dimen/text_size_11"
+            android:textColor="@color/text_secondary" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="end">
+
+        <TextView
+            android:id="@+id/btnDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="Deletar"
+            android:textSize="@dimen/text_size_12"
+            android:textColor="@color/error"
+            android:paddingHorizontal="12dp"
+            android:gravity="center"
+            android:background="@drawable/pill_error" />
+
+        <TextView
+            android:id="@+id/btnRestore"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="Restaurar"
+            android:textSize="@dimen/text_size_12"
+            android:textColor="@color/success"
+            android:paddingHorizontal="12dp"
+            android:gravity="center"
+            android:background="@drawable/pill_success"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

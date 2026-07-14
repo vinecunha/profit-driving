@@ -4,11 +4,13 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
+import com.google.android.gms.tasks.Tasks
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.profitdriving.L
-import com.googlecode.tesseract.android.TessBaseAPI
-import java.io.File
-import java.io.FileOutputStream
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 object App99Extractor {
 
@@ -65,115 +67,54 @@ object App99Extractor {
         }
     }
 
-    fun extractWithOCR(context: Context, bitmap: Bitmap): RawCardData? {
+    fun extractWithMLKit(context: Context, bitmap: Bitmap, windowBounds: android.graphics.Rect? = null): RawCardData? {
         try {
-            L.d(TAG, "🔍 [OCR] App99Extractor.extractWithOCR() INICIADO")
+            L.d(TAG, "🔍 [99MLKit] App99Extractor.extractWithMLKit() INICIADO")
 
-            val tessDir = File(context.cacheDir, "tessdata")
-            val traineddata = File(tessDir, "por.traineddata")
-            L.d(TAG, "📁 [OCR] TessData path: ${tessDir.absolutePath}")
-
-            if (!traineddata.exists()) {
-                L.d(TAG, "📁 [OCR] por.traineddata não encontrado — copiando de assets...")
-                try {
-                    tessDir.mkdirs()
-                    context.assets.open("tessdata/por.traineddata").use { input ->
-                        FileOutputStream(traineddata).use { output ->
-                            input.copyTo(output)
-                        }
-                    }
-                    L.d(TAG, "✅ [OCR] por.traineddata copiado de assets (${traineddata.length()} bytes)")
-                } catch (e: Exception) {
-                    L.e(TAG, "❌ [OCR] Falha ao copiar traineddata de assets: ${e.message}")
-                    L.d(TAG, "📥 Baixe de: https://github.com/tesseract-ocr/tessdata/raw/main/por.traineddata")
-                    L.d(TAG, "📥 E coloque em: ${traineddata.absolutePath}")
-                    return null
-                }
+            val inputBitmap = if (windowBounds != null && !windowBounds.isEmpty()) {
+                cropToBounds(bitmap, windowBounds)
             } else {
-                L.d(TAG, "📁 [OCR] por.traineddata existe: ${traineddata.length()} bytes")
+                bitmap
             }
+            val ownBitmap = inputBitmap !== bitmap
 
-            val fractions = OCREnhancer.getCropFractions(bitmap.height)
-            L.d(TAG, "📐 [OCR] Altura=${bitmap.height}, tentando crops: $fractions")
+            val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+            val image = InputImage.fromBitmap(inputBitmap, 0)
+            val result = Tasks.await(recognizer.process(image), 15, TimeUnit.SECONDS)
+            val rawText = result.text
+            recognizer.close()
 
-            val api = TessBaseAPI()
-            L.d(TAG, "📁 [OCR] TessBaseAPI instanciada, chamando init(${context.cacheDir.absolutePath}, por)...")
-            val initOk = api.init(context.cacheDir.absolutePath, "por")
-            L.d(TAG, "📁 [OCR] Tess init() retornou: $initOk")
+            if (ownBitmap) inputBitmap.recycle()
 
-            if (!initOk) {
-                L.e(TAG, "❌ [OCR] TessBaseAPI.init() falhou!")
-                api.end()
+            if (rawText.isBlank()) {
+                L.w(TAG, "❌ [99MLKit] ML Kit retornou texto vazio")
                 return null
             }
 
-            OCREnhancer.configureTesseract(api)
+            L.d(TAG, "✅ [99MLKit] Texto extraído (${rawText.length} chars)")
 
-            var bestLines: List<String>? = null
-            var bestText = ""
-            var bestFraction = 0f
+            val lines = rawText.lines().map { it.trim() }.filter { it.isNotEmpty() }
+            val filtered = OCREnhancer.filterCardLines(lines)
 
-            for (fraction in fractions) {
-                val cropped = OCREnhancer.cropToCardRegion(bitmap, fraction)
-                val enhanced = OCREnhancer.preprocessForOCR(cropped)
-                if (cropped !== bitmap) cropped.recycle()
-
-                val swBitmap = enhanced.copy(Bitmap.Config.ARGB_8888, false)
-                api.setImage(swBitmap)
-                val text = api.utF8Text
-                swBitmap.recycle()
-                if (enhanced !== cropped) enhanced.recycle()
-
-                if (text.isBlank()) {
-                    L.d(TAG, "📐 [OCR] Crop ${fraction}x: blank, tentando próximo")
-                    continue
-                }
-
-                val lines = text.lines().map { it.trim() }.filter { it.isNotEmpty() }.toMutableList()
-                val filtered = OCREnhancer.filterCardLines(lines)
-
-                if (bestLines == null) {
-                    bestLines = filtered
-                    bestText = text
-                    bestFraction = fraction
-                }
-
-                if (OCREnhancer.hasCardData(filtered)) {
-                    L.d(TAG, "✅ [OCR] Crop ${fraction}x: ${lines.size}→${filtered.size} linhas, dados OK")
-                    bestLines = filtered
-                    bestText = text
-                    bestFraction = fraction
-                    break
-                }
-                L.d(TAG, "📐 [OCR] Crop ${fraction}x: ${lines.size}→${filtered.size} linhas, dados insuficientes")
-            }
-
-            api.end()
-
-            if (bestLines == null || bestLines.isEmpty()) {
-                L.w(TAG, "❌ [OCR] Nenhum crop encontrou dados do card")
-                OCREnhancer.saveDiagnosticData(context, "App99", bitmap, bestText, emptyList(), "no card data found")
+            if (filtered.isEmpty()) {
+                L.w(TAG, "❌ [99MLKit] Nenhuma linha relevante após filtro")
                 return null
             }
 
-            if (!OCREnhancer.hasCardData(bestLines)) {
-                L.w(TAG, "⚠️ [OCR] Crop ${bestFraction}x: apenas ${bestLines.size} linhas, dados podem estar incompletos")
-                OCREnhancer.saveDiagnosticData(context, "App99", bitmap, bestText, bestLines, "insufficient card data")
-            } else {
-                L.d(TAG, "✅ [OCR] Melhor crop ${bestFraction}x: ${bestLines.size} linhas")
+            val hasData = OCREnhancer.hasCardData(filtered)
+            if (!hasData) {
+                L.w(TAG, "⚠️ [99MLKit] Dados insuficientes no card")
             }
 
-            val fixed = OCREnhancer.fixOCRDistances(bestLines.toMutableList())
-            L.d(TAG, "📝 [OCR] ${fixed.size} linhas após correção de distâncias")
-
-            return createFromTexts(fixed)
+            val validCropCount = if (hasData) 2 else 1
+            return createFromTexts(filtered, validCropCount)
         } catch (e: Exception) {
-            L.e(TAG, "❌ [OCR] extractWithOCR crashou: ${e.message}", e)
+            L.e(TAG, "❌ [99MLKit] extractWithMLKit crashou: ${e.message}", e)
             return null
         }
     }
 
-    fun createFromTexts(texts: List<String>): RawCardData {
+    fun createFromTexts(texts: List<String>, validCropCount: Int = 0): RawCardData {
         val cardType = detectCardType(texts)
         return RawCardData(
             cardType = cardType,
@@ -184,8 +125,18 @@ object App99Extractor {
             serviceNode = findServiceNode(texts),
             bonusNodes = findBonusNodes(texts),
             acceptNode = findAcceptNode(texts),
-            rawTexts = texts
+            rawTexts = texts,
+            validCropCount = validCropCount
         )
+    }
+
+    private fun cropToBounds(bitmap: Bitmap, bounds: android.graphics.Rect): Bitmap {
+        val x = bounds.left.coerceAtLeast(0)
+        val y = bounds.top.coerceAtLeast(0)
+        val w = bounds.width().coerceAtMost(bitmap.width - x)
+        val h = bounds.height().coerceAtMost(bitmap.height - y)
+        if (w <= 0 || h <= 0) return bitmap
+        return Bitmap.createBitmap(bitmap, x, y, w, h)
     }
 
     private fun logTree(node: AccessibilityNodeInfo, depth: Int) {

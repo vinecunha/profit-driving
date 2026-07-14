@@ -18,7 +18,6 @@ class AddRefuelDialog(
 ) {
     private var selectedFuel = refuel?.fuelType ?: "gasoline"
     private var selectedCharger = refuel?.chargerType ?: "AC"
-    private var isFullTank = refuel?.isFullTank ?: true
 
     fun show() {
         val view = LayoutInflater.from(context).inflate(R.layout.dialog_add_refuel, null)
@@ -41,8 +40,6 @@ class AddRefuelDialog(
         val btnChargerAC = view.findViewById<TextView>(R.id.btnChargerAC)
         val btnChargerDC = view.findViewById<TextView>(R.id.btnChargerDC)
         val btnChargerHome = view.findViewById<TextView>(R.id.btnChargerHome)
-        val btnFullYes = view.findViewById<TextView>(R.id.btnFullTankYes)
-        val btnFullNo = view.findViewById<TextView>(R.id.btnFullTankNo)
         val btnConfirm = view.findViewById<TextView>(R.id.btnConfirmRefuel)
 
         val allFuelButtons = listOf(
@@ -100,16 +97,6 @@ class AddRefuelDialog(
         selectFuel(selectedFuel)
         selectCharger(selectedCharger)
 
-        fun toggleFullTank(yes: Boolean) {
-            isFullTank = yes
-            btnFullYes.isSelected = yes
-            btnFullYes.setBackgroundResource(if (yes) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btnFullYes.setTextColor(if (yes) AppColors.textInverse else AppColors.textSecondary)
-            btnFullNo.isSelected = !yes
-            btnFullNo.setBackgroundResource(if (!yes) R.drawable.pill_selected else R.drawable.pill_unselected)
-            btnFullNo.setTextColor(if (!yes) AppColors.textInverse else AppColors.textSecondary)
-        }
-
         if (refuel != null) {
             etOdometer.setText(FormatUtils.decimal(refuel.odometerKm))
             etPricePerUnit.setText(FormatUtils.decimal(refuel.pricePerUnit))
@@ -117,7 +104,6 @@ class AddRefuelDialog(
             etAmount.setText(FormatUtils.decimal(refuel.amount))
             refuel.percentageStart?.let { etPercentageStart.setText(it.toString()) }
             refuel.percentageEnd?.let { etPercentageEnd.setText(it.toString()) }
-            toggleFullTank(refuel.isFullTank)
         }
 
         fun updateAmount() {
@@ -134,10 +120,6 @@ class AddRefuelDialog(
         }
         etTotalValue.addTextChangedListener(amountWatcher)
         etPricePerUnit.addTextChangedListener(amountWatcher)
-
-        btnFullYes.setOnClickListener { toggleFullTank(true) }
-        btnFullNo.setOnClickListener { toggleFullTank(false) }
-        if (refuel == null) toggleFullTank(true)
 
         val dialog = AlertDialog.Builder(context)
             .setView(view)
@@ -184,7 +166,7 @@ class AddRefuelDialog(
                 unitType = energyType.unit,
                 pricePerUnit = price,
                 totalValue = total,
-                isFullTank = isFullTank,
+                isFullTank = false,
                 fuelType = selectedFuel,
                 chargerType = if (energyType.isElectric) selectedCharger else null,
                 percentageStart = if (energyType.isElectric) pctStart else null,
@@ -200,7 +182,7 @@ class AddRefuelDialog(
                 unitType = energyType.unit,
                 pricePerUnit = price,
                 totalValue = total,
-                isFullTank = isFullTank,
+                isFullTank = false,
                 fuelType = selectedFuel,
                 chargerType = if (energyType.isElectric) selectedCharger else null,
                 percentageStart = if (energyType.isElectric) pctStart else null,

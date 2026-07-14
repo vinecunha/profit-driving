@@ -62,14 +62,6 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     private var lastSavedValue: Double? = null
     private var currentRawLogId: Long = -1L
     private var isReScanTriggered = false
-    private var lastOcrAttempt = 0L
-    private val OCR_COOLDOWN = 30000L
-    private var lastCaptureTime = 0L
-    private val CAPTURE_COOLDOWN = 10000L
-    private var parserMatched = false
-    private var lastNoCardTime = 0L
-    private var noCardBackoff = 1000L
-    private var lastHomeScanHash = ""
     private val eventAlertManager by lazy { EventAlertManager(this) }
 
     private val parsers: List<RideDataParser> = listOf(
@@ -205,8 +197,6 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                 }
                 recycleDeprecated(root)
             }
-            // Fallback: primeira janela Uber tipo 1 (APPLICATION) mesmo sem texto
-            // Necessário para Samsung Tab A9 onde ride card é WebView com nós ocultos
             for (window in allWindows) {
                 val root = window.root ?: continue
                 val pkg = root.packageName?.toString() ?: ""
@@ -339,11 +329,6 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     }
 
     private suspend fun detectRideCard(root: AccessibilityNodeInfo, pkg: String) {
-        val now = System.currentTimeMillis()
-        if (noCardBackoff > 0 && lastNoCardTime > 0 && (now - lastNoCardTime) < noCardBackoff) {
-            L.d(TAG, "No-card backoff ativo (${(noCardBackoff - (now - lastNoCardTime)) / 1000}s) — pulando")
-            return
-        }
         try {
             L.d(TAG, "=== detectRideCard V2 iniciado para $pkg ===")
 
@@ -354,27 +339,12 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                         return
                     }
                     L.d(TAG, "🔍 Chamando UberCardExtractor")
-                    var raw = UberCardExtractor.extract(root, pkg)
-                    val isEmptyOverlay = raw?.rawTexts?.isEmpty() == true && hasEmptyOverlay()
-                    if (raw != null && raw.rawTexts.isEmpty() && isEmptyOverlay) {
-                        // Tenta ativar o WebView via accessibility focus antes do OCR
-                        L.d(TAG, "Card vazio — tentando accessibility focus no WebView...")
-                        tryForceWebViewAccessibility(root)
-                        delay(250)
-                        raw = UberCardExtractor.extract(root, pkg)
-                        L.d(TAG, "Re-leitura após focus: ${raw?.rawTexts?.size ?: 0} textos")
-                    }
-                    if (raw != null) {
-                        parserMatched = false
+                    val raw = UberCardExtractor.extract(root, pkg)
+                    if (raw != null && raw.rawTexts.isNotEmpty()) {
                         processRawCard(raw, pkg)
-                        if (parserMatched) {
-                            captureScreen("Uber")
-                        } else if (raw.acceptNode == null && raw.valueNode == null) {
-                            captureAndProcessUberCard(pkg, force = isEmptyOverlay)
-                        }
                     } else {
-                        L.d(TAG, "UberCardExtractor retornou null")
-                        captureAndProcessUberCard(pkg, force = isEmptyOverlay)
+                        L.d(TAG, "UberCardExtractor retornou null/vazio — tentando ML Kit")
+                        captureAndProcessWithMLKit(pkg)
                     }
                 }
                 pkg.contains("taxis99") || pkg.contains("app99") -> {
@@ -387,8 +357,8 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                     if (raw != null) {
                         processRawCard(raw, pkg)
                     } else {
-                        L.d(TAG, "⚠️ App99Extractor falhou, chamando OCR...")
-                        captureAndProcess99Card(pkg)
+                        L.d(TAG, "⚠️ App99Extractor falhou, chamando ML Kit...")
+                        captureAndProcessWithMLKit(pkg)
                     }
                 }
             }
@@ -411,9 +381,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         }
     }
 
-
     private suspend fun readStableTree(pkg: String? = null): AccessibilityNodeInfo? {
-        // Tenta rootInActiveWindow primeiro (mais rápido)
         try {
             val activeRoot = rootInActiveWindow
             if (activeRoot != null) {
@@ -437,8 +405,6 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             }
         } catch (_: Exception) { }
 
-        // Fast path: se a janela ride já está vazia (ex: WebView com nós ocultos),
-        // não adianta fazer retry — vai direto pra OCR.
         val fastRoot = if (pkg != null) findRideWindow(pkg) else findRideWindow()
         if (fastRoot != null) {
             val t = mutableListOf<String>()
@@ -482,8 +448,8 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                     }
                     L.d(TAG, "readStableTree: tentativa $i (delay=${delay}ms) — não atingiu critério (price=$hasPrice action=$hasAction, textos=${texts.take(5)})")
                 }
-                L.d(TAG, "readStableTree: nenhuma tentativa atingiu critério de estabilidade, usando última leitura")
-                lastRoot
+                L.d(TAG, "readStableTree: nenhuma tentativa atingiu critério de estabilidade — abortando")
+                null
             }
         } finally {
             if (result == null && lastRoot != null) {
@@ -494,185 +460,83 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         return result
     }
 
-    private fun captureScreen(appName: String) {
-        val now = System.currentTimeMillis()
-        if (now - lastCaptureTime < CAPTURE_COOLDOWN) {
-            L.d(TAG, "[captureScreen] Cooldown ativo (${(CAPTURE_COOLDOWN - (now - lastCaptureTime)) / 1000}s)")
-            return
+    private fun captureAndProcessWithMLKit(pkg: String) {
+        val appName = when {
+            pkg.contains("ubercab") -> "Uber"
+            pkg.contains("taxis99") || pkg.contains("app99") -> "99"
+            else -> "Unknown"
         }
-        lastCaptureTime = now
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return
-        try {
-            takeScreenshot(android.view.Display.DEFAULT_DISPLAY,
-                java.util.concurrent.Executors.newSingleThreadExecutor(),
-                object : AccessibilityService.TakeScreenshotCallback {
-                    override fun onSuccess(result: AccessibilityService.ScreenshotResult) {
-                        try {
-                            val hb = result.hardwareBuffer
-                            val bitmap = Bitmap.wrapHardwareBuffer(hb, null)
-                            hb.close()
-                            if (bitmap != null) {
-                                L.d(TAG, "📸 Captura salva para $appName")
-                                CaptureManager(this@RideAccessibilityServiceV2).saveCapture(bitmap, appName)
-                                bitmap.recycle()
-                            }
-                        } catch (_: Exception) { }
-                    }
-                    override fun onFailure(c: Int) { }
-                })
-        } catch (_: Exception) { }
-    }
-
-    private fun captureAndProcess99Card(pkg: String) {
-        L.d(TAG, "📸 [OCR] captureAndProcess99Card() INICIADO - pkg=$pkg, API=${Build.VERSION.SDK_INT}")
+        L.d(TAG, "📸 [MLKit] captureAndProcessWithMLKit() INICIADO - pkg=$pkg, app=$appName, API=${Build.VERSION.SDK_INT}")
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            L.d(TAG, "❌ [OCR] OCR requer Android 14+ (API 34). Dispositivo: API ${Build.VERSION.SDK_INT}")
+            L.d(TAG, "❌ [MLKit] ML Kit requer Android 14+ (API 34). Dispositivo: API ${Build.VERSION.SDK_INT}")
             return
         }
         try {
-            L.d(TAG, "📸 [OCR] Chamando takeScreenshot(Display, Executor, Callback)...")
             takeScreenshot(android.view.Display.DEFAULT_DISPLAY,
                 java.util.concurrent.Executors.newSingleThreadExecutor(),
                 object : AccessibilityService.TakeScreenshotCallback {
                     override fun onSuccess(result: AccessibilityService.ScreenshotResult) {
-                        L.d(TAG, "✅ [OCR] onSuccess chamado!")
                         try {
                             val hb = result.hardwareBuffer
-                            L.d(TAG, "📸 [OCR] hardwareBuffer: ${hb.width}x${hb.height} format=${hb.format}")
                             val bitmap = Bitmap.wrapHardwareBuffer(hb, null)
                             hb.close()
                             if (bitmap != null) {
-                                L.d(TAG, "✅ [OCR] Bitmap: ${bitmap.width}x${bitmap.height} config=${bitmap.config}")
-                                L.d(TAG, "📸 [OCR] Salvando captura no histórico...")
                                 val captureManager = CaptureManager(this@RideAccessibilityServiceV2)
                                 val rideHash = currentRawLogId.let { if (it >= 0) it.toString() else null }
-                                captureManager.saveCapture(bitmap, "99", rideHash)
-                                L.d(TAG, "📸 [OCR] Chamando App99Extractor.extractWithOCR()...")
-                                val raw = App99Extractor.extractWithOCR(this@RideAccessibilityServiceV2, bitmap)
-                                L.d(TAG, "📸 [OCR] extractWithOCR retornou: ${if (raw != null) "SUCESSO" else "null"}")
+                                captureManager.saveCapture(bitmap, appName, rideHash)
+
+                                val windowBounds = getAppWindowBounds(pkg)
+                                val raw = when {
+                                    pkg.contains("ubercab") ->
+                                        UberCardExtractor.extractWithMLKit(this@RideAccessibilityServiceV2, bitmap, windowBounds)
+                                    else ->
+                                        App99Extractor.extractWithMLKit(this@RideAccessibilityServiceV2, bitmap, windowBounds)
+                                }
                                 bitmap.recycle()
                                 if (raw != null) {
-                                    L.d(TAG, "✅ [OCR] OCR funcionou! ${raw.rawTexts.size} textos")
+                                    L.d(TAG, "✅ [MLKit] OCR funcionou! ${raw.rawTexts.size} textos")
                                     processRawCard(raw, pkg)
                                 } else {
-                                    L.d(TAG, "❌ [OCR] OCR falhou ou não extraiu texto")
+                                    L.d(TAG, "❌ [MLKit] OCR falhou ou não extraiu texto")
                                 }
-                            } else {
-                                L.d(TAG, "❌ [OCR] Bitmap.wrapHardwareBuffer retornou null!")
                             }
                         } catch (e: Exception) {
-                            L.e(TAG, "❌ [OCR] Exceção no onSuccess: ${e.message}", e)
+                            L.e(TAG, "❌ [MLKit] Exceção no onSuccess: ${e.message}", e)
                         }
                     }
                     override fun onFailure(errorCode: Int) {
-                        L.d(TAG, "❌ [OCR] takeScreenshot.onFailure: errorCode=$errorCode")
+                        L.d(TAG, "❌ [MLKit] takeScreenshot.onFailure: errorCode=$errorCode")
                     }
                 })
-            L.d(TAG, "📸 [OCR] takeScreenshot chamado (callback pendente)")
         } catch (e: Exception) {
-            L.e(TAG, "❌ [OCR] Exceção em captureAndProcess99Card: ${e.message}", e)
+            L.e(TAG, "❌ [MLKit] Exceção em captureAndProcessWithMLKit: ${e.message}", e)
         }
     }
 
-    private fun hasEmptyOverlay(): Boolean {
-        return try {
-            windows?.any { w ->
-                val isTargetPkg = w.root?.packageName?.toString()?.let { pkg ->
-                    pkg.contains("ubercab") || pkg.contains("app99") || pkg.contains("taxis99")
-                } == true
-                if (!isTargetPkg) return@any false
-                if (w.type != 6 && w.type != 1) return@any false
-                w.root?.let { root ->
-                    val t = mutableListOf<String>()
-                    collectTextsForCheck(root, t)
-                    t.isEmpty()
-                } == true
-            } ?: false
-        } catch (_: Exception) { false }
-    }
-
-    private fun tryForceWebViewAccessibility(root: AccessibilityNodeInfo) {
+    private fun getAppWindowBounds(pkg: String): android.graphics.Rect? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return null
         try {
-            // Tenta encontrar o nó WebView e solicitar foco de acessibilidade
-            // para forçar o WebView a popular sua árvore de acessibilidade
-            val wv = findWebViewInTree(root)
-            if (wv != null) {
-                L.d(TAG, "WebView encontrado — solicitando accessibility focus")
-                wv.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS)
-                // Alguns WebViews precisam de dois focus requests
-                wv.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS)
-            } else {
-                L.d(TAG, "Nenhum nó WebView encontrado — tentando focus na raiz")
-                root.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS)
+            val allWindows = windows ?: return null
+            for (window in allWindows) {
+                val root = window.root ?: continue
+                val wpkg = root.packageName?.toString() ?: ""
+                val isTarget = when {
+                    pkg.contains("ubercab") -> wpkg.contains("ubercab")
+                    else -> wpkg.contains("taxis99") || wpkg.contains("app99")
+                }
+                if (isTarget) {
+                    val bounds = android.graphics.Rect()
+                    window.getBoundsInScreen(bounds)
+                    recycleDeprecated(root)
+                    if (!bounds.isEmpty()) return bounds
+                } else {
+                    recycleDeprecated(root)
+                }
             }
         } catch (e: Exception) {
-            L.e(TAG, "tryForceWebViewAccessibility falhou: ${e.message}")
-        }
-    }
-
-    private fun findWebViewInTree(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
-        val cn = node.className?.toString() ?: ""
-        if (cn.contains("WebView", ignoreCase = true) ||
-            cn.contains("chromium", ignoreCase = true) ||
-            cn.contains("WebContents", ignoreCase = true)) {
-            return node
-        }
-        for (i in 0 until node.childCount) {
-            val child = node.getChild(i) ?: continue
-            val result = findWebViewInTree(child)
-            if (result != null) {
-                recycleDeprecated(child)
-                return result
-            }
-            recycleDeprecated(child)
+            L.e(TAG, "getAppWindowBounds error: ${e.message}")
         }
         return null
-    }
-
-    private fun captureAndProcessUberCard(pkg: String, force: Boolean = false) {
-        val now = System.currentTimeMillis()
-        if (!force && now - lastOcrAttempt < OCR_COOLDOWN) {
-            L.d(TAG, "[UberOCR] Cooldown ativo (${(OCR_COOLDOWN - (now - lastOcrAttempt)) / 1000}s restantes)")
-            return
-        }
-        lastOcrAttempt = now
-
-        L.d(TAG, "📸 [UberOCR] captureAndProcessUberCard() INICIADO - pkg=$pkg, API=${Build.VERSION.SDK_INT}")
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return
-
-        try {
-            takeScreenshot(android.view.Display.DEFAULT_DISPLAY,
-                java.util.concurrent.Executors.newSingleThreadExecutor(),
-                object : AccessibilityService.TakeScreenshotCallback {
-                    override fun onSuccess(result: AccessibilityService.ScreenshotResult) {
-                        try {
-                            val hb = result.hardwareBuffer
-                            val bitmap = Bitmap.wrapHardwareBuffer(hb, null)
-                            hb.close()
-                            if (bitmap != null) {
-                                val captureManager = CaptureManager(this@RideAccessibilityServiceV2)
-                                val rideHash = currentRawLogId.let { if (it >= 0) it.toString() else null }
-                                captureManager.saveCapture(bitmap, "Uber", rideHash)
-                                val raw = UberCardExtractor.extractWithOCR(this@RideAccessibilityServiceV2, bitmap)
-                                bitmap.recycle()
-                                if (raw != null) {
-                                    L.d(TAG, "✅ [UberOCR] OCR funcionou! ${raw.rawTexts.size} textos")
-                                    processRawCard(raw, pkg)
-                                } else {
-                                    L.d(TAG, "❌ [UberOCR] OCR falhou ou não extraiu texto")
-                                }
-                            }
-                        } catch (e: Exception) {
-                            L.e(TAG, "❌ [UberOCR] Exceção no onSuccess: ${e.message}", e)
-                        }
-                    }
-                    override fun onFailure(errorCode: Int) {
-                        L.d(TAG, "❌ [UberOCR] takeScreenshot.onFailure: errorCode=$errorCode")
-                    }
-                })
-        } catch (e: Exception) {
-            L.e(TAG, "❌ [UberOCR] Exceção em captureAndProcessUberCard: ${e.message}", e)
-        }
     }
 
     private fun processRawCard(raw: RawCardData, pkg: String) {
@@ -686,9 +550,6 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                 L.d(TAG, "Nenhum botão de aceitar encontrado — verificando se é card de corrida")
                 if (raw.valueNode == null) {
                     L.d(TAG, "Card não é de corrida — ignorando")
-                    lastNoCardTime = System.currentTimeMillis()
-                    noCardBackoff = (noCardBackoff * 2).coerceAtMost(8000L)
-                    lastHomeScanHash = hash
                     if (cardVisible) {
                         L.d(TAG, "Card sumiu — resetando estado")
                         if (!statusLocked && lastInsertedId >= 0) {
@@ -707,7 +568,16 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                 }
             }
 
-            // Só salva raw log se realmente é um card de corrida
+            if (!isPlausible(raw)) {
+                L.d(TAG, "Card reprovado na validação de plausibilidade — ignorando")
+                return
+            }
+
+            if (hash == lastHash && cardVisible) {
+                L.d(TAG, "Mesmo card ainda visível — ignorando (duplicata exata)")
+                return
+            }
+
             currentRawLogId = db.insertRawLog(
                 cardHash = hash,
                 pkg = pkg,
@@ -716,15 +586,16 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             )
             L.d(TAG, "\uD83D\uDCDD Raw log salvo: id=$currentRawLogId")
 
-            if (hash == lastHash && cardVisible) {
-                L.d(TAG, "Mesmo card ainda visível — prosseguindo")
-                db.updateRawLogStatus(currentRawLogId, status = "duplicate", error = "same card still visible")
-            }
-
             val parser = selectParser(raw)
             if (parser == null) {
                 L.d(TAG, "Nenhum parser disponível para este card")
                 db.updateRawLogStatus(currentRawLogId, status = "failed", error = "no parser available")
+
+                val anomaly = AnomalyDetector(this).analyze(raw, pkg)
+                if (anomaly.isAnomaly) {
+                    AnomalyDetector(this).notify(anomaly)
+                }
+
                 return
             }
             L.d(TAG, "Parser selecionado: ${parser::class.simpleName}")
@@ -736,9 +607,6 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                 return
             }
 
-            parserMatched = true
-            lastNoCardTime = 0L
-            noCardBackoff = 1000L
             val classification = CardClassificationEngine().classify(ride, raw.validCropCount)
             ride = classification.rideData
 
@@ -790,8 +658,6 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                 db.updateRawLogStatus(currentRawLogId, status = "duplicate", error = "same value within 5s")
             }
 
-            lastNoCardTime = 0L
-            noCardBackoff = 1000L
             saveOrUpdateRide(ride, cardHash, db)
             db.updateRawLogRideData(currentRawLogId, ride)
             db.updateRawLogStatus(currentRawLogId, rideId = lastInsertedId.takeIf { it >= 0 }, status = "success")
@@ -978,6 +844,45 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         return hasDistance || hasTime
     }
 
+    private fun isPlausible(raw: RawCardData): Boolean {
+        val value = parsePlausibleValue(raw.valueNode)
+        if (value != null && (value < 2.0 || value > 10000.0)) {
+            L.w(TAG, "Valor rejeitado: R$ $value (fora de 2,00–10.000,00)")
+            return false
+        }
+
+        val pickup = parsePlausiblePickup(raw.pickupNode)
+        if (pickup != null) {
+            if (pickup.first > 120) return false
+            if (pickup.second > 30) return false
+        }
+
+        val rating = parsePlausibleRating(raw.ratingNode)
+        if (rating != null && (rating < 3.0 || rating > 5.0)) return false
+
+        return true
+    }
+
+    private fun parsePlausibleValue(node: String?): Double? {
+        if (node == null) return null
+        val m = Regex("""R\$\s*(\d+(?:[.,]\d+)?)""").find(node) ?: return null
+        return m.groupValues[1].replace(",", ".").toDoubleOrNull()
+    }
+
+    private fun parsePlausiblePickup(node: String?): Pair<Int, Double>? {
+        if (node == null) return null
+        val m = Regex("""(\d+)\s*min.*?(\d+[.,]\d+)\s*km""", RegexOption.IGNORE_CASE).find(node) ?: return null
+        val min = m.groupValues[1].toIntOrNull() ?: return null
+        val km = m.groupValues[2].replace(",", ".").toDoubleOrNull() ?: return null
+        return Pair(min, km)
+    }
+
+    private fun parsePlausibleRating(node: String?): Double? {
+        if (node == null) return null
+        val m = Regex("""(\d[.,]\d{1,2})""").find(node) ?: return null
+        return m.groupValues[1].replace(",", ".").toDoubleOrNull()
+    }
+
     private fun vibrateFeedback() {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -1025,28 +930,8 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         }
     }
 
-    fun diagnosticWebViewNodes() {
-        val root = rootInActiveWindow ?: return
-        findWebViewNodes(root, 0)
-        recycleDeprecated(root)
-    }
-
-    private fun findWebViewNodes(node: AccessibilityNodeInfo, depth: Int) {
-        val className = node.className?.toString() ?: ""
-        val text = node.text?.toString() ?: node.contentDescription?.toString() ?: ""
-        if (className.contains("WebView", ignoreCase = true) && text.isNotEmpty()) {
-            L.d(WV_TAG, "WebView depth=$depth: className=$className text=$text")
-        }
-        for (i in 0 until node.childCount) {
-            val child = node.getChild(i) ?: continue
-            findWebViewNodes(child, depth + 1)
-            recycleDeprecated(child)
-        }
-    }
-
     companion object {
         private const val TAG = "RideAccessibilityV2"
-        private const val WV_TAG = "WebViewDiagnostic"
         var instance: RideAccessibilityServiceV2? = null
     }
 }

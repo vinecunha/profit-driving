@@ -407,12 +407,12 @@ class App99CardParser : RideDataParser {
         }
 
         private val PRIORITY_BONUS_REGEX = Regex(
-            """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do\s+para\s+prioridade""",
+            """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do\s+para\s+(?:prioridade|embarque)""",
             RegexOption.IGNORE_CASE
         )
 
         private val DYNAMIC_BONUS_REGEX = Regex(
-            """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do(?!\s+para\s+prioridade)""",
+            """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do(?!\s+para\s+(?:prioridade|embarque))""",
             RegexOption.IGNORE_CASE
         )
 

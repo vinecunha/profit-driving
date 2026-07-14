@@ -77,6 +77,12 @@
         <activity
             android:name=".CaptureViewerActivity"
             android:exported="false" />
+        <activity
+            android:name=".backup.BackupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".support.SupportActivity"
+            android:exported="false" />
 
         <service
             android:name=".FloatingCardService"

@@ -70,6 +70,21 @@
   3. **Removed undefined `TABLE_RIDES_COLS` constants** — My previous edit referenced `TABLE_RIDES_COLS.size` etc. which don't exist; replaced with `ContentValues()` default constructor.
 - **Removed unused `ContentValues.putOpt` extension function** — All import functions now use explicit typed `put` calls.
 
+### Backup + Support + Settings IA Rows
+- **activity_settings.xml** — Added SERVIÇOS section with `llBackup` and `llSupport` clickable rows and `tvSupportBadge`
+- **SettingsActivity.kt** — Added `setupBackupEntry()` (navigates to BackupActivity) and `setupSupportEntry()` (navigates to SupportActivity, shows pending count badge)
+- **build.gradle** — Added `gson:2.10.1` and `work-runtime-ktx:2.9.0` dependencies
+- **drawable/input_bg.xml**, **pill_error.xml**, **pill_success.xml**, **pill_badge.xml** — Created missing drawable resources
+
+### Compilation Fixes
+- **BackupActivity.kt** — Added `import android.view.View`
+- **SupportActivity.kt** — Added `import android.view.View`; fixed `RawCardLog` cast (top-level class, not inner class)
+- **BackupModels.kt** — Fixed imports: `RideRecord`, `Expense`, `DailyRide` are top-level classes in `com.profitdriving`, removed incorrect `DatabaseHelper.` prefix
+- **BackupManager.kt** — Simplified `restoreAllData()` (removed transaction management since `db` is `DatabaseHelper`, not `SQLiteDatabase`)
+
+## Pre-existing
+- All 30 tests in `RideParserTest` fail — unrelated to these changes.
+
 ## Key Files Modified
 - `app/src/main/res/values/themes.xml`
 - `app/src/main/res/layout/dialog_actions.xml`

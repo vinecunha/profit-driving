@@ -7,6 +7,22 @@ import com.profitdriving.accessibility.extractor.RawCardData
 import com.profitdriving.accessibility.extractor.UberCardExtractor
 import java.util.Locale
 
+// ─── Aliases para RideCardRegexes ───
+private val VALUE_REGEX get() = RideCardRegexes.value
+private val PICKUP_REGEX get() = RideCardRegexes.pickup
+private val VIAGEM_REGEX get() = RideCardRegexes.trip
+private val DISTANCE_PATTERNS get() = RideCardRegexes.distanceFallback
+private val TIME_PATTERNS get() = RideCardRegexes.timeFallback
+private val RATING_STAR_REGEX get() = RideCardRegexes.ratingStar
+private val RATING_COUNT_REGEX get() = RideCardRegexes.ratingCount
+private val RATING_BULLET_REGEX get() = RideCardRegexes.ratingBullet
+private val RATING_DECIMAL_REGEX get() = RideCardRegexes.ratingDecimal
+private val SERVICE_TYPE_PATTERNS get() = SERVICE_TYPES
+private val PRIORITY_BONUS_REGEX get() = RideCardRegexes.bonusPriority
+private val DYNAMIC_BONUS_REGEX get() = RideCardRegexes.bonusDynamic
+private val ADDRESS_AFTER_TIME_DIST get() = RideCardRegexes.addressLine
+private val ADDRESS_TIME_DIST_NEW get() = RideCardRegexes.addressInline
+
 class GenericRideCardParser : RideDataParser {
 
     override fun canParse(raw: RawCardData): Boolean {
@@ -273,89 +289,5 @@ class GenericRideCardParser : RideDataParser {
 
     companion object {
         private const val TAG = "GenericRideCardParser"
-
-        private val VALUE_REGEX = Regex(
-            """(?:^|\s)R\$\s*(\d+(?:[.,]\d+)?)(?=\s|$)""",
-            RegexOption.IGNORE_CASE
-        )
-
-        private val PICKUP_REGEX = Regex(
-            """(\d+)\s*min(?:uto)?s?\s*\(\s*(\d+[.,]\d+)\s*km\s*\)""",
-            RegexOption.IGNORE_CASE
-        )
-
-        private val VIAGEM_REGEX = Regex(
-            """(?:(\d+)\s*[Hh](?:ora(?:s)?)?\s*e\s*)?(\d+)\s*[Mm]in(?:uto)?s?\s*\((\d+[.,]\d+)\s*km\)""",
-            RegexOption.IGNORE_CASE
-        )
-
-        private val DISTANCE_PATTERNS = listOf(
-            Regex("""\((\d+[.,]?\d*)\s*km""", RegexOption.IGNORE_CASE),
-            Regex("""(\d+[.,]?\d*)\s*km""", RegexOption.IGNORE_CASE),
-            Regex("""km[:\s]*(\d+[.,]?\d*)""", RegexOption.IGNORE_CASE),
-            Regex("""(\d+[.,]?\d*)\s*quilômetro""", RegexOption.IGNORE_CASE),
-            Regex("""dist[âa]ncia[:\s]*(\d+[.,]?\d*)\s*km""", RegexOption.IGNORE_CASE),
-            Regex("""(\d+[.,]?\d*)\s*km\s*de\s*dist[âa]ncia""", RegexOption.IGNORE_CASE)
-        )
-
-        private val TIME_PATTERNS = listOf(
-            Regex("""(\d+)\s*[Mm]in(?:uto)?s?"""),
-            Regex("""(\d+)\s*[Hh](?:ora)?s?"""),
-            Regex("""tempo[:\s]*(\d+)\s*min""", RegexOption.IGNORE_CASE),
-            Regex("""duração[:\s]*(\d+)\s*min""", RegexOption.IGNORE_CASE)
-        )
-
-        private val RATING_STAR_REGEX = Regex("""(\d[.,]\d{1,2})\s*[★⭐*]""")
-        private val RATING_COUNT_REGEX = Regex("""(\d[.,]\d{1,2})\s*\(\d+\)""")
-        private val RATING_BULLET_REGEX = Regex("""(\d[.,]\d{1,2})\s*[·•]""")
-        private val RATING_DECIMAL_REGEX = Regex("""(\d[.,]\d{1,2})""")
-
-        private val SERVICE_TYPE_PATTERNS: List<Pair<Regex, String>> = listOf(
-            "uberx" to "UberX",
-            "uber flash" to "Flash",
-            "uber juntos" to "Juntos",
-            "uber moto" to "Moto",
-            "uber black" to "Black",
-            "uber comfort" to "Comfort",
-            "uber bag" to "Black Bag",
-            "uber priority" to "Prioridade",
-            "business comfort" to "Business Comfort",
-            "business black" to "Business Black",
-            "envios moto" to "Envios Moto",
-            "envios carro" to "Envios Carro",
-            "black bag" to "Black Bag",
-            "flash" to "Flash",
-            "juntos" to "Juntos",
-            "moto" to "Moto",
-            "black" to "Black",
-            "bag" to "Black Bag",
-            "comfort" to "Comfort",
-            "priority" to "Prioridade",
-            "pop" to "Pop",
-            "top" to "Top",
-            "entrega" to "Entrega"
-        ).map { (keyword, label) ->
-            Regex("\\b${Regex.escape(keyword)}\\b", RegexOption.IGNORE_CASE) to label
-        }
-
-        private val PRIORITY_BONUS_REGEX = Regex(
-            """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do\s+para\s+prioridade""",
-            RegexOption.IGNORE_CASE
-        )
-
-        private val DYNAMIC_BONUS_REGEX = Regex(
-            """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do(?!\s+para\s+prioridade)""",
-            RegexOption.IGNORE_CASE
-        )
-
-        private val ADDRESS_AFTER_TIME_DIST = Regex(
-            """\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)\s*\n\s*([^\n]+)""",
-            RegexOption.IGNORE_CASE
-        )
-
-        private val ADDRESS_TIME_DIST_NEW = Regex(
-            """\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)\s+([A-Za-zÀ-Úà-ú0-9\s,./°-]+?)(?=\s*\d+\s*min(?:uto)?s?\s*\([\d.,]+\s*km\)|\s*(?:Reservas|Aceitar|Informações|Selecionar|$))""",
-            RegexOption.IGNORE_CASE
-        )
     }
 }

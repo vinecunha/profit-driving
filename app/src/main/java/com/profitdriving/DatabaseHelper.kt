@@ -27,6 +27,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         db.execSQL(CREATE_RAW_LOGS_INDEX_TS)
         db.execSQL(CREATE_RAW_LOGS_INDEX_HASH)
         db.execSQL(CREATE_RAW_LOGS_INDEX_STATUS)
+        db.execSQL(CREATE_SUPPORT_REPORTS)
+        db.execSQL(CREATE_BACKUPS)
+        db.execSQL(CREATE_BACKUP_CONFIG)
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_dropoff_address ON $TABLE_NAME(dropoff_address)")
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_ride_records_timestamp ON $TABLE_NAME($COL_TIMESTAMP)")
         db.execSQL("""
@@ -222,6 +225,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         if (oldVersion < 29) {
             try { db.execSQL("CREATE INDEX IF NOT EXISTS idx_daily_rides_date ON $TABLE_DAILY_RIDES($COL_DR_DATE)") } catch (e: Exception) { L.w("DB", "v29 index: ${e.message}") }
         }
+        if (oldVersion < 30) {
+            try { db.execSQL(CREATE_SUPPORT_REPORTS) } catch (e: Exception) { L.w("DB", "v30 support: ${e.message}") }
+            try { db.execSQL(CREATE_BACKUPS) } catch (e: Exception) { L.w("DB", "v30 backups: ${e.message}") }
+            try { db.execSQL(CREATE_BACKUP_CONFIG) } catch (e: Exception) { L.w("DB", "v30 backup_config: ${e.message}") }
+        }
     }
 
     private fun rebuildFuelRefuelsTable(db: SQLiteDatabase) {
@@ -377,6 +385,34 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             }
         }
         return null
+    }
+
+    fun updateRideFromRawData(rideId: Long, rideData: RideData) = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                rideData.value?.let { put(COL_VALUE, it) }
+                rideData.distanceKm?.let { put(COL_DISTANCE_KM, it) }
+                rideData.timeMin?.let { put(COL_TIME_MIN, it) }
+                rideData.rating?.let { put(COL_RATING, it) }
+                rideData.effectivePricePerKm?.let { put(COL_PRICE_PER_KM, it) }
+                rideData.effectivePricePerHour?.let { put(COL_PRICE_PER_HOUR, it) }
+                rideData.pickupDistanceKm?.let { put(COL_PICKUP_DISTANCE, it) }
+                rideData.pickupTimeMin?.let { put(COL_PICKUP_TIME, it) }
+                rideData.tripDistanceKm?.let { put(COL_TRIP_DISTANCE, it) }
+                rideData.tripTimeMin?.let { put(COL_TRIP_TIME, it) }
+                rideData.serviceType?.let { put(COL_SERVICE_TYPE, it) }
+                rideData.priorityBonus?.let { put(COL_PRIORITY_BONUS, it) }
+                rideData.dynamicBonus?.let { put(COL_DYNAMIC_BONUS, it) }
+                rideData.pickupAddress?.let { put(COL_PICKUP_ADDRESS, it) }
+                rideData.dropoffAddress?.let { put(COL_DROPOFF_ADDRESS, it) }
+            }
+            if (cv.size() > 0) {
+                db.update(TABLE_NAME, cv, "$COL_ID = ?", arrayOf(rideId.toString()))
+            }
+        } finally {
+            db.close()
+        }
     }
 
     fun updateRideValueByHash(cardHash: String, newValue: Double, newTimestamp: Long) = synchronized(dbLock) {
@@ -540,6 +576,23 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return result
     }
 
+    fun getSuccessfulRawCards(limit: Int = 50): List<RawCardLog> {
+        val result = mutableListOf<RawCardLog>()
+        val cursor = readableDatabase.query(
+            TABLE_RAW_LOGS, null,
+            "$COL_RAW_STATUS = 'success' AND $COL_RAW_RIDE_ID IS NOT NULL",
+            null, null, null,
+            "$COL_RAW_TIMESTAMP ASC",
+            limit.toString()
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                result.add(rawCardLogFromCursor(it))
+            }
+        }
+        return result
+    }
+
     fun getPendingRawCards(limit: Int = 50): List<RawCardLog> {
         val result = mutableListOf<RawCardLog>()
         val cursor = readableDatabase.query(
@@ -585,6 +638,249 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         } finally {
             db.close()
         }
+    }
+
+    fun getRawLogsByStatus(status: String, limit: Int = 20): List<RawCardLog> {
+        val result = mutableListOf<RawCardLog>()
+        val cursor = readableDatabase.query(
+            TABLE_RAW_LOGS, null,
+            "$COL_RAW_STATUS = ?",
+            arrayOf(status), null, null,
+            "$COL_RAW_TIMESTAMP DESC",
+            limit.toString()
+        )
+        cursor.use {
+            while (it.moveToNext()) result.add(rawCardLogFromCursor(it))
+        }
+        return result
+    }
+
+    // ── Support Reports ──────────────────────────────────────
+
+    fun insertSupportReport(report: com.profitdriving.support.SupportReport): Long = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                report.rawLogId?.let { put(COL_SR_RAW_LOG_ID, it) }
+                report.rideId?.let { put(COL_SR_RIDE_ID, it) }
+                report.cardHash?.let { put(COL_SR_CARD_HASH, it) }
+                report.userNotes?.let { put(COL_SR_USER_NOTES, it) }
+                put(COL_SR_STATUS, report.status.name)
+                put(COL_SR_PRIORITY, report.priority.name)
+                report.deviceModel?.let { put(COL_SR_DEVICE_MODEL, it) }
+                report.androidVersion?.let { put(COL_SR_ANDROID_VERSION, it) }
+                report.appVersion?.let { put(COL_SR_APP_VERSION, it) }
+                report.screenshotPath?.let { put(COL_SR_SCREENSHOT_PATH, it) }
+                put(COL_SR_CREATED_AT, report.createdAt)
+                put(COL_SR_UPDATED_AT, report.updatedAt)
+            }
+            db.insert(TABLE_SUPPORT_REPORTS, null, cv)
+        } finally { db.close() }
+    }
+
+    fun getSupportReports(status: com.profitdriving.support.SupportStatus? = null): List<com.profitdriving.support.SupportReport> {
+        val list = mutableListOf<com.profitdriving.support.SupportReport>()
+        val cursor = if (status != null) {
+            readableDatabase.query(TABLE_SUPPORT_REPORTS, null,
+                "$COL_SR_STATUS = ?", arrayOf(status.name),
+                null, null, "$COL_SR_CREATED_AT DESC")
+        } else {
+            readableDatabase.query(TABLE_SUPPORT_REPORTS, null,
+                null, null, null, null, "$COL_SR_CREATED_AT DESC")
+        }
+        cursor.use {
+            while (it.moveToNext()) list.add(supportReportFromCursor(it))
+        }
+        return list
+    }
+
+    fun getSupportReport(id: Long): com.profitdriving.support.SupportReport? {
+        val cursor = readableDatabase.query(TABLE_SUPPORT_REPORTS, null,
+            "$COL_ID = ?", arrayOf(id.toString()), null, null, null)
+        cursor.use {
+            if (it.moveToFirst()) return supportReportFromCursor(it)
+        }
+        return null
+    }
+
+    fun updateSupportReportStatus(reportId: Long, status: com.profitdriving.support.SupportStatus, notes: String? = null): Boolean = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_SR_STATUS, status.name)
+                put(COL_SR_UPDATED_AT, System.currentTimeMillis())
+                if (status == com.profitdriving.support.SupportStatus.RESOLVED || status == com.profitdriving.support.SupportStatus.REJECTED) {
+                    put(COL_SR_RESOLVED_AT, System.currentTimeMillis())
+                }
+                notes?.let { put(COL_SR_RESOLUTION_NOTES, it) }
+            }
+            db.update(TABLE_SUPPORT_REPORTS, cv, "$COL_ID = ?", arrayOf(reportId.toString())) > 0
+        } finally { db.close() }
+    }
+
+    fun deleteSupportReport(id: Long) = synchronized(dbLock) {
+        writableDatabase.delete(TABLE_SUPPORT_REPORTS, "$COL_ID = ?", arrayOf(id.toString()))
+    }
+
+    private fun supportReportFromCursor(c: android.database.Cursor): com.profitdriving.support.SupportReport {
+        return com.profitdriving.support.SupportReport(
+            id = c.getSafeLong(COL_ID) ?: 0L,
+            rawLogId = c.getSafeLong(COL_SR_RAW_LOG_ID),
+            rideId = c.getSafeLong(COL_SR_RIDE_ID),
+            cardHash = c.getSafeString(COL_SR_CARD_HASH),
+            userNotes = c.getSafeString(COL_SR_USER_NOTES),
+            status = try { com.profitdriving.support.SupportStatus.valueOf(c.getSafeString(COL_SR_STATUS) ?: "PENDING") } catch (_: Exception) { com.profitdriving.support.SupportStatus.PENDING },
+            priority = try { com.profitdriving.support.SupportPriority.valueOf(c.getSafeString(COL_SR_PRIORITY) ?: "NORMAL") } catch (_: Exception) { com.profitdriving.support.SupportPriority.NORMAL },
+            deviceModel = c.getSafeString(COL_SR_DEVICE_MODEL),
+            androidVersion = c.getSafeString(COL_SR_ANDROID_VERSION),
+            appVersion = c.getSafeString(COL_SR_APP_VERSION),
+            screenshotPath = c.getSafeString(COL_SR_SCREENSHOT_PATH),
+            createdAt = c.getSafeLong(COL_SR_CREATED_AT) ?: 0L,
+            updatedAt = c.getSafeLong(COL_SR_UPDATED_AT) ?: 0L,
+            resolvedAt = c.getSafeLong(COL_SR_RESOLVED_AT),
+            resolutionNotes = c.getSafeString(COL_SR_RESOLUTION_NOTES)
+        )
+    }
+
+    // ── Backups ───────────────────────────────────────────────
+
+    fun insertBackup(backup: com.profitdriving.backup.Backup): Long = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_B_NAME, backup.backupName)
+                put(COL_B_TYPE, backup.backupType.name)
+                put(COL_B_PATH, backup.backupPath)
+                put(COL_B_FILE_SIZE, backup.fileSize)
+                put(COL_B_RIDE_COUNT, backup.rideCount)
+                put(COL_B_FUEL_COUNT, backup.fuelCount)
+                put(COL_B_EXPENSE_COUNT, backup.expenseCount)
+                put(COL_B_STATUS, backup.status.name)
+                put(COL_B_CREATED_AT, backup.createdAt)
+                backup.notes?.let { put(COL_B_NOTES, it) }
+            }
+            db.insert(TABLE_BACKUPS, null, cv)
+        } finally { db.close() }
+    }
+
+    fun getAllBackups(): List<com.profitdriving.backup.Backup> {
+        val list = mutableListOf<com.profitdriving.backup.Backup>()
+        val cursor = readableDatabase.query(TABLE_BACKUPS, null,
+            null, null, null, null, "$COL_B_CREATED_AT DESC")
+        cursor.use {
+            while (it.moveToNext()) list.add(backupFromCursor(it))
+        }
+        return list
+    }
+
+    fun getBackup(id: Long): com.profitdriving.backup.Backup? {
+        val cursor = readableDatabase.query(TABLE_BACKUPS, null,
+            "$COL_ID = ?", arrayOf(id.toString()), null, null, null)
+        cursor.use {
+            if (it.moveToFirst()) return backupFromCursor(it)
+        }
+        return null
+    }
+
+    fun deleteBackup(id: Long): Boolean = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            db.delete(TABLE_BACKUPS, "$COL_ID = ?", arrayOf(id.toString())) > 0
+        } finally { db.close() }
+    }
+
+    fun updateBackupRestored(backupId: Long, restoredAt: Long) = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            val cv = ContentValues().apply {
+                put(COL_B_RESTORED_AT, restoredAt)
+            }
+            db.update(TABLE_BACKUPS, cv, "$COL_ID = ?", arrayOf(backupId.toString()))
+        } finally { db.close() }
+    }
+
+    fun getBackupConfig(): com.profitdriving.backup.BackupConfig? {
+        val cursor = readableDatabase.query(TABLE_BACKUP_CONFIG, null, null, null, null, null, null)
+        cursor.use {
+            if (it.moveToFirst()) return backupConfigFromCursor(it)
+        }
+        return null
+    }
+
+    fun updateBackupConfig(config: com.profitdriving.backup.BackupConfig): Boolean = synchronized(dbLock) {
+        val db = writableDatabase
+        val existing = getBackupConfig()
+        try {
+            val cv = ContentValues().apply {
+                put(COL_BC_ENABLED, if (config.enabled) 1 else 0)
+                put(COL_BC_FREQUENCY, config.frequency.name)
+                put(COL_BC_HOUR, config.hour)
+                put(COL_BC_MAX_BACKUPS, config.maxBackups)
+                put(COL_BC_INCLUDE_SCREENSHOTS, if (config.includeScreenshots) 1 else 0)
+                put(COL_BC_ENCRYPT, if (config.encrypt) 1 else 0)
+                put(COL_BC_AUTO_RESTORE, if (config.autoRestore) 1 else 0)
+                config.lastBackupAt?.let { put(COL_BC_LAST_BACKUP_AT, it) }
+                config.nextBackupAt?.let { put(COL_BC_NEXT_BACKUP_AT, it) }
+                put(COL_BC_UPDATED_AT, config.updatedAt)
+            }
+            if (existing != null) {
+                db.update(TABLE_BACKUP_CONFIG, cv, "$COL_ID = 1", null)
+            } else {
+                cv.put(COL_ID, 1)
+                db.insert(TABLE_BACKUP_CONFIG, null, cv)
+            }
+            true
+        } finally { db.close() }
+    }
+
+    fun clearAllData() = synchronized(dbLock) {
+        val db = writableDatabase
+        try {
+            db.delete(TABLE_NAME, null, null)
+            db.delete(TABLE_FUEL_REFUELS, null, null)
+            db.delete(TABLE_EXPENSES, null, null)
+            db.delete(TABLE_DAILY_RIDES, null, null)
+            db.delete("address_reputation", null, null)
+        } finally { db.close() }
+    }
+
+    fun insertRideRecord(record: RideRecord): Long = insert(record)
+
+    fun insertAddressReputation(normalizedAddress: String, reputation: Int) {
+        setAddressReputation(normalizedAddress, reputation)
+    }
+
+    private fun backupFromCursor(c: android.database.Cursor): com.profitdriving.backup.Backup {
+        return com.profitdriving.backup.Backup(
+            id = c.getSafeLong(COL_ID) ?: 0L,
+            backupName = c.getSafeString(COL_B_NAME) ?: "",
+            backupType = try { com.profitdriving.backup.BackupType.valueOf(c.getSafeString(COL_B_TYPE) ?: "MANUAL") } catch (_: Exception) { com.profitdriving.backup.BackupType.MANUAL },
+            backupPath = c.getSafeString(COL_B_PATH) ?: "",
+            fileSize = c.getSafeLong(COL_B_FILE_SIZE) ?: 0L,
+            rideCount = c.getSafeInt(COL_B_RIDE_COUNT) ?: 0,
+            fuelCount = c.getSafeInt(COL_B_FUEL_COUNT) ?: 0,
+            expenseCount = c.getSafeInt(COL_B_EXPENSE_COUNT) ?: 0,
+            status = try { com.profitdriving.backup.BackupStatus.valueOf(c.getSafeString(COL_B_STATUS) ?: "COMPLETE") } catch (_: Exception) { com.profitdriving.backup.BackupStatus.COMPLETE },
+            createdAt = c.getSafeLong(COL_B_CREATED_AT) ?: 0L,
+            restoredAt = c.getSafeLong(COL_B_RESTORED_AT),
+            notes = c.getSafeString(COL_B_NOTES)
+        )
+    }
+
+    private fun backupConfigFromCursor(c: android.database.Cursor): com.profitdriving.backup.BackupConfig {
+        return com.profitdriving.backup.BackupConfig(
+            id = 1,
+            enabled = c.getSafeInt(COL_BC_ENABLED) ?: 1 == 1,
+            frequency = try { com.profitdriving.backup.BackupFrequency.valueOf(c.getSafeString(COL_BC_FREQUENCY) ?: "DAILY") } catch (_: Exception) { com.profitdriving.backup.BackupFrequency.DAILY },
+            hour = c.getSafeInt(COL_BC_HOUR) ?: 22,
+            maxBackups = c.getSafeInt(COL_BC_MAX_BACKUPS) ?: 10,
+            includeScreenshots = c.getSafeInt(COL_BC_INCLUDE_SCREENSHOTS) ?: 0 == 1,
+            encrypt = c.getSafeInt(COL_BC_ENCRYPT) ?: 1 == 1,
+            autoRestore = c.getSafeInt(COL_BC_AUTO_RESTORE) ?: 1 == 1,
+            lastBackupAt = c.getSafeLong(COL_BC_LAST_BACKUP_AT),
+            nextBackupAt = c.getSafeLong(COL_BC_NEXT_BACKUP_AT),
+            updatedAt = c.getSafeLong(COL_BC_UPDATED_AT) ?: 0L
+        )
     }
 
     private fun rawCardLogFromCursor(c: android.database.Cursor): RawCardLog {
@@ -1579,7 +1875,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     companion object {
         private val dbLock = Any()
         private const val DATABASE_NAME = "profit_driving.db"
-        private const val DATABASE_VERSION = 29
+        private const val DATABASE_VERSION = 30
         private const val TABLE_NAME = "ride_history"
         private const val TABLE_FUEL_REFUELS = "fuel_refuels"
         private const val TABLE_EXPENSES = "expenses"
@@ -1588,6 +1884,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val TABLE_COST_SETTINGS = "cost_settings"
         private const val TABLE_MONTHLY_STATS = "monthly_stats"
         private const val TABLE_DAILY_RIDES = "daily_rides"
+        private const val TABLE_SUPPORT_REPORTS = "support_reports"
+        private const val TABLE_BACKUPS = "backups"
+        private const val TABLE_BACKUP_CONFIG = "backup_config"
 
         private const val COL_ID = "id"
         private const val COL_VALUE = "ride_value"
@@ -1698,6 +1997,47 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         private const val COL_DR_NOTES = "notes"
         private const val COL_DR_CREATED_AT = "created_at"
         private const val COL_DR_UPDATED_AT = "updated_at"
+
+        // Support reports columns
+        private const val COL_SR_RAW_LOG_ID = "raw_log_id"
+        private const val COL_SR_RIDE_ID = "ride_id"
+        private const val COL_SR_CARD_HASH = "card_hash"
+        private const val COL_SR_USER_NOTES = "user_notes"
+        private const val COL_SR_STATUS = "status"
+        private const val COL_SR_PRIORITY = "priority"
+        private const val COL_SR_DEVICE_MODEL = "device_model"
+        private const val COL_SR_ANDROID_VERSION = "android_version"
+        private const val COL_SR_APP_VERSION = "app_version"
+        private const val COL_SR_SCREENSHOT_PATH = "screenshot_path"
+        private const val COL_SR_CREATED_AT = "created_at"
+        private const val COL_SR_UPDATED_AT = "updated_at"
+        private const val COL_SR_RESOLVED_AT = "resolved_at"
+        private const val COL_SR_RESOLUTION_NOTES = "resolution_notes"
+
+        // Backups columns
+        private const val COL_B_NAME = "backup_name"
+        private const val COL_B_TYPE = "backup_type"
+        private const val COL_B_PATH = "backup_path"
+        private const val COL_B_FILE_SIZE = "file_size"
+        private const val COL_B_RIDE_COUNT = "ride_count"
+        private const val COL_B_FUEL_COUNT = "fuel_count"
+        private const val COL_B_EXPENSE_COUNT = "expense_count"
+        private const val COL_B_STATUS = "status"
+        private const val COL_B_CREATED_AT = "created_at"
+        private const val COL_B_RESTORED_AT = "restored_at"
+        private const val COL_B_NOTES = "notes"
+
+        // Backup config columns
+        private const val COL_BC_ENABLED = "enabled"
+        private const val COL_BC_FREQUENCY = "frequency"
+        private const val COL_BC_HOUR = "hour"
+        private const val COL_BC_MAX_BACKUPS = "max_backups"
+        private const val COL_BC_INCLUDE_SCREENSHOTS = "include_screenshots"
+        private const val COL_BC_ENCRYPT = "encrypt"
+        private const val COL_BC_AUTO_RESTORE = "auto_restore"
+        private const val COL_BC_LAST_BACKUP_AT = "last_backup_at"
+        private const val COL_BC_NEXT_BACKUP_AT = "next_backup_at"
+        private const val COL_BC_UPDATED_AT = "updated_at"
 
         private val CREATE_FUEL_REFUELS = """
             CREATE TABLE $TABLE_FUEL_REFUELS (
@@ -1861,6 +2201,59 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             "CREATE INDEX IF NOT EXISTS idx_raw_logs_hash ON $TABLE_RAW_LOGS($COL_RAW_CARD_HASH)"
         private val CREATE_RAW_LOGS_INDEX_STATUS =
             "CREATE INDEX IF NOT EXISTS idx_raw_logs_status ON $TABLE_RAW_LOGS($COL_RAW_STATUS)"
+
+        private val CREATE_SUPPORT_REPORTS = """
+            CREATE TABLE IF NOT EXISTS $TABLE_SUPPORT_REPORTS (
+                $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_SR_RAW_LOG_ID INTEGER,
+                $COL_SR_RIDE_ID INTEGER,
+                $COL_SR_CARD_HASH TEXT,
+                $COL_SR_USER_NOTES TEXT,
+                $COL_SR_STATUS TEXT DEFAULT 'PENDING',
+                $COL_SR_PRIORITY TEXT DEFAULT 'NORMAL',
+                $COL_SR_DEVICE_MODEL TEXT,
+                $COL_SR_ANDROID_VERSION TEXT,
+                $COL_SR_APP_VERSION TEXT,
+                $COL_SR_SCREENSHOT_PATH TEXT,
+                $COL_SR_CREATED_AT INTEGER NOT NULL,
+                $COL_SR_UPDATED_AT INTEGER NOT NULL,
+                $COL_SR_RESOLVED_AT INTEGER,
+                $COL_SR_RESOLUTION_NOTES TEXT
+            )
+        """.trimIndent()
+
+        private val CREATE_BACKUPS = """
+            CREATE TABLE IF NOT EXISTS $TABLE_BACKUPS (
+                $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_B_NAME TEXT NOT NULL,
+                $COL_B_TYPE TEXT NOT NULL,
+                $COL_B_PATH TEXT NOT NULL,
+                $COL_B_FILE_SIZE INTEGER NOT NULL,
+                $COL_B_RIDE_COUNT INTEGER DEFAULT 0,
+                $COL_B_FUEL_COUNT INTEGER DEFAULT 0,
+                $COL_B_EXPENSE_COUNT INTEGER DEFAULT 0,
+                $COL_B_STATUS TEXT DEFAULT 'COMPLETE',
+                $COL_B_CREATED_AT INTEGER NOT NULL,
+                $COL_B_RESTORED_AT INTEGER,
+                $COL_B_NOTES TEXT
+            )
+        """.trimIndent()
+
+        private val CREATE_BACKUP_CONFIG = """
+            CREATE TABLE IF NOT EXISTS $TABLE_BACKUP_CONFIG (
+                $COL_ID INTEGER PRIMARY KEY DEFAULT 1,
+                $COL_BC_ENABLED INTEGER DEFAULT 1,
+                $COL_BC_FREQUENCY TEXT DEFAULT 'DAILY',
+                $COL_BC_HOUR INTEGER DEFAULT 22,
+                $COL_BC_MAX_BACKUPS INTEGER DEFAULT 10,
+                $COL_BC_INCLUDE_SCREENSHOTS INTEGER DEFAULT 0,
+                $COL_BC_ENCRYPT INTEGER DEFAULT 1,
+                $COL_BC_AUTO_RESTORE INTEGER DEFAULT 1,
+                $COL_BC_LAST_BACKUP_AT INTEGER,
+                $COL_BC_NEXT_BACKUP_AT INTEGER,
+                $COL_BC_UPDATED_AT INTEGER NOT NULL
+            )
+        """.trimIndent()
     }
 }
 

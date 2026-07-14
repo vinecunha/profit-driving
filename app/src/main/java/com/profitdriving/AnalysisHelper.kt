@@ -165,6 +165,30 @@ data class DriverRating(
     val description: String
 )
 
+data class DestinationStats(
+    val destination: String,
+    val rideCount: Int,
+    val avgPricePerKm: Double,
+    val avgValue: Double,
+    val avgPricePerHour: Double,
+    val dynamicPercent: Double,
+    val priorityPercent: Double,
+    val avgRating: Double,
+    val avgDistanceKm: Double,
+    val avgTimeMin: Double,
+    val goodOfferPercent: Double,
+    val avgScore: Double,
+    val recommendation: String  // "🔥 Quente", "✅ Bom", "⚠️ Evitar"
+)
+
+data class HourlyDestination(
+    val hour: Int,
+    val destination: String,
+    val rideCount: Int,
+    val avgPricePerKm: Double,
+    val dynamicPercent: Double
+)
+
 data class AnalysisResultV2(
     val offeredCount: Int,
     val acceptedCount: Int,
@@ -202,6 +226,8 @@ data class AnalysisResultV2(
     val multipleStopsImpact: MultipleStopsImpact? = null,
     val rejectionPatterns: RejectionPatterns? = null,
     val serviceTypes: List<ServiceTypeStats> = emptyList(),
+    val destinationHotspots: List<DestinationStats> = emptyList(),
+    val hourlyDestinations: List<HourlyDestination> = emptyList(),
     val driverRating: DriverRating? = null
 )
 
@@ -426,6 +452,9 @@ object AnalysisHelperV2 {
 
         val serviceTypes = calculateServiceTypeStats(offered, accepted, dailyRidesMap, totalEarnings)
 
+        val destinationHotspots = calculateDestinationStats(accepted, offered, dailyRidesMap)
+        val hourlyDestinations = calculateHourlyDestinations(accepted, offered, dailyRidesMap)
+
         return AnalysisResultV2(
             offeredCount = offeredCount,
             acceptedCount = acceptedCount,
@@ -461,6 +490,8 @@ object AnalysisHelperV2 {
             multipleStopsImpact = multipleStopsImpact,
             rejectionPatterns = rejectionPatterns,
             serviceTypes = serviceTypes,
+            destinationHotspots = destinationHotspots,
+            hourlyDestinations = hourlyDestinations,
             driverRating = calculateDriverRating(avgPricePerKm, avgPricePerHour, profitMargin, acceptanceRate, goodPercent)
         )
     }
@@ -1346,6 +1377,126 @@ fun AnalysisHelperV2.calculateServiceTypeStats(
                 priorityPercent = priPct,
                 bestHour = bestHour,
                 earningsPercentOfTotal = earningsPct
+            )
+        }
+    }
+
+    fun calculateDestinationStats(
+        accepted: List<RideRecord>,
+        offered: List<RideRecord>,
+        dailyRidesMap: Map<Long, DailyRide>
+    ): List<DestinationStats> {
+        val destRides = accepted.filter { it.dropoffAddress != null && it.dropoffAddress!!.isNotBlank() }
+        val byDest = destRides.groupBy { it.dropoffAddress!! }
+            .filterKeys { !it.equals("Desconhecido", ignoreCase = true) }
+            .mapValues { (_, list) -> list }
+
+        val allByDest = offered.filter { it.dropoffAddress != null && it.dropoffAddress!!.isNotBlank() }
+            .groupBy { it.dropoffAddress!! }
+
+        return byDest.map { (dest, list) ->
+            val allDestRides = allByDest[dest] ?: emptyList()
+
+            val avgPpk = list.mapNotNull { ride ->
+                val daily = dailyRidesMap[ride.id]
+                val v = daily?.finalValue ?: ride.value ?: return@mapNotNull null
+                val d = ride.distanceKm ?: return@mapNotNull null
+                if (d > 0) v / d else null
+            }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+
+            val avgValue = list.mapNotNull { ride ->
+                val daily = dailyRidesMap[ride.id]
+                daily?.finalValue ?: ride.value
+            }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+
+            val avgPph = list.mapNotNull { ride ->
+                val daily = dailyRidesMap[ride.id]
+                val v = daily?.finalValue ?: ride.value ?: return@mapNotNull null
+                val t = ride.timeMin ?: return@mapNotNull null
+                if (t > 0) v / (t / 60.0) else null
+            }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+
+            val dynCount = allDestRides.count { AnalysisHelperV2.hasDynamicBonus(it) }
+            val dynPct = if (allDestRides.isNotEmpty()) dynCount.toDouble() / allDestRides.size * 100 else 0.0
+
+            val priCount = allDestRides.count { AnalysisHelperV2.hasPriorityBonus(it) }
+            val priPct = if (allDestRides.isNotEmpty()) priCount.toDouble() / allDestRides.size * 100 else 0.0
+
+            val avgRating = list.mapNotNull { it.rating }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+            val avgDist = list.mapNotNull { it.distanceKm }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+            val avgTime = list.mapNotNull { it.timeMin?.toDouble() }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+
+            val scored = list.filter { it.scorePercent != null }
+            val goodCount = scored.count { it.scorePercent!! >= 80 }
+            val goodPct = if (scored.isNotEmpty()) goodCount.toDouble() / scored.size * 100 else 0.0
+            val avgScore = scored.mapNotNull { it.scorePercent }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+
+            val recommendation = when {
+                avgPpk >= 1.8 && dynPct >= 25 -> "\uD83D\uDD25 Quente"
+                avgPpk >= 1.5 -> "\uD83D\uDC4D Bom"
+                avgPpk < 1.0 -> "\u26A0\uFE0F Evitar"
+                else -> "\uD83D\uDCCD Regular"
+            }
+
+            DestinationStats(
+                destination = dest,
+                rideCount = list.size,
+                avgPricePerKm = avgPpk,
+                avgValue = avgValue,
+                avgPricePerHour = avgPph,
+                dynamicPercent = dynPct,
+                priorityPercent = priPct,
+                avgRating = avgRating,
+                avgDistanceKm = avgDist,
+                avgTimeMin = avgTime,
+                goodOfferPercent = goodPct,
+                avgScore = avgScore,
+                recommendation = recommendation
+            )
+        }.sortedByDescending { it.rideCount }
+    }
+
+    fun calculateHourlyDestinations(
+        accepted: List<RideRecord>,
+        offered: List<RideRecord>,
+        dailyRidesMap: Map<Long, DailyRide>
+    ): List<HourlyDestination> {
+        val destRides = accepted.filter { ride -> ride.dropoffAddress != null && ride.dropoffAddress!!.isNotBlank() }
+        val byHour = destRides.groupBy { ride -> AnalysisHelperV2.getHourOfDay(ride.timestamp) }
+        val allByHour = offered.filter { ride -> ride.dropoffAddress != null && ride.dropoffAddress!!.isNotBlank() }
+            .groupBy { ride -> AnalysisHelperV2.getHourOfDay(ride.timestamp) }
+
+        return (0..23).map { hour ->
+            val hourRides = byHour[hour] ?: emptyList()
+            val allHourRides = allByHour[hour] ?: emptyList()
+
+            if (hourRides.isEmpty()) return@map HourlyDestination(
+                hour = hour, destination = "-", rideCount = 0, avgPricePerKm = 0.0, dynamicPercent = 0.0
+            )
+
+            val bestDest = hourRides.groupBy { it.dropoffAddress!! }
+                .maxByOrNull { (_, list) -> list.size }
+
+            val destName = bestDest?.key ?: "-"
+            val destRideList = bestDest?.value ?: emptyList()
+            val allDestHourRides = allHourRides.filter { it.dropoffAddress == destName }
+
+            val avgPpk = destRideList.mapNotNull { ride ->
+                val daily = dailyRidesMap[ride.id]
+                val v = daily?.finalValue ?: ride.value ?: return@mapNotNull null
+                val d = ride.distanceKm ?: return@mapNotNull null
+                if (d > 0) v / d else null
+            }.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+
+            val dynCount = allDestHourRides.count { AnalysisHelperV2.hasDynamicBonus(it) }
+            val dynPct = if (allDestHourRides.isNotEmpty()) dynCount.toDouble() / allDestHourRides.size * 100 else 0.0
+
+            HourlyDestination(
+                hour = hour,
+                destination = destName,
+                rideCount = destRideList.size,
+                avgPricePerKm = avgPpk,
+                dynamicPercent = dynPct
             )
         }
     }

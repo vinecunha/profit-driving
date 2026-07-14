@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import com.profitdriving.SecurePreferences
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -60,6 +61,7 @@ class MainActivity : BaseActivity() {
     private var selectedPeriodFilter: String? = null
     private var selectedTypeFilter = "all"
     private var selectedScoreFilter = "all"
+    private var selectedStatusFilter = "all"
     private var currentPage = 0
     private var pageSize = 100
     private var hasMore = false
@@ -79,14 +81,37 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    private val scorePrefs: SharedPreferences
+        get() = getSharedPreferences(SettingsActivity.PREF_NAME, 0)
+
+    private fun thresholdAceitar(): Int = scorePrefs.getInt(SettingsActivity.KEY_THRESHOLD_ACEITAR, 80)
+    private fun thresholdAnalisar(): Int = scorePrefs.getInt(SettingsActivity.KEY_THRESHOLD_ANALISAR, 50)
+
     private fun applyExtraFilters(records: List<RideRecord>): List<RideRecord> {
+        val aceitar = thresholdAceitar()
+        val analisar = thresholdAnalisar()
         return records
             .let { r -> if (selectedTypeFilter != "all") r.filter { it.serviceType == selectedTypeFilter } else r }
             .let { r ->
                 when (selectedScoreFilter) {
-                    "good" -> r.filter { it.scorePercent != null && it.scorePercent >= 80.0 }
-                    "medium" -> r.filter { it.scorePercent != null && it.scorePercent >= 50.0 && it.scorePercent < 80.0 }
-                    "bad" -> r.filter { it.scorePercent != null && it.scorePercent < 50.0 }
+                    "good" -> r.filter { it.scorePercent != null && it.scorePercent >= aceitar }
+                    "medium" -> r.filter { it.scorePercent != null && it.scorePercent >= analisar && it.scorePercent < aceitar }
+                    "bad" -> r.filter { it.scorePercent != null && it.scorePercent < analisar }
+                    else -> r
+                }
+            }
+            .let { r ->
+                when (selectedStatusFilter) {
+                    "accepted" -> {
+                        val (sinceMs, _) = computeFilterTimeRange()
+                        val myDayIds = if (sinceMs != null) {
+                            db.getAllDailyRides().map { it.rideId }.toSet()
+                        } else {
+                            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(java.util.Date())
+                            db.getDailyRidesByDate(today).map { it.rideId }.toSet()
+                        }
+                        r.filter { it.id in myDayIds }
+                    }
                     else -> r
                 }
             }
@@ -165,10 +190,12 @@ class MainActivity : BaseActivity() {
         if (savedInstanceState != null) {
             selectedTypeFilter = savedInstanceState.getString("typeFilter", "all") ?: "all"
             selectedScoreFilter = savedInstanceState.getString("scoreFilter", "all") ?: "all"
+            selectedStatusFilter = savedInstanceState.getString("statusFilter", "all") ?: "all"
             filtersExpanded = savedInstanceState.getBoolean("filtersExpanded", false)
         } else {
             selectedTypeFilter = FilterManager.loadString(this, "main_filter_type", "all") ?: "all"
             selectedScoreFilter = FilterManager.loadString(this, "main_filter_score", "all") ?: "all"
+            selectedStatusFilter = FilterManager.loadString(this, "main_filter_status", "all") ?: "all"
             filtersExpanded = FilterManager.loadBoolean(this, "main_filter_expanded", false)
         }
 
@@ -190,6 +217,7 @@ class MainActivity : BaseActivity() {
         setupPeriodFilter()
         setupTypeFilter()
         setupScoreFilter()
+        setupStatusFilter()
 
         val filterToggle = findViewById<LinearLayout>(R.id.btnFilterToggle)
         val filterContainer = findViewById<LinearLayout>(R.id.filterContainer)
@@ -303,6 +331,8 @@ class MainActivity : BaseActivity() {
                         records,
                         costPerKm = costSummary.totalCostPerKm,
                         confirmedRideIds = confirmedIds,
+                        thresholdAceitar = thresholdAceitar(),
+                        thresholdAnalisar = thresholdAnalisar(),
                         onDeleteRide = { ride ->
                             AlertDialog.Builder(this@MainActivity)
                                 .setTitle("Excluir corrida")
@@ -581,6 +611,32 @@ class MainActivity : BaseActivity() {
         container.addView(view)
     }
 
+    private fun setupStatusFilter() {
+        val container = findViewById<ViewGroup>(R.id.statusFilterContainer)
+        filterManager.clearContainer(container)
+        val options = listOf(
+            FilterManager.FilterOption("all", "Todas", "📋"),
+            FilterManager.FilterOption("accepted", "Confirmadas", "✅")
+        )
+        val selected = if (selectedStatusFilter == "all") emptySet() else setOf(selectedStatusFilter)
+        val view = filterManager.createFilterSection(
+            parent = container,
+            title = "",
+            options = options,
+            selectedIds = selected,
+            singleSelection = true,
+            callback = object : FilterManager.FilterCallback {
+                override fun onFilterChanged(filterId: String, isSelected: Boolean) {
+                    selectedStatusFilter = if (isSelected) filterId else "all"
+                    FilterManager.saveString(this@MainActivity, "main_filter_status", selectedStatusFilter)
+                    loadFilteredHistory()
+                }
+                override fun onClearAll() {}
+            }
+        )
+        container.addView(view)
+    }
+
     // ============================================================
     // MENU LATERAL - APENAS ITENS QUE NÃO ESTÃO NO BOTTOM NAV
     // ============================================================
@@ -678,6 +734,7 @@ class MainActivity : BaseActivity() {
         outState.putInt("filterDays", filterDays)
         outState.putString("typeFilter", selectedTypeFilter)
         outState.putString("scoreFilter", selectedScoreFilter)
+        outState.putString("statusFilter", selectedStatusFilter)
         outState.putBoolean("filtersExpanded", filtersExpanded)
     }
 }
@@ -692,7 +749,9 @@ class HistoryAdapter(
     private val onDeleteRide: ((RideRecord) -> Unit)? = null,
     private val onAddToMyDay: ((RideRecord) -> Unit)? = null,
     private val onRemoveFromMyDay: ((RideRecord) -> Unit)? = null,
-    private val confirmedRideIds: Set<Long> = emptySet()
+    private val confirmedRideIds: Set<Long> = emptySet(),
+    private val thresholdAceitar: Int = 80,
+    private val thresholdAnalisar: Int = 50
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private data class DisplayRide(
@@ -861,19 +920,21 @@ class HistoryAdapter(
         vh.ivServiceTypeIcon.setColorFilter(iconColor)
         vh.tvServiceType.setTextColor(textColor)
 
+        val aceitar = thresholdAceitar
+        val analisar = thresholdAnalisar
         val decisionText = when {
-            r.scorePercent != null && r.scorePercent >= 80 -> "✅ BOA (${FormatUtils.percent(r.scorePercent)})"
-            r.scorePercent != null && r.scorePercent >= 50 -> "⚠️ MÉDIA (${FormatUtils.percent(r.scorePercent)})"
+            r.scorePercent != null && r.scorePercent >= aceitar -> "✅ BOA (${FormatUtils.percent(r.scorePercent)})"
+            r.scorePercent != null && r.scorePercent >= analisar -> "⚠️ MÉDIA (${FormatUtils.percent(r.scorePercent)})"
             else -> "❌ RUIM (${FormatUtils.percent(r.scorePercent)})"
         }
         val decisionBg = when {
-            r.scorePercent != null && r.scorePercent >= 80 -> AppColors.successBg
-            r.scorePercent != null && r.scorePercent >= 50 -> AppColors.warningBg
+            r.scorePercent != null && r.scorePercent >= aceitar -> AppColors.successBg
+            r.scorePercent != null && r.scorePercent >= analisar -> AppColors.warningBg
             else -> AppColors.errorBg
         }
         val decisionTextColor = when {
-            r.scorePercent != null && r.scorePercent >= 80 -> AppColors.successText
-            r.scorePercent != null && r.scorePercent >= 50 -> AppColors.warningText
+            r.scorePercent != null && r.scorePercent >= aceitar -> AppColors.successText
+            r.scorePercent != null && r.scorePercent >= analisar -> AppColors.warningText
             else -> AppColors.errorText
         }
         vh.tvDecisionBadge.text = decisionText
