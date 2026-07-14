@@ -695,11 +695,10 @@ class RideAccessibilityService : AccessibilityService() {
 
     private fun extractStops(text: String): Boolean {
         val lowerText = text.lowercase(Locale.ROOT)
-        val hasStops = lowerText.contains("várias paradas") ||
-                lowerText.contains("paradas")
+        val hasStops = Regex("""\b(?:\d+\s+)?(?:várias\s+)?paradas?\b""", RegexOption.IGNORE_CASE).containsMatchIn(lowerText)
 
         if (hasStops) {
-            L.d(TAG, "Várias paradas detectado!")
+            L.d(TAG, "Paradas detectado!")
         }
         return hasStops
     }

@@ -57,7 +57,7 @@ object OCREnhancer {
         Regex("""^\s*(rua|av|avenida|travessa|praça|rodovia|estrada|alameda|beco|via|residencial|condomínio)"""),
         Regex("""\bkm\b.*\bdistância\b"""),
         Regex("""de\s+distância"""),
-        Regex("""várias\s+paradas"""),
+        Regex("""(?:\d+\s+)?(?:várias\s+)?paradas?"""),
         Regex("""priorit[áa]rio"""),
         Regex("""iniciar\s+viagem"""),
         Regex("""exclusivo"""),

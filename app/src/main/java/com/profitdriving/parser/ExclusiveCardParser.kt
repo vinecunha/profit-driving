@@ -335,7 +335,7 @@ class ExclusiveCardParser : RideDataParser {
 
     private fun extractStops(text: String): Boolean {
         val lowerText = text.lowercase(Locale.ROOT)
-        return lowerText.contains("várias paradas") || lowerText.contains("paradas")
+        return Regex("""\b(?:\d+\s+)?(?:várias\s+)?paradas?\b""", RegexOption.IGNORE_CASE).containsMatchIn(lowerText)
     }
 
     private fun extractAddresses(text: String): Pair<String?, String?> {
