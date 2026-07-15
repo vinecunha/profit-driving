@@ -332,7 +332,8 @@ class RadarCardParser : RideDataParser {
     }
 
     private fun extractDynamicBonus(text: String): Double? {
-        val m = DYNAMIC_BONUS_REGEX.find(text) ?: return null
+        val cleanText = text.replace(PRIORITY_BONUS_REGEX, " ")
+        val m = DYNAMIC_BONUS_REGEX.find(cleanText) ?: return null
         val v = UberCardExtractor.parseBr(m.groupValues[1])
         return if (v != null && v > 0) v else null
     }

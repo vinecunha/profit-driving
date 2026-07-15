@@ -74,11 +74,11 @@ val SERVICE_TYPES: List<ServiceTypeEntry> = listOf(
 
 // ─── BÔNUS ───
 private val RE_BONUS_PRIORITY = Regex(
-    """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do\s+para\s+(?:prioridade|embarque)""",
+    """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do\s+para\s+embarque\s+priorit[áa]rio""",
     RegexOption.IGNORE_CASE
 )
 private val RE_BONUS_DYNAMIC = Regex(
-    """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do(?!\s+para\s+prioridade)""",
+    """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do(?!\s+para\s+embarque\s+priorit[áa]rio)""",
     RegexOption.IGNORE_CASE
 )
 

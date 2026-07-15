@@ -1193,6 +1193,18 @@ class SettingsActivity : BaseActivity() {
         findViewById<LinearLayout>(R.id.llBackup).setOnClickListener {
             startActivity(Intent(this, com.profitdriving.backup.BackupActivity::class.java))
         }
+        try {
+            val config = com.profitdriving.backup.BackupManager(this).getConfig()
+            val tvStatus = findViewById<TextView>(R.id.tvBackupStatus)
+            val lastDate = config.lastBackupAt?.let {
+                java.text.SimpleDateFormat("dd/MM HH:mm", java.util.Locale.getDefault())
+                    .format(java.util.Date(it))
+            }
+            tvStatus.text = if (lastDate != null) "Último backup: $lastDate"
+            else if (config.enabled) "Backup automático ativo"
+            else "Backup desativado"
+            tvStatus.visibility = View.VISIBLE
+        } catch (_: Exception) { }
     }
 
     private fun setupSupportEntry() {

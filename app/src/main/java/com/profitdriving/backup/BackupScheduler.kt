@@ -3,9 +3,9 @@ package com.profitdriving.backup
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.*
+import com.profitdriving.L
 import com.profitdriving.R
 import java.text.SimpleDateFormat
 import java.util.*
@@ -75,14 +75,14 @@ class BackupWorker(
         return try {
             val backup = BackupManager(applicationContext).createBackup(BackupType.AUTO)
             if (backup != null) {
-                Log.d("BackupWorker", "Backup automático criado: ${backup.backupName}")
+                L.d("BackupWorker", "Backup automático criado: ${backup.backupName}")
                 Result.success()
             } else {
-                Log.e("BackupWorker", "Falha ao criar backup automático")
+                L.e("BackupWorker", "Falha ao criar backup automático")
                 Result.failure()
             }
         } catch (e: Exception) {
-            Log.e("BackupWorker", "Erro no backup", e)
+            L.e("BackupWorker", "Erro no backup", e)
             Result.retry()
         }
     }

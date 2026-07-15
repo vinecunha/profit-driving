@@ -44,7 +44,6 @@ class CaptureManager(private val context: Context) {
             }.toByteArray()
             thumbFile.writeBytes(FileEncryption.encryptRaw(thumbBytes, EncryptionConfig.EXPORT_PASSWORD))
             thumb.recycle()
-            bitmap.recycle()
 
             val record = CaptureRecord(
                 id = id,

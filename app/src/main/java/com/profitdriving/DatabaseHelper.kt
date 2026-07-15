@@ -764,22 +764,33 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     fun getAllBackups(): List<com.profitdriving.backup.Backup> {
-        val list = mutableListOf<com.profitdriving.backup.Backup>()
-        val cursor = readableDatabase.query(TABLE_BACKUPS, null,
-            null, null, null, null, "$COL_B_CREATED_AT DESC")
-        cursor.use {
-            while (it.moveToNext()) list.add(backupFromCursor(it))
+        return try {
+            val list = mutableListOf<com.profitdriving.backup.Backup>()
+            val cursor = readableDatabase.query(TABLE_BACKUPS, null,
+                null, null, null, null, "$COL_B_CREATED_AT DESC")
+            cursor.use {
+                while (it.moveToNext()) list.add(backupFromCursor(it))
+            }
+            list
+        } catch (e: Exception) {
+            L.w("DB", "getAllBackups: ${e.message}")
+            emptyList()
         }
-        return list
     }
 
     fun getBackup(id: Long): com.profitdriving.backup.Backup? {
-        val cursor = readableDatabase.query(TABLE_BACKUPS, null,
-            "$COL_ID = ?", arrayOf(id.toString()), null, null, null)
-        cursor.use {
-            if (it.moveToFirst()) return backupFromCursor(it)
+        return try {
+            val cursor = readableDatabase.query(TABLE_BACKUPS, null,
+                "$COL_ID = ?", arrayOf(id.toString()), null, null, null)
+            var result: com.profitdriving.backup.Backup? = null
+            cursor.use {
+                if (it.moveToFirst()) result = backupFromCursor(it)
+            }
+            result
+        } catch (e: Exception) {
+            L.w("DB", "getBackup: ${e.message}")
+            null
         }
-        return null
     }
 
     fun deleteBackup(id: Long): Boolean = synchronized(dbLock) {
@@ -800,11 +811,17 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     fun getBackupConfig(): com.profitdriving.backup.BackupConfig? {
-        val cursor = readableDatabase.query(TABLE_BACKUP_CONFIG, null, null, null, null, null, null)
-        cursor.use {
-            if (it.moveToFirst()) return backupConfigFromCursor(it)
+        return try {
+            val cursor = readableDatabase.query(TABLE_BACKUP_CONFIG, null, null, null, null, null, null)
+            var result: com.profitdriving.backup.BackupConfig? = null
+            cursor.use {
+                if (it.moveToFirst()) result = backupConfigFromCursor(it)
+            }
+            result
+        } catch (e: Exception) {
+            L.w("DB", "getBackupConfig: ${e.message}")
+            null
         }
-        return null
     }
 
     fun updateBackupConfig(config: com.profitdriving.backup.BackupConfig): Boolean = synchronized(dbLock) {
@@ -966,6 +983,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             db.close()
         }
     }
+
+    fun getCurrentCostPerKm(): Double = calculateCurrentCostPerKm() ?: 2.5
 
     private fun calculateCurrentCostPerKm(): Double? {
         val now = System.currentTimeMillis()
@@ -2175,7 +2194,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_KM_STATE INTEGER,
                 $COL_HOUR_STATE INTEGER,
                 $COL_MIN_STATE INTEGER,
-                $COL_RATING_STATE INTEGER
+                $COL_RATING_STATE INTEGER,
+                $COL_PICKUP_ADDRESS TEXT,
+                $COL_DROPOFF_ADDRESS TEXT,
+                $COL_CARD_HASH TEXT
             )
         """.trimIndent()
 

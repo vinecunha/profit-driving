@@ -1,6 +1,19 @@
 # Profit Driving — Session Summary
 
-## Completed Work
+## Session 2026-07-14: ML Kit OCR Optimization + Accessibility Revert
+
+### Changes (OCR-only)
+- **RideAccessibilityServiceV2.kt** — Move `saveCapture` (disk I/O) to **after** `processRawCard` in `processMLKitScreenshot`, so the floating card appears without waiting for disk writes.
+- All prior session accessibility changes (rate limit, `lastProcessAttemptMs`, `readStableTree` retry reduction, `onUberWindowDismissed` conditional, duplicata rápida early-return removal, debug logs) **reverted to original**.
+
+### Known Issues
+- Some "radar" cards still missed — likely due to `pendingJob?.isActive` blocking concurrent events while ML Kit is processing.
+- Next step: investigate radar card timing; possibly queue events or further optimize ML Kit path.
+
+### Key Files Modified
+- `app/src/main/java/com/profitdriving/accessibility/RideAccessibilityServiceV2.kt`
+
+## Completed Work (Pre-session)
 
 ### Redesign Simplified Ride Card
 - **item_ride_card.xml** — Applied design token system (use_color, text_primary, text_secondary, etc.), icon+suffix pattern, dynamic income display

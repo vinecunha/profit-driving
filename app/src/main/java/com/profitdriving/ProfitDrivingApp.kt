@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.profitdriving.backup.BackupScheduler
 
 class ProfitDrivingApp : Application() {
 
@@ -17,6 +18,7 @@ class ProfitDrivingApp : Application() {
         databaseHelper = DatabaseHelper(this)
         prefs = createEncryptedPrefs()
         databaseHelper.pruneOldRawLogs()
+        BackupScheduler(this).schedule()
     }
 
     private fun createEncryptedPrefs(): SharedPreferences {

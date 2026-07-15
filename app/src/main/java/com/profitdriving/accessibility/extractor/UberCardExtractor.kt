@@ -1,7 +1,7 @@
 package com.profitdriving.accessibility.extractor
 
-import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
 import com.google.android.gms.tasks.Tasks
@@ -37,14 +37,6 @@ object UberCardExtractor {
         val bonusNodes = findBonusNodes(allTexts)
         val acceptNode = findAcceptNode(allTexts)
 
-        if (cardType == CardType.RADAR &&
-            pickupNode == null && tripNode == null &&
-            ratingNode == null && serviceNode == null && bonusNodes.isEmpty()
-        ) {
-            L.d(TAG, "Card RADAR com apenas valor+aceitar — provável tela de espera, rejeitando")
-            return null
-        }
-
         return RawCardData(
             cardType = cardType,
             valueNode = valueNode,
@@ -58,7 +50,7 @@ object UberCardExtractor {
         )
     }
 
-    fun extractWithMLKit(context: Context, bitmap: Bitmap, windowBounds: android.graphics.Rect? = null): RawCardData? {
+    fun extractWithMLKit(bitmap: Bitmap, windowBounds: Rect? = null): RawCardData? {
         try {
             L.d(TAG, "🔍 [UberMLKit] UberCardExtractor.extractWithMLKit() INICIADO")
 
@@ -121,7 +113,7 @@ object UberCardExtractor {
         )
     }
 
-    private fun cropToBounds(bitmap: Bitmap, bounds: android.graphics.Rect): Bitmap {
+    private fun cropToBounds(bitmap: Bitmap, bounds: Rect): Bitmap {
         val x = bounds.left.coerceAtLeast(0)
         val y = bounds.top.coerceAtLeast(0)
         val w = bounds.width().coerceAtMost(bitmap.width - x)
@@ -279,11 +271,11 @@ object UberCardExtractor {
     private val RATING_BULLET_REGEX = Regex("""(\d[.,]\d{1,2})\s*[·•]""")
     private val RATING_DECIMAL_REGEX = Regex("""(\d[.,]\d{1,2})""")
     private val PRIORITY_BONUS_PATTERN = Regex(
-        """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do\s+para\s+prioridade""",
+        """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do\s+para\s+embarque\s+priorit[áa]rio""",
         RegexOption.IGNORE_CASE
     )
     private val DYNAMIC_BONUS_PATTERN = Regex(
-        """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do(?!\s+para\s+prioridade)""",
+        """\+R\$\s*(\d+(?:[.,]\d+)?)\s*inclu[íi]do(?!\s+para\s+embarque\s+priorit[áa]rio)""",
         RegexOption.IGNORE_CASE
     )
 

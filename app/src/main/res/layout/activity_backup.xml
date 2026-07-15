@@ -24,12 +24,16 @@
 
             <TextView
                 android:id="@+id/tvTotalBackups"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="0"
                 android:textSize="@dimen/text_size_18"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary" />
 
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Backups"
                 android:textSize="@dimen/text_size_11"
                 android:textColor="@color/text_tertiary" />
@@ -45,12 +49,16 @@
 
             <TextView
                 android:id="@+id/tvTotalSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="0 MB"
                 android:textSize="@dimen/text_size_18"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary" />
 
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Tamanho total"
                 android:textSize="@dimen/text_size_11"
                 android:textColor="@color/text_tertiary" />
@@ -66,12 +74,16 @@
 
             <TextView
                 android:id="@+id/tvLastBackup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Nunca"
                 android:textSize="@dimen/text_size_14"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary" />
 
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Último backup"
                 android:textSize="@dimen/text_size_11"
                 android:textColor="@color/text_tertiary" />
@@ -110,6 +122,8 @@
             android:focusable="true">
 
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="Config"
                 android:textSize="@dimen/text_size_13" />
 
@@ -126,46 +140,62 @@
         android:gravity="center">
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="Próximo: "
             android:textSize="@dimen/text_size_11"
             android:textColor="@color/text_tertiary" />
 
         <TextView
             android:id="@+id/tvNextBackup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="indefinido"
             android:textSize="@dimen/text_size_11"
             android:textColor="@color/accent"
             android:textStyle="bold" />
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="  |  "
             android:textSize="@dimen/text_size_11"
             android:textColor="@color/text_tertiary" />
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="Frequência: "
             android:textSize="@dimen/text_size_11"
             android:textColor="@color/text_tertiary" />
 
         <TextView
             android:id="@+id/tvFrequency"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="DAILY"
             android:textSize="@dimen/text_size_11"
             android:textColor="@color/accent"
             android:textStyle="bold" />
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="  |  "
             android:textSize="@dimen/text_size_11"
             android:textColor="@color/text_tertiary" />
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="Máx: "
             android:textSize="@dimen/text_size_11"
             android:textColor="@color/text_tertiary" />
 
         <TextView
             android:id="@+id/tvMaxBackups"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="10"
             android:textSize="@dimen/text_size_11"
             android:textColor="@color/accent"

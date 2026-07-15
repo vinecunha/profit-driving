@@ -10,7 +10,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.profitdriving.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -28,7 +30,6 @@ class BackupActivity : BaseActivity() {
         backupManager = BackupManager(this)
         setupViews()
         loadData()
-        updateUI()
     }
 
     private fun setupViews() {
@@ -45,28 +46,30 @@ class BackupActivity : BaseActivity() {
     }
 
     private fun loadData() {
-        val backups = backupManager.getBackups()
-        adapter.submitList(backups)
-        findViewById<TextView>(R.id.tvEmpty).visibility = if (backups.isEmpty()) View.VISIBLE else View.GONE
-        findViewById<TextView>(R.id.tvTotalBackups).text = "${backups.size}"
-    }
+        lifecycleScope.launch {
+            try {
+                val backups = withContext(Dispatchers.IO) { backupManager.getBackups() }
+                adapter.submitList(backups)
+                findViewById<TextView>(R.id.tvEmpty).visibility = if (backups.isEmpty()) View.VISIBLE else View.GONE
+                findViewById<TextView>(R.id.tvTotalBackups).text = "${backups.size}"
 
-    private fun updateUI() {
-        val stats = backupManager.getBackupStats()
-        findViewById<TextView>(R.id.tvTotalBackups).text = "${stats.totalBackups}"
-        findViewById<TextView>(R.id.tvTotalSize).text = formatFileSize(stats.totalSize)
+                val stats = withContext(Dispatchers.IO) { backupManager.getBackupStats() }
+                findViewById<TextView>(R.id.tvTotalSize).text = formatFileSize(stats.totalSize)
+                val lastDate = stats.lastBackup?.let {
+                    SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(it.createdAt))
+                } ?: "Nunca"
+                findViewById<TextView>(R.id.tvLastBackup).text = lastDate
 
-        val lastDate = stats.lastBackup?.let {
-            SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(it.createdAt))
-        } ?: "Nunca"
-        findViewById<TextView>(R.id.tvLastBackup).text = lastDate
-
-        val config = backupManager.getConfig()
-        findViewById<TextView>(R.id.tvFrequency).text = config.frequency.name
-        findViewById<TextView>(R.id.tvMaxBackups).text = "${config.maxBackups}"
-        findViewById<TextView>(R.id.tvNextBackup).text = config.nextBackupAt?.let {
-            SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(Date(it))
-        } ?: "indefinido"
+                val config = withContext(Dispatchers.IO) { backupManager.getConfig() }
+                findViewById<TextView>(R.id.tvFrequency).text = config.frequency.name
+                findViewById<TextView>(R.id.tvMaxBackups).text = "${config.maxBackups}"
+                findViewById<TextView>(R.id.tvNextBackup).text = config.nextBackupAt?.let {
+                    SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(Date(it))
+                } ?: "indefinido"
+            } catch (e: Exception) {
+                L.e("BackupActivity", "Erro ao carregar dados", e)
+            }
+        }
     }
 
     private fun createManualBackup() {
@@ -81,7 +84,7 @@ class BackupActivity : BaseActivity() {
             }
             findViewById<Button>(R.id.btnCreateBackup).isEnabled = true
             findViewById<Button>(R.id.btnCreateBackup).text = "Criar Backup"
-            loadData(); updateUI()
+            loadData()
         }
     }
 
@@ -107,7 +110,7 @@ class BackupActivity : BaseActivity() {
                     } else {
                         Toast.makeText(this@BackupActivity, "Erro ao restaurar", Toast.LENGTH_SHORT).show()
                     }
-                    loadData(); updateUI()
+                    loadData()
                 }
             }
             .setNegativeButton("Cancelar", null)
@@ -121,7 +124,7 @@ class BackupActivity : BaseActivity() {
             .setPositiveButton("Deletar") { _, _ ->
                 if (backupManager.deleteBackup(backup.id)) {
                     Toast.makeText(this@BackupActivity, "Backup removido", Toast.LENGTH_SHORT).show()
-                    loadData(); updateUI()
+                    loadData()
                 }
             }
             .setNegativeButton("Cancelar", null)
@@ -166,7 +169,7 @@ class BackupActivity : BaseActivity() {
                 )
                 if (backupManager.updateConfig(updated)) {
                     Toast.makeText(this@BackupActivity, "Configurações salvas!", Toast.LENGTH_SHORT).show()
-                    updateUI()
+                    loadData()
                     if (updated.enabled) BackupScheduler(this@BackupActivity).schedule()
                     else BackupScheduler(this@BackupActivity).cancel()
                 }

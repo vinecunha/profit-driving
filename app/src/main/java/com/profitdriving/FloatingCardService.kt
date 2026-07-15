@@ -10,6 +10,7 @@ import com.profitdriving.FormatUtils
 import com.profitdriving.SecurePreferences
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Handler
@@ -25,10 +26,12 @@ import android.view.WindowManager
 import android.view.WindowManager.BadTokenException
 import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.NotificationCompat
-import com.profitdriving.predictor.OfferAnalyzer
+import com.profitdriving.predictor.EnhancedOfferAnalyzer
 import com.profitdriving.predictor.OfferClassification
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -409,7 +412,7 @@ class FloatingCardService : Service() {
             serviceScope.launch(Dispatchers.IO) {
                 try {
                     val db = DatabaseHelper(this@FloatingCardService)
-                    val analysis = OfferAnalyzer(db).analyze(ride)
+                    val analysis = EnhancedOfferAnalyzer(db).analyze(ride)
 
                     withContext(Dispatchers.Main) {
                         if (analysis != null) {
@@ -440,10 +443,9 @@ class FloatingCardService : Service() {
                                     tvAIPotential.visibility = View.GONE
                                 }
 
-                                val analysisCopy = analysis
                                 tvInfoIcon.setOnClickListener {
                                     handler.removeCallbacks(dismissRunnable)
-                                    showAIExplanation(analysisCopy, ride)
+                                    showEnhancedExplanation(analysis, ride)
                                 }
 
                                 llAI.visibility = View.VISIBLE
@@ -883,34 +885,190 @@ class FloatingCardService : Service() {
         super.onDestroy()
     }
 
-    private fun showAIExplanation(analysis: com.profitdriving.predictor.OfferAnalysis, ride: RideData) {
+    private var infoOverlayView: View? = null
+
+    private fun showEnhancedExplanation(analysis: com.profitdriving.predictor.EnhancedOfferAnalysis, ride: RideData) {
         try {
+            if (infoOverlayView != null) {
+                try { windowManager.removeView(infoOverlayView) } catch (_: Exception) {}
+                infoOverlayView = null
+            }
+            val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            val density = resources.displayMetrics.density
+            val screenWidth = resources.displayMetrics.widthPixels
+            val screenHeight = resources.displayMetrics.heightPixels
+            val maxCardWidth = (screenWidth * 0.85).toInt()
+
             val direction = if (analysis.diffPercent >= 0) "melhor" else "pior"
             val diffAbs = kotlin.math.abs(analysis.diffPercent)
-            AlertDialog.Builder(this)
-                .setTitle("📊 Como calculamos?")
-                .setMessage(buildString {
-                    appendLine("Comparação com a média das suas últimas 72h:\n")
-                    appendLine("• Mesmo app: ${analysis.app}")
-                    appendLine("• Mesmo horário: ±2h (${analysis.hourSlot})")
-                    appendLine("• ${analysis.historicalRidesCount} corridas analisadas\n")
-                    appendLine("Sua média: R$ ${"%.2f".format(analysis.historicalAvg)}/km")
-                    appendLine("Oferta atual: R$ ${"%.2f".format(analysis.currentPpk)}/km")
-                    appendLine()
-                    if (direction == "melhor") {
-                        appendLine("✅ ${"%.0f".format(diffAbs)}% $direction")
-                        if (analysis.potentialExtra > 0) {
-                            appendLine("💰 Potencial extra: R$ ${"%.2f".format(analysis.potentialExtra)}")
-                        }
-                    } else {
-                        appendLine("⚠️ ${"%.0f".format(diffAbs)}% $direction")
-                    }
-                    appendLine()
-                    appendLine("🔒 Dados anônimos — apenas suas corridas")
+            val avgFormatted = "%.2f".format(analysis.historicalAvg)
+            val currFormatted = "%.2f".format(analysis.currentPpk)
+
+            // Card root — full screen, semi-transparent background
+            val root = LinearLayout(this).apply {
+                layoutParams = WindowManager.LayoutParams(
+                    screenWidth, screenHeight,
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    else
+                        @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE,
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                    PixelFormat.TRANSLUCENT
+                )
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                setBackgroundColor(Color.parseColor("#80000000"))
+                setOnClickListener { dismissInfoOverlay() }
+            }
+
+            // Card content
+            val card = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(maxCardWidth, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    setMargins((16 * density).toInt(), 0, (16 * density).toInt(), 0)
+                }
+                orientation = LinearLayout.VERTICAL
+                val bg = GradientDrawable()
+                bg.setColor(Color.parseColor("#FF1E1E2E"))
+                bg.cornerRadius = 16f * density
+                background = bg
+                setPadding(
+                    (16 * density).toInt(), (16 * density).toInt(),
+                    (16 * density).toInt(), (16 * density).toInt()
+                )
+            }
+
+            // Title row
+            val titleRow = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            titleRow.addView(TextView(this).apply {
+                text = "📊 Análise Completa"
+                setTextColor(Color.WHITE)
+                textSize = 16f
+                typeface = android.graphics.Typeface.DEFAULT_BOLD
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            })
+            titleRow.addView(TextView(this).apply {
+                text = "✕"
+                setTextColor(Color.parseColor("#FF888888"))
+                textSize = 20f
+                gravity = Gravity.CENTER
+                setPadding((12 * density).toInt(), 0, 0, 0)
+                setOnClickListener { dismissInfoOverlay() }
+            })
+            card.addView(titleRow)
+
+            // Divider
+            card.addView(View(this).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, (1 * density).toInt()
+                ).apply { topMargin = (12 * density).toInt(); bottomMargin = (12 * density).toInt() }
+                setBackgroundColor(Color.parseColor("#FF333344"))
+            })
+
+            // Scrollable content
+            val scroll = ScrollView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    (screenHeight * 0.55).toInt()
+                )
+            }
+            val content = LinearLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+                orientation = LinearLayout.VERTICAL
+            }
+            scroll.addView(content)
+            card.addView(scroll)
+
+            val textColor = Color.parseColor("#FFCCCCCC")
+            val highlightColor = Color.parseColor("#FF4FC3F7")
+            val successColor = Color.parseColor("#FF4CAF50")
+            val errorColor = Color.parseColor("#FFEF5350")
+            val labelSize = 14f
+            val bodySize = 13f
+
+            fun addSection(title: String) {
+                content.addView(TextView(this).apply {
+                    text = title
+                    setTextColor(highlightColor)
+                    textSize = labelSize
+                    typeface = android.graphics.Typeface.DEFAULT_BOLD
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { topMargin = (12 * density).toInt(); bottomMargin = (4 * density).toInt() }
                 })
-                .setPositiveButton("Entendi", null)
-                .show()
-        } catch (_: Exception) { }
+            }
+
+            fun addLine(text: String, color: Int = textColor) {
+                content.addView(TextView(this).apply {
+                    this.text = text
+                    setTextColor(color)
+                    textSize = bodySize
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { leftMargin = (8 * density).toInt() }
+                })
+            }
+
+            addSection("📍 Comparação com seu histórico (72h)")
+            addLine("• App: ${ride.appName} ${ride.serviceType?.let { "($it)" } ?: ""}")
+            addLine("• ${analysis.historicalRidesCount} corridas analisadas")
+            addLine("• Dados anônimos — apenas suas corridas")
+
+            addSection("📈 Desempenho")
+            val perfColor = if (analysis.diffPercent >= 0) successColor else errorColor
+            addLine("Atual: R\$$currFormatted/km", highlightColor)
+            addLine("Média: R\$$avgFormatted/km")
+            addLine("Diferença: ${"%.0f".format(diffAbs)}% $direction", perfColor)
+
+            if (analysis.percentile <= 50) {
+                addSection("🏆 Topo do Ranking")
+                addLine("TOP ${analysis.percentile}% das melhores ofertas", successColor)
+            }
+
+            addSection("⏳ Probabilidade")
+            addLine("${analysis.chanceBetterIn15min}% de chance de oferta melhor em 15min")
+
+            addSection("💰 Análise Financeira")
+            addLine("Lucro líquido: R$ ${"%.2f".format(analysis.netProfit)}", successColor)
+            addLine("Custo/km: R$ ${"%.2f".format(analysis.costPerKm)}")
+            addLine("Potencial extra: R$ ${"%.2f".format(analysis.potentialExtra)}", highlightColor)
+
+            addSection("📊 Faixa de R\$/km — Hoje")
+            addLine("Melhor: R$ ${"%.2f".format(analysis.bestToday)}/km", successColor)
+            addLine("Pior: R$ ${"%.2f".format(analysis.worstToday)}/km", errorColor)
+            addLine("Média: R$ ${"%.2f".format(analysis.avgToday)}/km")
+
+            if (analysis.sameServiceDiff != 0.0) {
+                val sSign = if (analysis.sameServiceDiff > 0) "+" else ""
+                val sColor = if (analysis.sameServiceDiff >= 0) successColor else errorColor
+                addSection("📊 Comparação por Serviço")
+                addLine("${sSign}${"%.0f".format(analysis.sameServiceDiff)}% vs média ${ride.serviceType ?: ""}", sColor)
+            }
+
+            root.addView(card)
+            windowManager.addView(root, root.layoutParams as WindowManager.LayoutParams)
+            infoOverlayView = root
+        } catch (e: Exception) {
+            L.e(TAG, "Erro no info overlay: ${e.message}")
+        }
+    }
+
+    private fun dismissInfoOverlay() {
+        infoOverlayView?.let {
+            try { windowManager.removeView(it) } catch (_: Exception) {}
+            infoOverlayView = null
+        }
     }
 
     private fun applyDecisionBorder(view: View, decision: DecisionEngine.Decision) {

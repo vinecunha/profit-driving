@@ -11,6 +11,7 @@ import android.os.VibratorManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import com.profitdriving.BuildConfig
+import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -62,6 +63,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     private var lastSavedValue: Double? = null
     private var currentRawLogId: Long = -1L
     private var isReScanTriggered = false
+    private var dismissPending: kotlinx.coroutines.Job? = null
     private val eventAlertManager by lazy { EventAlertManager(this) }
     private val anomalyDetector = AnomalyDetector(this)
 
@@ -105,17 +107,48 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             versionToken++
             val token = versionToken
 
+            val is99 = pkg.contains("taxis99") || pkg.contains("app99")
+
             pendingJob = scope.launch(Dispatchers.IO) {
-                delay(300)
                 if (token != versionToken) return@launch
                 readMutex.withLock {
                     if (token != versionToken) return@withLock
-                    val root = readStableTree(pkg) ?: return@withLock
-                    val detectedPkg = root.packageName?.toString() ?: ""
-                    try {
-                        detectRideCard(root, detectedPkg)
-                    } finally {
-                        recycleDeprecated(root)
+                    if (is99) {
+                        if (isAppReadingEnabled("99")) {
+                            val root = findApp99Window()
+                            if (root != null) {
+                                try {
+                                    val texts = mutableListOf<String>()
+                                    collectTextsForCheck(root, texts)
+                                    val hasCardData = texts.any { t ->
+                                        val lower = t.lowercase(java.util.Locale.ROOT)
+                                        lower.contains("aceitar") || lower.contains("escolher") ||
+                                        lower.contains("selecionar") ||
+                                        (lower.contains("min") && lower.contains("km"))
+                                    }
+                                    if (hasCardData) {
+                                        L.d(TAG, "99: card detectado na árvore, processando...")
+                                        val raw = com.profitdriving.accessibility.extractor.App99Extractor.createFromTexts(texts)
+                                        processRawCard(raw, pkg)
+                                        return@withLock
+                                    }
+                                    L.d(TAG, "99: janela sem dados de corrida (home screen) — ignorando")
+                                    return@withLock
+                                } finally {
+                                    recycleDeprecated(root)
+                                }
+                            }
+                            captureAndProcessWithMLKit(pkg)
+                        }
+                    } else if (isAppReadingEnabled("uber")) {
+                        val root = readStableTree(pkg)
+                        if (root == null) return@withLock
+                        val detectedPkg = root.packageName?.toString() ?: ""
+                        try {
+                            detectRideCard(root, detectedPkg)
+                        } finally {
+                            recycleDeprecated(root)
+                        }
                     }
                 }
             }
@@ -315,7 +348,6 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         pendingJob?.cancel()
         pendingJob = null
         FloatingCardService.stop(this)
-        L.d(TAG, "Janela Uber saiu — estado resetado, card flutuante removido")
     }
 
     private fun buildCardHash(texts: List<String>): String {
@@ -333,37 +365,21 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         try {
             L.d(TAG, "=== detectRideCard V2 iniciado para $pkg ===")
 
-            when {
-                pkg.contains("ubercab") -> {
-                    if (!isAppReadingEnabled("uber")) {
-                        L.d(TAG, "Leitura Uber desabilitada nas configurações")
-                        return
-                    }
-                    L.d(TAG, "🔍 Chamando UberCardExtractor")
-                    val raw = UberCardExtractor.extract(root, pkg)
-                    if (raw != null && raw.rawTexts.isNotEmpty()) {
-                        processRawCard(raw, pkg)
-                    } else {
-                        L.d(TAG, "UberCardExtractor retornou null/vazio — tentando ML Kit")
-                        captureAndProcessWithMLKit(pkg)
-                    }
-                }
-                pkg.contains("taxis99") || pkg.contains("app99") -> {
-                    if (!isAppReadingEnabled("99")) {
-                        L.d(TAG, "Leitura 99 desabilitada nas configurações")
-                        return
-                    }
-                    L.d(TAG, "🔍 Chamando App99Extractor")
-                    val raw = App99Extractor.extract(root, pkg)
-                    if (raw != null) {
-                        processRawCard(raw, pkg)
-                    } else {
-                        L.d(TAG, "⚠️ App99Extractor falhou, chamando ML Kit...")
-                        captureAndProcessWithMLKit(pkg)
-                    }
-                }
+            if (!pkg.contains("ubercab")) return
+
+            if (!isAppReadingEnabled("uber")) {
+                L.d(TAG, "Leitura Uber desabilitada nas configurações")
+                return
             }
 
+            L.d(TAG, "🔍 Chamando UberCardExtractor")
+            val raw = UberCardExtractor.extract(root, pkg)
+            if (raw != null && raw.rawTexts.isNotEmpty()) {
+                processRawCard(raw, pkg)
+            } else {
+                L.d(TAG, "UberCardExtractor retornou null/vazio — tentando ML Kit")
+                captureAndProcessWithMLKit(pkg)
+            }
         } catch (e: Exception) {
             L.e(TAG, "detectRideCard crashou: ${e.message}", e)
         }
@@ -436,6 +452,11 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                     val texts = mutableListOf<String>()
                     collectTextsForCheck(root, texts)
 
+                    if (texts.isEmpty()) {
+                        L.d(TAG, "readStableTree: janela vazia (fast path na tentativa $i)")
+                        return@withTimeoutOrNull root
+                    }
+
                     val hasPrice = texts.any { it.contains("R$", ignoreCase = true) }
                     val hasAction = texts.any { t ->
                         val lower = t.lowercase()
@@ -447,9 +468,9 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                         L.d(TAG, "readStableTree: sucesso na tentativa $i (delay=${delay}ms)")
                         return@withTimeoutOrNull root
                     }
-                    L.d(TAG, "readStableTree: tentativa $i (delay=${delay}ms) — não atingiu critério (price=$hasPrice action=$hasAction, textos=${texts.take(5)})")
+
+                    L.d(TAG, "readStableTree: tentativa $i (delay=${delay}ms) — price=$hasPrice action=$hasAction, textos=${texts.take(5)}")
                 }
-                L.d(TAG, "readStableTree: nenhuma tentativa atingiu critério de estabilidade — abortando")
                 null
             }
         } finally {
@@ -462,56 +483,67 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     }
 
     private fun captureAndProcessWithMLKit(pkg: String) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            L.d(TAG, "❌ [MLKit] ML Kit requer Android 14+ (API 34). Dispositivo: API ${Build.VERSION.SDK_INT}")
+            return
+        }
         val appName = when {
             pkg.contains("ubercab") -> "Uber"
             pkg.contains("taxis99") || pkg.contains("app99") -> "99"
             else -> "Unknown"
         }
+        val tStart = System.currentTimeMillis()
         L.d(TAG, "📸 [MLKit] captureAndProcessWithMLKit() INICIADO - pkg=$pkg, app=$appName, API=${Build.VERSION.SDK_INT}")
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            L.d(TAG, "❌ [MLKit] ML Kit requer Android 14+ (API 34). Dispositivo: API ${Build.VERSION.SDK_INT}")
-            return
-        }
         try {
             takeScreenshot(android.view.Display.DEFAULT_DISPLAY,
                 java.util.concurrent.Executors.newSingleThreadExecutor(),
                 object : AccessibilityService.TakeScreenshotCallback {
                     override fun onSuccess(result: AccessibilityService.ScreenshotResult) {
+                        val tAfterScreenshot = System.currentTimeMillis()
+                        L.d(TAG, "⏱️ [MLKit] takeScreenshot onSuccess em ${tAfterScreenshot - tStart}ms")
                         try {
                             val hb = result.hardwareBuffer
                             val bitmap = Bitmap.wrapHardwareBuffer(hb, null)
                             hb.close()
                             if (bitmap != null) {
-                                val captureManager = CaptureManager(this@RideAccessibilityServiceV2)
-                                val rideHash = currentRawLogId.let { if (it >= 0) it.toString() else null }
-                                captureManager.saveCapture(bitmap, appName, rideHash)
-
-                                val windowBounds = getAppWindowBounds(pkg)
-                                val raw = when {
-                                    pkg.contains("ubercab") ->
-                                        UberCardExtractor.extractWithMLKit(this@RideAccessibilityServiceV2, bitmap, windowBounds)
-                                    else ->
-                                        App99Extractor.extractWithMLKit(this@RideAccessibilityServiceV2, bitmap, windowBounds)
-                                }
-                                bitmap.recycle()
-                                if (raw != null) {
-                                    L.d(TAG, "✅ [MLKit] OCR funcionou! ${raw.rawTexts.size} textos")
-                                    processRawCard(raw, pkg)
-                                } else {
-                                    L.d(TAG, "❌ [MLKit] OCR falhou ou não extraiu texto")
-                                }
+                                processMLKitScreenshot(bitmap, appName, pkg)
                             }
                         } catch (e: Exception) {
                             L.e(TAG, "❌ [MLKit] Exceção no onSuccess: ${e.message}", e)
                         }
                     }
                     override fun onFailure(errorCode: Int) {
-                        L.d(TAG, "❌ [MLKit] takeScreenshot.onFailure: errorCode=$errorCode")
+                        L.d(TAG, "❌ [MLKit] takeScreenshot.onFailure: errorCode=$errorCode (após ${System.currentTimeMillis() - tStart}ms)")
                     }
                 })
         } catch (e: Exception) {
             L.e(TAG, "❌ [MLKit] Exceção em captureAndProcessWithMLKit: ${e.message}", e)
         }
+    }
+
+    private fun processMLKitScreenshot(bitmap: Bitmap, appName: String, pkg: String) {
+        val t0 = System.currentTimeMillis()
+
+        val windowBounds = getAppWindowBounds(pkg)
+        L.d(TAG, "⏱️ [MLKit] windowBounds=$windowBounds")
+        val raw = when {
+            pkg.contains("ubercab") ->
+                UberCardExtractor.extractWithMLKit(bitmap, windowBounds)
+            else ->
+                App99Extractor.extractWithMLKit(bitmap, windowBounds)
+        }
+        val tAfterOCR = System.currentTimeMillis()
+        L.d(TAG, "⏱️ [MLKit] OCR levou ${tAfterOCR - t0}ms")
+
+        if (raw != null) {
+            processRawCard(raw, pkg)
+        }
+
+        val captureManager = CaptureManager(this@RideAccessibilityServiceV2)
+        val rideHash = currentRawLogId.let { if (it >= 0) it.toString() else null }
+        captureManager.saveCapture(bitmap, appName, rideHash)
+        L.d(TAG, "⏱️ [MLKit] total=${System.currentTimeMillis() - t0}ms raw=${raw != null}")
+        bitmap.recycle()
     }
 
     private fun getAppWindowBounds(pkg: String): android.graphics.Rect? {
@@ -541,8 +573,9 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
     }
 
     private fun processRawCard(raw: RawCardData, pkg: String) {
+        val tStart = System.currentTimeMillis()
         try {
-            L.d(TAG, "Textos coletados (${raw.rawTexts.size}): ${raw.rawTexts.take(10)}")
+            L.d(TAG, "Textos (${raw.rawTexts.size}): ${raw.rawTexts.take(10)} — hash=${buildCardHash(raw.rawTexts)}")
 
             val db = DatabaseHelper(this)
             val hash = buildCardHash(raw.rawTexts)
@@ -575,7 +608,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             }
 
             if (hash == lastHash && cardVisible) {
-                L.d(TAG, "Mesmo card ainda visível — ignorando (duplicata exata)")
+                L.d(TAG, "Mesmo hash do card visível — ignorando (hash=$hash)")
                 return
             }
 
@@ -585,7 +618,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
                 cardType = raw.cardType.name,
                 rawTexts = raw.rawTexts
             )
-            L.d(TAG, "\uD83D\uDCDD Raw log salvo: id=$currentRawLogId")
+            L.d(TAG, "Raw log salvo: id=$currentRawLogId")
 
             val parser = selectParser(raw)
             if (parser == null) {
@@ -655,8 +688,9 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             }
 
             if ((now - lastSaveTime) < 5_000L && ride.value == lastSavedValue) {
-                L.d(TAG, "⏱️ Duplicata rápida: valor R$${ride.value} salvo há ${now - lastSaveTime}ms — prosseguindo")
+                L.d(TAG, "Duplicata rápida: valor R$${ride.value} salvo há ${now - lastSaveTime}ms — ignorando")
                 db.updateRawLogStatus(currentRawLogId, status = "duplicate", error = "same value within 5s")
+                return
             }
 
             saveOrUpdateRide(ride, cardHash, db)
@@ -690,7 +724,8 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
 
         L.d(TAG, "Card detectado V2 em $pkg: valor=${ride.value} km=${ride.distanceKm} " +
                 "tempo=${ride.timeMin} nota=${ride.rating} " +
-                "R$/km=${ride.effectivePricePerKm} R$/h=${ride.effectivePricePerHour}")
+                "R$/km=${ride.effectivePricePerKm} R$/h=${ride.effectivePricePerHour}" +
+                " — processRawCard total=${System.currentTimeMillis() - tStart}ms")
         } catch (e: Exception) {
             L.e(TAG, "processRawCard crashou: ${e.message}", e)
         }
@@ -708,7 +743,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
         if (existingRideId != null) {
             val existingRide = db.getRideById(existingRideId)
             if (existingRide?.value != ride.value) {
-                L.d(TAG, "🔄 Valor atualizado para corrida existente: hash=$cardHash, " +
+                L.d(TAG, "Valor atualizado para corrida existente: hash=$cardHash, " +
                         "valor antigo=${existingRide?.value}, novo=${ride.value}")
                 db.updateRideValueByHash(cardHash, ride.value ?: 0.0, System.currentTimeMillis())
                 lastInsertedId = existingRideId
@@ -790,6 +825,7 @@ class RideAccessibilityServiceV2 : AccessibilityService() {
             ride.dropoffAddress?.let { putExtra("dropoffAddress", it) }
             putExtra("hasMultipleStops", ride.hasMultipleStops)
         })
+        L.d(TAG, "FloatingCardService.start chamado de saveOrUpdateRide — valor=${ride.value} hash=$cardHash")
 
         FloatingBubbleService.start(this, Intent().apply {
             ride.value?.let { putExtra("value", it) }

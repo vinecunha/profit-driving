@@ -25,6 +25,8 @@
 
         <TextView
             android:id="@+id/tvBackupSize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="1.2 MB"
             android:textSize="@dimen/text_size_11"
             android:textColor="@color/text_tertiary" />
@@ -48,6 +50,8 @@
 
         <TextView
             android:id="@+id/tvBackupRides"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="45 corridas"
             android:textSize="@dimen/text_size_11"
             android:textColor="@color/text_secondary" />
@@ -67,7 +71,7 @@
             android:layout_height="32dp"
             android:text="Deletar"
             android:textSize="@dimen/text_size_12"
-            android:textColor="@color/error"
+            android:textColor="@color/text_inverse"
             android:paddingHorizontal="12dp"
             android:gravity="center"
             android:background="@drawable/pill_error" />
@@ -78,7 +82,7 @@
             android:layout_height="32dp"
             android:text="Restaurar"
             android:textSize="@dimen/text_size_12"
-            android:textColor="@color/success"
+            android:textColor="@color/text_inverse"
             android:paddingHorizontal="12dp"
             android:gravity="center"
             android:background="@drawable/pill_success"
